@@ -1,0 +1,95 @@
+{
+  "name": "mtbassist",
+  "displayName": "mtbassist",
+  "description": "An assistant for ModusToolbox",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.71.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "multi-root ready"
+  ],
+  "activationEvents": [
+    "onView:mtbglobal",
+    "onView:mtbdocs",
+    "onCommand:mtbassist.mtbCreateProject",
+    "onCommand:mtbassist.mtbImportProject",
+    "onCommand:mtbassist.mtbRunEditor",
+    "workspaceContains:Makefile"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "mtbassist.mtbCreateProject",
+        "title": "ModusToolbox Create Project"
+      },
+      {
+        "command": "mtbassist.mtbImportProject",
+        "title": "ModusToolbox Import Project"
+      },
+      {
+        "command" : "mtbassist.mtbRunEditor",
+        "title" : "ModusToolbox Run Editor"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "mtbcontainer",
+          "title": "ModusToolbox Assistant",
+          "icon": "media/mtbicon.svg"
+        }
+      ]
+    },
+    "views": {
+      "mtbcontainer": [
+        {
+          "id": "mtbglobal",
+          "name": "ModusToolbox",
+          "icon": "media/mtbicon.svg",
+          "contextualTitle": "Global Programs"
+        },
+        {
+          "id": "mtbdocs",
+          "name": "Documentation",
+          "icon": "media/mtbicon.svg",
+          "contextualTitle": "Global Docs"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.2.0",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.71.0",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@typescript-eslint/parser": "^5.31.0",
+    "@vscode/test-electron": "^2.1.5",
+    "eslint": "^8.20.0",
+    "glob": "^8.0.3",
+    "mocha": "^10.0.0",
+    "ts-loader": "^9.3.1",
+    "typescript": "^4.7.4",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
+  },
+  "dependencies": {
+    "json5": "^2.2.1"
+  }
+}
