@@ -3,9 +3,7 @@
 import * as vscode from 'vscode';
 import { MTBAssistGlobalProvider } from './mtbglobal';
 import { MTBAssistDocumentProvider } from './mtbdoc';
-import { mtbCreateProject } from './mtbcommands';
-import { mtbImportProject } from './mtbcommands';
-import { mtbRunEditor } from './mtbcommands' ;
+import { mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc } from './mtbcommands';
 import path = require('path');
 import fs = require('fs') ;
 import { getMTBDocumentationTreeProvider, getMTBProgramsTreeProvider, initMtbInfo } from './mtbinfo';
@@ -34,6 +32,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbRunEditor', (args: any[]) => {
 		mtbRunEditor(args) ;
+	});
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbShowDoc', (args: any[]) => {
+		mtbShowDoc(args) ;
 	});
 
 	context.subscriptions.push(disposable);

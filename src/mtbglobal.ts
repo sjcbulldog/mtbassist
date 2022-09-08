@@ -60,7 +60,10 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
         item.command = new MTBAssistCommand("Import Project", "mtbassist.mtbImportProject", "ImportProject") ;
         this.items_[0].addChild(item) ;
 
-        if (info !== undefined) {            
+        if (info !== undefined) {      
+            item = new MTBAssistItem("Application") ;
+            this.items_.push(item) ;
+
             let projects : string[] = this.findProjects(info!.launch.configs) ;
             projects.forEach((project) => {
                 item = new MTBAssistItem("Project: " + project) ;
@@ -75,10 +78,12 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
                 item.command.arguments.push(config) ;
                 item.config = config ;
 
-                if (config.scope === "global" || config.scope === "bsp") {
+                if (config.scope === "global") {
                     if (config.shortName !== "project-creator") {
                         this.items_[0].addChild(item) ;
                     }
+                } else if (config.scope === "bsp") {
+                    this.items_[1].addChild(item) ;
                 } else if (config.scope === "project") {
                     projmap.get(config.project)?.addChild(item) ;
                 }

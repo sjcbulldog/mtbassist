@@ -3,9 +3,24 @@ import path = require("path");
 import { mtbGetInfo, MTBInfo } from "./mtbinfo";
 import exec = require("child_process") ;
 import { MTBAssistCommand } from './mtbglobal';
-import { MTBLaunchConfig } from './mtblaunchdata';
+import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
+import open = require("open") ;
 
 export function mtbImportProject() {
+}
+
+export function mtbShowDoc(args?: any) {
+    let typestr: string = typeof args ;
+
+    let info : MTBInfo = mtbGetInfo() ;
+
+    if (typestr === "object") {
+        let docobj: MTBLaunchDoc = args as MTBLaunchDoc ;
+
+        vscode.window.showInformationMessage("Showing document '" + docobj.title + "'") ;
+        let fileuri: vscode.Uri = vscode.Uri.file(docobj.location) ;
+        open(decodeURIComponent(fileuri.toString())) ;
+    }    
 }
 
 export function mtbRunEditor(args?: any) {
@@ -17,21 +32,24 @@ export function mtbRunEditor(args?: any) {
         let cmdobj: MTBLaunchConfig = args as MTBLaunchConfig ;
         let cmdargs :string [] = [] ;
 
-        for(let i = 1 ; i < cmdobj.cmdline.length ; i++) {
-            cmdargs.push(cmdobj.cmdline[i]) ;
+        for(let i = 0 ; i < cmdobj.cmdline.length ; i++) {
+            if (i !== 0) {
+                cmdargs.push(cmdobj.cmdline[i]) ;
+            }
         }
+
+        vscode.window.showInformationMessage("Starting program '" + cmdobj.shortName) ;
+
         exec.execFile(cmdobj.cmdline[0], 
             cmdargs, 
             { 
-                cwd: info.appDir, 
-                windowsHide: true,
-                windowsVerbatimArguments: true
+                cwd: info.appDir
             }, (error, stdout, stderr) => 
             {
                 if (error) {
-                console.error(`exec error: ${error}`);
-                return;
+                    vscode.window.showErrorMessage(error.message) ;
                 }
+                console.error(`exec error: ${error}`);
                 console.log(`stdout: ${stdout}`);
                 console.error(`stderr: ${stderr}`);
             }
@@ -42,11 +60,10 @@ export function mtbRunEditor(args?: any) {
 export function mtbCreateProject() {
     let info : MTBInfo = mtbGetInfo() ;
     let pcpath : string = path.join(info.toolsDir, "project-creator", "project-creator") ;
-    let makepath : string = path.join(info.toolsDir, "modus-shell", "bin", "bash") ;
+
 
     if (process.platform === "win32") {
         pcpath += ".exe" ;
-        makepath += ".exe" ;
     }
 
     let outstr : Buffer ;
@@ -66,18 +83,7 @@ export function mtbCreateProject() {
         return ;
     }
 
-    let channel = vscode.window.createOutputChannel("ModusToolbox") ;
-    try {
-        outstr = exec.execFileSync(makepath, ["-c", 'PATH=/bin ; make vscode'], { cwd: comps[2] }) ;
-    }
-    catch(error) {
-        if (typeof error === "string") {
-            channel.appendLine(<string>error) ;
-        }
-        return ;
-    }
 
     let uri = vscode.Uri.file(comps[2]) ;
     vscode.commands.executeCommand('vscode.openFolder', uri) ;
-    channel.appendLine(outstr.toString()) ;
 }

@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import exec = require("child_process") ;
 import path = require("path") ;
 import fs = require('fs');
@@ -90,36 +91,81 @@ function mtbUpdateProgs(launch: string ) {
     docs.refresh(info_) ;
 }
 
+function findLaunchInfo(appdir: string) {
+    vscode.window.showInformationMessage("Running 'mtblaunch' to get project information") ;
+
+    //
+    // Now go get the mtblaunch information an populate the trees
+    //
+    info_.appDir = appdir! ;
+    let mtblaunch = path.join(info_.toolsDir, "mtblaunch", "mtblaunch") ;
+    if (process.platform === "win32") {
+        mtblaunch += ".exe" ;
+    }
+    mtblaunch += " --quick --docs --app "  + info_.appDir ;
+
+    exec.exec(mtblaunch, { cwd: info_.appDir, windowsHide: true }, (error, stdout, stderr) => {
+        if (error) {
+            console.log("mtblaunch error: " + error) ;
+        }
+
+        if (stderr) {
+            console.log("mtblaunch: stderr: " + stderr) ;
+        }
+
+        if (stdout) {
+            mtbUpdateProgs(stdout) ;
+        }
+    }) ;
+}
+
+function runMakeVSCode(appdir: string) {
+    vscode.window.showInformationMessage("Running 'make vscode'") ;
+
+    let makepath : string = path.join(info_.toolsDir, "modus-shell", "bin", "bash") ;
+    
+    if (process.platform === "win32") {
+        makepath += ".exe" ;
+    }
+   
+    try {
+        exec.execFileSync(makepath, ["-c", 'PATH=/bin ; make vscode'], { cwd: appdir }) ;
+        findLaunchInfo(appdir) ;
+    }
+    catch(error) {
+    }
+}
+
 export function initMtbInfo(appdir?: string) {
     info_.toolsDir = findToolsDir() ;
     info_.inited = true ;
 
     if (appdir) {
-        //
-        // Now go get the mtblaunch information an populate the trees
-        //
-        info_.appDir = appdir! ;
-        let mtblaunch = path.join(info_.toolsDir, "mtblaunch", "mtblaunch") ;
-        if (process.platform === "win32") {
-            mtblaunch += ".exe" ;
-        }
-        mtblaunch += " --quick --docs --app "  + info_.appDir ;
-
-        exec.exec(mtblaunch, { cwd: info_.appDir, windowsHide: true }, (error, stdout, stderr) => {
-            if (error) {
-                console.log("mtblaunch error: " + error) ;
+        let vscodedir: string = path.join(appdir, ".vscode") ;
+        fs.stat(vscodedir, (err, stats) => {
+            if (err) {
+                if (err.code === 'ENOENT') {
+                    vscode.window
+                        .showInformationMessage("This project has not been prepared for Visual Studio Code.  Do you want to run 'make vscode'?", "Yes", "No")
+                        .then (answer => {
+                            if (answer === "Yes") {
+                                runMakeVSCode(appdir!) ;
+                            }
+                        }) ;
+                }
+                else {
+                    vscode.window.showInformationMessage("Cannot detect if this is an ModusToolbox Project") ;                    
+                }
+                return ;
             }
-
-            if (stderr) {
-                console.log("mtblaunch: stderr: " + stderr) ;
-            }
-
-            if (stdout) {
-                mtbUpdateProgs(stdout) ;
+            else {
+                findLaunchInfo(appdir!) ;
             }
         }) ;
     }
 }
+
+
 
 export function mtbGetInfo() : MTBInfo {
     if (info_.inited === false) {
