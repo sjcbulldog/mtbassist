@@ -6,7 +6,6 @@ import json5 = require('json5') ;
 import { MTBAssistDocumentProvider } from "./mtbdoc";
 import { MTBAssistGlobalProvider } from "./mtbglobal";
 import { MTBLaunchInfo } from "./mtblaunchdata";
-import { glob } from "glob";
 
 const CY_TOOLS_DIR:string = "CY_TOOLS_DIR" ;
 const CY_TOOLS_PATHS:string = "CY_TOOLS_PATHS" ;

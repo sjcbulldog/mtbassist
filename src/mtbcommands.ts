@@ -57,6 +57,49 @@ export function mtbRunEditor(args?: any) {
     }
 }
 
+function dropEmptyLines(lines: string[]) : string [] {
+    let ret: string[] = [] ;
+
+    lines.forEach((line) => {
+        if (line.length > 0) {
+            ret.push(line) ;
+        }
+    }) ;
+
+    return ret ;
+}
+
+function createProjects(output: Buffer) {
+    let createout: string = output.toString() ;
+    let lines: string[] = dropEmptyLines(createout.split("\r\n")) ;
+    
+    let projects : any[] = [] ;
+    lines.forEach((line) => {
+        let comps: string[] = line.split("|") ;
+        if (comps[0] === "#PROJECT#") {
+            let project = {
+                name : comps[1],
+                location: comps[2]
+            } ;
+            projects.push(project) ;
+        }
+    }) ;
+
+    return projects ;
+}
+
+class ApplicationItem implements vscode.QuickPickItem {
+    label: string ;
+    description: string ;
+    location: string ;
+
+    constructor(label: string, description: string, location: string) {
+        this.label = label ;
+        this.description = description ;
+        this.location = location ;
+    }
+}
+
 export function mtbCreateProject() {
     let info : MTBInfo = mtbGetInfo() ;
     let pcpath : string = path.join(info.toolsDir, "project-creator", "project-creator") ;
@@ -75,15 +118,29 @@ export function mtbCreateProject() {
         return ;
     }
 
-    let newdir: string = outstr.toString() ;
-    newdir = newdir.trim() ;
-    let comps : string[] = newdir.split("|") ;
+    let projects = createProjects(outstr) ;
+    let projpath: string = "" ;
 
-    if (comps[0] !== "#PROJECT#") {
-        return ;
+    if (projects.length === 1) {
+        projpath = projects[0].location ;
+        let uri = vscode.Uri.file(projects[0].location) ;
+        vscode.commands.executeCommand('vscode.openFolder', uri) ;
     }
+    else {
+        const qp = vscode.window.createQuickPick<ApplicationItem>() ;
+        qp.placeholder = "Multiple Applications Created - Select An Application" ;
+        let items : ApplicationItem[] = [] ;
+        projects.forEach((proj) => {
+            let item: ApplicationItem = new ApplicationItem(proj.name, proj.location, proj.location) ;
+            items.push(item) ;
+        }) ;
+        qp.items = items ;
 
+        qp.onDidChangeSelection(selection => {
+            let uri = vscode.Uri.file(selection[0].location) ;
+            vscode.commands.executeCommand('vscode.openFolder', uri) ;
+        }) ;
 
-    let uri = vscode.Uri.file(comps[2]) ;
-    vscode.commands.executeCommand('vscode.openFolder', uri) ;
+        qp.show() ;
+    }
 }
