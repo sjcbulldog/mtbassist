@@ -6,12 +6,38 @@ import json5 = require('json5') ;
 import { MTBAssistDocumentProvider } from "./mtbdoc";
 import { MTBAssistGlobalProvider } from "./mtbglobal";
 import { MTBLaunchInfo } from "./mtblaunchdata";
+import { pathEqual } from "path-equal" ;
 
 const CY_TOOLS_DIR:string = "CY_TOOLS_DIR" ;
 const CY_TOOLS_PATHS:string = "CY_TOOLS_PATHS" ;
+const MTBASSIST_GLOBAL_STATE_VAR = "mtbassistant.project" ;
 
 let pgms : MTBAssistGlobalProvider = new MTBAssistGlobalProvider() ;
 let docs : MTBAssistDocumentProvider = new MTBAssistDocumentProvider() ;
+
+export function clearCreatedProjects(context: vscode.ExtensionContext) {
+    context.globalState.update(MTBASSIST_GLOBAL_STATE_VAR, []) ;
+}
+
+export function addCreatedProject(context: vscode.ExtensionContext, projdir: string) {
+    let normpath = path.normalize(projdir) ;
+    let projs : string[] = context.globalState.get(MTBASSIST_GLOBAL_STATE_VAR) as string[] ;
+    projs.push(normpath) ;
+    context.globalState.update(MTBASSIST_GLOBAL_STATE_VAR, projs) ;
+}
+
+export function isCreatedProject(context: vscode.ExtensionContext, projdir: string) : boolean {
+    let normpath = path.normalize(projdir) ;
+    let projs : string[] = context.globalState.get(MTBASSIST_GLOBAL_STATE_VAR) as string[] ;
+    let ret: boolean = false ;
+
+    for(let i: number = 0 ; i < projs.length ; i++) {
+        if (pathEqual(normpath, projs[i])) {
+            ret = true ;
+        }
+    }
+    return ret ;
+}
 
 export function getMTBProgramsTreeProvider() {
     return pgms ;
@@ -118,24 +144,26 @@ function findLaunchInfo(appdir: string) {
     }) ;
 }
 
-function runMakeVSCode(appdir: string) {
-    vscode.window.showInformationMessage("Running 'make vscode'") ;
-
-    let makepath : string = path.join(info_.toolsDir, "modus-shell", "bin", "bash") ;
+function runMakeVSCode(context: vscode.ExtensionContext, appdir: string) {
+    clearCreatedProjects(context) ;
+    vscode.window.showInformationMessage("Running 'make vscode'")
+        .then(() => {
+            let makepath : string = path.join(info_.toolsDir, "modus-shell", "bin", "bash") ;
     
-    if (process.platform === "win32") {
-        makepath += ".exe" ;
-    }
-   
-    try {
-        exec.execFileSync(makepath, ["-c", 'PATH=/bin ; make vscode'], { cwd: appdir }) ;
-        findLaunchInfo(appdir) ;
-    }
-    catch(error) {
-    }
+            if (process.platform === "win32") {
+                makepath += ".exe" ;
+            }
+           
+            try {
+                exec.execFileSync(makepath, ["-c", 'PATH=/bin ; make vscode'], { cwd: appdir }) ;
+                findLaunchInfo(appdir) ;
+            }
+            catch(error) {
+            }
+        }) ;
 }
 
-export function initMtbInfo(appdir?: string) {
+export function initMtbInfo(context: vscode.ExtensionContext, appdir?: string) {
     info_.toolsDir = findToolsDir() ;
     info_.inited = true ;
 
@@ -144,13 +172,17 @@ export function initMtbInfo(appdir?: string) {
         fs.stat(vscodedir, (err, stats) => {
             if (err) {
                 if (err.code === 'ENOENT') {
-                    vscode.window
-                        .showInformationMessage("This project has not been prepared for Visual Studio Code.  Do you want to run 'make vscode'?", "Yes", "No")
-                        .then (answer => {
-                            if (answer === "Yes") {
-                                runMakeVSCode(appdir!) ;
-                            }
-                        }) ;
+                    if (isCreatedProject(context, appdir)) {
+                        runMakeVSCode(context, appdir!) ;
+                    } else {
+                        vscode.window
+                            .showInformationMessage("This project has not been prepared for Visual Studio Code.  Do you want to run 'make vscode'?", "Yes", "No")
+                            .then (answer => {
+                                if (answer === "Yes") {
+                                    runMakeVSCode(context, appdir!) ;
+                                }
+                            }) ;
+                    }
                 }
                 else {
                     vscode.window.showInformationMessage("Cannot detect if this is an ModusToolbox Project") ;                    

@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import path = require("path");
-import { mtbGetInfo, MTBInfo } from "./mtbinfo";
+import { addCreatedProject, clearCreatedProjects, mtbGetInfo, MTBInfo } from "./mtbinfo";
 import exec = require("child_process") ;
 import { MTBAssistCommand } from './mtbglobal';
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import open = require("open") ;
 
-export function mtbImportProject() {
+export function mtbImportProject(context: vscode.ExtensionContext) {
 }
 
 export function mtbShowDoc(args?: any) {
@@ -100,11 +100,10 @@ class ApplicationItem implements vscode.QuickPickItem {
     }
 }
 
-export function mtbCreateProject() {
+export function mtbCreateProject(context: vscode.ExtensionContext) {
     let info : MTBInfo = mtbGetInfo() ;
     let pcpath : string = path.join(info.toolsDir, "project-creator", "project-creator") ;
-
-
+    
     if (process.platform === "win32") {
         pcpath += ".exe" ;
     }
@@ -120,6 +119,11 @@ export function mtbCreateProject() {
 
     let projects = createProjects(outstr) ;
     let projpath: string = "" ;
+
+    clearCreatedProjects(context) ;
+    projects.forEach((proj) =>  {
+        addCreatedProject(context, proj.location) ;
+    }) ;
 
     if (projects.length === 1) {
         projpath = projects[0].location ;

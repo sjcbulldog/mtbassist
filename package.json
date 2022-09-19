@@ -96,6 +96,7 @@
   },
   "dependencies": {
     "json5": "^2.2.1",
-    "open": "^8.4.0"
+    "open": "^8.4.0",
+    "path-equal": "^1.2.2"
   }
 }
