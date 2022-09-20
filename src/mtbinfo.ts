@@ -6,7 +6,6 @@ import json5 = require('json5') ;
 import { MTBAssistDocumentProvider } from "./mtbdoc";
 import { MTBAssistGlobalProvider } from "./mtbglobal";
 import { MTBLaunchInfo } from "./mtblaunchdata";
-import { pathEqual } from "path-equal" ;
 
 const CY_TOOLS_DIR:string = "CY_TOOLS_DIR" ;
 const CY_TOOLS_PATHS:string = "CY_TOOLS_PATHS" ;
@@ -14,6 +13,12 @@ const MTBASSIST_GLOBAL_STATE_VAR = "mtbassistant.project" ;
 
 let pgms : MTBAssistGlobalProvider = new MTBAssistGlobalProvider() ;
 let docs : MTBAssistDocumentProvider = new MTBAssistDocumentProvider() ;
+let channel: vscode.OutputChannel = vscode.window.createOutputChannel("ModusToolbox") ;
+let debugMode: boolean = true ;
+
+export function getModusToolboxChannel() : vscode.OutputChannel {
+    return channel ;
+}
 
 export function clearCreatedProjects(context: vscode.ExtensionContext) {
     context.globalState.update(MTBASSIST_GLOBAL_STATE_VAR, []) ;
@@ -26,13 +31,31 @@ export function addCreatedProject(context: vscode.ExtensionContext, projdir: str
     context.globalState.update(MTBASSIST_GLOBAL_STATE_VAR, projs) ;
 }
 
+function comparePaths(p1: string, p2:string) : boolean {
+    let ret: boolean = false ;
+
+    if (process.platform === "win32") {
+        if (p1.charAt(0).toLowerCase() !== p2.charAt(0).toLowerCase()) {
+            ret = false ;
+        }
+        else {
+            ret = p1.slice(1) === p2.slice(1) ;
+        }
+    }
+    else {
+        ret = (p1 === p2) ;
+    }
+
+    return ret ;
+}
+
 export function isCreatedProject(context: vscode.ExtensionContext, projdir: string) : boolean {
     let normpath = path.normalize(projdir) ;
     let projs : string[] = context.globalState.get(MTBASSIST_GLOBAL_STATE_VAR) as string[] ;
     let ret: boolean = false ;
 
     for(let i: number = 0 ; i < projs.length ; i++) {
-        if (pathEqual(normpath, projs[i])) {
+        if (comparePaths(normpath, projs[i])) {
             ret = true ;
         }
     }
@@ -117,7 +140,7 @@ function mtbUpdateProgs(launch: string ) {
 }
 
 function findLaunchInfo(appdir: string) {
-    vscode.window.showInformationMessage("Running 'mtblaunch' to get project information") ;
+    getModusToolboxChannel().appendLine("Running 'mtblaunch' to get project information") ;
 
     //
     // Now go get the mtblaunch information an populate the trees
@@ -131,14 +154,17 @@ function findLaunchInfo(appdir: string) {
 
     exec.exec(mtblaunch, { cwd: info_.appDir, windowsHide: true }, (error, stdout, stderr) => {
         if (error) {
-            console.log("mtblaunch error: " + error) ;
+            getModusToolboxChannel().appendLine("mtblaunch error: " + error) ;
         }
 
         if (stderr) {
-            console.log("mtblaunch: stderr: " + stderr) ;
+            getModusToolboxChannel().appendLine("mtblaunch: stderr: " + stderr) ;
         }
 
         if (stdout) {
+            if (debugMode) {
+                getModusToolboxChannel().appendLine(stdout) ;
+            }
             mtbUpdateProgs(stdout) ;
         }
     }) ;
@@ -146,21 +172,20 @@ function findLaunchInfo(appdir: string) {
 
 function runMakeVSCode(context: vscode.ExtensionContext, appdir: string) {
     clearCreatedProjects(context) ;
-    vscode.window.showInformationMessage("Running 'make vscode'")
-        .then(() => {
-            let makepath : string = path.join(info_.toolsDir, "modus-shell", "bin", "bash") ;
+    getModusToolboxChannel().appendLine("Running 'make vscode' to prepare directory") ;
+
+    let makepath : string = path.join(info_.toolsDir, "modus-shell", "bin", "bash") ;
+
+    if (process.platform === "win32") {
+        makepath += ".exe" ;
+    }
     
-            if (process.platform === "win32") {
-                makepath += ".exe" ;
-            }
-           
-            try {
-                exec.execFileSync(makepath, ["-c", 'PATH=/bin ; make vscode'], { cwd: appdir }) ;
-                findLaunchInfo(appdir) ;
-            }
-            catch(error) {
-            }
-        }) ;
+    try {
+        exec.execFileSync(makepath, ["-c", 'PATH=/bin ; make vscode'], { cwd: appdir }) ;
+        findLaunchInfo(appdir) ;
+    }
+    catch(error) {
+    }
 }
 
 export function initMtbInfo(context: vscode.ExtensionContext, appdir?: string) {
@@ -195,8 +220,6 @@ export function initMtbInfo(context: vscode.ExtensionContext, appdir?: string) {
         }) ;
     }
 }
-
-
 
 export function mtbGetInfo() : MTBInfo {
     if (info_.inited === false) {

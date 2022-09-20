@@ -1,12 +1,133 @@
 import * as vscode from 'vscode';
 import path = require("path");
-import { addCreatedProject, clearCreatedProjects, mtbGetInfo, MTBInfo } from "./mtbinfo";
+import fs = require('fs') ;
+import { addCreatedProject, clearCreatedProjects, getModusToolboxChannel, mtbGetInfo, MTBInfo } from "./mtbinfo";
 import exec = require("child_process") ;
 import { MTBAssistCommand } from './mtbglobal';
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import open = require("open") ;
 
+function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: string, gitpath: string, name: string) {
+    let info = mtbGetInfo() ;
+    let makepath : string = path.join(info.toolsDir, "modus-shell", "bin", "bash") ;
+
+    let st = fs.statSync(locdir) ;
+    if (!st) {
+        vscode.window.showErrorMessage("The path '" + locdir + "' does not exist") ;
+        return ;
+    }
+
+    if (!st.isDirectory) {
+        vscode.window.showErrorMessage("The path '" + locdir + "' exists but is not a directory") ;
+        return ;        
+    }
+
+    if (process.platform === "win32") {
+        makepath += ".exe" ;
+    }
+
+    let finalpath: string = path.join(locdir, name) ;
+
+    getModusToolboxChannel().appendLine("mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... ") ;
+    let cmd = "git clone " + gitpath + " " + name ;
+    let job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: locdir }) ;
+
+    job.stdout.on(('data'), (data: string) => {
+        let str: string = data.toString() ;
+        getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+    }) ;
+
+    job.stderr.on(('data'), (data: string) => {
+        let str: string = data.toString() ;
+        getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+    }) ;
+
+    job.on('close', (code: number) => {
+        if (code === 0) {
+            getModusToolboxChannel().appendLine("mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ...") ;
+            cmd = "make getlibs" ;
+            job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: finalpath }) ;
+
+            job.stdout.on(('data'), (data: Buffer) => {
+                let str: string = data.toString() ;
+                getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+            }) ;
+        
+            job.stderr.on(('data'), (data: string) => {
+                let str: string = data.toString() ;
+                getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+            }) ;
+
+            job.on('close', (code: number) => {
+                if (code === 0) {
+                    getModusToolboxChannel().appendLine("mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ...") ;   
+                    cmd = "make vscode" ;
+                    job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: finalpath }) ;
+
+                    job.stdout.on(('data'), (data: string) => {
+                        let str: string = data.toString() ;
+                        getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+                    }) ;
+                
+                    job.stderr.on(('data'), (data: string) => {
+                        let str: string = data.toString() ;
+                        getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+                    }) ;
+                    
+                    job.on('close', (code: number) => {
+                        if (code === 0) {
+                            let uri = vscode.Uri.file(finalpath) ;
+                            vscode.commands.executeCommand('vscode.openFolder', uri) ;
+                        }
+                        else {
+                            getModusToolboxChannel().appendLine("mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ... failed") ;                               
+                        }
+                    }) ;
+                }
+                else {
+                    getModusToolboxChannel().appendLine("mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ... failed") ;                    
+                }
+            }) ;
+        }
+        else {
+            getModusToolboxChannel().appendLine("mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... failed") ;            
+        }
+    }) ;
+}
+
 export function mtbImportProject(context: vscode.ExtensionContext) {
+    vscode.window.showOpenDialog({
+        defaultUri: vscode.Uri.file("C:/cygwin64/home/butch/mtbprojects/temp"),
+        canSelectFiles : false,
+        canSelectFolders: true,
+        canSelectMany: false })
+        .then( (folder) => {
+            if (folder) {
+                let folderarray : vscode.Uri[] = folder as vscode.Uri[] ;
+                let destdir: string = folderarray[0].fsPath ;
+
+                vscode.window.showInputBox({
+                        prompt : "Git Repo Location",
+                        title: "Import Project From Git Repo",
+                        placeHolder : "Enter location of git repo",
+                        value: "https://github.com/sjcbulldog/mtbhelloworld.git"
+                    })
+                    .then( (gitloc) => {
+                        if (gitloc) {
+                            vscode.window.showInputBox({
+                                prompt : "Name of the project",
+                                title: "Import Project From Git Repo",
+                                placeHolder : "Name of the project in target directory",
+                                value: "MyNewProject"
+                            }).then((name) => {
+                                if (name) {
+                                    mtbImportProjectWithLoc(context, destdir, gitloc!, name!) ;
+                                }
+                            }) ;
+                        }
+                    }) ;
+            }
+        }) ;
 }
 
 export function mtbShowDoc(args?: any) {
@@ -110,7 +231,7 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
 
     let outstr : Buffer ;
     try {
-        outstr = exec.execFileSync(pcpath, ["--eclipse"]) ;
+        outstr = exec.execFileSync(pcpath, ["--eclipse", "--ideVersion", "3.0"]) ;
     }
     catch(error) {
         console.log("error: " + error) ;
@@ -125,7 +246,10 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
         addCreatedProject(context, proj.location) ;
     }) ;
 
-    if (projects.length === 1) {
+    if (projects.length === 0) {
+        vscode.window.showErrorMessage("No projects created by ModusToolbox") ;
+    }
+    else if (projects.length === 1) {
         projpath = projects[0].location ;
         let uri = vscode.Uri.file(projects[0].location) ;
         vscode.commands.executeCommand('vscode.openFolder', uri) ;
