@@ -60,6 +60,10 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
         item.command = new MTBAssistCommand("Import Project", "mtbassist.mtbImportProject", "ImportProject") ;
         this.items_[0].addChild(item) ;
 
+        item = new MTBAssistItem("Show Welcome Page") ;
+        item.command = new MTBAssistCommand("Import Project", "mtbassist.mtbShowWelcomePage", "Show Welcome Page") ;
+        this.items_[0].addChild(item) ;
+
         if (info !== undefined) {      
             item = new MTBAssistItem("Application") ;
             this.items_.push(item) ;
@@ -88,6 +92,10 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
                     projmap.get(config.project)?.addChild(item) ;
                 }
             }) ;
+        }
+        else {
+            item = new MTBAssistItem("Load application for more ...") ;
+            this.items_.push(item) ;
         }
 
         this.onDidChangeTreeData_.fire();

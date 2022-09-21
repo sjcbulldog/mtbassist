@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
 import path = require("path");
 import fs = require('fs') ;
-import { addCreatedProject, clearCreatedProjects, getModusToolboxChannel, mtbGetInfo, MTBInfo } from "./mtbinfo";
+import { getDocsLocation, getModusToolboxChannel, mtbGetInfo, MTBInfo, runMakeVSCode } from "./mtbinfo";
 import exec = require("child_process") ;
 import { MTBAssistCommand } from './mtbglobal';
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import open = require("open") ;
+import { getModusToolboxAssistantStartupHtml } from './mtbstart';
+import { url } from 'inspector';
 
 function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: string, gitpath: string, name: string) {
     let info = mtbGetInfo() ;
@@ -28,6 +30,7 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
 
     let finalpath: string = path.join(locdir, name) ;
 
+    getModusToolboxChannel().show() ;
     getModusToolboxChannel().appendLine("mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... ") ;
     let cmd = "git clone " + gitpath + " " + name ;
     let job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: locdir }) ;
@@ -49,8 +52,8 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
             job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: finalpath }) ;
 
             job.stdout.on(('data'), (data: Buffer) => {
-                let str: string = data.toString() ;
-                getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+                let str: string = data.toString().replace("\r\n","") ;
+                getModusToolboxChannel().appendLine(str) ;
             }) ;
         
             job.stderr.on(('data'), (data: string) => {
@@ -221,6 +224,57 @@ class ApplicationItem implements vscode.QuickPickItem {
     }
 }
 
+function mtbFinishProject(context: vscode.ExtensionContext, appdir: string) {
+    if (runMakeVSCode(context, appdir)) {
+        let uri = vscode.Uri.file(appdir) ;
+        vscode.commands.executeCommand('vscode.openFolder', uri) ;
+        getModusToolboxChannel().appendLine("ModusToolbox application '" + uri.fsPath + "' is ready") ;
+    }
+}
+
+export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
+    
+    let panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
+        'mtbassist', 
+        'ModusToolbox', 
+        vscode.ViewColumn.One, 
+        {
+            enableScripts: true
+        }
+    ) ;
+    let html: string = getModusToolboxAssistantStartupHtml() ;
+
+    panel.webview.html = html ;
+
+    panel.webview.onDidReceiveMessage( (message)=> {
+        console.log("Help me") ;
+        if (message.command === "createNew") {
+            vscode.commands.executeCommand("mtbassist.mtbCreateProject") ;
+        }
+        else if (message.command === "importExisting") {
+            vscode.commands.executeCommand("mtbassist.mtbImportProject") ;
+        }
+        else if (message.command === "showModusToolbox") {
+            vscode.commands.executeCommand("mtbglobal.focus") ;
+        }
+        else if (message.command === "showUserGuide") {
+            let docpath: string = getDocsLocation("mtb_user_guide.pdf") ;
+            let fileuri = vscode.Uri.file(docpath) ;
+            open(decodeURIComponent(fileuri.toString())) ;
+        }
+        else if (message.command === "showReleaseNotes") {
+            let docpath: string = getDocsLocation("mt_release_notes.pdf") ;
+            let fileuri = vscode.Uri.file(docpath) ;
+            open(decodeURIComponent(fileuri.toString())) ;
+        }
+        else if (message.command === "openRecent") {
+            let appdir: string = message.projdir ;
+            let uri = vscode.Uri.file(appdir) ;
+            vscode.commands.executeCommand('vscode.openFolder', uri) ;
+        }
+    }) ;    
+}
+
 export function mtbCreateProject(context: vscode.ExtensionContext) {
     let info : MTBInfo = mtbGetInfo() ;
     let pcpath : string = path.join(info.toolsDir, "project-creator", "project-creator") ;
@@ -238,21 +292,19 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
         return ;
     }
 
+    getModusToolboxChannel().show() ;
+    getModusToolboxChannel().appendLine("Reading ModusToolbox application state, please wait ...") ;
+
     let projects = createProjects(outstr) ;
     let projpath: string = "" ;
-
-    clearCreatedProjects(context) ;
-    projects.forEach((proj) =>  {
-        addCreatedProject(context, proj.location) ;
-    }) ;
 
     if (projects.length === 0) {
         vscode.window.showErrorMessage("No projects created by ModusToolbox") ;
     }
     else if (projects.length === 1) {
         projpath = projects[0].location ;
-        let uri = vscode.Uri.file(projects[0].location) ;
-        vscode.commands.executeCommand('vscode.openFolder', uri) ;
+        mtbFinishProject(context, projpath) ;
+
     }
     else {
         const qp = vscode.window.createQuickPick<ApplicationItem>() ;
@@ -265,8 +317,7 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
         qp.items = items ;
 
         qp.onDidChangeSelection(selection => {
-            let uri = vscode.Uri.file(selection[0].location) ;
-            vscode.commands.executeCommand('vscode.openFolder', uri) ;
+            mtbFinishProject(context, selection[0].location) ;
         }) ;
 
         qp.show() ;

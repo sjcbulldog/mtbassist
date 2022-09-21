@@ -35,6 +35,10 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
         return -1 ;
     }
 
+    private convertTradeMark(title: string) : string {
+        return title.replace("&trade;", "\u2122") ;
+    }
+
     refresh(info?: MTBInfo) {
         this.items_ = [] ;
 
@@ -57,7 +61,8 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
 
             if (info !== undefined) {
                 info.launch.docs.forEach((doc) => {
-                    let item : MTBAssistItem = new MTBAssistItem(doc.title) ;
+                    let title: string = this.convertTradeMark(doc.title) ;
+                    let item : MTBAssistItem = new MTBAssistItem(title) ;
                     item.doc = doc ;
                     
                     item.command = new MTBAssistCommand(doc.title, "mtbassist.mtbShowDoc", "Open the '" + doc.title + "' document") ;
@@ -99,7 +104,7 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
             }
         }
         else {
-            item = new MTBAssistItem("Loading project ...") ;
+            item = new MTBAssistItem("Load application for more ...") ;
             this.items_.push(item) ;
         }
         this.onDidChangeTreeData_.fire();

@@ -6,6 +6,8 @@ import json5 = require('json5') ;
 import { MTBAssistDocumentProvider } from "./mtbdoc";
 import { MTBAssistGlobalProvider } from "./mtbglobal";
 import { MTBLaunchInfo } from "./mtblaunchdata";
+import { debug } from 'console';
+import { addToRecentProjects } from './mtbrecent';
 
 const CY_TOOLS_DIR:string = "CY_TOOLS_DIR" ;
 const CY_TOOLS_PATHS:string = "CY_TOOLS_PATHS" ;
@@ -16,50 +18,20 @@ let docs : MTBAssistDocumentProvider = new MTBAssistDocumentProvider() ;
 let channel: vscode.OutputChannel = vscode.window.createOutputChannel("ModusToolbox") ;
 let debugMode: boolean = true ;
 
+export function isDebugMode() : boolean {
+    return debugMode ;
+}
+
+export function getDocsLocation(filename: string) {
+    let info: MTBInfo = mtbGetInfo() ;
+
+    let verstr = info.toolsDir.slice(info.toolsDir.length - 3, info.toolsDir.length) ;
+    let docspath: string = path.join(path.dirname(info.toolsDir), "docs_" + verstr) ;
+    return path.join(docspath, filename) ;
+}
+
 export function getModusToolboxChannel() : vscode.OutputChannel {
     return channel ;
-}
-
-export function clearCreatedProjects(context: vscode.ExtensionContext) {
-    context.globalState.update(MTBASSIST_GLOBAL_STATE_VAR, []) ;
-}
-
-export function addCreatedProject(context: vscode.ExtensionContext, projdir: string) {
-    let normpath = path.normalize(projdir) ;
-    let projs : string[] = context.globalState.get(MTBASSIST_GLOBAL_STATE_VAR) as string[] ;
-    projs.push(normpath) ;
-    context.globalState.update(MTBASSIST_GLOBAL_STATE_VAR, projs) ;
-}
-
-function comparePaths(p1: string, p2:string) : boolean {
-    let ret: boolean = false ;
-
-    if (process.platform === "win32") {
-        if (p1.charAt(0).toLowerCase() !== p2.charAt(0).toLowerCase()) {
-            ret = false ;
-        }
-        else {
-            ret = p1.slice(1) === p2.slice(1) ;
-        }
-    }
-    else {
-        ret = (p1 === p2) ;
-    }
-
-    return ret ;
-}
-
-export function isCreatedProject(context: vscode.ExtensionContext, projdir: string) : boolean {
-    let normpath = path.normalize(projdir) ;
-    let projs : string[] = context.globalState.get(MTBASSIST_GLOBAL_STATE_VAR) as string[] ;
-    let ret: boolean = false ;
-
-    for(let i: number = 0 ; i < projs.length ; i++) {
-        if (comparePaths(normpath, projs[i])) {
-            ret = true ;
-        }
-    }
-    return ret ;
 }
 
 export function getMTBProgramsTreeProvider() {
@@ -170,12 +142,11 @@ function findLaunchInfo(appdir: string) {
     }) ;
 }
 
-function runMakeVSCode(context: vscode.ExtensionContext, appdir: string) {
-    clearCreatedProjects(context) ;
+export function runMakeVSCode(context: vscode.ExtensionContext, appdir: string) : boolean {
+    let ret: boolean = true ;
+
     getModusToolboxChannel().appendLine("Running 'make vscode' to prepare directory") ;
-
     let makepath : string = path.join(info_.toolsDir, "modus-shell", "bin", "bash") ;
-
     if (process.platform === "win32") {
         makepath += ".exe" ;
     }
@@ -185,38 +156,70 @@ function runMakeVSCode(context: vscode.ExtensionContext, appdir: string) {
         findLaunchInfo(appdir) ;
     }
     catch(error) {
+        let errmgs: Error = error as Error ;
+        getModusToolboxChannel().appendLine("Error running 'make vscode': " + errmgs.message) ;
+        ret = false ;
     }
+
+    return ret ;
+}
+
+export function checkModusToolboxVersion(context: vscode.ExtensionContext) : boolean {
+    let ret: boolean = true ;
+
+    initMtbInfo(context, undefined) ;
+
+    const verex = new RegExp(".*tools_([0-9]+)\\.([0-9]+)") ;
+    const matches = verex.exec(info_.toolsDir) ;
+
+    if (matches && matches.length === 3) {
+        let major: number = Number(matches[1]) ;
+        let minor: number = Number(matches[2]) ;
+
+        if (major < 3) {
+            ret = false ;
+        }
+    }
+    else {
+        ret = false ;
+    }
+
+    return ret ;
 }
 
 export function initMtbInfo(context: vscode.ExtensionContext, appdir?: string) {
     info_.toolsDir = findToolsDir() ;
     info_.inited = true ;
 
+    if (process.env.MTBASSISTANT_DEBUG) {
+        debugMode = true ;
+    }
+    else {
+        debugMode = false ;
+    }
+
     if (appdir) {
         let vscodedir: string = path.join(appdir, ".vscode") ;
         fs.stat(vscodedir, (err, stats) => {
             if (err) {
                 if (err.code === 'ENOENT') {
-                    if (isCreatedProject(context, appdir)) {
-                        runMakeVSCode(context, appdir!) ;
-                    } else {
-                        vscode.window
-                            .showInformationMessage("This project has not been prepared for Visual Studio Code.  Do you want to run 'make vscode'?", "Yes", "No")
-                            .then (answer => {
-                                if (answer === "Yes") {
-                                    runMakeVSCode(context, appdir!) ;
+                    vscode.window
+                        .showInformationMessage("This project has not been prepared for Visual Studio Code.  Do you want to run 'make vscode'?", "Yes", "No")
+                        .then (answer => {
+                            if (answer === "Yes") {
+                                if (!runMakeVSCode(context, appdir!)) {
+                                    return ;
                                 }
-                            }) ;
-                    }
+                            }
+                        }) ;
                 }
                 else {
                     vscode.window.showInformationMessage("Cannot detect if this is an ModusToolbox Project") ;                    
                 }
                 return ;
             }
-            else {
-                findLaunchInfo(appdir!) ;
-            }
+            findLaunchInfo(appdir!) ;
+            addToRecentProjects(context, appdir) ;
         }) ;
     }
 }

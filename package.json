@@ -2,7 +2,10 @@
   "name": "mtbassist",
   "displayName": "mtbassist",
   "description": "An Assistant for ModusToolbox",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "publisher" : "ApolloSoftware",
+  "license" : "license.txt",
+  "icon" : "media/exticon.png",
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -10,7 +13,9 @@
     "Other"
   ],
   "keywords": [
-    "multi-root ready"
+    "modustoolbox",
+    "embedded development",
+    "ARM cortex"
   ],
   "activationEvents": [
     "onView:mtbglobal",
@@ -19,7 +24,8 @@
     "onCommand:mtbassist.mtbImportProject",
     "onCommand:mtbassist.mtbRunEditor",
     "onCommand:mtbassist.mtbShowDoc",
-    "workspaceContains:Makefile"
+    "workspaceContains:Makefile",
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -39,6 +45,10 @@
       {
         "command": "mtbassist.mtbShowDoc",
         "title": "ModusToolbox Show Document"
+      },
+      {
+        "command": "mtbassist.mtbShowWelcomePage",
+        "title": "ModusToolbox Assistant Show Welcome Page"
       }
     ],
     "viewsContainers": {
@@ -46,7 +56,7 @@
         {
           "id": "mtbcontainer",
           "title": "ModusToolbox Assistant",
-          "icon": "media/mtbicon.svg"
+          "icon": "media/bot.png"
         }
       ]
     },
@@ -55,13 +65,13 @@
         {
           "id": "mtbglobal",
           "name": "ModusToolbox",
-          "icon": "media/mtbicon.svg",
+          "icon": "media/bot.png",
           "contextualTitle": "Global Programs"
         },
         {
           "id": "mtbdocs",
           "name": "Documentation",
-          "icon": "media/mtbicon.svg",
+          "icon": "media/bot.png",
           "contextualTitle": "Global Docs"
         }
       ]
