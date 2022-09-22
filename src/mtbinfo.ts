@@ -48,12 +48,14 @@ export class MTBInfo
     public appDir: string ;
     public inited: boolean ;
     public launch: MTBLaunchInfo ;
+    public isValidMTBProject: boolean ;
 
     constructor() {
         this.toolsDir = "" ;
         this.appDir = "" ;
         this.inited = false ;
         this.launch = new MTBLaunchInfo("") ;
+        this.isValidMTBProject = false ;
     }
 }
 
@@ -94,7 +96,7 @@ function findToolsDir() : string {
         console.log("Error, not ModusToolbox tools directory found") ;
     }
     else {
-        ret = paths[0] ;
+        ret = paths[paths.length - 1] ;
     }
 
     return ret ;
@@ -187,7 +189,7 @@ export function checkModusToolboxVersion(context: vscode.ExtensionContext) : boo
     return ret ;
 }
 
-export function initMtbInfo(context: vscode.ExtensionContext, appdir?: string) {
+export function initMtbInfo(context: vscode.ExtensionContext) {
     info_.toolsDir = findToolsDir() ;
     info_.inited = true ;
 
@@ -197,31 +199,34 @@ export function initMtbInfo(context: vscode.ExtensionContext, appdir?: string) {
     else {
         debugMode = false ;
     }
+}
 
-    if (appdir) {
+export function initMtbAppInfo(context: vscode.ExtensionContext, appdir: string) : Promise<void> {
+    let ret = new Promise<void>( (resolve, reject) => {
         let vscodedir: string = path.join(appdir, ".vscode") ;
         fs.stat(vscodedir, (err, stats) => {
             if (err) {
                 if (err.code === 'ENOENT') {
                     vscode.window
-                        .showInformationMessage("This project has not been prepared for Visual Studio Code.  Do you want to run 'make vscode'?", "Yes", "No")
-                        .then (answer => {
-                            if (answer === "Yes") {
-                                if (!runMakeVSCode(context, appdir!)) {
-                                    return ;
-                                }
+                    .showInformationMessage("This project has not been prepared for Visual Studio Code.  Do you want to run 'make vscode'?", "Yes", "No")
+                    .then (answer => {
+                        if (answer === "Yes") {
+                            if (!runMakeVSCode(context, appdir!)) {
+                                return ;
                             }
-                        }) ;
+                        }
+                    }) ;
                 }
-                else {
-                    vscode.window.showInformationMessage("Cannot detect if this is an ModusToolbox Project") ;                    
-                }
-                return ;
+            }
+            else {
+
             }
             findLaunchInfo(appdir!) ;
             addToRecentProjects(context, appdir) ;
         }) ;
-    }
+    }) ;
+
+    return ret ;
 }
 
 export function mtbGetInfo() : MTBInfo {

@@ -16,7 +16,8 @@ import { getModusToolboxAssistantStartupHtml } from './mtbstart';
 export function activate(context: vscode.ExtensionContext) {
 
 	if (!checkModusToolboxVersion(context)) {
-		throw new Error("This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later was not detected on this machine.") ;
+		vscode.window.showInformationMessage("This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.")
+		return ;
 	}
 
 	let folders = vscode.workspace.workspaceFolders ;
