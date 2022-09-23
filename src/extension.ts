@@ -1,22 +1,31 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { MTBAssistGlobalProvider } from './mtbglobal';
-import { MTBAssistDocumentProvider } from './mtbdoc';
+import { getMTBProgramsTreeProvider, MTBAssistGlobalProvider } from './mtbglobal';
+import { getMTBDocumentationTreeProvider, MTBAssistDocumentProvider } from './mtbdoc';
 import { mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc } from './mtbcommands';
 import path = require('path');
 import fs = require('fs') ;
-import { checkModusToolboxVersion, getDocsLocation, getModusToolboxChannel, getMTBDocumentationTreeProvider, getMTBProgramsTreeProvider, initMtbInfo, isDebugMode } from './mtbinfo';
 import open = require("open") ;
 import { readRecentList } from './mtbrecent';
 import { getModusToolboxAssistantStartupHtml } from './mtbstart';
+import { MessageType, mtbAssistExtensionInfo } from './mtbextinfo';
+import { MTBAppInfo, mtbAssistLoadApp } from './mtbappinfo';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
-	if (!checkModusToolboxVersion(context)) {
-		vscode.window.showInformationMessage("This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.")
+	mtbAssistExtensionInfo.showMessageWindow() ;
+	mtbAssistExtensionInfo.logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
+
+	if (!mtbAssistExtensionInfo.isVersionOk) {
+		// Put the message in the log window
+		mtbAssistExtensionInfo.showMessageWindow() ;
+		mtbAssistExtensionInfo.logMessage(MessageType.error, "This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.") ;
+
+		// Also tell the user via VS code messages
+		vscode.window.showInformationMessage("This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.") ;
 		return ;
 	}
 
@@ -29,12 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
 		appdir = folders[0].uri.fsPath ;
 	}
 
-	initMtbInfo(context, appdir) ;
-
-	if (isDebugMode()) {
-		getModusToolboxChannel().appendLine("MtbAssistant: running in debug mode") ;
-	}
-
+	mtbAssistLoadApp(appdir) ;
 	readRecentList(context) ;
 	
 	// The command has been defined in the package.json file
@@ -74,15 +78,6 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		treeDataProvider: getMTBDocumentationTreeProvider()
 	}) ;
-
-	if (vscode.workspace.workspaceFolders) {
-		vscode.workspace.workspaceFolders.forEach((folder) => {
-			let mkpath : string = path.join(folder.uri.fsPath, "Makefile") ;
-			if (fs.existsSync(mkpath)) {
-				initMtbInfo(context, folder.uri.fsPath) ;
-			}
-		}) ;
-	}
 
 	vscode.commands.executeCommand('mtbassist.mtbShowWelcomePage') ;
 }

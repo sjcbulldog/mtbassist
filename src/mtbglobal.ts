@@ -1,8 +1,8 @@
 import { runInThisContext } from 'vm';
 import * as vscode from 'vscode';
-import { MTBInfo } from './mtbinfo';
+import { MTBExtensionInfo } from './mtbextinfo';
 import { MTBAssistItem } from './mtbitem' ;
-import { MTBLaunchConfig } from './mtblaunchdata';
+import { MTBLaunchConfig, MTBLaunchInfo } from './mtblaunchdata';
 
 export class MTBAssistCommand implements vscode.Command
 {
@@ -45,7 +45,7 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
         return Promise.resolve(retval) ;
     }
 
-    refresh(info?: MTBInfo): void {
+    refresh(launch?: MTBLaunchInfo): void {
         let projmap: Map<string, MTBAssistItem> = new Map<string, MTBAssistItem>() ;
         this.items_ = [] ;
 
@@ -64,18 +64,18 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
         item.command = new MTBAssistCommand("Import Project", "mtbassist.mtbShowWelcomePage", "Show Welcome Page") ;
         this.items_[0].addChild(item) ;
 
-        if (info !== undefined) {      
+        if (launch !== undefined) {      
             item = new MTBAssistItem("Application") ;
             this.items_.push(item) ;
 
-            let projects : string[] = this.findProjects(info!.launch.configs) ;
+            let projects : string[] = this.findProjects(launch.configs) ;
             projects.forEach((project) => {
                 item = new MTBAssistItem("Project: " + project) ;
                 projmap.set(project, item) ;
                 this.items_.push(item) ;
             }) ;
 
-            info!.launch.configs.forEach((config) => {
+            launch.configs.forEach((config) => {
                 item = new MTBAssistItem(config.displayName) ;
                 item.command = new MTBAssistCommand(config.displayName, "mtbassist.mtbRunEditor", "Run the '" + config.displayName + "' program") ;
                 item.command.arguments = [] ;
@@ -112,4 +112,10 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
 
         return ret;
     }
+}
+
+let pgms : MTBAssistGlobalProvider = new MTBAssistGlobalProvider() ;
+
+export function getMTBProgramsTreeProvider() : MTBAssistGlobalProvider {
+    return pgms ;
 }

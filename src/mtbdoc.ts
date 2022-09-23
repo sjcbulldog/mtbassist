@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import path = require("path") ;
 import { MTBAssistCommand } from './mtbglobal';
-import { MTBInfo } from './mtbinfo';
+import { mtbAssistExtensionInfo, MTBExtensionInfo } from './mtbextinfo';
 import { MTBAssistItem } from './mtbitem' ;
-import { MTBLaunchDoc } from './mtblaunchdata';
+import { MTBLaunchDoc, MTBLaunchInfo } from './mtblaunchdata';
 
 export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAssistItem> {
     private items_ : MTBAssistItem[] = [] ;
@@ -39,28 +39,28 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
         return title.replace("&trade;", "\u2122") ;
     }
 
-    refresh(info?: MTBInfo) {
+    refresh(launch?: MTBLaunchInfo) {
         this.items_ = [] ;
 
         let parent: MTBAssistItem ;
         let item: MTBAssistItem ;
 
-        if (info) {
-            item = new MTBAssistItem("ModusToolbox Landing Page") ;
-            item.command = new MTBAssistCommand("ModusToolbox Landing Page", "mtbassist.mtbShowDoc", "Open the 'ModusToolbox Landing Page' document") ;
-            item.command.arguments = [] ;
-            let land: MTBLaunchDoc = new MTBLaunchDoc() ;
-            let landpath: string = info!.toolsDir.replace("tools_", "docs_") ;
-            landpath = path.join(landpath, "doc_landing.html") ;
-            land.location = landpath ;
-            item.command.arguments.push(land) ;
+        item = new MTBAssistItem("ModusToolbox Landing Page") ;
+        item.command = new MTBAssistCommand("ModusToolbox Landing Page", "mtbassist.mtbShowDoc", "Open the 'ModusToolbox Landing Page' document") ;
+        item.command.arguments = [] ;
+        let land: MTBLaunchDoc = new MTBLaunchDoc() ;
+
+        let landpath:string = path.join(mtbAssistExtensionInfo.docsDir, "doc_landing.html") ;
+        land.location = landpath ;
+        item.command.arguments.push(land) ;
+        this.items_.push(item) ;
+
+        if (launch) {
+            item = new MTBAssistItem("Application") ;
             this.items_.push(item) ;
 
-            item = new MTBAssistItem("Global") ;
-            this.items_.push(item) ;
-
-            if (info !== undefined) {
-                info.launch.docs.forEach((doc) => {
+            if (launch !== undefined) {
+                launch.docs.forEach((doc) => {
                     let title: string = this.convertTradeMark(doc.title) ;
                     let item : MTBAssistItem = new MTBAssistItem(title) ;
                     item.doc = doc ;
@@ -109,4 +109,11 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
         }
         this.onDidChangeTreeData_.fire();
     }
+}
+
+
+let docs : MTBAssistDocumentProvider = new MTBAssistDocumentProvider() ;
+
+export function getMTBDocumentationTreeProvider() : MTBAssistDocumentProvider {
+    return docs ;
 }

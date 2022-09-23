@@ -1,17 +1,15 @@
 import * as vscode from 'vscode';
 import path = require("path");
 import fs = require('fs') ;
-import { getDocsLocation, getModusToolboxChannel, mtbGetInfo, MTBInfo, runMakeVSCode } from "./mtbinfo";
 import exec = require("child_process") ;
-import { MTBAssistCommand } from './mtbglobal';
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import open = require("open") ;
 import { getModusToolboxAssistantStartupHtml } from './mtbstart';
-import { url } from 'inspector';
+import { MessageType, mtbAssistExtensionInfo } from './mtbextinfo';
+import { mtbAssistLoadApp, theModusToolboxApp } from './mtbappinfo';
 
 function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: string, gitpath: string, name: string) {
-    let info = mtbGetInfo() ;
-    let makepath : string = path.join(info.toolsDir, "modus-shell", "bin", "bash") ;
+    let makepath : string = path.join(mtbAssistExtensionInfo.toolsDir, "modus-shell", "bin", "bash") ;
 
     let st = fs.statSync(locdir) ;
     if (!st) {
@@ -30,51 +28,52 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
 
     let finalpath: string = path.join(locdir, name) ;
 
-    getModusToolboxChannel().show() ;
-    getModusToolboxChannel().appendLine("mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... ") ;
+    mtbAssistExtensionInfo.showMessageWindow() ;
+    mtbAssistExtensionInfo.logMessage(MessageType.info, "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... ") ;
+
     let cmd = "git clone " + gitpath + " " + name ;
     let job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: locdir }) ;
 
     job.stdout.on(('data'), (data: string) => {
-        let str: string = data.toString() ;
-        getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+        let str: string = data.toString().replace("\r\n", "\n") ;
+        mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
     }) ;
 
     job.stderr.on(('data'), (data: string) => {
-        let str: string = data.toString() ;
-        getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+        let str: string = data.toString().replace("\r\n", "\n") ;
+        mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
     }) ;
 
     job.on('close', (code: number) => {
         if (code === 0) {
-            getModusToolboxChannel().appendLine("mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ...") ;
+            mtbAssistExtensionInfo.logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ...") ;
             cmd = "make getlibs" ;
             job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: finalpath }) ;
 
             job.stdout.on(('data'), (data: Buffer) => {
-                let str: string = data.toString().replace("\r\n","") ;
-                getModusToolboxChannel().appendLine(str) ;
+                let str: string = data.toString().replace("\r\n", "\n") ;
+                mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
             }) ;
         
             job.stderr.on(('data'), (data: string) => {
-                let str: string = data.toString() ;
-                getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+                let str: string = data.toString().replace("\r\n", "\n") ;
+                mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
             }) ;
 
             job.on('close', (code: number) => {
                 if (code === 0) {
-                    getModusToolboxChannel().appendLine("mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ...") ;   
+                    mtbAssistExtensionInfo.logMessage(MessageType.info, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ...") ;
                     cmd = "make vscode" ;
                     job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: finalpath }) ;
 
                     job.stdout.on(('data'), (data: string) => {
-                        let str: string = data.toString() ;
-                        getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+                        let str: string = data.toString().replace("\r\n", "\n") ;
+                        mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
                     }) ;
                 
                     job.stderr.on(('data'), (data: string) => {
-                        let str: string = data.toString() ;
-                        getModusToolboxChannel().appendLine(str.replace("\r\n", "\n")) ;
+                        let str: string = data.toString().replace("\r\n", "\n") ;
+                        mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
                     }) ;
                     
                     job.on('close', (code: number) => {
@@ -83,17 +82,17 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
                             vscode.commands.executeCommand('vscode.openFolder', uri) ;
                         }
                         else {
-                            getModusToolboxChannel().appendLine("mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ... failed") ;                               
+                            mtbAssistExtensionInfo.logMessage(MessageType.error, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ... failed") ;
                         }
                     }) ;
                 }
                 else {
-                    getModusToolboxChannel().appendLine("mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ... failed") ;                    
+                    mtbAssistExtensionInfo.logMessage(MessageType.error, "mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ... failed") ;                    
                 }
             }) ;
         }
         else {
-            getModusToolboxChannel().appendLine("mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... failed") ;            
+            mtbAssistExtensionInfo.logMessage(MessageType.error, "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... failed") ;            
         }
     }) ;
 }
@@ -136,8 +135,6 @@ export function mtbImportProject(context: vscode.ExtensionContext) {
 export function mtbShowDoc(args?: any) {
     let typestr: string = typeof args ;
 
-    let info : MTBInfo = mtbGetInfo() ;
-
     if (typestr === "object") {
         let docobj: MTBLaunchDoc = args as MTBLaunchDoc ;
 
@@ -149,8 +146,6 @@ export function mtbShowDoc(args?: any) {
 
 export function mtbRunEditor(args?: any) {
     let typestr: string = typeof args ;
-
-    let info : MTBInfo = mtbGetInfo() ;
 
     if (typestr === "object") {
         let cmdobj: MTBLaunchConfig = args as MTBLaunchConfig ;
@@ -167,7 +162,7 @@ export function mtbRunEditor(args?: any) {
         exec.execFile(cmdobj.cmdline[0], 
             cmdargs, 
             { 
-                cwd: info.appDir
+                cwd: theModusToolboxApp?.appDir
             }, (error, stdout, stderr) => 
             {
                 if (error) {
@@ -225,11 +220,17 @@ class ApplicationItem implements vscode.QuickPickItem {
 }
 
 function mtbFinishProject(context: vscode.ExtensionContext, appdir: string) {
-    if (runMakeVSCode(context, appdir)) {
-        let uri = vscode.Uri.file(appdir) ;
-        vscode.commands.executeCommand('vscode.openFolder', uri) ;
-        getModusToolboxChannel().appendLine("ModusToolbox application '" + uri.fsPath + "' is ready") ;
-    }
+    mtbAssistLoadApp(appdir) ;
+    theModusToolboxApp.runModusCommandThroughShell("make vscode")
+        .then((output: string) => {
+            let uri = vscode.Uri.file(appdir) ;
+            vscode.commands.executeCommand('vscode.openFolder', uri) ;
+            mtbAssistExtensionInfo.logMessage(MessageType.info, "the application directory '" + theModusToolboxApp.appDir + "' is ready for use") ;
+        })
+        .catch((error) => {
+            mtbAssistExtensionInfo.showMessageWindow() ;
+            mtbAssistExtensionInfo.logMessage(MessageType.error, "the command 'make vscode' failed in the directory '" + theModusToolboxApp?.appDir) ;
+        }) ;
 }
 
 export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
@@ -258,12 +259,12 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
             vscode.commands.executeCommand("mtbglobal.focus") ;
         }
         else if (message.command === "showUserGuide") {
-            let docpath: string = getDocsLocation("mtb_user_guide.pdf") ;
+            let docpath: string = path.join(mtbAssistExtensionInfo.docsDir, "mtb_user_guide.pdf") ;
             let fileuri = vscode.Uri.file(docpath) ;
             open(decodeURIComponent(fileuri.toString())) ;
         }
         else if (message.command === "showReleaseNotes") {
-            let docpath: string = getDocsLocation("mt_release_notes.pdf") ;
+            let docpath: string = path.join(mtbAssistExtensionInfo.docsDir, "mt_release_notes.pdf") ;
             let fileuri = vscode.Uri.file(docpath) ;
             open(decodeURIComponent(fileuri.toString())) ;
         }
@@ -276,8 +277,7 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
 }
 
 export function mtbCreateProject(context: vscode.ExtensionContext) {
-    let info : MTBInfo = mtbGetInfo() ;
-    let pcpath : string = path.join(info.toolsDir, "project-creator", "project-creator") ;
+    let pcpath : string = path.join(mtbAssistExtensionInfo.toolsDir, "project-creator", "project-creator") ;
     
     if (process.platform === "win32") {
         pcpath += ".exe" ;
@@ -292,8 +292,8 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
         return ;
     }
 
-    getModusToolboxChannel().show() ;
-    getModusToolboxChannel().appendLine("Reading ModusToolbox application state, please wait ...") ;
+    mtbAssistExtensionInfo.showMessageWindow() ;
+    mtbAssistExtensionInfo.logMessage(MessageType.info, "reading ModusToolbox application state, please wait ...") ;
 
     let projects = createProjects(outstr) ;
     let projpath: string = "" ;
