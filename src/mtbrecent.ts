@@ -64,10 +64,10 @@ export function readRecentList(context: ExtensionContext) {
     }
 
     if (recentList.length === 1) {
-        mtbAssistExtensionInfo.logMessage(MessageType.debug, "read 1 entry from recently opened list") ;
+        mtbAssistExtensionInfo.logMessage(MessageType.debug, "Read 1 entry from recently opened list") ;
     }
     else {
-        mtbAssistExtensionInfo.logMessage(MessageType.debug, "read " + recentList.length + " entries from recently opened list") ;
+        mtbAssistExtensionInfo.logMessage(MessageType.debug, "Read " + recentList.length + " entries from recently opened list") ;
     }
 }
 

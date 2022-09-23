@@ -14,6 +14,18 @@
 // limitations under the License.
 //
 
+//
+// This file loads the and maintains the information about the current ModusToolbox
+// application.
+//
+// A new application is loaded by calling mtbAssistLoadApp(appDir) where appDir is
+// the directory that contains the ModusToolbox application.  Once this API is called
+// the application can be accessed via the global theModusToolboxApp.  The load happens
+// in the background and the load may fail, so it is important to check the isLoading
+// member to see if the loading processes is underway.  If the load fails or has never
+// happened, the isValid member will be false.
+//
+
 import path = require("path") ;
 import exec = require("child_process") ;
 import fs = require('fs');
@@ -25,22 +37,43 @@ import { MTBLaunchInfo } from './mtblaunchdata';
 
 export class MTBAppInfo
 {
+    // The top level directory for the application
     public appDir: string ;
+
+    // The launch information (configurators and documentation) for the application
     public launch?: MTBLaunchInfo ;
+
+    // If true, the application is currently loading
     public isLoading: boolean ;
+
+    // If true, the application is loaded and valid
     public isValid: boolean ;
 
+    //
+    // Create the application object and load in the background
+    //
     constructor(appdir? : string) {
         this.appDir = "" ;
         this.setLaunchInfo(undefined) ;
-        this.isValid = false ;
-        this.isLoading = false ;
 
-        this.initApp(appdir) ;
+        this.isValid = false ;
+        this.isLoading = true ;
+        this.initApp(appdir)
+            .then (()=> {
+                this.isValid = true ;
+                this.isLoading = false ;
+            })
+            .catch((error) => {
+                this.isValid = false ;
+                this.isLoading = false ;
+            }) ;
     }
 
+    //
+    // Load the application in the background
+    //
     public initApp(appdir?: string) : Promise<void> {
-        this.isLoading = true ;
+
         if (appdir) {
             this.appDir = appdir ;
         }
@@ -54,22 +87,17 @@ export class MTBAppInfo
                                 this.mtbUpdateProgs()
                                     .then(() => {
                                         mtbAssistExtensionInfo.logMessage(MessageType.debug, "loaded ModusToolbox application '" + this.appDir + "'") ;
-                                        this.isValid = true ;
-                                        this.isLoading = false ;
                                         resolve() ;
                                     })
                                     .catch((error) => {
-                                        this.isLoading = false ;
                                         reject(error) ;
                                     }) ;
                             })
                             .catch ((error) => {
-                                this.isLoading = false ;
                                 reject(error) ;
                             }) ;
                     })
                     .catch ((error) => {
-                        this.isLoading = false ;
                         resolve(error) ;
                     }) ;
             }
@@ -127,7 +155,7 @@ export class MTBAppInfo
     }    
 
 
-    private runMakeVSCode() : Promise<void> {
+    public runMakeVSCode() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.runModusCommandThroughShell("make vscode")
                 .then ((output: string) => {

@@ -114,6 +114,13 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
 }
 
 export function mtbImportProject(context: vscode.ExtensionContext) {
+    
+    if (theModusToolboxApp.isLoading) {
+        mtbAssistExtensionInfo.logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
+        vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
+        return ;
+    }
+
     vscode.window.showOpenDialog({
         defaultUri: vscode.Uri.file("C:/cygwin64/home/butch/mtbprojects/temp"),
         canSelectFiles : false,
@@ -237,16 +244,16 @@ class ApplicationItem implements vscode.QuickPickItem {
 
 function mtbFinishProject(context: vscode.ExtensionContext, appdir: string) {
     mtbAssistLoadApp(appdir) ;
-    theModusToolboxApp.runModusCommandThroughShell("make vscode")
-        .then((output: string) => {
-            let uri = vscode.Uri.file(appdir) ;
-            vscode.commands.executeCommand('vscode.openFolder', uri) ;
-            mtbAssistExtensionInfo.logMessage(MessageType.info, "the application directory '" + theModusToolboxApp.appDir + "' is ready for use") ;
-        })
-        .catch((error) => {
-            mtbAssistExtensionInfo.showMessageWindow() ;
-            mtbAssistExtensionInfo.logMessage(MessageType.error, "the command 'make vscode' failed in the directory '" + theModusToolboxApp?.appDir) ;
-        }) ;
+    // theModusToolboxApp.runMakeVSCode()
+    //     .then(() => {
+    //         let uri = vscode.Uri.file(appdir) ;
+    //         vscode.commands.executeCommand('vscode.openFolder', uri) ;
+    //         mtbAssistExtensionInfo.logMessage(MessageType.info, "the application directory '" + theModusToolboxApp.appDir + "' is ready for use") ;
+    //     })
+    //     .catch((error) => {
+    //         mtbAssistExtensionInfo.showMessageWindow() ;
+    //         mtbAssistExtensionInfo.logMessage(MessageType.error, "the command 'make vscode' failed in the directory '" + theModusToolboxApp?.appDir) ;
+    //     }) ;
 }
 
 export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
@@ -293,6 +300,12 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
 }
 
 export function mtbCreateProject(context: vscode.ExtensionContext) {
+    if (theModusToolboxApp.isLoading) {
+        mtbAssistExtensionInfo.logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
+        vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
+        return ;
+    }
+    
     let pcpath : string = path.join(mtbAssistExtensionInfo.toolsDir, "project-creator", "project-creator") ;
     
     if (process.platform === "win32") {

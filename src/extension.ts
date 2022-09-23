@@ -14,19 +14,23 @@
 // limitations under the License.
 //
 
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+//
+// This file is the main entry point for the ModusToolbox assistant extension.
+// This file sets up the various commands and graphical elements of the extension
+// to interact with the user.
+//
+
+
 import * as vscode from 'vscode';
-import { getMTBProgramsTreeProvider, MTBAssistGlobalProvider } from './mtbglobal';
-import { getMTBDocumentationTreeProvider, MTBAssistDocumentProvider } from './mtbdoc';
+import { getMTBProgramsTreeProvider } from './mtbglobal';
+import { getMTBDocumentationTreeProvider } from './mtbdoc';
 import { mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc } from './mtbcommands';
 import path = require('path');
 import fs = require('fs') ;
 import open = require("open") ;
 import { readRecentList } from './mtbrecent';
-import { getModusToolboxAssistantStartupHtml } from './mtbstart';
 import { MessageType, mtbAssistExtensionInfo } from './mtbextinfo';
-import { MTBAppInfo, mtbAssistLoadApp } from './mtbappinfo';
+import { mtbAssistLoadApp } from './mtbappinfo';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
