@@ -1,3 +1,19 @@
+//
+// Copyright 2022 by Apollo Software
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
 import * as vscode from 'vscode';
 import exec = require("child_process") ;
 import path = require("path") ;
@@ -19,9 +35,10 @@ export class MTBExtensionInfo
 {
     public toolsDir: string ;
     public docsDir: string ;
+    public major: number ;
+    public minor: number ;
     public debugMode: boolean ;
     public channel: vscode.OutputChannel ;
-    public isVersionOk: boolean ;
 
     constructor() {
         this.toolsDir = this.findToolsDir() ;
@@ -35,11 +52,14 @@ export class MTBExtensionInfo
             this.debugMode = false ;
         }
 
-        this.isVersionOk = this.checkModusToolboxVersion() ;
-
         this.logMessage(MessageType.debug, "ModusToolbox install directory: " + this.defaultInstallDir()) ;
         this.logMessage(MessageType.debug, "ModusToolbox tools directory:" + this.toolsDir) ;
         this.logMessage(MessageType.debug, "ModusToolbox docs directory: " + this.docsDir) ;
+
+        this.major = -1 ;
+        this.minor = -1 ;
+        this.checkModusToolboxVersion() ;
+
     }
 
     public showMessageWindow() {
@@ -70,25 +90,14 @@ export class MTBExtensionInfo
         }
     }
 
-    private checkModusToolboxVersion() : boolean {
-        let ret: boolean = true ;
-    
+    private checkModusToolboxVersion() {
         const verex = new RegExp(".*tools_([0-9]+)\\.([0-9]+)") ;
         const matches = verex.exec(this.toolsDir) ;
     
         if (matches && matches.length === 3) {
-            let major: number = Number(matches[1]) ;
-            let minor: number = Number(matches[2]) ;
-    
-            if (major < 3) {
-                ret = false ;
-            }
+            this.major = Number(matches[1]) ;
+            this.minor = Number(matches[2]) ;
         }
-        else {
-            ret = false ;
-        }
-    
-        return ret ;
     }
 
     private defaultInstallDir() : string {
