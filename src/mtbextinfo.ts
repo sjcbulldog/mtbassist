@@ -44,17 +44,12 @@ export class MTBExtensionInfo
         this.toolsDir = this.findToolsDir() ;
         this.docsDir = this.toolsDir.replace("tools_", "docs_") ;
         this.channel = vscode.window.createOutputChannel("ModusToolbox") ;
+        this.debugMode = false ;
 
-        if (process.env.MTBASSISTANT_DEBUG) {
-            this.debugMode = true ;
-        }
-        else {
-            this.debugMode = false ;
-        }
-
-        this.logMessage(MessageType.debug, "ModusToolbox install directory: " + this.defaultInstallDir()) ;
-        this.logMessage(MessageType.debug, "ModusToolbox tools directory:" + this.toolsDir) ;
-        this.logMessage(MessageType.debug, "ModusToolbox docs directory: " + this.docsDir) ;
+        this.logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
+        this.logMessage(MessageType.info, "ModusToolbox install directory: " + this.defaultInstallDir()) ;
+        this.logMessage(MessageType.info, "ModusToolbox tools directory:" + this.toolsDir) ;
+        this.logMessage(MessageType.info, "ModusToolbox docs directory: " + this.docsDir) ;
 
         this.major = -1 ;
         this.minor = -1 ;

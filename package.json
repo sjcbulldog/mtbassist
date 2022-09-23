@@ -49,6 +49,14 @@
       {
         "command": "mtbassist.mtbShowWelcomePage",
         "title": "ModusToolbox Assistant Show Welcome Page"
+      },
+      {
+        "command": "mtbassist.mtbTurnOnDebugMode",
+        "title": "ModusToolbox Turn On Debug Mode"
+      },
+      {
+        "command": "mtbassist.mtbTurnOffDebugMode",
+        "title": "ModusToolbox Turn Off Debug Mode"
       }
     ],
     "viewsContainers": {

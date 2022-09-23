@@ -83,7 +83,7 @@ export class MTBLaunchInfo {
             one.shortName = config["short-name"] ;
             one.toolId = config["tool-id"] ;
             one.type = config["type"] ;
-            one.version = config["version"]
+            one.version = config["version"] ;
             ret.push(one) ;
         }) ;
 

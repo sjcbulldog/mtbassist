@@ -23,6 +23,42 @@ let recentList : string[] = [] ;
 const maxrecent: number = 5 ;
 const recentfile: string = "recent.json" ;
 
+function removeFromRecentList(appdir: string) {
+    let removing: boolean = true ;
+    while (removing) {
+        let index: number = recentList.indexOf(appdir) ;
+        if (index === -1) {
+            removing = false ;
+        }
+        else {
+            recentList.splice(index, 1) ;
+        }
+    }    
+}
+
+export function checkRecent(appdir: string) : boolean {
+    let ret: boolean = true ;
+
+    try {
+        let st = fs.statSync(appdir) ;
+        if (!st.isDirectory()) {
+            ret = false ;
+        }
+    }
+    catch
+    {
+        ret = false ;
+    }
+    return ret ;
+}
+
+export function removeRecent(context: ExtensionContext, appdir: string) {
+    appdir = path.normalize(appdir) ;
+    
+    removeFromRecentList(appdir) ;
+    storeRecentList(context) ;
+}
+
 export function getRecentList() : string [] {
     return recentList ;
 }
@@ -109,18 +145,12 @@ function storeRecentList(context: ExtensionContext) {
 export function addToRecentProjects(context: ExtensionContext, appdir: string) {
     let removing: boolean = true ;
 
+    appdir = path.normalize(appdir) ;
+
     //
     // If it already exists in the list, remove it
     //
-    while (removing) {
-        let index: number = recentList.indexOf(appdir) ;
-        if (index === -1) {
-            removing = false ;
-        }
-        else {
-            recentList.splice(index, 1) ;
-        }
-    }
+    removeFromRecentList(appdir) ;
 
     //
     // Now add the new element at the end, which is the location

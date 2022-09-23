@@ -23,6 +23,9 @@ import open = require("open") ;
 import { getModusToolboxAssistantStartupHtml } from './mtbstart';
 import { MessageType, mtbAssistExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, theModusToolboxApp } from './mtbappinfo';
+import { checkRecent, removeRecent } from './mtbrecent';
+
+
 
 function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: string, gitpath: string, name: string) {
     let makepath : string = path.join(mtbAssistExtensionInfo.toolsDir, "modus-shell", "bin", "bash") ;
@@ -115,7 +118,7 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
 
 export function mtbImportProject(context: vscode.ExtensionContext) {
     
-    if (theModusToolboxApp.isLoading) {
+    if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
         mtbAssistExtensionInfo.logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
         vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
         return ;
@@ -242,33 +245,21 @@ class ApplicationItem implements vscode.QuickPickItem {
     }
 }
 
-function mtbFinishProject(context: vscode.ExtensionContext, appdir: string) {
-    mtbAssistLoadApp(appdir) ;
-    // theModusToolboxApp.runMakeVSCode()
-    //     .then(() => {
-    //         let uri = vscode.Uri.file(appdir) ;
-    //         vscode.commands.executeCommand('vscode.openFolder', uri) ;
-    //         mtbAssistExtensionInfo.logMessage(MessageType.info, "the application directory '" + theModusToolboxApp.appDir + "' is ready for use") ;
-    //     })
-    //     .catch((error) => {
-    //         mtbAssistExtensionInfo.showMessageWindow() ;
-    //         mtbAssistExtensionInfo.logMessage(MessageType.error, "the command 'make vscode' failed in the directory '" + theModusToolboxApp?.appDir) ;
-    //     }) ;
+let panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
+    'mtbassist', 
+    'ModusToolbox', 
+    vscode.ViewColumn.One, 
+    {
+        enableScripts: true
+    }
+) ;
+
+export function refreshStartPage() {
+    panel.webview.html = getModusToolboxAssistantStartupHtml() ;
 }
 
 export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
-    
-    let panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
-        'mtbassist', 
-        'ModusToolbox', 
-        vscode.ViewColumn.One, 
-        {
-            enableScripts: true
-        }
-    ) ;
-    let html: string = getModusToolboxAssistantStartupHtml() ;
-
-    panel.webview.html = html ;
+    panel.webview.html = getModusToolboxAssistantStartupHtml() ;
 
     panel.webview.onDidReceiveMessage( (message)=> {
         console.log("Help me") ;
@@ -293,14 +284,25 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         }
         else if (message.command === "openRecent") {
             let appdir: string = message.projdir ;
-            let uri = vscode.Uri.file(appdir) ;
-            vscode.commands.executeCommand('vscode.openFolder', uri) ;
+
+            if (checkRecent(appdir)) {
+                let uri = vscode.Uri.file(appdir) ;
+                vscode.commands.executeCommand('vscode.openFolder', uri) ;
+            } else {
+                vscode.window.showInformationMessage("The application '" + appdir + "' does not exist.  Remove it from the recent list?", "Yes", "No")
+                    .then((answer) => {
+                        if (answer === "Yes") {
+                            removeRecent(context, appdir) ;
+                            refreshStartPage() ;
+                        }
+                }) ;
+            }
         }
     }) ;    
 }
 
 export function mtbCreateProject(context: vscode.ExtensionContext) {
-    if (theModusToolboxApp.isLoading) {
+    if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
         mtbAssistExtensionInfo.logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
         vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
         return ;
@@ -332,8 +334,8 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
     }
     else if (projects.length === 1) {
         projpath = projects[0].location ;
-        mtbFinishProject(context, projpath) ;
-
+        let uri = vscode.Uri.file(projpath) ;
+        vscode.commands.executeCommand('vscode.openFolder', uri) ;
     }
     else {
         const qp = vscode.window.createQuickPick<ApplicationItem>() ;
@@ -346,9 +348,18 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
         qp.items = items ;
 
         qp.onDidChangeSelection(selection => {
-            mtbFinishProject(context, selection[0].location) ;
+            let uri = vscode.Uri.file(selection[0].location) ;
+            vscode.commands.executeCommand('vscode.openFolder', uri) ;
         }) ;
 
         qp.show() ;
     }
+}
+
+export function mtbTurnOnDebugMode(context: vscode.ExtensionContext) {
+    mtbAssistExtensionInfo.debugMode = true ;
+}
+
+export function mtbTurnOffDebugMode(context: vscode.ExtensionContext) {
+    mtbAssistExtensionInfo.debugMode = false ;
 }

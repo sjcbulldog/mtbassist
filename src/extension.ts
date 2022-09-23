@@ -24,7 +24,7 @@
 import * as vscode from 'vscode';
 import { getMTBProgramsTreeProvider } from './mtbglobal';
 import { getMTBDocumentationTreeProvider } from './mtbdoc';
-import { mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc } from './mtbcommands';
+import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc } from './mtbcommands';
 import path = require('path');
 import fs = require('fs') ;
 import open = require("open") ;
@@ -44,7 +44,6 @@ export function activate(context: vscode.ExtensionContext) {
 	// It is all accessed through the mtbAssistExtensionInfo object which is created in the
 	// mtbextinfo.ts file.
 	//
-
 	mtbAssistExtensionInfo.showMessageWindow() ;
 	mtbAssistExtensionInfo.logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
 
@@ -92,6 +91,16 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(disposable);
 
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOnDebugMode', (args: any[]) => {
+		mtbTurnOnDebugMode(context) ;
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOffDebugMode', (args: any[]) => {
+		mtbTurnOffDebugMode(context) ;
+	});
+	context.subscriptions.push(disposable);
+
 	//
 	// Set the tree providers for the programs that can be invoked from ModusToolbox
 	//
@@ -119,7 +128,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Note: if the appdir is undefined, this means no actual folder is being loaded.  In this case
 	// loading the application sets up the tree providers to show the state of no application loaded
-	mtbAssistLoadApp(appdir) ;
+	mtbAssistLoadApp(context, appdir) ;
 
 	// Show the user the ModusToolbox assistant welcom page
 	vscode.commands.executeCommand('mtbassist.mtbShowWelcomePage') ;

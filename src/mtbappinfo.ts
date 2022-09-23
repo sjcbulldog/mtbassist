@@ -26,6 +26,7 @@
 // happened, the isValid member will be false.
 //
 
+import * as vscode from 'vscode';
 import path = require("path") ;
 import exec = require("child_process") ;
 import fs = require('fs');
@@ -34,6 +35,8 @@ import { getMTBDocumentationTreeProvider } from './mtbdoc';
 import { getMTBProgramsTreeProvider } from './mtbglobal';
 import { MessageType, mtbAssistExtensionInfo } from './mtbextinfo';
 import { MTBLaunchInfo } from './mtblaunchdata';
+import { addToRecentProjects } from './mtbrecent';
+import { refreshStartPage } from './mtbcommands';
 
 export class MTBAppInfo
 {
@@ -49,11 +52,15 @@ export class MTBAppInfo
     // If true, the application is loaded and valid
     public isValid: boolean ;
 
+    // The extension contextg
+    public context: vscode.ExtensionContext ;
+
     //
     // Create the application object and load in the background
     //
-    constructor(appdir? : string) {
+    constructor(context: vscode.ExtensionContext, appdir? : string) {
         this.appDir = "" ;
+        this.context = context ;
         this.setLaunchInfo(undefined) ;
 
         this.isValid = false ;
@@ -62,10 +69,15 @@ export class MTBAppInfo
             .then (()=> {
                 this.isValid = true ;
                 this.isLoading = false ;
+                if (appdir) {
+                    mtbAssistExtensionInfo.logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
+                    vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;
+                }
             })
             .catch((error) => {
                 this.isValid = false ;
                 this.isLoading = false ;
+                mtbAssistExtensionInfo.logMessage(MessageType.info, "the application directory '" + appdir + "' is not a ModusToolbox application") ;
             }) ;
     }
 
@@ -86,7 +98,8 @@ export class MTBAppInfo
                             .then( () => {
                                 this.mtbUpdateProgs()
                                     .then(() => {
-                                        mtbAssistExtensionInfo.logMessage(MessageType.debug, "loaded ModusToolbox application '" + this.appDir + "'") ;
+                                        addToRecentProjects(this.context, this.appDir) ;
+                                        refreshStartPage() ;
                                         resolve() ;
                                     })
                                     .catch((error) => {
@@ -98,7 +111,7 @@ export class MTBAppInfo
                             }) ;
                     })
                     .catch ((error) => {
-                        resolve(error) ;
+                        reject(error) ;
                     }) ;
             }
             else {
@@ -235,7 +248,7 @@ export class MTBAppInfo
                 makepath += ".exe" ;
             }
 
-            mtbAssistExtensionInfo.logMessage(MessageType.debug, "running ModusToolbox command '" + cmd + "' in directory '" + this.appDir + "'") ;
+            mtbAssistExtensionInfo.logMessage(MessageType.info, "running ModusToolbox command '" + cmd + "' in directory '" + this.appDir + "'") ;
             exec.execFile(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: this.appDir }, (error, stdout, stderr) => {
                 if (error) {
                     let errmsg : Error = error as Error ;
@@ -247,8 +260,10 @@ export class MTBAppInfo
                     let lines: string[] = stderr.split("\n") ;
                     mtbAssistExtensionInfo.logMessage(MessageType.error, "error output from running command '" + cmd + "'") ;
                     for(let i : number = 0 ; i < lines.length ; i++) {
-                        let msg: string = i.toString() + ": " + lines[i] ;
-                        mtbAssistExtensionInfo.logMessage(MessageType.error, msg) ;
+                        if (lines[i].length > 0) {
+                            let msg: string = (i + 1).toString() + ": " + lines[i] ;
+                            mtbAssistExtensionInfo.logMessage(MessageType.error, msg) ;
+                        }
                     }
                 }
 
@@ -260,11 +275,11 @@ export class MTBAppInfo
     }
 }
 
-export function mtbAssistLoadApp(appdir?: string) {
-    if (appdir && theModusToolboxApp.appDir === appdir && theModusToolboxApp.isLoading) {
+export function mtbAssistLoadApp(context: vscode.ExtensionContext, appdir?: string) {
+    if (appdir && theModusToolboxApp !== undefined && theModusToolboxApp.appDir === appdir && theModusToolboxApp.isLoading) {
         return ;
     }
-    theModusToolboxApp = new MTBAppInfo(appdir) ;
+    theModusToolboxApp = new MTBAppInfo(context, appdir) ;
 }
 
-export let theModusToolboxApp : MTBAppInfo = new MTBAppInfo(undefined) ;
+export let theModusToolboxApp : MTBAppInfo | undefined = undefined ;
