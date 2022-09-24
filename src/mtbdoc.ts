@@ -55,7 +55,7 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
         return title.replace("&trade;", "\u2122") ;
     }
 
-    refresh(launch?: MTBLaunchInfo) {
+    refresh(docs?: MTBLaunchDoc[]) {
         this.items_ = [] ;
 
         let parent: MTBAssistItem ;
@@ -71,53 +71,51 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
         item.command.arguments.push(land) ;
         this.items_.push(item) ;
 
-        if (launch) {
+        if (docs) {
             item = new MTBAssistItem("Application") ;
             this.items_.push(item) ;
 
-            if (launch !== undefined) {
-                launch.docs.forEach((doc) => {
-                    let title: string = this.convertTradeMark(doc.title) ;
-                    let item : MTBAssistItem = new MTBAssistItem(title) ;
-                    item.doc = doc ;
-                    
-                    item.command = new MTBAssistCommand(doc.title, "mtbassist.mtbShowDoc", "Open the '" + doc.title + "' document") ;
-                    item.command.arguments = [] ;
-                    item.command.arguments.push(doc) ;
+            docs.forEach((doc) => {
+                let title: string = this.convertTradeMark(doc.title) ;
+                let item : MTBAssistItem = new MTBAssistItem(title) ;
+                item.doc = doc ;
+                
+                item.command = new MTBAssistCommand(doc.title, "mtbassist.mtbShowDoc", "Open the '" + doc.title + "' document") ;
+                item.command.arguments = [] ;
+                item.command.arguments.push(doc) ;
 
-                    if (doc.path.length === 0) {
-                        this.items_[1].addChild(item) ;
-                    }
-                    else {
-                        let index: number = 0 ;
+                if (doc.path.length === 0) {
+                    this.items_[1].addChild(item) ;
+                }
+                else {
+                    let index: number = 0 ;
 
-                        while (index < doc.path.length) {
-                            let offset : number ;
+                    while (index < doc.path.length) {
+                        let offset : number ;
 
-                            if (index === 0) {
-                                offset = this.findItem(this.items_, doc.path[index]) ;
-                            }
-                            else {
-                                offset = this.findItem(parent.getChildren(), doc.path[index]) ;
-                            }
-
-                            if (offset === -1) {
-                                let newone:MTBAssistItem = new MTBAssistItem(doc.path[index]) ;
-                                if (index === 0) {
-                                    this.items_.push(newone) ;
-                                }
-                                else {
-                                    parent.addChild(newone) ;
-                                }
-                                index++ ;
-                                parent = newone ;
-                            }
+                        if (index === 0) {
+                            offset = this.findItem(this.items_, doc.path[index]) ;
+                        }
+                        else {
+                            offset = this.findItem(parent.getChildren(), doc.path[index]) ;
                         }
 
-                        parent.addChild(item) ;
+                        if (offset === -1) {
+                            let newone:MTBAssistItem = new MTBAssistItem(doc.path[index]) ;
+                            if (index === 0) {
+                                this.items_.push(newone) ;
+                            }
+                            else {
+                                parent.addChild(newone) ;
+                            }
+                            index++ ;
+                            parent = newone ;
+                        }
                     }
-                }) ;
-            }
+
+                    parent.addChild(item) ;
+                }
+            }) ;
         }
         else {
             item = new MTBAssistItem("Load application for more ...") ;
@@ -126,7 +124,6 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
         this.onDidChangeTreeData_.fire();
     }
 }
-
 
 let docs : MTBAssistDocumentProvider | undefined ;
 

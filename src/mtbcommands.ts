@@ -14,6 +14,11 @@
 // limitations under the License.
 //
 
+//
+// This file implements all of the commands that are registered by the
+// ModusToolbox Assistant extension.
+//
+
 import * as vscode from 'vscode';
 import path = require("path");
 import fs = require('fs') ;

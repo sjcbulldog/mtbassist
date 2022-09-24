@@ -50,12 +50,9 @@ export class MTBLaunchInfo {
     public configs: MTBLaunchConfig[] ;
     public docs: MTBLaunchDoc[] ;
 
-    constructor(data: string) {
+    constructor(jsonobj? : any) {
 
-        if (data.length > 0) {
-            data = data.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m);
-            let jsonobj = JSON.parse(data) ;
-
+        if (jsonobj) {
             this.configs = this.parseConfigs(jsonobj.configs) ;
             this.docs = this.parseDocs(jsonobj.documentation) ;
         }

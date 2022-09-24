@@ -37,6 +37,7 @@ import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { MTBLaunchInfo } from './mtblaunchdata';
 import { addToRecentProjects } from './mtbrecent';
 import { refreshStartPage } from './mtbcommands';
+import { mtbStringToJSON } from './mtbjson';
 
 export class MTBAppInfo
 {
@@ -52,7 +53,7 @@ export class MTBAppInfo
     // If true, the application is loaded and valid
     public isValid: boolean ;
 
-    // The extension contextg
+    // The extension context
     public context: vscode.ExtensionContext ;
 
     //
@@ -92,12 +93,27 @@ export class MTBAppInfo
 
         let ret : Promise<void> = new Promise<void>( (resolve, reject) => {
             if (appdir) {
+                //
+                // Check to see if this is a ModusToolbox application by running
+                // make get_app_info
+                //
                 this.checkModusToolboxApp()
                     .then( () => {
+                        //
+                        // If the .vscode directory does not exist, run make vscode
+                        //
                         this.createVSCodeDirectory()
                             .then( () => {
+                                //
+                                // Run mtblaunch --quick --docs to get the information about
+                                // relevant configurators and documentation
+                                //
                                 this.mtbUpdateProgs()
                                     .then(() => {
+                                        //
+                                        // Add this project to the recent projects list, and refresh the
+                                        // ModusToolbox assistant welcome page if visible
+                                        //
                                         addToRecentProjects(this.context, this.appDir) ;
                                         refreshStartPage() ;
                                         resolve() ;
@@ -111,10 +127,19 @@ export class MTBAppInfo
                             }) ;
                     })
                     .catch ((error) => {
+                        //
+                        // This is not a ModusToolbox application, reset the quick launch
+                        // panel
+                        //
+                        this.setLaunchInfo(undefined) ;
                         reject(error) ;
                     }) ;
             }
             else {
+                //
+                // Called without an application directory, reset the quick launch
+                // information to reflect now application
+                //
                 this.setLaunchInfo(undefined) ;
                 resolve() ;
             }
@@ -125,12 +150,30 @@ export class MTBAppInfo
     private setLaunchInfo(launch?: MTBLaunchInfo) {
         this.launch = launch ;
 
-        getMTBProgramsTreeProvider().refresh(this.launch) ;
-        getMTBDocumentationTreeProvider().refresh(this.launch) ;
+        if (launch) {
+            //
+            // If there is valid launch information, update the quick launch panel on
+            // the left of the screen
+            //
+            getMTBProgramsTreeProvider().refresh(this.launch?.configs) ;
+            getMTBDocumentationTreeProvider().refresh(this.launch?.docs) ;
+        }
+        else {
+            //
+            // There is no valid application and therefore not valid quick launch
+            // information.  Reset the quick launch panels to their default values
+            //
+            getMTBProgramsTreeProvider().refresh(undefined) ;
+            getMTBDocumentationTreeProvider().refresh(undefined) ;
+        }
     }
 
-    private runMtbLaunch() : Promise<string> {
-        let ret = new Promise<string>( (resolve, reject) => {
+    //
+    // Run the mtb launch application and return the output when it is done.  The output is
+    // json text.
+    //
+    private runMtbLaunch() : Promise<any> {
+        let ret = new Promise<any>( (resolve, reject) => {
             let mtblaunch = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "mtblaunch", "mtblaunch") ;
             if (process.platform === "win32") {
                 mtblaunch += ".exe" ;
@@ -145,8 +188,9 @@ export class MTBAppInfo
                 if (stderr) {
                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "mtblaunch: " + stderr) ;
                 }
-
-                resolve(stdout) ;
+                
+                let obj = mtbStringToJSON(stdout) ;
+                resolve(obj) ;
             }) ;
         }) ;
 
@@ -156,8 +200,8 @@ export class MTBAppInfo
     private mtbUpdateProgs() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.runMtbLaunch()
-                .then ((output: string) => {
-                    this.setLaunchInfo(new MTBLaunchInfo(output));
+                .then ((jsonobj: any) => {
+                    this.setLaunchInfo(new MTBLaunchInfo(jsonobj));
                     resolve() ;
                 })
                 .catch ((error) => {
@@ -181,6 +225,10 @@ export class MTBAppInfo
         return ret ;
     }
 
+    //
+    // Check for the .vscode directory and if it does not exist, run 
+    // make vscode to create the vscode support needed.
+    //
     private createVSCodeDirectory() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             let vscodedir: string = path.join(this.appDir, ".vscode") ;
@@ -212,6 +260,11 @@ export class MTBAppInfo
         return ret ;
     }
 
+    //
+    // Run make get_app_info and check the output for errors.  If there are errors
+    // assume this is not a ModusToolbox directory and reject the Promise halting
+    // any further processing of the current folder as a ModusToolbox application.
+    //
     private checkModusToolboxApp() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.runModusCommandThroughShell("make get_app_info")
@@ -275,6 +328,9 @@ export class MTBAppInfo
     }
 }
 
+//
+// Load a new application in as the ModusToolbox application being processed
+//
 export function mtbAssistLoadApp(context: vscode.ExtensionContext, appdir?: string) {
     if (appdir && theModusToolboxApp !== undefined && theModusToolboxApp.appDir === appdir && theModusToolboxApp.isLoading) {
         return ;

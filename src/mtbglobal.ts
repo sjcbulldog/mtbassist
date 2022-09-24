@@ -59,7 +59,7 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
         return Promise.resolve(retval) ;
     }
 
-    refresh(launch?: MTBLaunchInfo): void {
+    refresh(configs?: MTBLaunchConfig[]): void {
         let projmap: Map<string, MTBAssistItem> = new Map<string, MTBAssistItem>() ;
         this.items_ = [] ;
 
@@ -78,18 +78,18 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
         item.command = new MTBAssistCommand("Import Project", "mtbassist.mtbShowWelcomePage", "Show Welcome Page") ;
         this.items_[0].addChild(item) ;
 
-        if (launch !== undefined) {      
+        if (configs !== undefined) {      
             item = new MTBAssistItem("Application") ;
             this.items_.push(item) ;
 
-            let projects : string[] = this.findProjects(launch.configs) ;
+            let projects : string[] = this.findProjects(configs) ;
             projects.forEach((project) => {
                 item = new MTBAssistItem("Project: " + project) ;
                 projmap.set(project, item) ;
                 this.items_.push(item) ;
             }) ;
 
-            launch.configs.forEach((config) => {
+            configs.forEach((config) => {
                 item = new MTBAssistItem(config.displayName) ;
                 item.command = new MTBAssistCommand(config.displayName, "mtbassist.mtbRunEditor", "Run the '" + config.displayName + "' program") ;
                 item.command.arguments = [] ;
