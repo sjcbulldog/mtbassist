@@ -14,6 +14,7 @@
 // limitations under the License.
 //
 
+import { MTBExtensionInfo } from "./mtbextinfo";
 import { getRecentList } from "./mtbrecent";
 
 export function getModusToolboxAssistantStartupHtml() : string {
@@ -27,7 +28,16 @@ export function getModusToolboxAssistantStartupHtml() : string {
 	</head>
 	<body>
 		<script>
+        alert("Started") ;
 		const vscode = acquireVsCodeApi() ;
+        function showWelcomePageChanged(cb) {
+            if (cb.checked) {
+                vscode.postMessage({ command: 'showWelcomePage'}) ;
+            }
+            else {
+                vscode.postMessage({ command: 'hideWelcomePage'}) ;
+            }
+        }
 		</script>
 	<h1>ModusToolbox Assistant For ModusToolbox 3.0</h1>
 	<hr>
@@ -56,10 +66,22 @@ export function getModusToolboxAssistantStartupHtml() : string {
         html += `</ul>` ;
     }
 
-    html += `<li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">ModusToolbox Assistant Side Bar</a></li>
-	<li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'showUserGuide'}) ;" href="#">ModusToolbox User's Guide</a></li>
-	<li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'showReleaseNotes'}) ;" href="#">ModusToolbox Release Notes</a></li>
-	</ul>
+    html += 
+    `<li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">ModusToolbox Assistant Side Bar</a></li>
+	 <li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'showUserGuide'}) ;" href="#">ModusToolbox User's Guide</a></li>
+	 <li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'showReleaseNotes'}) ;" href="#">ModusToolbox Release Notes</a></li>
+	 </ul>
+     <input type="checkbox" onclick="showWelcomePageChanged(this);" id="showWelcomePage" name="showWelcomePage"`;
+
+    if (MTBExtensionInfo.getMtbExtensionInfo().getPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
+        html += "checked" ;
+    }
+    else {
+        html += "unchecked" ;
+    }
+
+    html += `>
+    <label for="showWelcomePage">Show Welcome Page On Extension Activation</label><br>
 	<hr>
 	<a href="https://www.flaticon.com/free-icons/bot" title="bot icons">Bot icons created by Smashicons - Flaticon</a>
 	</body>

@@ -17,7 +17,7 @@
 import fs = require('fs');
 import path = require('path') ;
 import { ExtensionContext } from "vscode";
-import { MessageType, mtbAssistExtensionInfo } from './mtbextinfo';
+import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 
 let recentList : string[] = [] ;
 const maxrecent: number = 5 ;
@@ -68,26 +68,26 @@ export function readRecentList(context: ExtensionContext) {
     try {
         let st = fs.statSync(stdir) ;
         if (!st) {
-            mtbAssistExtensionInfo.logMessage(MessageType.debug, "no recently opened list file exists") ;
+            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "no recently opened list file exists") ;
             return ;
         }
     }
     catch
     {
-        mtbAssistExtensionInfo.logMessage(MessageType.debug, "no recently opened list file exists") ; ;
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "no recently opened list file exists") ; ;
     }
 
     let stfile: string = path.join(stdir, recentfile) ;
     try {
         let st = fs.statSync(stfile) ;
         if (!st) {
-            mtbAssistExtensionInfo.logMessage(MessageType.debug, "no recently opened list file exists") ;
+            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.debug, "no recently opened list file exists") ;
             return ;
         }
     }
     catch
     {
-        mtbAssistExtensionInfo.logMessage(MessageType.debug, "no recently opened list file exists") ;      
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.debug, "no recently opened list file exists") ;      
         return ;
     }
 
@@ -100,10 +100,10 @@ export function readRecentList(context: ExtensionContext) {
     }
 
     if (recentList.length === 1) {
-        mtbAssistExtensionInfo.logMessage(MessageType.debug, "Read 1 entry from recently opened list") ;
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.debug, "Read 1 entry from recently opened list") ;
     }
     else {
-        mtbAssistExtensionInfo.logMessage(MessageType.debug, "Read " + recentList.length + " entries from recently opened list") ;
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.debug, "Read " + recentList.length + " entries from recently opened list") ;
     }
 }
 
@@ -124,7 +124,7 @@ function storeRecentList(context: ExtensionContext) {
             // If we cannot create the directory, we don't fail horribly we just
             // don't support the recently created list.
             //
-            mtbAssistExtensionInfo.logMessage(MessageType.error, "could not create extension storage directory '" + stdir + "'") ;            
+            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "could not create extension storage directory '" + stdir + "'") ;            
             return ;
         }
     }
@@ -137,7 +137,7 @@ function storeRecentList(context: ExtensionContext) {
         fs.writeFileSync(stfile, objstr) ;
     }
     catch {
-        mtbAssistExtensionInfo.logMessage(MessageType.error, "could not write recently opened list '" + stfile + "'") ;            
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "could not write recently opened list '" + stfile + "'") ;            
         return ;
     }
 }

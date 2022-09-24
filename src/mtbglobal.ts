@@ -128,8 +128,12 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
     }
 }
 
-let pgms : MTBAssistGlobalProvider = new MTBAssistGlobalProvider() ;
+let pgms : MTBAssistGlobalProvider | undefined ;
 
 export function getMTBProgramsTreeProvider() : MTBAssistGlobalProvider {
+    if (pgms === undefined) {
+        pgms = new MTBAssistGlobalProvider() ;
+    }
+    
     return pgms ;
 }

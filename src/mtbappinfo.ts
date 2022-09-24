@@ -33,7 +33,7 @@ import fs = require('fs');
 
 import { getMTBDocumentationTreeProvider } from './mtbdoc';
 import { getMTBProgramsTreeProvider } from './mtbglobal';
-import { MessageType, mtbAssistExtensionInfo } from './mtbextinfo';
+import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { MTBLaunchInfo } from './mtblaunchdata';
 import { addToRecentProjects } from './mtbrecent';
 import { refreshStartPage } from './mtbcommands';
@@ -70,14 +70,14 @@ export class MTBAppInfo
                 this.isValid = true ;
                 this.isLoading = false ;
                 if (appdir) {
-                    mtbAssistExtensionInfo.logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
                     vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;
                 }
             })
             .catch((error) => {
                 this.isValid = false ;
                 this.isLoading = false ;
-                mtbAssistExtensionInfo.logMessage(MessageType.info, "the application directory '" + appdir + "' is not a ModusToolbox application") ;
+                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "the application directory '" + appdir + "' is not a ModusToolbox application") ;
             }) ;
     }
 
@@ -131,7 +131,7 @@ export class MTBAppInfo
 
     private runMtbLaunch() : Promise<string> {
         let ret = new Promise<string>( (resolve, reject) => {
-            let mtblaunch = path.join(mtbAssistExtensionInfo.toolsDir, "mtblaunch", "mtblaunch") ;
+            let mtblaunch = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "mtblaunch", "mtblaunch") ;
             if (process.platform === "win32") {
                 mtblaunch += ".exe" ;
             }
@@ -143,7 +143,7 @@ export class MTBAppInfo
                 }
         
                 if (stderr) {
-                    mtbAssistExtensionInfo.logMessage(MessageType.error, "mtblaunch: " + stderr) ;
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "mtblaunch: " + stderr) ;
                 }
 
                 resolve(stdout) ;
@@ -243,26 +243,26 @@ export class MTBAppInfo
     //
     public runModusCommandThroughShell(cmd: string) : Promise<string> {
         let ret : Promise<string> = new Promise<string>( (resolve, reject) => {
-            let makepath : string = path.join(mtbAssistExtensionInfo.toolsDir, "modus-shell", "bin", "bash") ;
+            let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "modus-shell", "bin", "bash") ;
             if (process.platform === "win32") {
                 makepath += ".exe" ;
             }
 
-            mtbAssistExtensionInfo.logMessage(MessageType.info, "running ModusToolbox command '" + cmd + "' in directory '" + this.appDir + "'") ;
+            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "running ModusToolbox command '" + cmd + "' in directory '" + this.appDir + "'") ;
             exec.execFile(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: this.appDir }, (error, stdout, stderr) => {
                 if (error) {
                     let errmsg : Error = error as Error ;
-                    mtbAssistExtensionInfo.logMessage(MessageType.error, "running command '" + cmd + "' - " + errmsg.message) ;
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "running command '" + cmd + "' - " + errmsg.message) ;
                     reject(error) ;
                 }
 
                 if (stderr) {
                     let lines: string[] = stderr.split("\n") ;
-                    mtbAssistExtensionInfo.logMessage(MessageType.error, "error output from running command '" + cmd + "'") ;
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "error output from running command '" + cmd + "'") ;
                     for(let i : number = 0 ; i < lines.length ; i++) {
                         if (lines[i].length > 0) {
                             let msg: string = (i + 1).toString() + ": " + lines[i] ;
-                            mtbAssistExtensionInfo.logMessage(MessageType.error, msg) ;
+                            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;
                         }
                     }
                 }

@@ -21,14 +21,12 @@ import exec = require("child_process") ;
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import open = require("open") ;
 import { getModusToolboxAssistantStartupHtml } from './mtbstart';
-import { MessageType, mtbAssistExtensionInfo } from './mtbextinfo';
+import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, theModusToolboxApp } from './mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
 
-
-
 function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: string, gitpath: string, name: string) {
-    let makepath : string = path.join(mtbAssistExtensionInfo.toolsDir, "modus-shell", "bin", "bash") ;
+    let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
 
     let st = fs.statSync(locdir) ;
     if (!st) {
@@ -47,52 +45,52 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
 
     let finalpath: string = path.join(locdir, name) ;
 
-    mtbAssistExtensionInfo.showMessageWindow() ;
-    mtbAssistExtensionInfo.logMessage(MessageType.info, "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... ") ;
+    MTBExtensionInfo.getMtbExtensionInfo(context).showMessageWindow() ;
+    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... ") ;
 
     let cmd = "git clone " + gitpath + " " + name ;
     let job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: locdir }) ;
 
     job.stdout.on(('data'), (data: string) => {
         let str: string = data.toString().replace("\r\n", "\n") ;
-        mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
     }) ;
 
     job.stderr.on(('data'), (data: string) => {
         let str: string = data.toString().replace("\r\n", "\n") ;
-        mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
     }) ;
 
     job.on('close', (code: number) => {
         if (code === 0) {
-            mtbAssistExtensionInfo.logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ...") ;
+            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ...") ;
             cmd = "make getlibs" ;
             job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: finalpath }) ;
 
             job.stdout.on(('data'), (data: Buffer) => {
                 let str: string = data.toString().replace("\r\n", "\n") ;
-                mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
+                MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
             }) ;
         
             job.stderr.on(('data'), (data: string) => {
                 let str: string = data.toString().replace("\r\n", "\n") ;
-                mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
+                MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
             }) ;
 
             job.on('close', (code: number) => {
                 if (code === 0) {
-                    mtbAssistExtensionInfo.logMessage(MessageType.info, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ...") ;
+                    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ...") ;
                     cmd = "make vscode" ;
                     job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: finalpath }) ;
 
                     job.stdout.on(('data'), (data: string) => {
                         let str: string = data.toString().replace("\r\n", "\n") ;
-                        mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
+                        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
                     }) ;
                 
                     job.stderr.on(('data'), (data: string) => {
                         let str: string = data.toString().replace("\r\n", "\n") ;
-                        mtbAssistExtensionInfo.logMessage(MessageType.info, str) ;
+                        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
                     }) ;
                     
                     job.on('close', (code: number) => {
@@ -101,17 +99,17 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
                             vscode.commands.executeCommand('vscode.openFolder', uri) ;
                         }
                         else {
-                            mtbAssistExtensionInfo.logMessage(MessageType.error, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ... failed") ;
+                            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ... failed") ;
                         }
                     }) ;
                 }
                 else {
-                    mtbAssistExtensionInfo.logMessage(MessageType.error, "mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ... failed") ;                    
+                    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ... failed") ;                    
                 }
             }) ;
         }
         else {
-            mtbAssistExtensionInfo.logMessage(MessageType.error, "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... failed") ;            
+            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... failed") ;            
         }
     }) ;
 }
@@ -119,7 +117,7 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
 export function mtbImportProject(context: vscode.ExtensionContext) {
     
     if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
-        mtbAssistExtensionInfo.logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
         vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
         return ;
     }
@@ -245,24 +243,30 @@ class ApplicationItem implements vscode.QuickPickItem {
     }
 }
 
-let panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
-    'mtbassist', 
-    'ModusToolbox', 
-    vscode.ViewColumn.One, 
-    {
-        enableScripts: true
-    }
-) ;
+let panel: vscode.WebviewPanel | undefined ;
+
 
 export function refreshStartPage() {
-    panel.webview.html = getModusToolboxAssistantStartupHtml() ;
+    if (panel !== undefined) {
+        panel.webview.html = getModusToolboxAssistantStartupHtml() ;
+    }
 }
 
 export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
+    if (panel === undefined) {
+       panel = vscode.window.createWebviewPanel(
+            'mtbassist', 
+            'ModusToolbox', 
+            vscode.ViewColumn.One, 
+            {
+                enableScripts: true
+            }
+        ) ;
+    }
     panel.webview.html = getModusToolboxAssistantStartupHtml() ;
 
     panel.webview.onDidReceiveMessage( (message)=> {
-        console.log("Help me") ;
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "recevied startup page command '" + message.command + "'") ;
         if (message.command === "createNew") {
             vscode.commands.executeCommand("mtbassist.mtbCreateProject") ;
         }
@@ -273,12 +277,18 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
             vscode.commands.executeCommand("mtbglobal.focus") ;
         }
         else if (message.command === "showUserGuide") {
-            let docpath: string = path.join(mtbAssistExtensionInfo.docsDir, "mtb_user_guide.pdf") ;
+            let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mtb_user_guide.pdf") ;
             let fileuri = vscode.Uri.file(docpath) ;
             open(decodeURIComponent(fileuri.toString())) ;
         }
+        else if (message.command === "showWelcomePage") {
+            MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true) ;
+        }
+        else if (message.command === "hideWelcomePage") {
+            MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.showWelcomePageName, false) ;
+        }
         else if (message.command === "showReleaseNotes") {
-            let docpath: string = path.join(mtbAssistExtensionInfo.docsDir, "mt_release_notes.pdf") ;
+            let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mt_release_notes.pdf") ;
             let fileuri = vscode.Uri.file(docpath) ;
             open(decodeURIComponent(fileuri.toString())) ;
         }
@@ -303,12 +313,12 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
 
 export function mtbCreateProject(context: vscode.ExtensionContext) {
     if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
-        mtbAssistExtensionInfo.logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
         vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
         return ;
     }
     
-    let pcpath : string = path.join(mtbAssistExtensionInfo.toolsDir, "project-creator", "project-creator") ;
+    let pcpath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "project-creator", "project-creator") ;
     
     if (process.platform === "win32") {
         pcpath += ".exe" ;
@@ -323,8 +333,8 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
         return ;
     }
 
-    mtbAssistExtensionInfo.showMessageWindow() ;
-    mtbAssistExtensionInfo.logMessage(MessageType.info, "reading ModusToolbox application state, please wait ...") ;
+    MTBExtensionInfo.getMtbExtensionInfo(context).showMessageWindow() ;
+    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "reading ModusToolbox application state, please wait ...") ;
 
     let projects = createProjects(outstr) ;
     let projpath: string = "" ;
@@ -357,9 +367,9 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
 }
 
 export function mtbTurnOnDebugMode(context: vscode.ExtensionContext) {
-    mtbAssistExtensionInfo.debugMode = true ;
+    MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.debugModeName, true) ;
 }
 
 export function mtbTurnOffDebugMode(context: vscode.ExtensionContext) {
-    mtbAssistExtensionInfo.debugMode = false ;
+    MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.debugModeName, false) ;
 }

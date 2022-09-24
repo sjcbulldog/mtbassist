@@ -19,6 +19,7 @@ import exec = require("child_process") ;
 import path = require("path") ;
 import fs = require('fs');
 import json5 = require('json5') ;
+import { debug } from 'console';
 
 // const CY_TOOLS_DIR:string = "CY_TOOLS_DIR" ;
 // const CY_TOOLS_PATHS:string = "CY_TOOLS_PATHS" ;
@@ -33,18 +34,24 @@ export enum MessageType
 
 export class MTBExtensionInfo
 {
+    static mtbAssistExtensionInfo : MTBExtensionInfo | undefined = undefined ;
+
+    public static readonly debugModeName : string = "debugMode" ;
+    public static readonly showWelcomePageName : string = "showWelcomePage" ;
+
     public toolsDir: string ;
     public docsDir: string ;
     public major: number ;
     public minor: number ;
-    public debugMode: boolean ;
     public channel: vscode.OutputChannel ;
 
-    constructor() {
+    context: vscode.ExtensionContext;
+
+    constructor(context: vscode.ExtensionContext) {
         this.toolsDir = this.findToolsDir() ;
         this.docsDir = this.toolsDir.replace("tools_", "docs_") ;
         this.channel = vscode.window.createOutputChannel("ModusToolbox") ;
-        this.debugMode = false ;
+        this.context = context ;
 
         this.logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
         this.logMessage(MessageType.info, "ModusToolbox install directory: " + this.defaultInstallDir()) ;
@@ -55,6 +62,39 @@ export class MTBExtensionInfo
         this.minor = -1 ;
         this.checkModusToolboxVersion() ;
 
+        if (this.getPresistedBoolean(MTBExtensionInfo.debugModeName, false)) {
+            this.logMessage(MessageType.debug, "Debug mode is enabled, you should see debug messages") ;
+        }
+    }
+
+    public static getMtbExtensionInfo(context?: vscode.ExtensionContext) : MTBExtensionInfo {
+        if (this.mtbAssistExtensionInfo === undefined) {
+            if (context === undefined) {
+                throw new Error("mtbassist initialization error, the context must be set when creating the extension info object") ;
+            }
+            else {
+                this.mtbAssistExtensionInfo = new MTBExtensionInfo(context) ;
+            }
+        }
+
+        return this.mtbAssistExtensionInfo ;
+    }
+
+    public getPresistedBoolean(name: string, def: boolean) : boolean {
+        let ret: boolean = def ;
+
+        if (this.context.globalState.keys().indexOf(name) !== -1) {
+            let obj = this.context.globalState.get(name) ;
+            if (typeof obj === "boolean") {
+                ret = obj as boolean ;
+            }
+        }
+
+        return ret ;
+    }
+
+    public setPresistedBoolean(name: string, value: boolean) {
+        this.context.globalState.update(name, value) ;
     }
 
     public showMessageWindow() {
@@ -62,7 +102,7 @@ export class MTBExtensionInfo
     }
 
     public logMessage(type: MessageType, message:string) {
-        if (type !== MessageType.debug || this.debugMode) {
+        if (type !== MessageType.debug || this.getPresistedBoolean(MTBExtensionInfo.debugModeName, false)) {
             let now : Date = new Date() ;
             let typestr: string = "" ;
 
@@ -137,4 +177,5 @@ export class MTBExtensionInfo
     }
 }
 
-export let mtbAssistExtensionInfo = new MTBExtensionInfo() ;
+
+

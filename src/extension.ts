@@ -29,7 +29,7 @@ import path = require('path');
 import fs = require('fs') ;
 import open = require("open") ;
 import { readRecentList } from './mtbrecent';
-import { MessageType, mtbAssistExtensionInfo } from './mtbextinfo';
+import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp } from './mtbappinfo';
 
 // this method is called when your extension is activated
@@ -44,13 +44,13 @@ export function activate(context: vscode.ExtensionContext) {
 	// It is all accessed through the mtbAssistExtensionInfo object which is created in the
 	// mtbextinfo.ts file.
 	//
-	mtbAssistExtensionInfo.showMessageWindow() ;
-	mtbAssistExtensionInfo.logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
+	MTBExtensionInfo.getMtbExtensionInfo(context).showMessageWindow() ;
+	MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
 
-	if (mtbAssistExtensionInfo.major < 3) {
+	if (MTBExtensionInfo.getMtbExtensionInfo(context).major < 3) {
 		// Put the message in the log window
-		mtbAssistExtensionInfo.showMessageWindow() ;
-		mtbAssistExtensionInfo.logMessage(MessageType.error, "This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.") ;
+		MTBExtensionInfo.getMtbExtensionInfo(context).showMessageWindow() ;
+		MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.") ;
 
 		// Also tell the user via VS code messages
 		vscode.window.showInformationMessage("This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.") ;
@@ -131,7 +131,9 @@ export function activate(context: vscode.ExtensionContext) {
 	mtbAssistLoadApp(context, appdir) ;
 
 	// Show the user the ModusToolbox assistant welcom page
-	vscode.commands.executeCommand('mtbassist.mtbShowWelcomePage') ;
+	if (MTBExtensionInfo.getMtbExtensionInfo().getPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
+		vscode.commands.executeCommand('mtbassist.mtbShowWelcomePage') ;
+	}
 }
 
 // this method is called when your extension is deactivated

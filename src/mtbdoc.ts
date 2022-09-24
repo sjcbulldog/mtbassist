@@ -17,7 +17,7 @@
 import * as vscode from 'vscode';
 import path = require("path") ;
 import { MTBAssistCommand } from './mtbglobal';
-import { mtbAssistExtensionInfo, MTBExtensionInfo } from './mtbextinfo';
+import { MTBExtensionInfo } from './mtbextinfo';
 import { MTBAssistItem } from './mtbitem' ;
 import { MTBLaunchDoc, MTBLaunchInfo } from './mtblaunchdata';
 
@@ -66,7 +66,7 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
         item.command.arguments = [] ;
         let land: MTBLaunchDoc = new MTBLaunchDoc() ;
 
-        let landpath:string = path.join(mtbAssistExtensionInfo.docsDir, "doc_landing.html") ;
+        let landpath:string = path.join(MTBExtensionInfo.getMtbExtensionInfo().docsDir, "doc_landing.html") ;
         land.location = landpath ;
         item.command.arguments.push(land) ;
         this.items_.push(item) ;
@@ -128,8 +128,11 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
 }
 
 
-let docs : MTBAssistDocumentProvider = new MTBAssistDocumentProvider() ;
+let docs : MTBAssistDocumentProvider | undefined ;
 
 export function getMTBDocumentationTreeProvider() : MTBAssistDocumentProvider {
+    if (docs === undefined) {
+        docs = new MTBAssistDocumentProvider() ;
+    }
     return docs ;
 }
