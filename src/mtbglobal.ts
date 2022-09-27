@@ -16,7 +16,7 @@
 
 import * as vscode from 'vscode';
 import { MTBAssistItem } from './mtbitem' ;
-import { MTBLaunchConfig, MTBLaunchInfo } from './mtblaunchdata';
+import { MTBLaunchConfig } from './mtblaunchdata';
 
 export class MTBAssistCommand implements vscode.Command
 {

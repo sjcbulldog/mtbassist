@@ -49,7 +49,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
     if (recent.length > 0) {
         html += `<li style="font-size: 1.5rem;">Recently Opened Projects</li>` ;
         html += `<ul>` ;
-        for(let i : number = 0 ; i < recent.length ; i++) {
+        for(let i : number = recent.length - 1 ; i >= 0 ; i--) {
             let looping: boolean = true ;
             let appdir: string = recent[i] ;
             while (looping) {

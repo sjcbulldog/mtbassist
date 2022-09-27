@@ -81,6 +81,12 @@
           "name": "Documentation",
           "icon": "media/bot.png",
           "contextualTitle": "Global Docs"
+        },
+        {
+          "id": "mtbassets",
+          "name": "Assets",
+          "icon": "media/bot.png",
+          "contextualTitle": "ModusToolbox Assets"
         }
       ]
     }

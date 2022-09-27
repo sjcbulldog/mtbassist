@@ -24,13 +24,14 @@
 import * as vscode from 'vscode';
 import { getMTBProgramsTreeProvider } from './mtbglobal';
 import { getMTBDocumentationTreeProvider } from './mtbdoc';
-import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc } from './mtbcommands';
+import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc} from './mtbcommands';
 import path = require('path');
 import fs = require('fs') ;
 import open = require("open") ;
 import { readRecentList } from './mtbrecent';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp } from './mtbappinfo';
+import { getMTBAssetProvider } from './mtbassetprovider';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -115,6 +116,14 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.window.createTreeView('mtbdocs',
 	{
 		treeDataProvider: getMTBDocumentationTreeProvider()
+	}) ;
+
+		//
+	// Set the tree provider for the documentation that can be loaded
+	//
+	vscode.window.createTreeView('mtbassets',
+	{
+		treeDataProvider: getMTBAssetProvider()
 	}) ;
 
 	//

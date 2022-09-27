@@ -29,6 +29,7 @@ import { getModusToolboxAssistantStartupHtml } from './mtbstart';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, theModusToolboxApp } from './mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
+import { ConsoleReporter } from '@vscode/test-electron';
 
 function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: string, gitpath: string, name: string) {
     let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
@@ -54,7 +55,7 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
     MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... ") ;
 
     let cmd = "git clone " + gitpath + " " + name ;
-    let job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: locdir }) ;
+    let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: locdir }) ;
 
     job.stdout.on(('data'), (data: string) => {
         let str: string = data.toString().replace("\r\n", "\n") ;
@@ -70,7 +71,7 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
         if (code === 0) {
             MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ...") ;
             cmd = "make getlibs" ;
-            job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: finalpath }) ;
+            job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: finalpath }) ;
 
             job.stdout.on(('data'), (data: Buffer) => {
                 let str: string = data.toString().replace("\r\n", "\n") ;
@@ -86,7 +87,7 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
                 if (code === 0) {
                     MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ...") ;
                     cmd = "make vscode" ;
-                    job = exec.spawn(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: finalpath }) ;
+                    job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: finalpath }) ;
 
                     job.stdout.on(('data'), (data: string) => {
                         let str: string = data.toString().replace("\r\n", "\n") ;
@@ -250,7 +251,6 @@ class ApplicationItem implements vscode.QuickPickItem {
 
 let panel: vscode.WebviewPanel | undefined ;
 
-
 export function refreshStartPage() {
     if (panel !== undefined) {
         panel.webview.html = getModusToolboxAssistantStartupHtml() ;
@@ -269,6 +269,9 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         ) ;
     }
     panel.webview.html = getModusToolboxAssistantStartupHtml() ;
+    panel.onDidDispose(()=> {
+        panel = undefined ;
+    }) ;
 
     panel.webview.onDidReceiveMessage( (message)=> {
         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "recevied startup page command '" + message.command + "'") ;

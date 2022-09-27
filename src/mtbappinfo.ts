@@ -27,9 +27,9 @@
 //
 
 import * as vscode from 'vscode';
-import path = require("path") ;
-import exec = require("child_process") ;
-import fs = require('fs');
+import * as path from 'path' ;
+import * as exec from 'child_process' ;
+import * as fs from 'fs' ;
 
 import { getMTBDocumentationTreeProvider } from './mtbdoc';
 import { getMTBProgramsTreeProvider } from './mtbglobal';
@@ -38,6 +38,7 @@ import { MTBLaunchInfo } from './mtblaunchdata';
 import { addToRecentProjects } from './mtbrecent';
 import { refreshStartPage } from './mtbcommands';
 import { mtbStringToJSON } from './mtbjson';
+import { MTBAssetInstance } from './mtbassets';
 
 export class MTBAppInfo
 {
@@ -55,13 +56,29 @@ export class MTBAppInfo
 
     // The extension context
     public context: vscode.ExtensionContext ;
+    
+    // The shared directory
+    public sharedDir?: string ;
+
+    // The libs directory
+    public libsDir?: string ;
+
+    // The deps directory
+    public depsDir?: string ;
+
+    // The list of assets
+    public assets: MTBAssetInstance[] ;
 
     //
     // Create the application object and load in the background
     //
     constructor(context: vscode.ExtensionContext, appdir? : string) {
         this.appDir = "" ;
+        this.sharedDir = undefined ;
+        this.libsDir = undefined ;
+        this.depsDir = undefined ;
         this.context = context ;
+        this.assets = [] ;
         this.setLaunchInfo(undefined) ;
 
         this.isValid = false ;
@@ -89,6 +106,9 @@ export class MTBAppInfo
 
         if (appdir) {
             this.appDir = appdir ;
+            this.sharedDir = path.join(path.dirname(appdir), "mtb_shared") ;
+            this.libsDir = path.join(appdir, "libs") ;
+            this.depsDir = path.join(appdir, "deps") ;
         }
 
         let ret : Promise<void> = new Promise<void>( (resolve, reject) => {
@@ -116,6 +136,7 @@ export class MTBAppInfo
                                         //
                                         addToRecentProjects(this.context, this.appDir) ;
                                         refreshStartPage() ;
+                                        MTBAssetInstance.mtbLoadAssetInstance() ;
                                         resolve() ;
                                     })
                                     .catch((error) => {
@@ -211,7 +232,6 @@ export class MTBAppInfo
         return ret ;
     }    
 
-
     public runMakeVSCode() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.runModusCommandThroughShell("make vscode")
@@ -302,7 +322,15 @@ export class MTBAppInfo
             }
 
             MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "running ModusToolbox command '" + cmd + "' in directory '" + this.appDir + "'") ;
-            exec.execFile(makepath, ["-c", 'PATH=/bin ; ' + cmd], { cwd: this.appDir }, (error, stdout, stderr) => {
+            let cmdstr: string ;
+            if (process.platform === 'win32') {
+                cmdstr = "PATH=/bin:/usr/bin ; " + cmd ;
+            }
+            else {
+                cmdstr = cmd ;
+            }
+            
+            exec.execFile(makepath, ["-c", cmdstr], { cwd: this.appDir }, (error, stdout, stderr) => {
                 if (error) {
                     let errmsg : Error = error as Error ;
                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "running command '" + cmd + "' - " + errmsg.message) ;
