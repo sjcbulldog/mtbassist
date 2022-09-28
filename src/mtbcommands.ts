@@ -20,16 +20,17 @@
 //
 
 import * as vscode from 'vscode';
-import path = require("path");
-import fs = require('fs') ;
-import exec = require("child_process") ;
+import * as path from 'path' ;
+import * as fs from 'fs' ;
+import * as open from 'open' ;
+import * as exec from 'child_process' ;
+
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
-import open = require("open") ;
 import { getModusToolboxAssistantStartupHtml } from './mtbstart';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { mtbAssistLoadApp, theModusToolboxApp } from './mtbappinfo';
+import { theModusToolboxApp } from './mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
-import { ConsoleReporter } from '@vscode/test-electron';
+import { MTBAssetInstance } from './mtbassets';
 
 function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: string, gitpath: string, name: string) {
     let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
@@ -380,4 +381,30 @@ export function mtbTurnOnDebugMode(context: vscode.ExtensionContext) {
 
 export function mtbTurnOffDebugMode(context: vscode.ExtensionContext) {
     MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.debugModeName, false) ;
+}
+
+export function mtbSymbolDoc(context: vscode.ExtensionContext) {
+    if (vscode.window.activeTextEditor) {
+        let uri: vscode.Uri = vscode.window.activeTextEditor.document.uri ;
+        let pos: vscode.Position = vscode.window.activeTextEditor.selection.active ;
+        vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, pos)
+            .then(value => {
+                let locs : vscode.Location[] = value as vscode.Location[] ;
+                MTBExtensionInfo.getMtbExtensionInfo().
+                        logMessage(MessageType.debug, "found " + locs.length + " locations for symbol under cursor") ;
+                        
+                if (locs.length > 0) {
+                    let asset: MTBAssetInstance|undefined = MTBAssetInstance.mtbPathToInstance(locs[0].uri.fsPath) ;
+                    if (asset) {
+                        asset.displayDocs() ;
+                    }
+                    else {
+                        vscode.window.showInformationMessage("Symbol under cursors is not part of an asset") ;
+                    }
+                }
+                else {
+                    vscode.window.showInformationMessage("Symbol under cursors is not part of an asset") ;
+                }
+            }) ;
+    }
 }

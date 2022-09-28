@@ -57,6 +57,10 @@
       {
         "command": "mtbassist.mtbTurnOffDebugMode",
         "title": "ModusToolbox Turn Off Debug Mode"
+      },
+      {
+        "command": "mtbassist.mtbSymbolDoc",
+        "title": "ModusToolbox Symbol Documentation"
       }
     ],
     "viewsContainers": {
@@ -72,7 +76,7 @@
       "mtbcontainer": [
         {
           "id": "mtbglobal",
-          "name": "ModusToolbox",
+          "name": "Tools",
           "icon": "media/bot.png",
           "contextualTitle": "Global Programs"
         },

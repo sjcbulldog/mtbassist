@@ -14,6 +14,8 @@
 // limitations under the License.
 //
 
+import * as path from 'path' ;
+
 export class MTBLaunchConfig {
     public basedir: string = "";
     public cmdline: string[] = [] ;
@@ -91,7 +93,7 @@ export class MTBLaunchInfo {
         let ret : MTBLaunchDoc[] = [] ;
         docs.forEach(function (doc: any) {
             let one : MTBLaunchDoc = new MTBLaunchDoc() ;
-            one.location = doc["location"] ;
+            one.location = path.normalize(doc["location"]) ;
             one.path = doc["path"] ;
             one.project = doc["project"] ;
             one.title = doc["title"] ;

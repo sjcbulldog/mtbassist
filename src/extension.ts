@@ -24,7 +24,7 @@
 import * as vscode from 'vscode';
 import { getMTBProgramsTreeProvider } from './mtbglobal';
 import { getMTBDocumentationTreeProvider } from './mtbdoc';
-import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc} from './mtbcommands';
+import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc, mtbSymbolDoc} from './mtbcommands';
 import path = require('path');
 import fs = require('fs') ;
 import open = require("open") ;
@@ -99,6 +99,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOffDebugMode', (args: any[]) => {
 		mtbTurnOffDebugMode(context) ;
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbSymbolDoc', (args: any[]) => {
+		mtbSymbolDoc(context) ;
 	});
 	context.subscriptions.push(disposable);
 
