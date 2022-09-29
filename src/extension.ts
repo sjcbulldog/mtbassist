@@ -32,6 +32,7 @@ import { readRecentList } from './mtbrecent';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp } from './mtbappinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
+import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -106,6 +107,14 @@ export function activate(context: vscode.ExtensionContext) {
 		mtbSymbolDoc(context) ;
 	});
 	context.subscriptions.push(disposable);
+
+	//
+	// Set the tree providers for general information about the ModusToolbox project
+	//
+	vscode.window.createTreeView('mtbprojinfo', 
+	{
+		treeDataProvider: getMTBProjectInfoProvider()
+	}) ;
 
 	//
 	// Set the tree providers for the programs that can be invoked from ModusToolbox

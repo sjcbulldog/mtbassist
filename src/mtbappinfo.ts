@@ -39,6 +39,9 @@ import { addToRecentProjects } from './mtbrecent';
 import { refreshStartPage } from './mtbcommands';
 import { mtbStringToJSON } from './mtbjson';
 import { MTBAssetInstance } from './mtbassets';
+import { ModusToolboxEnvVarNames } from './mtbnames';
+import G = require('glob');
+import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
 
 export class MTBAppInfo
 {
@@ -66,8 +69,16 @@ export class MTBAppInfo
     // The deps directory
     public depsDir?: string ;
 
+    // The global directory
+    public globalDir?: string ;
+
     // The list of assets
     public assets: MTBAssetInstance[] ;
+
+    // The list of vars from the make get_app_info
+    mtbvars: Map<string, string> = new Map<string, string>() ;
+
+    static oldVarMap: Map<string, string> = new Map<string, string>() ;
 
     //
     // Create the application object and load in the background
@@ -80,6 +91,10 @@ export class MTBAppInfo
         this.context = context ;
         this.assets = [] ;
         this.setLaunchInfo(undefined) ;
+
+        if (MTBAppInfo.oldVarMap.size === 0) {
+            MTBAppInfo.initOldVarMap() ;
+        }
 
         this.isValid = false ;
         this.isLoading = true ;
@@ -99,11 +114,14 @@ export class MTBAppInfo
             }) ;
     }
 
+    public getVar(varname: string) : string | undefined {
+        return this.mtbvars.get(varname) ;
+    }
+
     //
     // Load the application in the background
     //
     public initApp(appdir?: string) : Promise<void> {
-
         if (appdir) {
             this.appDir = appdir ;
             this.sharedDir = path.join(path.dirname(appdir), "mtb_shared") ;
@@ -280,6 +298,38 @@ export class MTBAppInfo
         return ret ;
     }
 
+    private processEnv(output: string) {
+        let lines: string[] = output.split('\n') ;
+        for(var line of lines) {
+            let index = line.indexOf('=') ;
+            if (index !== -1) {
+                let name: string = line.substring(0, index) ;
+                let value: string = line.substring(index + 1) ;
+                if (MTBAppInfo.oldVarMap.has(name)) {
+                    name = MTBAppInfo.oldVarMap.get(name) as string ;
+                }
+
+                if (name.startsWith("MTB_")) {
+                    this.mtbvars.set(name, value) ;
+                }
+
+                if (this.mtbvars.has(ModusToolboxEnvVarNames.MTB_LIBS)) {
+                    this.libsDir = this.mtbvars.get(ModusToolboxEnvVarNames.MTB_LIBS);
+                }
+
+                if (this.mtbvars.has(ModusToolboxEnvVarNames.MTB_GLOBAL_DIR)) {
+                    this.globalDir = this.mtbvars.get(ModusToolboxEnvVarNames.MTB_GLOBAL_DIR) ;
+                }
+
+                if (this.mtbvars.has(ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR) && this.mtbvars.has(ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME)) {
+                    let shdir: string = this.mtbvars.get(ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR) as string ;
+                    let shname: string = this.mtbvars.get(ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME) as string ;
+                    this.sharedDir = path.join(shdir, shname) ;
+                }
+            }
+        }
+    }
+
     //
     // Run make get_app_info and check the output for errors.  If there are errors
     // assume this is not a ModusToolbox directory and reject the Promise halting
@@ -290,6 +340,8 @@ export class MTBAppInfo
             this.runModusCommandThroughShell("make get_app_info")
                 .then ((output: string) => {
                     if (output.indexOf("No rule") === -1) {
+                        this.processEnv(output) ;
+                        getMTBProjectInfoProvider().refresh() ;
                         resolve() ;
                     }
                     else {
@@ -353,6 +405,24 @@ export class MTBAppInfo
         }) ;
 
         return ret ;
+    }
+
+    static initOldVarMap() {
+        MTBAppInfo.oldVarMap.set("TARGET_DEVICE", ModusToolboxEnvVarNames.MTB_DEVICE);
+        MTBAppInfo.oldVarMap.set("TOOLCHAIN", ModusToolboxEnvVarNames.MTB_TOOLCHAIN);
+        MTBAppInfo.oldVarMap.set("TARGET", ModusToolboxEnvVarNames.MTB_TARGET);
+        MTBAppInfo.oldVarMap.set("COMPONENTS", ModusToolboxEnvVarNames.MTB_COMPONENTS);
+        MTBAppInfo.oldVarMap.set("DISABLE_COMPONENTS", ModusToolboxEnvVarNames.MTB_DISABLED_COMPONENTS);
+        MTBAppInfo.oldVarMap.set("ADDITIONAL_DEVICES", ModusToolboxEnvVarNames.MTB_ADDITIONAL_DEVICES);
+        MTBAppInfo.oldVarMap.set("CY_GETLIBS_PATH", ModusToolboxEnvVarNames.MTB_LIBS);
+        MTBAppInfo.oldVarMap.set("CY_GETLIBS_DEPS_PATH", ModusToolboxEnvVarNames.MTB_DEPS);
+        MTBAppInfo.oldVarMap.set("CY_GETLIBS_SHARED_NAME", ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME);
+        MTBAppInfo.oldVarMap.set("CY_GETLIBS_SHARED_PATH", ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR);
+        MTBAppInfo.oldVarMap.set("CY_TOOLS_PATH", ModusToolboxEnvVarNames.MTB_TOOLS_DIR);
+        MTBAppInfo.oldVarMap.set("APP_NAME", ModusToolboxEnvVarNames.MTB_APP_NAME);
+        MTBAppInfo.oldVarMap.set("CY_GETLIBS_CACHE_PATH", ModusToolboxEnvVarNames.MTB_CACHE_DIR);
+        MTBAppInfo.oldVarMap.set("CY_GETLIBS_OFFLINE_PATH", ModusToolboxEnvVarNames.MTB_OFFLINE_DIR);
+        MTBAppInfo.oldVarMap.set("CY_GETLIBS_GLOBAL_PATH", ModusToolboxEnvVarNames.MTB_GLOBAL_DIR);
     }
 }
 

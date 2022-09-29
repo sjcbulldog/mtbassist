@@ -1,8 +1,8 @@
 {
   "name": "mtbassist",
-  "displayName": "mtbassist",
+  "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "publisher" : "ApolloSoftware",
   "license" : "license.txt",
   "icon" : "media/exticon.png",
@@ -60,7 +60,7 @@
       },
       {
         "command": "mtbassist.mtbSymbolDoc",
-        "title": "ModusToolbox Symbol Documentation"
+        "title": "ModusToolbox Documentation"
       }
     ],
     "viewsContainers": {
@@ -74,6 +74,12 @@
     },
     "views": {
       "mtbcontainer": [
+        {
+          "id": "mtbprojinfo",
+          "name": "Project Info",
+          "icon": "media/bot.png",
+          "contextualTitle": "Project Info"
+        },
         {
           "id": "mtbglobal",
           "name": "Tools",
@@ -91,6 +97,15 @@
           "name": "Assets",
           "icon": "media/bot.png",
           "contextualTitle": "ModusToolbox Assets"
+        }
+      ]
+    },
+    "menus" : {
+      "editor/context" : [
+          {
+            "when": "resourceLangId == c",
+            "command": "mtbassist.mtbSymbolDoc",
+          "group": "navigation"
         }
       ]
     }
