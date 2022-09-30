@@ -18,8 +18,7 @@ import * as vscode from 'vscode';
 import exec = require("child_process") ;
 import path = require("path") ;
 import fs = require('fs');
-import json5 = require('json5') ;
-import { debug } from 'console';
+import { MtbManifestDb } from './manifest/mtbmanifest';
 
 // const CY_TOOLS_DIR:string = "CY_TOOLS_DIR" ;
 // const CY_TOOLS_PATHS:string = "CY_TOOLS_PATHS" ;
@@ -44,6 +43,7 @@ export class MTBExtensionInfo
     public major: number ;
     public minor: number ;
     public channel: vscode.OutputChannel ;
+    public mandb: MtbManifestDb ;
 
     context: vscode.ExtensionContext;
 
@@ -52,6 +52,7 @@ export class MTBExtensionInfo
         this.docsDir = this.toolsDir.replace("tools_", "docs_") ;
         this.channel = vscode.window.createOutputChannel("ModusToolbox") ;
         this.context = context ;
+        this.mandb = new MtbManifestDb() ;
 
         this.logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
         this.logMessage(MessageType.info, "ModusToolbox install directory: " + this.defaultInstallDir()) ;

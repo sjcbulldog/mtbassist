@@ -3,9 +3,9 @@
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
   "version": "1.0.5",
-  "publisher" : "ApolloSoftware",
-  "license" : "license.txt",
-  "icon" : "media/exticon.png",
+  "publisher": "ApolloSoftware",
+  "license": "license.txt",
+  "icon": "media/exticon.png",
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -100,11 +100,11 @@
         }
       ]
     },
-    "menus" : {
-      "editor/context" : [
-          {
-            "when": "resourceLangId == c",
-            "command": "mtbassist.mtbSymbolDoc",
+    "menus": {
+      "editor/context": [
+        {
+          "when": "resourceLangId == c",
+          "command": "mtbassist.mtbSymbolDoc",
           "group": "navigation"
         }
       ]
@@ -138,6 +138,8 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
-    "open": "^8.4.0"
+    "node-fetch": "^3.2.10",
+    "open": "^8.4.0",
+    "xml2js": "^0.4.23"
   }
 }
