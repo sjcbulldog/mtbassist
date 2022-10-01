@@ -18,7 +18,7 @@ import * as vscode from 'vscode';
 import exec = require("child_process") ;
 import path = require("path") ;
 import fs = require('fs');
-import { MtbManifestDb } from './manifest/mtbmanifest';
+import { MtbManifestDb } from './manifest/mtbmanifestdb';
 
 // const CY_TOOLS_DIR:string = "CY_TOOLS_DIR" ;
 // const CY_TOOLS_PATHS:string = "CY_TOOLS_PATHS" ;
