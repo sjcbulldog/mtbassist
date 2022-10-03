@@ -18,6 +18,7 @@ import * as vscode from 'vscode';
 import { MTBItemVersion } from './mtbitemversion';
 
 export class MTBMiddleware {
+    public readonly source: vscode.Uri ;
     public readonly name: string;
     public readonly id: string;
     public readonly uri: vscode.Uri;
@@ -26,14 +27,27 @@ export class MTBMiddleware {
     public readonly requirements: string[];
     public readonly versions: MTBItemVersion[];
 
-    constructor(id: string, name: string, uri: vscode.Uri, desc: string, cat: string,
-        reqs: string[], versions: MTBItemVersion[]) {
+    constructor(src: vscode.Uri, id: string, name: string, uri: vscode.Uri, desc: string, cat: string,
+                    reqs: string[], versions: MTBItemVersion[]) {
+        this.source = src ;
         this.id = id;
         this.name = name;
         this.uri = uri;
         this.description = desc;
         this.category = cat;
-        this.requirements = reqs;
+        this.requirements = [...reqs] ;
         this.versions = versions;
+
+        this.requirements.sort() ;
     }
+    
+    public containsVersion(num: string) : boolean {
+        for(let ver of this.versions) {
+            if (ver.num === num) {
+                return true ;
+            }
+        }
+        
+        return false ;
+    }    
 }

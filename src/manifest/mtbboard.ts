@@ -18,6 +18,7 @@ import * as vscode from 'vscode';
 import { MTBItemVersion } from './mtbitemversion';
 
 export class MTBBoard {
+    public readonly source: vscode.Uri ;
     public readonly id: string;
     public readonly name: string;
     public readonly category: string;
@@ -31,9 +32,10 @@ export class MTBBoard {
 
     //id, name, category, desc, summary, boardUri, documentationUri, provs, chips, versions) ;
 
-    constructor(id: string, name: string, category: string, desc: string, summary: string, boardUri: vscode.Uri,
-        docUri: vscode.Uri, provs: string[], chips: Map<string, string>,
-        versions: MTBItemVersion[]) {
+    constructor(src: vscode.Uri, id: string, name: string, category: string, desc: string, 
+                    summary: string, boardUri: vscode.Uri,docUri: vscode.Uri, provs: string[], 
+                    chips: Map<string, string>, versions: MTBItemVersion[]) {
+        this.source = src ;
         this.id = id;
         this.name = name;
         this.category = category;
@@ -41,8 +43,20 @@ export class MTBBoard {
         this.summary = summary;
         this.boardUri = boardUri;
         this.documentationUri = docUri;
-        this.provides = provs;
+        this.provides = [...provs] ;
         this.chips = chips;
         this.versions = versions;
+
+        this.provides.sort() ;
     }
+
+    public containsVersion(num: string) : boolean {
+        for(let ver of this.versions) {
+            if (ver.num === num) {
+                return true ;
+            }
+        }
+        
+        return false ;
+    }    
 }

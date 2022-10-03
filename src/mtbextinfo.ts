@@ -28,6 +28,7 @@ export enum MessageType
 {
     debug,
     info,
+    warning,
     error
 }
 
@@ -109,16 +110,20 @@ export class MTBExtensionInfo
 
             switch(type) {
                 case MessageType.debug:
-                    typestr = "Debug " ;
+                    typestr = "Debug   " ;
                     break ;
 
                 case MessageType.error:
-                    typestr = "Error " ;
+                    typestr = "Error   " ;
                     break ;
 
                 case MessageType.info:
-                    typestr = "Info  " ;
+                    typestr = "Info    " ;
                     break ;
+
+                case MessageType.warning:
+                    typestr = "Warning " ;
+                    break ;                    
             }
 
             let str: string = typestr + ": [" + now.toLocaleString() + "]: " + message ;

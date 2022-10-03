@@ -18,6 +18,7 @@ import * as vscode from 'vscode';
 import { MTBItemVersion } from './mtbitemversion';
 
 export class MTBApp {
+    public readonly source: vscode.Uri ;
     public readonly name: string;
     public readonly id: string;
     public readonly uri: vscode.Uri;
@@ -25,13 +26,25 @@ export class MTBApp {
     public readonly requirements: string[];
     public readonly versions: MTBItemVersion[];
 
-    constructor(name: string, id: string, uri: vscode.Uri, description: string,
+    constructor(src: vscode.Uri, name: string, id: string, uri: vscode.Uri, description: string,
         requirements: string[], versions: MTBItemVersion[]) {
+            this.source = src ;
         this.name = name;
         this.id = id;
         this.uri = uri;
         this.description = description;
-        this.requirements = requirements;
+        this.requirements = [...requirements];
         this.versions = versions;
+        this.requirements.sort() ;
+    }
+    
+    public containsVersion(num: string) : boolean {
+        for(let ver of this.versions) {
+            if (ver.num === num) {
+                return true ;
+            }
+        }
+        
+        return false ;
     }
 }
