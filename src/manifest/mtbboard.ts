@@ -14,11 +14,35 @@
 // limitations under the License.
 //
 
-export class MTBBoard 
-{
-    public readonly id: string ;
+import * as vscode from 'vscode';
+import { MTBItemVersion } from './mtbitemversion';
 
-    constructor(id: string) {
-        this.id = id ;
+export class MTBBoard {
+    public readonly id: string;
+    public readonly name: string;
+    public readonly category: string;
+    public readonly description: string;
+    public readonly summary: string;
+    public readonly boardUri: vscode.Uri;
+    public readonly documentationUri: vscode.Uri;
+    public readonly provides: string[];
+    public readonly chips: Map<string, string>;
+    public readonly versions: MTBItemVersion[];
+
+    //id, name, category, desc, summary, boardUri, documentationUri, provs, chips, versions) ;
+
+    constructor(id: string, name: string, category: string, desc: string, summary: string, boardUri: vscode.Uri,
+        docUri: vscode.Uri, provs: string[], chips: Map<string, string>,
+        versions: MTBItemVersion[]) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.description = desc;
+        this.summary = summary;
+        this.boardUri = boardUri;
+        this.documentationUri = docUri;
+        this.provides = provs;
+        this.chips = chips;
+        this.versions = versions;
     }
 }

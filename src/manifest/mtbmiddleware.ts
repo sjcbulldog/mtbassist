@@ -14,11 +14,26 @@
 // limitations under the License.
 //
 
-export class MTBMiddleware
-{
-    public readonly id: string ;
+import * as vscode from 'vscode';
+import { MTBItemVersion } from './mtbitemversion';
 
-    constructor(id: string) {
-        this.id = id ;
+export class MTBMiddleware {
+    public readonly name: string;
+    public readonly id: string;
+    public readonly uri: vscode.Uri;
+    public readonly description: string;
+    public readonly category: string;
+    public readonly requirements: string[];
+    public readonly versions: MTBItemVersion[];
+
+    constructor(id: string, name: string, uri: vscode.Uri, desc: string, cat: string,
+        reqs: string[], versions: MTBItemVersion[]) {
+        this.id = id;
+        this.name = name;
+        this.uri = uri;
+        this.description = desc;
+        this.category = cat;
+        this.requirements = reqs;
+        this.versions = versions;
     }
 }

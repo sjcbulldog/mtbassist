@@ -14,25 +14,24 @@
 // limitations under the License.
 //
 
-import * as vscode from 'vscode' ;
+import * as vscode from 'vscode';
 import { MTBItemVersion } from './mtbitemversion';
 
-export class MTBApp 
-{
-    public readonly name: string ;
-    public readonly id: string ;
-    public readonly uri: vscode.Uri ;
-    public readonly description: string ;
-    public requirements: string[] ;
-    public versions: MTBItemVersion[] ;
+export class MTBApp {
+    public readonly name: string;
+    public readonly id: string;
+    public readonly uri: vscode.Uri;
+    public readonly description: string;
+    public readonly requirements: string[];
+    public readonly versions: MTBItemVersion[];
 
-    constructor(name: string, id: string, uri: vscode.Uri, description: string, 
-                    requirements: string[], versions: MTBItemVersion[]) {
-        this.name = name ;
-        this.id = id ;
-        this.uri = uri ;
-        this.description = description ;
-        this.requirements = requirements ;
-        this.versions = versions ;
+    constructor(name: string, id: string, uri: vscode.Uri, description: string,
+        requirements: string[], versions: MTBItemVersion[]) {
+        this.name = name;
+        this.id = id;
+        this.uri = uri;
+        this.description = description;
+        this.requirements = requirements;
+        this.versions = versions;
     }
 }

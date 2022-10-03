@@ -14,19 +14,30 @@
 // limitations under the License.
 //
 
-export class MTBItemVersion
-{
-    public readonly num: string ;
-    public readonly commit: string ;
-    public requirements: string[] ;
+export class MTBItemVersion {
+    public readonly num: string;
+    public readonly commit: string;
+    public requirements: string[];
+    public flows: string[];
+    public toolsMinVersion: string | undefined;
 
     constructor(num: string, commit: string) {
-        this.num = num ;
-        this.commit = commit ;
-        this.requirements = [] ;
+        this.num = num;
+        this.commit = commit;
+        this.toolsMinVersion = undefined;
+        this.requirements = [];
+        this.flows = [];
     }
 
     public setRequirements(reqs: string[]) {
-        this.requirements = reqs ;
+        this.requirements = reqs;
+    }
+
+    public setFlows(flows: string[]) {
+        this.flows = flows;
+    }
+
+    public setMinToolsVersion(mintools: string | undefined) {
+        this.toolsMinVersion = mintools;
     }
 }
