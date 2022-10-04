@@ -278,6 +278,9 @@ export class MtbManifestLoader {
 
         if (obj.versions) {
             let versset = obj.versions.version as any[];
+            if (!Array.isArray(versset)) {
+                versset = [versset] ;
+            }
             for (var one of versset) {
                 let num: string = one.num as string;
                 let commit: string = one.commit as string;
@@ -326,6 +329,9 @@ export class MtbManifestLoader {
 
         if (obj.versions) {
             let versset = obj.versions.version as any[];
+            if (!Array.isArray(versset)) {
+                versset = [versset] ;
+            }
             for (var one of versset) {
                 let num: string = one.num as string;
                 let commit: string = one.commit as string;
@@ -370,6 +376,9 @@ export class MtbManifestLoader {
 
         if (obj.versions) {
             let versset = obj.versions.version as any[];
+            if (!Array.isArray(versset)) {
+                versset = [versset] ;
+            }
             for (var one of versset) {
                 let num: string = one.num as string;
                 let commit: string = one.commit as string;
@@ -409,18 +418,27 @@ export class MtbManifestLoader {
     processContentManifestXML(src: vscode.Uri, manifest: any) {
         if (manifest.apps) {
             let apparray = manifest.apps.app as object[];
+            if (!Array.isArray(apparray)) {
+                apparray = [apparray] ;
+            }
             for (let app of apparray) {
                 this.processApp(src, app);
             }
         }
         else if (manifest.boards) {
             let boardarray = manifest.boards.board as object[];
+            if (!Array.isArray(boardarray)) {
+                boardarray = [boardarray] ;
+            }
             for (let board of boardarray) {
                 this.processBoard(src, board);
             }
         }
         else if (manifest.middleware) {
             let middlearray = manifest.middleware.middleware as object[];
+            if (!Array.isArray(middlearray)) {
+                middlearray = [middlearray] ;
+            }
             for (let middleware of middlearray) {
                 this.processMiddleware(src, middleware);
             }

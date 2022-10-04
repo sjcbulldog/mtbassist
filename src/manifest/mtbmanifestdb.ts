@@ -44,6 +44,7 @@ export class MtbManifestDb {
             .then(() => {
                 this.isLoaded = true;
                 this.isLoading = false;
+                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "manifest database loaded") ;
             })
             .catch(err => {
                 this.isLoading = false;
@@ -65,7 +66,7 @@ export class MtbManifestDb {
             //
             let app1 = this.apps.get(app.id)! ;
             this.apps.delete(app.id);
-            finalapp = this.mergeApps(app1, app);
+            finalapp = MTBApp.merge(app1, app);
         }
 
         if (finalapp) {
@@ -83,7 +84,7 @@ export class MtbManifestDb {
             //
             let board1 = this.boards.get(board.id)! ;
             this.boards.delete(board.id);
-            finalboard = this.mergeBoards(board1, board);
+            finalboard = MTBBoard.merge(board1, board);
         }
 
         if (finalboard) {
@@ -101,77 +102,11 @@ export class MtbManifestDb {
             //
             let middleware1 = this.middleware.get(middleware.id)! ;
             this.middleware.delete(middleware.id);
-            finalmiddle = this.mergeMiddleware(middleware1, middleware);
+            finalmiddle = MTBMiddleware.merge(middleware1, middleware);
         }
 
         if (finalmiddle) {
             this.middleware.set(middleware.id, finalmiddle);
         }
-    }
-
-    compareStringArrays(a1: string[], a2: string[]) : boolean {
-        if (a1.length !== a2.length) {
-            return false ;
-        }
-
-        for(let index: number = 0 ; index < a1.length ; index++) {
-            if (a1[index] !== a2[index]) {
-                return false ;
-            }
-        }
-
-        return true ;
-    }
-
-    mergeMsg(id: string, typestr: string, field: string, f1: string, f2:string) {
-        let ext: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;
-        let msg: string = "two instances of '" + typestr + "' - '" + id + "' were merged with differing '" + field + "' fields" ;
-        ext.logMessage(MessageType.warning, msg) ;
-        msg = "    the first '" + field + "' value was '" + f1 + "'" ;
-        ext.logMessage(MessageType.warning, msg) ;
-        msg = "    the second '" + field + "' value was '" + f2 + "'" ;
-        ext.logMessage(MessageType.warning, msg) ;
-    }
-
-    mergeApps(app1: MTBApp, app2: MTBApp): MTBApp | undefined {
-        let ret: MTBApp | undefined = app1 ;
-
-        if (app1.name !== app2.name) {
-            this.mergeMsg(app1.id, "app", "name", app1.name, app2.name) ;
-        }
-
-        if (app1.uri !== app2.uri) {
-            this.mergeMsg(app1.id, "app", "uri", app1.uri.toString(), app2.uri.toString()) ;
-        }
-
-        if (app1.description !== app2.description) {
-            this.mergeMsg(app1.id, "app", "description", app1.description, app2.description) ;
-        }
-
-        if (!this.compareStringArrays(app1.requirements, app2.requirements)) {
-            this.mergeMsg(app1.id, "app", "requirements", app1.requirements.join(','), app2.requirements.join(',')) ;
-        }
-
-        for(let ver of app2.versions) {
-            if (app1.containsVersion(ver.num)) {
-                let ext: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;
-                //
-                // We cannot have the same version name in both.  Report an error
-                // and skip this element.
-                //
-                ext.logMessage(MessageType.error, "two instances of 'app' contains the same version '" + ver.num + "'") ;
-                ret = undefined ;
-            }
-        }
-
-        return ret;
-    }
-
-    mergeBoards(app1: MTBBoard, app2: MTBBoard): MTBBoard | undefined {
-        return undefined;
-    }
-
-    mergeMiddleware(app1: MTBMiddleware, app2: MTBMiddleware): MTBMiddleware | undefined {
-        return undefined;
     }
 }
