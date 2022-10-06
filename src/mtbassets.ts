@@ -40,17 +40,18 @@ export class MTBAssetInstance
     static readonly mtbAssetName: string = "$$ASSET_REPO$$" ;
     static readonly mtbLocalName: string = "$$LOCAL$$" ;
 
+    public id?: string ;
     public url?: string ;
     public version?: string ;
     public location?: string ;
-    public name?: string ;
     public isValid: boolean ;
 
     constructor() {
+        this.id = undefined ;
         this.url = undefined ;
         this.version = undefined ;
         this.location = undefined ;
-        this.name = undefined ;
+        this.id = undefined ;
         this.isValid = false ;
     }
 
@@ -80,7 +81,10 @@ export class MTBAssetInstance
             let index: number = parts[0].lastIndexOf('/') ;
             if (index !== -1) {
 
-                ret.name = parts[0].substring(index + 1) ;
+                ret.id = parts[0].substring(index + 1) ;
+                if (ret.id.startsWith("TARGET_")) {
+                    ret.id = ret.id.substring(7) ;
+                }
 
                 if (loc.startsWith(this.mtbAssetName))  {
                     ret.location = path.join(theModusToolboxApp!.sharedDir!, loc.substring(this.mtbAssetName.length));

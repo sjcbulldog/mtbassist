@@ -14,9 +14,13 @@
 // limitations under the License.
 //
 
+import { theModusToolboxApp } from "../mtbappinfo";
+import { getMTBAssetProvider } from "../mtbassetprovider";
 import { MessageType, MTBExtensionInfo } from "../mtbextinfo";
 import { MTBApp } from "./mtbapp";
 import { MTBBoard } from "./mtbboard";
+import { MTBItem } from "./mtbitem";
+import { MTBItemVersion } from "./mtbitemversion";
 import { MtbManifestLoader } from "./mtbmanifestloader";
 import { MTBMiddleware } from "./mtbmiddleware";
 
@@ -29,12 +33,16 @@ export class MtbManifestDb {
     boards: Map<string, MTBBoard>;
     middleware: Map<string, MTBMiddleware>;
 
+    loadedCallbacks: (() => void)[];
+
     manifestLoader: MtbManifestLoader;
 
     constructor() {
         this.apps = new Map<string, MTBApp>();
         this.boards = new Map<string, MTBBoard>();
         this.middleware = new Map<string, MTBMiddleware>();
+
+        this.loadedCallbacks = [] ;
 
         this.isLoaded = false;
         this.isLoading = true;
@@ -44,7 +52,19 @@ export class MtbManifestDb {
             .then(() => {
                 this.isLoaded = true;
                 this.isLoading = false;
-                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "manifest database loaded") ;
+                let msg: string = "manifest database loaded" ;
+                msg += ", " + this.apps.size + " applications" ;
+                msg += ", " + this.boards.size + " boards" ;
+                msg += ", " + this.middleware.size + " middlewares" ;
+                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, msg) ;
+
+                for(var cb of this.loadedCallbacks) {
+                    try {
+                        cb() ;
+                    }
+                    catch{
+                    }
+                }
             })
             .catch(err => {
                 this.isLoading = false;
@@ -54,6 +74,10 @@ export class MtbManifestDb {
                 MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, 
                         "error loading manifest database - " + errmsg.message) ;
             });
+    }
+
+    public addLoadedCallback(cb: () => void) {
+        this.loadedCallbacks.push(cb) ;
     }
 
     public addApp(app: MTBApp) {
@@ -108,5 +132,41 @@ export class MtbManifestDb {
         if (finalmiddle) {
             this.middleware.set(middleware.id, finalmiddle);
         }
+    }
+
+    public addDependency(id: string, commit: string, did: string, dcommit: string) {
+        let item: MTBItem | undefined = this.findItemByID(id) ;
+        if (item) {
+            let vers: MTBItemVersion | undefined = item.findVersion(commit) ;
+            if (vers) {
+                vers.addDependency(did, dcommit) ;
+            }
+        }
+    }
+
+    public findApp(id: string) : MTBApp | undefined {
+        return this.apps.get(id) ;
+    }
+
+    public findBoard(id: string) : MTBBoard | undefined {
+        return this.boards.get(id) ;
+    }
+
+    public findMiddleware(id: string) : MTBMiddleware | undefined {
+        return this.middleware.get(id) ;
+    }
+
+    public findItemByID(id:string) : MTBItem | undefined {
+        let item: MTBItem | undefined ;
+
+        item = this.findApp(id) ;
+        if (!item) {
+            item = this.findBoard(id) ;
+            if (!item) {
+                item = this.findMiddleware(id) ;
+            }
+        }
+
+        return item ;
     }
 }

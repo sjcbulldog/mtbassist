@@ -42,6 +42,7 @@ import { MTBAssetInstance } from './mtbassets';
 import { ModusToolboxEnvVarNames } from './mtbnames';
 import G = require('glob');
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
+import { getMTBAssetProvider } from './mtbassetprovider';
 
 export class MTBAppInfo
 {
@@ -91,6 +92,8 @@ export class MTBAppInfo
         this.context = context ;
         this.assets = [] ;
         this.setLaunchInfo(undefined) ;
+
+        MTBExtensionInfo.getMtbExtensionInfo().manifestDb.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
 
         if (MTBAppInfo.oldVarMap.size === 0) {
             MTBAppInfo.initOldVarMap() ;
@@ -184,6 +187,12 @@ export class MTBAppInfo
             }
         }) ;
         return ret ;
+    }
+
+    static manifestLoadedCallback() {
+        if (theModusToolboxApp) {
+            getMTBAssetProvider().refresh(theModusToolboxApp.assets) ;
+        }
     }
 
     private setLaunchInfo(launch?: MTBLaunchInfo) {

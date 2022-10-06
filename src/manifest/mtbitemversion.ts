@@ -14,12 +14,24 @@
 // limitations under the License.
 //
 
+export class MTBItemVersionDependency
+{
+    public readonly id: string ;
+    public readonly commit: string ;
+
+    constructor(id: string, commit: string) {
+        this.id = id ;
+        this.commit = commit ;
+    }
+}
+
 export class MTBItemVersion {
     public readonly num: string;
     public readonly commit: string;
     public requirements: string[];
     public flows: string[];
     public toolsMinVersion: string | undefined;
+    public dependencies: MTBItemVersionDependency[] ;
 
     constructor(num: string, commit: string) {
         this.num = num;
@@ -27,6 +39,7 @@ export class MTBItemVersion {
         this.toolsMinVersion = undefined;
         this.requirements = [];
         this.flows = [];
+        this.dependencies = [] ;
     }
 
     public setRequirements(reqs: string[]) {
@@ -39,5 +52,9 @@ export class MTBItemVersion {
 
     public setMinToolsVersion(mintools: string | undefined) {
         this.toolsMinVersion = mintools;
+    }
+
+    public addDependency(id: string, commit: string) {
+        this.dependencies.push(new MTBItemVersionDependency(id, commit)) ;
     }
 }

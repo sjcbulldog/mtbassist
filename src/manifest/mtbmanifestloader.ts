@@ -412,7 +412,41 @@ export class MtbManifestLoader {
         this.db.addMiddleware(middleware);
     }
 
+    processDependerVersions(src: vscode.Uri, id: string, versions: any[]) {
+        for(var one of versions) {
+            let commit:string = one.commit as string ;
+            let dependees = one.dependees.dependee ;
+            if (!Array.isArray(dependees)) {
+                dependees = [dependees] ;
+            }
+
+            for (var dependee of dependees) {
+                let did = dependee.id as string ;
+                let dcommit = dependee.commit as string ;
+
+                this.db.addDependency(id, commit, did, dcommit) ;
+            }
+        }
+    }
+
     processDependencyManifestXml(src: vscode.Uri, manifest: any) {
+        let ext: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;
+
+        let deps = manifest.dependencies ;
+        let dependers = deps.depender ;
+        if (!Array.isArray(deps.depender)) {
+            dependers = [dependers] ;
+        }
+
+        for(var depend of dependers) {
+            let id = depend.id as string ;
+            let versions = depend.versions.version;
+
+            if (!Array.isArray(versions)) {
+                versions = [versions] ;
+            }
+            this.processDependerVersions(src, id, versions) ;
+        }
     }
 
     processContentManifestXML(src: vscode.Uri, manifest: any) {

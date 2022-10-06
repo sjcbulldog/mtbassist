@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
+import { MTBItem } from './manifest/mtbitem';
+import { MtbManifestDb } from './manifest/mtbmanifestdb';
 import { MTBAssetInstance } from './mtbassets';
+import { MTBExtensionInfo } from './mtbextinfo';
 
 export class MTBAssetItem extends vscode.TreeItem {
     constructor(label: string) {
@@ -33,10 +36,29 @@ export class MTBAssistAssetProvider implements vscode.TreeDataProvider<MTBAssetI
         this.items_ = [] ;
 
         if (assets) {
-            assets.forEach(asset => {
-                let item = new MTBAssetItem(asset.name + ", " + asset.version) ;
+            for(var asset of assets) {
+                let item = new MTBAssetItem(asset.id + ", " + asset.version) ;
+                let mandb: MtbManifestDb = MTBExtensionInfo.getMtbExtensionInfo().manifestDb ;
+                if (mandb.isLoaded) {
+                    if (asset.id && asset.version) {
+                        let mitem: MTBItem | undefined = mandb.findItemByID(asset.id) ;
+                        if (mitem) {
+                            let versions: string[] = mitem.newerVersions(asset.version!) ;
+                            if (versions.length > 0) {
+                                item.label = "* " + item.label ;
+                                item.tooltip = versions.join(', ') ;
+                            }
+                        }
+                    }
+                }
+                else if (mandb.hadError) {
+                    item.tooltip = "Error loading manifest file" ;
+                }
+                else if (mandb.isLoading) {
+                    item.tooltip = "Loading manifest file ..." ;
+                }
                 this.items_.push(item) ;
-            }) ;
+            } ;
         }
 
         this.onDidChangeTreeData_.fire();

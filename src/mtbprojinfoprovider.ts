@@ -97,6 +97,10 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
                 }
             }
         }
+        else {
+            let item: MTBProjectItem = new MTBProjectItem("Load Or Create Project", "") ;
+            this.items_.push(item) ;
+        }
 
         this.onDidChangeTreeData_.fire();
     }

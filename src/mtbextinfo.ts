@@ -44,7 +44,7 @@ export class MTBExtensionInfo
     public major: number ;
     public minor: number ;
     public channel: vscode.OutputChannel ;
-    public mandb: MtbManifestDb ;
+    public manifestDb: MtbManifestDb ;
 
     context: vscode.ExtensionContext;
 
@@ -53,7 +53,7 @@ export class MTBExtensionInfo
         this.docsDir = this.toolsDir.replace("tools_", "docs_") ;
         this.channel = vscode.window.createOutputChannel("ModusToolbox") ;
         this.context = context ;
-        this.mandb = new MtbManifestDb() ;
+        this.manifestDb = new MtbManifestDb() ;
 
         this.logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
         this.logMessage(MessageType.info, "ModusToolbox install directory: " + this.defaultInstallDir()) ;

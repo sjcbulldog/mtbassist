@@ -17,6 +17,7 @@
 import * as vscode from 'vscode';
 import { MessageType, MTBExtensionInfo } from "../mtbextinfo";
 import { MTBItemVersion } from "./mtbitemversion";
+import { MTBVersion } from './mtbversion';
 
 export class MTBItem
 {
@@ -41,7 +42,31 @@ export class MTBItem
         
         return false ;
     }
-    
+
+    public findVersion(commit: string) : MTBItemVersion | undefined {
+        for(var ver of this.versions) {
+            if (ver.commit === commit) {
+                return ver ;
+            }
+        }
+
+        return undefined ;
+    }
+
+    public newerVersions(version: string) : string[] {
+        let ret : string[] = [] ;
+        let current: MTBVersion = MTBVersion.fromVersionString(version) ;
+
+        for(var item of this.versions) {
+            let itemver = MTBVersion.fromVersionString(item.commit) ;
+            if (MTBVersion.compare(current, itemver) < 0) {
+                ret.push(item.commit) ;
+            }
+        }
+
+        return ret ;
+    }
+
     protected static compareStringArrays(a1: string[], a2: string[]) : boolean {
         if (a1.length !== a2.length) {
             return false ;
