@@ -18,37 +18,103 @@ import { MTBExtensionInfo } from "./mtbextinfo";
 import { getRecentList } from "./mtbrecent";
 
 export function getModusToolboxAssistantStartupHtml() : string {
+    let html : string = 
+        `<!DOCTYPE html>
+            <head>
+            <meta charset="UTF-8">
+            <style>
+                div.tabbar
+                {
+                    overflow: hidden;
+                    border: 1px solid #ccc;
+                    background-color: #404040;
+                }
 
-    let html : string = `<!DOCTYPE html>
-	<html lang="en">
-	<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>ModusToolbox Asssitant</title>
-	</head>
-	<body>
-		<script>
-        alert("Started") ;
-		const vscode = acquireVsCodeApi() ;
-        function showWelcomePageChanged(cb) {
-            if (cb.checked) {
-                vscode.postMessage({ command: 'showWelcomePage'}) ;
-            }
-            else {
-                vscode.postMessage({ command: 'hideWelcomePage'}) ;
-            }
-        }
-		</script>
-	<h1>ModusToolbox Assistant For ModusToolbox 3.0</h1>
-	<hr>
-	<ul>
-	<li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'createNew'}) ;" href="#">Create A New Project</a></li>
-	<li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'importExisting'}) ;" href="#">Import An Existing Project</a></li>` ;
+                div.tabcont
+                {
+                    visibility: visible;
+                }
 
+                .tabbar button {
+                    background-color: inherit;
+                    float: left;
+                    border: none;
+                    outline: none;
+                    cursor: pointer;
+                    padding: 14px 16px;
+                    transition: 0.3s;
+                    color: white ;
+                }
+
+                .tabbar button:hover {
+                    background-color: #ddd;
+                }
+
+                div.content {
+                    padding: 6px 12px;
+                    border: 4px solid #ccc;
+                    border-top: none;
+                }
+            </style>
+            <script>
+                function selectContent(evt, which) {
+                    let buttons = document.getElementsByClassName("tabbutton") ;
+                    for(var button of buttons) {
+                        button.style.backgroundColor = "#202020" ;
+                    }
+
+                    let contents = document.getElementsByClassName("tabcont") ;
+                    for(var content of contents) {
+                        content.style.display = "none" ;
+                    }
+
+                    let selbutton = document.getElementById("tabbutton" + which) ;
+                    selbutton.style.backgroundColor = "#9c99f2" ;
+
+                    let selcontent = document.getElementById("content" + which) ;
+                    selcontent.style.display = "block" ;
+                }
+
+                document.addEventListener("DOMContentLoaded", function() {
+                    selectContent(undefined, "1") ;
+                }) ;
+            </script>
+        </head>
+
+        <body>
+            ####TITLE####
+            <div class="tabview">
+                <div class="tabbar">
+                    <button class="tabbutton" id="tabbutton1" onclick="selectContent(event, '1')">Tools</button>
+                    <button class="tabbutton" id="tabbutton2" onclick="selectContent(event, '2')">Documentation</button>
+                    <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">Recent</button>
+                </div>
+                <div style="font-size: 150%;" class="tabcont" id="content1">
+                    <a onclick="vscode.postMessage({ command: 'createNew'}) ;" href="#">Create A New Project</a><br>
+                    <a onclick="vscode.postMessage({ command: 'importExisting'}) ;" href="#">Import An Existing Project</a><br>
+                    <a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">Show ModusToolbox Assistant Side Bar</a><br>
+                </div>
+                <div style="font-size: 150%;"  class="tabcont" id="content2">
+                   <a onclick="vscode.postMessage({ command: 'showUserGuide'}) ;" href="#">Open ModusToolbox User's Guide</a><br>
+                   <a onclick="vscode.postMessage({ command: 'showReleaseNotes'}) ;" href="#">Open ModusToolbox Release Notes</a><br>    
+                </div>
+                <div style="font-size: 150%;"  class="tabcont" id="content3">
+                    ####RECENTS####
+                </div>
+            </div>
+            <hr>
+            ####CHECKBOX####
+            <div style="position: absolute; bottom: 0; width: 100%; height:60px">
+            <a href="https://www.flaticon.com/free-icons/bot" title="bot icons">Bot icons created by Smashicons - Flaticon</a>
+            </div>
+        </body>
+        </html>` ;    
+
+    let titlestr :string = '<p style="font-size:300%;">ModusToolbox Assistant 1.0' ;
+
+    let recentstr : string = "" ;
     let recent : string[] = getRecentList() ;
     if (recent.length > 0) {
-        html += `<li style="font-size: 1.5rem;">Recently Opened Projects</li>` ;
-        html += `<ul>` ;
         for(let i : number = recent.length - 1 ; i >= 0 ; i--) {
             let looping: boolean = true ;
             let appdir: string = recent[i] ;
@@ -61,31 +127,22 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     appdir = appdir.replace("\\","/") ;
                 }
             }            
-            html += '<li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: \'openRecent\', projdir: \'' + appdir + '\'}) ;" href="#">' + recent[i] + '</a></li>' ;
+            recentstr += '<div><a onclick="vscode.postMessage({ command: \'openRecent\', projdir: \'' + appdir + '\'}) ;" href="#">' + recent[i] + '</a></div>' ;
         }
-        html += `</ul>` ;
     }
 
-    html += 
-    `<li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">ModusToolbox Assistant Side Bar</a></li>
-	 <li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'showUserGuide'}) ;" href="#">ModusToolbox User's Guide</a></li>
-	 <li style="font-size: 1.5rem;"><a onclick="vscode.postMessage({ command: 'showReleaseNotes'}) ;" href="#">ModusToolbox Release Notes</a></li>
-	 </ul>
-     <input type="checkbox" onclick="showWelcomePageChanged(this);" id="showWelcomePage" name="showWelcomePage"`;
-
+    let checkstr: string = '<input type="checkbox" onclick="showWelcomePageChanged(this);" id="showWelcomePage" name="showWelcomePage"' ;
     if (MTBExtensionInfo.getMtbExtensionInfo().getPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
-        html += "checked" ;
+        checkstr += "checked" ;
     }
     else {
-        html += "unchecked" ;
+        checkstr += "unchecked" ;
     }
+    checkstr += '><label for="showWelcomePage">Show Welcome Page</label><br>' ;
 
-    html += `>
-    <label for="showWelcomePage">Show Welcome Page On Extension Activation</label><br>
-	<hr>
-	<a href="https://www.flaticon.com/free-icons/bot" title="bot icons">Bot icons created by Smashicons - Flaticon</a>
-	</body>
-	</html>`;
+    html = html.replace("####TITLE####", titlestr) ;
+    html = html.replace("####RECENTS####", recentstr) ;
+    html = html.replace("####CHECKBOX####", checkstr) ;
 
     return html ;
 }

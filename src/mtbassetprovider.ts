@@ -48,6 +48,9 @@ export class MTBAssistAssetProvider implements vscode.TreeDataProvider<MTBAssetI
                                 item.label = "* " + item.label ;
                                 item.tooltip = versions.join(', ') ;
                             }
+                            else {
+                                item.tooltip = "" ;
+                            }
                         }
                     }
                 }
