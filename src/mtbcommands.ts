@@ -276,7 +276,11 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
 
     panel.webview.onDidReceiveMessage( (message)=> {
         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "recevied startup page command '" + message.command + "'") ;
-        if (message.command === "createNew") {
+        if (message.command === "logMessage") {
+            let msg: string = message.message as string ;
+            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, msg) ;
+        }
+        else if (message.command === "createNew") {
             vscode.commands.executeCommand("mtbassist.mtbCreateProject") ;
         }
         else if (message.command === "importExisting") {

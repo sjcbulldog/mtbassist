@@ -47,7 +47,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
                 }
 
                 .tabbar button:hover {
-                    background-color: #ddd;
+                    background-color: #808080;
                 }
 
                 div.content {
@@ -61,6 +61,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     let buttons = document.getElementsByClassName("tabbutton") ;
                     for(var button of buttons) {
                         button.style.backgroundColor = "#202020" ;
+                        button.style.color = "#FFFFFF" ;
                     }
 
                     let contents = document.getElementsByClassName("tabcont") ;
@@ -69,7 +70,8 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     }
 
                     let selbutton = document.getElementById("tabbutton" + which) ;
-                    selbutton.style.backgroundColor = "#9c99f2" ;
+                    selbutton.style.backgroundColor = "#ffffffff" ;
+                    selbutton.style.color = "#000000ff" ;
 
                     let selcontent = document.getElementById("content" + which) ;
                     selcontent.style.display = "block" ;
@@ -94,11 +96,11 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     <a onclick="vscode.postMessage({ command: 'importExisting'}) ;" href="#">Import An Existing Project</a><br>
                     <a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">Show ModusToolbox Assistant Side Bar</a><br>
                 </div>
-                <div style="font-size: 150%;"  class="tabcont" id="content2">
+                <div style="font-size: 150%;" class="tabcont" id="content2">
                    <a onclick="vscode.postMessage({ command: 'showUserGuide'}) ;" href="#">Open ModusToolbox User's Guide</a><br>
                    <a onclick="vscode.postMessage({ command: 'showReleaseNotes'}) ;" href="#">Open ModusToolbox Release Notes</a><br>    
                 </div>
-                <div style="font-size: 150%;"  class="tabcont" id="content3">
+                <div style="font-size: 150%;" class="tabcont" id="content3">
                     ####RECENTS####
                 </div>
             </div>
@@ -138,7 +140,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
     else {
         checkstr += "unchecked" ;
     }
-    checkstr += '><label for="showWelcomePage">Show Welcome Page</label><br>' ;
+    checkstr += '><label for="showWelcomePage">Show Plugin Page</label><br>' ;
 
     html = html.replace("####TITLE####", titlestr) ;
     html = html.replace("####RECENTS####", recentstr) ;
