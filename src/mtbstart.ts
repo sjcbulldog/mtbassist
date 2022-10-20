@@ -122,7 +122,8 @@ export function getModusToolboxAssistantStartupHtml() : string {
             </div>
             <hr>
             ####CHECKBOX####
-            <div style="position: absolute; bottom: 0; width: 100%; height:60px">
+            <br><br>
+            <div>
             <a href="https://www.flaticon.com/free-icons/bot" title="bot icons">Bot icons created by Smashicons - Flaticon</a>
             </div>
         </body>

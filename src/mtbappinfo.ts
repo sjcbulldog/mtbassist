@@ -31,8 +31,8 @@ import * as path from 'path' ;
 import * as exec from 'child_process' ;
 import * as fs from 'fs' ;
 
-import { getMTBDocumentationTreeProvider } from './mtbdoc';
-import { getMTBProgramsTreeProvider } from './mtbglobal';
+import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
+import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { MTBLaunchInfo } from './mtblaunchdata';
 import { addToRecentProjects } from './mtbrecent';

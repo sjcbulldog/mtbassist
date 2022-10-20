@@ -433,10 +433,10 @@ export function mtbTurnOffDebugMode(context: vscode.ExtensionContext) {
     MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.debugModeName, false) ;
 }
 
-export function mtbSymbolDoc(context: vscode.ExtensionContext) {
+export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, context: vscode.ExtensionContext) {
     if (vscode.window.activeTextEditor) {
-        let uri: vscode.Uri = vscode.window.activeTextEditor.document.uri ;
-        let pos: vscode.Position = vscode.window.activeTextEditor.selection.active ;
+        let uri: vscode.Uri = editor.document.uri ;
+        let pos: vscode.Position = editor.selection.active ;
         vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, pos)
             .then(value => {
                 let locs : vscode.Location[] = value as vscode.Location[] ;

@@ -15,25 +15,12 @@
 //
 
 import * as vscode from 'vscode';
+import { MTBAssistCommand } from './mtbassistcmd';
+import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { MTBAssistItem } from './mtbitem' ;
 import { MTBLaunchConfig } from './mtblaunchdata';
 
-export class MTBAssistCommand implements vscode.Command
-{
-    public title : string ;
-    public command: string ;
-    public tooltip: string ;
-    public arguments?: any[] ;
-
-    constructor(t: string, c: string, s:string) {
-        this.title = t ;
-        this.command = c ;
-        this.tooltip = s ;
-        this.arguments = undefined ;
-    }
-}
-
-export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssistItem> {
+export class MTBProgramProvider implements vscode.TreeDataProvider<MTBAssistItem> {
     private items_ : MTBAssistItem[] = [] ;
     private onDidChangeTreeData_: vscode.EventEmitter<MTBAssistItem | undefined | null | void> = new vscode.EventEmitter<MTBAssistItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<MTBAssistItem | undefined | null | void> = this.onDidChangeTreeData_.event;
@@ -124,15 +111,17 @@ export class MTBAssistGlobalProvider implements vscode.TreeDataProvider<MTBAssis
             }
         }) ;
 
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "projects: " + ret.toString()) ;
+
         return ret;
     }
 }
 
-let pgms : MTBAssistGlobalProvider | undefined ;
+let pgms : MTBProgramProvider | undefined ;
 
-export function getMTBProgramsTreeProvider() : MTBAssistGlobalProvider {
+export function getMTBProgramsTreeProvider() : MTBProgramProvider {
     if (pgms === undefined) {
-        pgms = new MTBAssistGlobalProvider() ;
+        pgms = new MTBProgramProvider() ;
     }
     
     return pgms ;

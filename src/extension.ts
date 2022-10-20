@@ -22,8 +22,8 @@
 
 
 import * as vscode from 'vscode';
-import { getMTBProgramsTreeProvider } from './mtbglobal';
-import { getMTBDocumentationTreeProvider } from './mtbdoc';
+import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
+import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
 import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc, mtbSymbolDoc, mtbRunLibraryManager } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
@@ -103,8 +103,9 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(disposable);
 
-	disposable = vscode.commands.registerCommand('mtbassist.mtbSymbolDoc', (args: any[]) => {
-		mtbSymbolDoc(context);
+	disposable = vscode.commands.registerTextEditorCommand('mtbassist.mtbSymbolDoc', 
+		(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
+		mtbSymbolDoc(editor, edit, context);
 	});
 	context.subscriptions.push(disposable);
 

@@ -16,7 +16,7 @@
 
 import * as vscode from 'vscode';
 import path = require("path") ;
-import { MTBAssistCommand } from './mtbglobal';
+import { MTBAssistCommand } from './mtbassistcmd';
 import { MTBExtensionInfo } from './mtbextinfo';
 import { MTBAssistItem } from './mtbitem' ;
 import { MTBLaunchDoc, MTBLaunchInfo } from './mtblaunchdata';

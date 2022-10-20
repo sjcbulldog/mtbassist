@@ -14,7 +14,19 @@
 // limitations under the License.
 //
 
-export function mtbStringToJSON(str: string) : object {
-    str = str.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m);
-    return JSON.parse(str) ;
+import * as vscode from 'vscode';
+
+export class MTBAssistCommand implements vscode.Command
+{
+    public title : string ;
+    public command: string ;
+    public tooltip: string ;
+    public arguments?: any[] ;
+
+    constructor(t: string, c: string, s:string) {
+        this.title = t ;
+        this.command = c ;
+        this.tooltip = s ;
+        this.arguments = undefined ;
+    }
 }

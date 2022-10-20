@@ -56,12 +56,39 @@ export class MTBAssetInstance
         this.isValid = false ;
     }
 
+    static relPathToAbs (rpath: string) : string {
+        let ret: string = rpath ;
+        
+        if (!path.isAbsolute(rpath))
+        {
+            if (theModusToolboxApp) {
+                ret = path.normalize(path.join(theModusToolboxApp.appDir, rpath)) ;
+            }
+        }
+
+        if (process.platform === "win32" && ret.length > 2) {
+            let drive: string = ret.charAt(0) ;
+            if (drive >= 'a' && drive <= 'z') {
+                ret = drive.toUpperCase() + ret.substring(1) ;
+            }
+        }
+
+        return ret ;
+    }
+
+    static mtbPathCompare(full: string, sub: string) : boolean {
+        let subpath = MTBAssetInstance.relPathToAbs(sub) ;
+        let fullpath = MTBAssetInstance.relPathToAbs(full) ;
+
+        return fullpath.startsWith(subpath) ;
+    }
+
     static mtbPathToInstance(path: string) : MTBAssetInstance | undefined {
         let ret : MTBAssetInstance | undefined ;
         if (theModusToolboxApp?.assets) {
             for(let asset of theModusToolboxApp.assets) {
                 if (asset.isValid) {
-                    if (path.startsWith(asset.location as string)) {
+                    if (this.mtbPathCompare(path, asset.location as string)) {
                         ret = asset ;
                     }
                 }
@@ -176,40 +203,14 @@ export class MTBAssetInstance
         }
     }
 
-    pathMatch(p: string) : boolean {
-        let ret: boolean = false ;
-
-        if (this.location) {
-            if (process.platform === 'win32') 
-            {
-                if (path.isAbsolute(p) && path.isAbsolute(this.location))
-                {
-                    if (p.length > 2 && this.location.length > 2) {
-                        if (p.at(0)!.toLowerCase() === this.location.at(0)!.toLowerCase() && p.at(1)! === ':' && this.location.at(1)! === ':')
-                        {
-                            ret = p.substring(2).startsWith(this.location.substring(2)) ;
-                        }
-                    }
-                }
-                else
-                {
-                    ret = p.startsWith(this.location) ;
-                }
-            }
-            else
-            {
-                ret = p.startsWith(this.location) ;
-            }
-        }
-
-        return ret ;
-    }
 
     public displayDocs() {
         if (theModusToolboxApp?.launch) {
             theModusToolboxApp.launch.docs.forEach(doc => {
-                if (this.pathMatch(doc.location)) {
-                    open(decodeURIComponent(doc.location)) ;
+                if (this.location) {
+                    if (MTBAssetInstance.mtbPathCompare(doc.location, this.location)) {
+                        open(decodeURIComponent(doc.location)) ;
+                    }
                 }
             }) ;
         }
