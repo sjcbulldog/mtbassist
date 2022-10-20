@@ -17,3 +17,8 @@ must also be installed.
 
 Initial release of the ModusToolbox Assistant
 
+### 1.0.8
+
+Added Shift + Ctrl + F1 lookup for symbols documentation
+
+
