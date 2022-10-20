@@ -29,11 +29,12 @@ import * as path from 'path' ;
 import * as fs from 'fs' ;
 import * as open from 'open' ;
 
-import { theModusToolboxApp } from "./mtbappinfo";
+import { MTBAppInfo, theModusToolboxApp } from "./mtbappinfo";
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
 import { platform } from 'os';
 import { env } from 'process';
+import { MTBApp } from './manifest/mtbapp';
 
 export class MTBAssetInstance
 {
@@ -127,7 +128,23 @@ export class MTBAssetInstance
         return ret ;
     }
 
-    static scanOneDir(dirname: string) {
+    static adjustAssetsPane(appinfo: MTBAppInfo) {
+        if (appinfo?.assets) {
+            appinfo?.assets.sort((a, b) : number => {
+                if (b.id!.toLowerCase() > a.id!.toLowerCase()) {
+                    return -1 ;
+                }
+                if (a.id!.toLowerCase() > b.id!.toLowerCase()) {
+                    return 1 ;
+                }
+
+                return 0 ;
+            }) ;
+        }
+        getMTBAssetProvider().refresh(appinfo!.assets) ;
+    }
+
+    static scanOneDir(appinfo: MTBAppInfo, dirname: string) {
         fs.readdir(dirname, (err, files) => {
             if (err) {
                 let errmgs = err as Error ;
@@ -135,29 +152,27 @@ export class MTBAssetInstance
                 extinfo.logMessage(MessageType.error, "error scanning directory '" + dirname + "' - " + errmgs.message) ;
             }
             else {
-                files.forEach((file) => {
+                for(var file of files) {
                     if (path.extname(file) === '.mtb') {
                         this.readMtbFile(path.join(dirname, file))
                             .then((asset) => {
                                 theModusToolboxApp!.assets.push(asset) ;
-                                getMTBAssetProvider().refresh(theModusToolboxApp!.assets) ;
+                                this.adjustAssetsPane(appinfo) ;
                             })
                             .catch((err) => {
-
                             }) ;
                     }
-                }) ;
+                } ;
             }
         }) ;
     }
 
-    public static mtbLoadAssetInstance() {
-        if (theModusToolboxApp?.libsDir) {
-            this.scanOneDir(theModusToolboxApp.libsDir) ;
+    public static mtbLoadAssetInstance(appinfo: MTBAppInfo) {
+        if (appinfo?.libsDir) {
+            this.scanOneDir(appinfo, appinfo.libsDir) ;
         }
-
-        if (theModusToolboxApp?.depsDir) {
-            this.scanOneDir(theModusToolboxApp.depsDir) ;
+        if (appinfo?.depsDir) {
+            this.scanOneDir(appinfo, appinfo.depsDir) ;
         }
     }
 

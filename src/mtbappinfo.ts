@@ -157,7 +157,7 @@ export class MTBAppInfo
                                         //
                                         addToRecentProjects(this.context, this.appDir) ;
                                         refreshStartPage() ;
-                                        MTBAssetInstance.mtbLoadAssetInstance() ;
+                                        MTBAssetInstance.mtbLoadAssetInstance(this) ;
                                         resolve() ;
                                     })
                                     .catch((error) => {

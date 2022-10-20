@@ -57,6 +57,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
                 }
             </style>
             <script>
+                const vscode = acquireVsCodeApi() ;
                 function selectContent(evt, which) {
                     let buttons = document.getElementsByClassName("tabbutton") ;
                     for(var button of buttons) {
@@ -87,14 +88,29 @@ export function getModusToolboxAssistantStartupHtml() : string {
             ####TITLE####
             <div class="tabview">
                 <div class="tabbar">
-                    <button class="tabbutton" id="tabbutton1" onclick="selectContent(event, '1')">Tools</button>
+                    <button class="tabbutton" id="tabbutton1" onclick="selectContent(event, '1')">Getting Started</button>
                     <button class="tabbutton" id="tabbutton2" onclick="selectContent(event, '2')">Documentation</button>
                     <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">Recent</button>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content1">
-                    <a onclick="vscode.postMessage({ command: 'createNew'}) ;" href="#">Create A New Project</a><br>
-                    <a onclick="vscode.postMessage({ command: 'importExisting'}) ;" href="#">Import An Existing Project</a><br>
-                    <a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">Show ModusToolbox Assistant Side Bar</a><br>
+                    <p>There are two ways to get a new ModusToolbox application into Visual Studio Code.<p> 
+                    <ul>
+                    <li>You can <a onclick="vscode.postMessage({ command: 'createNew'}) ;" href="#">create</a> a new project</li>
+                    <li>You can <a onclick="vscode.postMessage({ command: 'importExisting'}) ;" href="#">import</a> an existing project.</li>
+                    </ul>
+                    
+                    <p>Creating a new project, starts the project creator where you can create a new project by selecting a target
+                    board and an example project supported by the target board.</p>
+
+                    <p>Importing a project provides a method to share a project that has been previously created and stored
+                    in a git repository.  Importing a project clones the project from the source git repository and
+                    then performs a <i>make getlibs</i> operation which readies the project for its location on the local
+                    machine.  Finally, the import performs a <i>make vscode</i> operation which initializes the .vscode directory
+                    to enable the project to work in the vscode environment.</p>
+                    Finally, note most features of ModusToolbox are available by selecting the 
+                    <a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">ModusToolbox</a> icon in the Activity Bar, given by the robot icon.
+                    This displays the ModusToolbox view in the Side Bar.  See this <a href="https://code.visualstudio.com/docs/getstarted/userinterface">page</a> for more details.
+                    <br><br><br>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content2">
                    <a onclick="vscode.postMessage({ command: 'showUserGuide'}) ;" href="#">Open ModusToolbox User's Guide</a><br>
@@ -140,7 +156,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
     else {
         checkstr += "unchecked" ;
     }
-    checkstr += '><label for="showWelcomePage">Show Plugin Page</label><br>' ;
+    checkstr += '><label for="showWelcomePage">Show ModusToolbox Assistant Welcome Page</label><br>' ;
 
     html = html.replace("####TITLE####", titlestr) ;
     html = html.replace("####RECENTS####", recentstr) ;

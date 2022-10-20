@@ -59,6 +59,10 @@
         "title": "ModusToolbox Turn Off Debug Mode"
       },
       {
+        "command": "mtbassist.mtbRunLibraryManager",
+        "title": "Run The ModusToolbox Library Manager"
+      },
+      {
         "command": "mtbassist.mtbSymbolDoc",
         "title": "ModusToolbox Documentation"
       }

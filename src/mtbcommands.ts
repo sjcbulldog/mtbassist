@@ -28,7 +28,7 @@ import * as exec from 'child_process' ;
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import { getModusToolboxAssistantStartupHtml } from './mtbstart';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { theModusToolboxApp } from './mtbappinfo';
+import { mtbAssistLoadApp, theModusToolboxApp } from './mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
 import { MTBAssetInstance } from './mtbassets';
 
@@ -163,7 +163,7 @@ export function mtbImportProject(context: vscode.ExtensionContext) {
         }) ;
 }
 
-export function mtbShowDoc(args?: any) {
+export function mtbShowDoc(context: vscode.ExtensionContext, args?: any) {
     let typestr: string = typeof args ;
 
     if (typestr === "object") {
@@ -175,7 +175,7 @@ export function mtbShowDoc(args?: any) {
     }    
 }
 
-export function mtbRunEditor(args?: any) {
+export function mtbRunEditor(context: vscode.ExtensionContext, args?: any) {
     let typestr: string = typeof args ;
 
     if (typestr === "object") {
@@ -202,6 +202,11 @@ export function mtbRunEditor(args?: any) {
                 console.error(`exec error: ${error}`);
                 console.log(`stdout: ${stdout}`);
                 console.error(`stderr: ${stderr}`);
+
+                if (vscode.workspace.workspaceFolders) {
+                    let appdir : string = vscode.workspace.workspaceFolders[0].uri.fsPath;
+                    mtbAssistLoadApp(context, appdir) ;
+                }
             }
         );
     }
@@ -248,6 +253,28 @@ class ApplicationItem implements vscode.QuickPickItem {
         this.description = description ;
         this.location = location ;
     }
+}
+
+function canRunModusCommand(context: vscode.ExtensionContext) : boolean {
+    let ret: boolean = true ;
+
+    if (theModusToolboxApp === undefined) {
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "there is not ModusToolbox application loaded") ;
+        vscode.window.showErrorMessage("You must load a ModusToolbox application for this command to work") ;
+        ret = false ;
+    }
+    else if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
+        vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
+        ret = false ;
+    }
+    else if (theModusToolboxApp.isValid === false) {
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "there was an error loading the ModusToolbox application") ;
+        vscode.window.showErrorMessage("There was an error loading the ModusToolbox application") ;
+        ret = false ;
+    }
+
+    return ret ;
 }
 
 let panel: vscode.WebviewPanel | undefined ;
@@ -322,6 +349,25 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
             }
         }
     }) ;    
+}
+
+export function mtbRunLibraryManager(context: vscode.ExtensionContext) {
+    if (canRunModusCommand(context) === true) {
+        let ran: boolean = false ;
+        if (theModusToolboxApp?.launch) {
+            for(var config of theModusToolboxApp.launch.configs) {
+                if (config.shortName === "library-manager") {
+                    vscode.commands.executeCommand("mtbassist.mtbRunEditor", config) ;
+                    ran = true ;
+                    break ;
+                }
+            }
+        }
+
+        if (ran === false) {
+            vscode.window.showErrorMessage("Cannot find the tools of type 'library-manager' in the tool list") ;
+        }
+    }    
 }
 
 export function mtbCreateProject(context: vscode.ExtensionContext) {

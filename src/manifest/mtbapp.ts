@@ -19,6 +19,10 @@ import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
 import { MTBItem } from './mtbitem';
 import { MTBItemVersion } from './mtbitemversion';
 
+//
+// This class represents a single application or code example that is available and defined
+//
+
 export class MTBApp extends MTBItem {
     public readonly uri: vscode.Uri;
     public readonly description: string;

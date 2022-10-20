@@ -3,6 +3,7 @@ import { MTBItem } from './manifest/mtbitem';
 import { MtbManifestDb } from './manifest/mtbmanifestdb';
 import { MTBAssetInstance } from './mtbassets';
 import { MTBExtensionInfo } from './mtbextinfo';
+import { MTBAssistCommand } from './mtbglobal';
 
 export class MTBAssetItem extends vscode.TreeItem {
     constructor(label: string) {
@@ -49,8 +50,10 @@ export class MTBAssistAssetProvider implements vscode.TreeDataProvider<MTBAssetI
                                 item.tooltip = versions.join(', ') ;
                             }
                             else {
-                                item.tooltip = "" ;
+                                item.tooltip = "No New Versions Available" ;
                             }
+                            
+                            item.command = new MTBAssistCommand("Run Library Manager", "mtbassist.mtbRunLibraryManager", "Run Library Manager") ;
                         }
                     }
                 }
