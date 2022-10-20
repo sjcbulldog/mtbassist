@@ -440,9 +440,6 @@ export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorE
         vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, pos)
             .then(value => {
                 let locs : vscode.Location[] = value as vscode.Location[] ;
-                MTBExtensionInfo.getMtbExtensionInfo().
-                        logMessage(MessageType.debug, "found " + locs.length + " locations for symbol under cursor") ;
-                        
                 if (locs.length > 0) {
                     let asset: MTBAssetInstance|undefined = MTBAssetInstance.mtbPathToInstance(locs[0].uri.fsPath) ;
                     if (asset) {

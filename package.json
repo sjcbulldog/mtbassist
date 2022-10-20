@@ -2,13 +2,13 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "publisher": "C And T Software",
   "license": "license.txt",
   "icon": "media/exticon.png",
   "repository": {
-    "type" : "git" ,
-    "url" : "https://github.com/sjcbulldog/mtbassist.git "
+    "type": "git",
+    "url": "https://github.com/sjcbulldog/mtbassist.git "
   },
   "engines": {
     "vscode": "^1.71.0"
@@ -73,8 +73,8 @@
     ],
     "keybindings": [
       {
-          "command": "mtbassist.mtbSymbolDoc",
-          "key": "ctrl+shift+f1"
+        "command": "mtbassist.mtbSymbolDoc",
+        "key": "ctrl+shift+f1"
       }
     ],
     "viewsContainers": {
