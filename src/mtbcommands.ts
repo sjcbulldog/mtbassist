@@ -24,6 +24,7 @@ import * as path from 'path' ;
 import * as fs from 'fs' ;
 import * as open from 'open' ;
 import * as exec from 'child_process' ;
+import * as os from 'os' ;
 
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import { getModusToolboxAssistantStartupHtml } from './mtbstart';
@@ -230,11 +231,18 @@ function createProjects(output: Buffer) {
     
     let projects : any[] = [] ;
     lines.forEach((line) => {
+        line = line.trim() ;
         let comps: string[] = line.split("|") ;
         if (comps[0] === "#PROJECT#") {
+            let projloc = comps[2] ;
+
+            if (projloc.length > 1 && projloc[0] === '~') {
+                projloc = projloc.replace('~', os.homedir()) ;
+            }
+
             let project = {
                 name : comps[1],
-                location: comps[2]
+                location: projloc
             } ;
             projects.push(project) ;
         }
@@ -285,18 +293,24 @@ export function refreshStartPage() {
     }
 }
 
-export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
+function getPanel() : vscode.WebviewPanel {
     if (panel === undefined) {
-       panel = vscode.window.createWebviewPanel(
-            'mtbassist', 
-            'ModusToolbox', 
-            vscode.ViewColumn.One, 
-            {
-                enableScripts: true
-            }
+        panel = vscode.window.createWebviewPanel(
+             'mtbassist', 
+             'ModusToolbox', 
+             vscode.ViewColumn.One, 
+             {
+                 enableScripts: true
+             }
         ) ;
     }
     panel.webview.html = getModusToolboxAssistantStartupHtml() ;
+    return panel ;
+}
+
+export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
+    panel = getPanel() ;
+
     panel.onDidDispose(()=> {
         panel = undefined ;
     }) ;
@@ -355,7 +369,7 @@ export function mtbRunLibraryManager(context: vscode.ExtensionContext) {
     if (canRunModusCommand(context) === true) {
         let ran: boolean = false ;
         if (theModusToolboxApp?.launch) {
-            for(var config of theModusToolboxApp.launch.configs) {
+            for(const config of theModusToolboxApp.launch.configs) {
                 if (config.shortName === "library-manager") {
                     vscode.commands.executeCommand("mtbassist.mtbRunEditor", config) ;
                     ran = true ;
