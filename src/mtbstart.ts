@@ -58,6 +58,15 @@ export function getModusToolboxAssistantStartupHtml() : string {
             </style>
             <script>
                 const vscode = acquireVsCodeApi() ;
+                function showWelcomePageChanged(box) {
+                    if (box.checked === true) {
+                        vscode.postMessage({ command: 'showWelcomePage'}) ;
+                    }
+                    else {
+                        vscode.postMessage({ command: 'hideWelcomePage'}) ;
+                    }
+                }
+
                 function selectContent(evt, which) {
                     let buttons = document.getElementsByClassName("tabbutton") ;
                     for(var button of buttons) {

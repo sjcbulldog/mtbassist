@@ -108,6 +108,10 @@ export class MTBAppInfo
                 if (appdir) {
                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
                     vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;
+                    let readme = path.join(appdir, "README.md") ;
+                    if (fs.existsSync(readme)) {
+                        vscode.commands.executeCommand("markdown.showPreview", vscode.Uri.file(readme)) ;
+                    }                    
                 }
             })
             .catch((error) => {

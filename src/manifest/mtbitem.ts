@@ -84,14 +84,14 @@ export class MTBItem
     protected static mergeMsg(id: string, typestr: string, field: string, f1: string, f2:string, src1: vscode.Uri, src2: vscode.Uri) {
         let ext: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;
         let msg: string = "two instances of '" + typestr + "' - '" + id + "' were merged with differing '" + field + "' fields" ;
-        ext.logMessage(MessageType.warning, msg) ;
+        ext.logMessage(MessageType.debug, msg) ;
         msg = "    the first instance was from '" + src1.toString() + "'" ;
-        ext.logMessage(MessageType.warning, msg) ;
+        ext.logMessage(MessageType.debug, msg) ;
         msg = "    the second instance was from '" + src2.toString() + "'" ;
-        ext.logMessage(MessageType.warning, msg) ;
+        ext.logMessage(MessageType.debug, msg) ;
         msg = "    the first '" + field + "' value was '" + f1 + "'" ;
-        ext.logMessage(MessageType.warning, msg) ;
+        ext.logMessage(MessageType.debug, msg) ;
         msg = "    the second '" + field + "' value was '" + f2 + "'" ;
-        ext.logMessage(MessageType.warning, msg) ;
+        ext.logMessage(MessageType.debug, msg) ;
     }
 }

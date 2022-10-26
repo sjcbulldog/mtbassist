@@ -22,6 +22,7 @@
 
 
 import * as vscode from 'vscode';
+import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
 import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
 import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc, mtbSymbolDoc, mtbRunLibraryManager } from './mtbcommands';
@@ -30,9 +31,19 @@ import fs = require('fs');
 import open = require("open");
 import { readRecentList } from './mtbrecent';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { mtbAssistLoadApp } from './mtbappinfo';
+import { mtbAssistLoadApp, theModusToolboxApp } from './mtbappinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
+
+function getTerminalWorkingDirectory() : string {
+	let ret: string = os.homedir() ;
+
+	if (theModusToolboxApp) {
+		ret = theModusToolboxApp.appDir ;
+	}
+
+	return ret ;
+}
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -163,6 +174,34 @@ export function activate(context: vscode.ExtensionContext) {
 	if (MTBExtensionInfo.getMtbExtensionInfo().getPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
 		vscode.commands.executeCommand('mtbassist.mtbShowWelcomePage');
 	}
+
+	let shpath = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "modus-shell/bin/bash") ;
+	if (process.platform === "win32") {
+		shpath += ".exe" ;
+	}
+
+	vscode.window.registerTerminalProfileProvider('mtbassist.mtbShell', {
+		provideTerminalProfile(token: vscode.CancellationToken) : vscode.ProviderResult<vscode.TerminalProfile> {
+			return {
+				options : {
+					name: "ModusToolbox Shell",
+					shellPath: shpath,
+					shellArgs: ["--login"],
+					cwd: getTerminalWorkingDirectory(),
+					env: {
+						["HOME"] : os.homedir(),
+						["PATH"] : "/bin:/usr/bin",
+						["TEMP"] : "/tmp",
+						["TMP"] : "/tmp",
+						["CHERE_INVOKING"] : getTerminalWorkingDirectory()
+					},
+					strictEnv: false,
+					message: "Welcome To ModusToolbox Shell",
+					
+				}
+			} ;
+		}
+	}) ;
 }
 
 // this method is called when your extension is deactivated
