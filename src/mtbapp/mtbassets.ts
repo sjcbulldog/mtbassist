@@ -1,5 +1,5 @@
 ///
-// Copyright 2022 by Apollo Software
+// Copyright 2022 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,9 +32,7 @@ import * as open from 'open' ;
 import { MTBAppInfo, theModusToolboxApp } from "./mtbappinfo";
 import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
 import { getMTBAssetProvider } from '../mtbassetprovider';
-import { platform } from 'os';
-import { env } from 'process';
-import { MTBApp } from '../manifest/mtbapp';
+import { MTBProjectInfo } from './mtbprojinfo';
 
 export class MTBAssetInstance
 {
@@ -45,6 +43,7 @@ export class MTBAssetInstance
     public url?: string ;
     public version?: string ;
     public location?: string ;
+    public fullpath?: string ;
     public isValid: boolean ;
 
     constructor() {
@@ -52,18 +51,17 @@ export class MTBAssetInstance
         this.url = undefined ;
         this.version = undefined ;
         this.location = undefined ;
+        this.fullpath = undefined ;
         this.id = undefined ;
         this.isValid = false ;
     }
 
-    static relPathToAbs (rpath: string) : string {
-        let ret: string = rpath ;
+    static relPathToAbs (projinfo?: MTBProjectInfo, rpath?: string) : string {
+        let ret: string = rpath! ;
         
-        if (!path.isAbsolute(rpath))
+        if (!path.isAbsolute(rpath!) && projinfo)
         {
-            if (theModusToolboxApp) {
-                ret = path.normalize(path.join(theModusToolboxApp.appDir, rpath)) ;
-            }
+            ret = path.normalize(path.join(projinfo.getProjectDir(), rpath!)) ;
         }
 
         if (process.platform === "win32" && ret.length > 2) {
@@ -76,20 +74,23 @@ export class MTBAssetInstance
         return ret ;
     }
 
-    static mtbPathCompare(full: string, sub: string) : boolean {
-        let subpath = MTBAssetInstance.relPathToAbs(sub) ;
-        let fullpath = MTBAssetInstance.relPathToAbs(full) ;
+    static mtbPathCompare(projinfo?: MTBProjectInfo, full?: string, sub?: string) : boolean {
+        let subpath = MTBAssetInstance.relPathToAbs(projinfo, sub) ;
+        let fullpath = MTBAssetInstance.relPathToAbs(projinfo, full) ;
 
         return fullpath.startsWith(subpath) ;
     }
 
     static mtbPathToInstance(path: string) : MTBAssetInstance | undefined {
-        let ret : MTBAssetInstance | undefined ;
-        if (theModusToolboxApp?.assets) {
-            for(let asset of theModusToolboxApp.assets) {
-                if (asset.isValid) {
-                    if (this.mtbPathCompare(path, asset.location as string)) {
-                        ret = asset ;
+        let ret : MTBAssetInstance | undefined = undefined ;
+
+        if (theModusToolboxApp) {
+            for(let proj of theModusToolboxApp.projects) {
+                for(let asset of proj.assets) {
+                    if (asset.isValid) {
+                        if (this.mtbPathCompare(proj, path, asset.location as string)) {
+                            ret = asset ;
+                        }
                     }
                 }
             }
@@ -97,7 +98,7 @@ export class MTBAssetInstance
         return ret ;
     }
 
-    static processMTBContents(line: string) : MTBAssetInstance {
+    static processMTBContents(projinfo: MTBProjectInfo, line: string) : MTBAssetInstance {
         let ret : MTBAssetInstance = new MTBAssetInstance() ;
 
         let parts: string[] = line.split('#') ;
@@ -115,16 +116,17 @@ export class MTBAssetInstance
                 }
 
                 if (loc.startsWith(this.mtbAssetName))  {
-                    ret.location = path.join(theModusToolboxApp!.sharedDir!, loc.substring(this.mtbAssetName.length));
+                    ret.location = path.join(projinfo.sharedDir!, loc.substring(this.mtbAssetName.length));
                 }
                 else if (loc.startsWith(this.mtbLocalName)) {
-                    ret.location = path.join(theModusToolboxApp!.libsDir!, loc.substring(this.mtbLocalName.length));
+                    ret.location = path.join(projinfo.libsDir!, loc.substring(this.mtbLocalName.length));
                 }
                 else {
-                    ret.location = path.join(theModusToolboxApp!.appDir, loc) ;
+                    ret.location = path.join(projinfo.getProjectDir(), loc) ;
                 }
 
                 ret.location = path.normalize(ret.location) ;
+                ret.fullpath = MTBAssetInstance.relPathToAbs(projinfo, ret.location) ;
 
                 ret.isValid = true ;
             }
@@ -133,7 +135,7 @@ export class MTBAssetInstance
         return ret;
     }
 
-    static readMtbFile(filename: string) : Promise<MTBAssetInstance> {
+    static readMtbFile(projinfo: MTBProjectInfo, filename: string) : Promise<MTBAssetInstance> {
         let ret = new Promise<MTBAssetInstance>((resolve, reject) => {
             let extinfo: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;
             extinfo.logMessage(MessageType.debug, "reading MTB file '" + filename + "'") ;
@@ -146,7 +148,7 @@ export class MTBAssetInstance
                     reject(err) ;
                 }
                 else {
-                    let ret = this.processMTBContents(buf.toString()) ;
+                    let ret = this.processMTBContents(projinfo, buf.toString()) ;
                     resolve(ret) ;
                 }
             }) ;
@@ -155,9 +157,9 @@ export class MTBAssetInstance
         return ret ;
     }
 
-    static adjustAssetsPane(appinfo: MTBAppInfo) {
-        if (appinfo?.assets) {
-            appinfo?.assets.sort((a, b) : number => {
+    static adjustAssetsPane(projinfo: MTBProjectInfo) {
+        if (projinfo.assets) {
+            projinfo.assets.sort((a, b) : number => {
                 if (b.id!.toLowerCase() > a.id!.toLowerCase()) {
                     return -1 ;
                 }
@@ -168,10 +170,10 @@ export class MTBAssetInstance
                 return 0 ;
             }) ;
         }
-        getMTBAssetProvider().refresh(appinfo!.assets) ;
+        getMTBAssetProvider().refresh(projinfo.name, projinfo.assets) ;
     }
 
-    static scanOneDir(appinfo: MTBAppInfo, dirname: string) {
+    static scanOneDir(projinfo: MTBProjectInfo, dirname: string) {
         fs.readdir(dirname, (err, files) => {
             if (err) {
                 let errmgs = err as Error ;
@@ -181,10 +183,10 @@ export class MTBAssetInstance
             else {
                 for(var file of files) {
                     if (path.extname(file) === '.mtb') {
-                        this.readMtbFile(path.join(dirname, file))
+                        this.readMtbFile(projinfo, path.join(dirname, file))
                             .then((asset) => {
-                                theModusToolboxApp!.assets.push(asset) ;
-                                this.adjustAssetsPane(appinfo) ;
+                                projinfo.assets.push(asset) ;
+                                this.adjustAssetsPane(projinfo) ;
                             })
                             .catch((err) => {
                             }) ;
@@ -194,21 +196,25 @@ export class MTBAssetInstance
         }) ;
     }
 
-    public static mtbLoadAssetInstance(appinfo: MTBAppInfo) {
-        if (appinfo?.libsDir) {
-            this.scanOneDir(appinfo, appinfo.libsDir) ;
-        }
-        if (appinfo?.depsDir) {
-            this.scanOneDir(appinfo, appinfo.depsDir) ;
-        }
+    public static mtbLoadAssetInstance(projinfo: MTBProjectInfo) : Promise<void> {
+        let ret : Promise<void> = new Promise<void>((resolve, reject) => {
+            if (projinfo?.libsDir) {
+                this.scanOneDir(projinfo, projinfo.libsDir) ;
+            }
+            if (projinfo?.depsDir) {
+                this.scanOneDir(projinfo, projinfo.depsDir) ;
+            }
+            resolve() ;
+        }) ;
+
+        return ret ;
     }
-
-
+    
     public displayDocs() {
         if (theModusToolboxApp?.launch) {
             theModusToolboxApp.launch.docs.forEach(doc => {
                 if (this.location) {
-                    if (MTBAssetInstance.mtbPathCompare(doc.location, this.location)) {
+                    if (MTBAssetInstance.mtbPathCompare(undefined, doc.location, this.fullpath)) {
                         open(decodeURIComponent(doc.location)) ;
                     }
                 }

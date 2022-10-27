@@ -1,5 +1,5 @@
 ///
-// Copyright 2022 by Apollo Software
+// Copyright 2022 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,21 @@
 // limitations under the License.
 //
 
+import * as path from 'path' ;
+
 import { ModusToolboxEnvVarNames } from "./mtbnames";
-import { MTBAppInfo } from "./mtbappinfo";
+import { AppType, MTBAppInfo } from "./mtbappinfo";
 import { MTBAssetInstance } from "./mtbassets";
 import { getMTBAssetProvider } from "../mtbassetprovider";
+import { runMakeGetAppInfo } from './mtbrunprogs';
+import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
 
 export class MTBProjectInfo
 {
     // The app that owns this project
     public app : MTBAppInfo ;
 
+    // The directory containining the project
     public name: string ;
         
     // The shared directory
@@ -43,17 +48,11 @@ export class MTBProjectInfo
 
     // The list of vars from the make get_app_info
     mtbvars: Map<string, string> = new Map<string, string>() ;
-        
-    static oldVarMap: Map<string, string> = new Map<string, string>() ;
 
     constructor(app: MTBAppInfo, name: string) {
         this.app = app ;
         this.name = name ;
         this.assets = [] ;
-        
-        if (MTBProjectInfo.oldVarMap.size === 0) {
-            MTBProjectInfo.initOldVarMap() ;
-        }
     }
 
     public getVar(varname: string) : string | undefined {
@@ -64,21 +63,90 @@ export class MTBProjectInfo
         getMTBAssetProvider().refresh(this.name, this.assets) ;
     }
 
-    static initOldVarMap() {
-        MTBProjectInfo.oldVarMap.set("TARGET_DEVICE", ModusToolboxEnvVarNames.MTB_DEVICE);
-        MTBProjectInfo.oldVarMap.set("TOOLCHAIN", ModusToolboxEnvVarNames.MTB_TOOLCHAIN);
-        MTBProjectInfo.oldVarMap.set("TARGET", ModusToolboxEnvVarNames.MTB_TARGET);
-        MTBProjectInfo.oldVarMap.set("COMPONENTS", ModusToolboxEnvVarNames.MTB_COMPONENTS);
-        MTBProjectInfo.oldVarMap.set("DISABLE_COMPONENTS", ModusToolboxEnvVarNames.MTB_DISABLED_COMPONENTS);
-        MTBProjectInfo.oldVarMap.set("ADDITIONAL_DEVICES", ModusToolboxEnvVarNames.MTB_ADDITIONAL_DEVICES);
-        MTBProjectInfo.oldVarMap.set("CY_GETLIBS_PATH", ModusToolboxEnvVarNames.MTB_LIBS);
-        MTBProjectInfo.oldVarMap.set("CY_GETLIBS_DEPS_PATH", ModusToolboxEnvVarNames.MTB_DEPS);
-        MTBProjectInfo.oldVarMap.set("CY_GETLIBS_SHARED_NAME", ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME);
-        MTBProjectInfo.oldVarMap.set("CY_GETLIBS_SHARED_PATH", ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR);
-        MTBProjectInfo.oldVarMap.set("CY_TOOLS_PATH", ModusToolboxEnvVarNames.MTB_TOOLS_DIR);
-        MTBProjectInfo.oldVarMap.set("APP_NAME", ModusToolboxEnvVarNames.MTB_APP_NAME);
-        MTBProjectInfo.oldVarMap.set("CY_GETLIBS_CACHE_PATH", ModusToolboxEnvVarNames.MTB_CACHE_DIR);
-        MTBProjectInfo.oldVarMap.set("CY_GETLIBS_OFFLINE_PATH", ModusToolboxEnvVarNames.MTB_OFFLINE_DIR);
-        MTBProjectInfo.oldVarMap.set("CY_GETLIBS_GLOBAL_PATH", ModusToolboxEnvVarNames.MTB_GLOBAL_DIR);
+    public initProject() : Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            runMakeGetAppInfo(this.getProjectDir())
+                .then((data: Map<string, string>) => {
+                    this.initProjectFromData(data)
+                        .then((ret: boolean) => {
+                            if (ret) {
+                                resolve() ;
+                            }
+                            else {
+                                reject(new Error("cannot initialize project '" + this.name + "'")) ;
+                            }
+                        })
+                        .catch((err: Error) => {
+                            reject(err) ;
+                        }) ;
+                })
+                .catch((err : Error) => {
+                    reject(err) ;
+                }) ;
+        }) ;
+    }
+
+    public initProjectFromData(data: Map<string, string>) : Promise<boolean> {
+        let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
+
+            if (data.has(ModusToolboxEnvVarNames.MTB_LIBS)) {
+                this.libsDir = data.get(ModusToolboxEnvVarNames.MTB_LIBS)
+            }
+            else {
+                let msg: string = "project '" + this.name + "' is missing value '" + ModusToolboxEnvVarNames.MTB_LIBS  + "'" ;
+                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;
+                reject(false);
+            }
+
+            if (data.has(ModusToolboxEnvVarNames.MTB_GLOBAL_DIR)) {
+                this.globalDir = data.get(ModusToolboxEnvVarNames.MTB_GLOBAL_DIR);
+            }
+            else {
+                let msg: string = "project '" + this.name + "' is missing value '" + ModusToolboxEnvVarNames.MTB_GLOBAL_DIR + "'" ;
+                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;
+                reject(false);
+            }
+
+            if (data.has(ModusToolboxEnvVarNames.MTB_DEPS)) {
+                this.depsDir = data.get(ModusToolboxEnvVarNames.MTB_DEPS);
+            }
+            else {
+                let msg: string = "project '" + this.name + "' is missing value '" + ModusToolboxEnvVarNames.MTB_DEPS + "'" ;
+                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;
+                reject(false);
+            }
+
+            if (data.has(ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR) && data.has(ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME)) {
+                let shdir: string = data.get(ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR) as string ;
+                let shname: string = data.get(ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME) as string ;
+                this.sharedDir = path.join(shdir, shname) ;
+            }
+            else {
+                let msg: string = "project '" + this.name + "' is missing value '" + ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR + "'";
+                msg += " or value '" + ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME + "'" ;
+                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;  
+                reject(false);          
+            }
+            this.mtbvars = data ;
+
+            MTBAssetInstance.mtbLoadAssetInstance(this)
+                .then(() => {
+                    resolve(true) ;
+                })
+                .catch((err: Error) => {
+                    reject(err) ;
+                }) ;
+        }) ;
+
+        return ret ;
+    }
+
+    public getProjectDir() : string {
+        let ret : string = this.app.appDir ;
+        if (this.app.appType === AppType.multicore) {
+            ret = path.join(this.app.appDir, this.name) ;
+        }
+
+        return ret ;
     }
 }

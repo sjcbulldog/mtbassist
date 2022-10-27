@@ -1,5 +1,5 @@
 //
-// Copyright 2022 by Apollo Software
+// Copyright 2022 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,36 +15,51 @@
 //
 
 import * as vscode from 'vscode';
-import { theModusToolboxApp } from './mtbappinfo';
+import { theModusToolboxApp } from './mtbapp/mtbappinfo';
 import { ModusToolboxEnvVarNames } from './mtbapp/mtbnames';
+import { MTBProjectInfo } from './mtbapp/mtbprojinfo';
 
 export class MTBProjectItem extends vscode.TreeItem {
-    private children: MTBProjectItem[] ;
+
+
+    private children_: MTBProjectItem[] ;
 
     constructor(label: string, desc?: string) {
         super(label) ;
 
         this.description = desc ;
-        this.children = [] ;
+        this.children_ = [] ;
     }
 
     addChild(child: MTBProjectItem) {
-        this.children.push(child) ;
+        this.children_.push(child) ;
         this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded ;
     }
 
     getChildren() : MTBProjectItem[] {
-        return this.children ;
+        return this.children_ ;
+    }
+
+    setChildren(c: MTBProjectItem[]) {
+        this.children_ = c ;
+        if (this.children_.length > 0) {
+            this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded ;
+        } 
+        else {
+            this.collapsibleState = vscode.TreeItemCollapsibleState.None ;
+        }
     }
 }
 
 export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBProjectItem> {
+    private emptyLabel = "Load Or Create Project" ;
+    
     private items_ : MTBProjectItem[] = [] ;
     private onDidChangeTreeData_: vscode.EventEmitter<MTBProjectItem | undefined | null | void> = new vscode.EventEmitter<MTBProjectItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<MTBProjectItem | undefined | null | void> = this.onDidChangeTreeData_.event;
 
     constructor() {
-        this.refresh() ;
+        this.refresh(undefined) ;
     }
 
     getTreeItem(element: MTBProjectItem): vscode.TreeItem {
@@ -64,39 +79,64 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
         return Promise.resolve(retval) ;
     }
 
-    refresh(): void {
-        this.items_ = [] ;
+    findTopLevelChild(name: string) : MTBProjectItem | undefined {
+        let ret : MTBProjectItem | undefined = undefined ;
 
-        if (theModusToolboxApp) {
-            let value = theModusToolboxApp.getVar(ModusToolboxEnvVarNames.MTB_APP_NAME) ;
+        for(let item of this.items_) {
+            if (item.label && item.label === name) {
+                ret = item ;
+                break ;
+            }
+        }
+
+        return ret ;
+    }
+
+    refresh(projinfo?: MTBProjectInfo): void {
+
+        if (projinfo) {
+            if (this.items_.length === 1 && this.items_[0].label === this.emptyLabel) {
+                this.items_ = [] ;
+            }
+
+            let parent: MTBProjectItem | undefined = this.findTopLevelChild(projinfo.name) ;
+
+            if (!parent) {
+                parent = new MTBProjectItem(projinfo.name) ;
+                this.items_.push(parent) ;
+            }
+
+            parent.setChildren([]) ;
+
+            let value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_APP_NAME) ;
             if (value) {
                 let item: MTBProjectItem = new MTBProjectItem("APP NAME", value) ;
-                this.items_.push(item) ;
+                parent.addChild(item) ;
             }
 
-            value = theModusToolboxApp.getVar(ModusToolboxEnvVarNames.MTB_TARGET) ;
+            value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_TARGET) ;
             if (value) {
                 let item: MTBProjectItem = new MTBProjectItem("TARGET", value) ;
-                this.items_.push(item) ;
+                parent.addChild(item) ;
             }
 
-            value = theModusToolboxApp.getVar(ModusToolboxEnvVarNames.MTB_DEVICE) ;
+            value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_DEVICE) ;
             if (value) {
                 let item: MTBProjectItem = new MTBProjectItem("DEVICE", value) ;
-                this.items_.push(item) ;
+                parent.addChild(item) ;
             }
 
-            value = theModusToolboxApp.getVar(ModusToolboxEnvVarNames.MTB_ADDITIONAL_DEVICES) ;
+            value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_ADDITIONAL_DEVICES) ;
             if (value && value.length > 0) {
                 let item: MTBProjectItem = new MTBProjectItem("ADDITIONAL", value) ;
-                this.items_.push(item) ;
+                parent.addChild(item) ;
             }
 
-            value = theModusToolboxApp.getVar(ModusToolboxEnvVarNames.MTB_COMPONENTS) ;
+            value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_COMPONENTS) ;
             if (value) {
                 let comps :string [] = (value as string).split(' ') ;
 
-                value = theModusToolboxApp.getVar(ModusToolboxEnvVarNames.MTB_DISABLED_COMPONENTS) ;
+                value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_DISABLED_COMPONENTS) ;
                 let disabled : string[] = (value as string).split(' ') ;
                 for(var one in disabled) {
                     let index: number = comps.indexOf(one) ;
@@ -106,7 +146,7 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
                 }
 
                 let item: MTBProjectItem = new MTBProjectItem("COMPONENTS", "(" + comps.length + ")") ;
-                this.items_.push(item) ;
+                parent.addChild(item) ;
                 for(var one of comps) {
                     let sub: MTBProjectItem = new MTBProjectItem(one) ;
                     item.addChild(sub) ;
@@ -114,7 +154,8 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
             }
         }
         else {
-            let item: MTBProjectItem = new MTBProjectItem("Load Or Create Project", "") ;
+            let item: MTBProjectItem = new MTBProjectItem(this.emptyLabel, "") ;
+            this.items_ = [] ;
             this.items_.push(item) ;
         }
 

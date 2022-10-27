@@ -1,5 +1,5 @@
 //
-// Copyright 2022 by Apollo Software
+// Copyright 2022 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,6 +97,7 @@ export class MTBAssistAssetProvider implements vscode.TreeDataProvider<MTBAssetI
                 this.items_.push(parent) ;
             }
 
+            parent.setChildren([]) ;
             for(var asset of assets) {
                 let item = new MTBAssetItem(asset.id + ", " + asset.version) ;
                 let mandb: MtbManifestDb = MTBExtensionInfo.getMtbExtensionInfo().manifestDb ;

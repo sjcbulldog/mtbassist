@@ -1,5 +1,5 @@
 //
-// Copyright 2022 by Apollo Software
+// Copyright 2022 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,20 @@
 
 import { MTBExtensionInfo } from "./mtbextinfo";
 import { getRecentList } from "./mtbrecent";
+
+export function getModusToolboxNotInstallHtml() : string {
+    let html : string = 
+        `<!DOCTYPE html>
+            <head>
+            <meta charset="UTF-8">
+            <body>
+            <p>ModusToolbox 3.0 or later is not installed.  Please install ModusToolbox 3.0 or later to use this extensison.</p>
+            <a href="https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software/">Go here to download</a>
+            </body>
+        ` ;
+
+    return html ;
+}
 
 export function getModusToolboxAssistantStartupHtml() : string {
     let html : string = 

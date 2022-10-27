@@ -1,5 +1,5 @@
 //
-// Copyright 2022 by Apollo Software
+// Copyright 2022 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,9 +31,10 @@ import fs = require('fs');
 import open = require("open");
 import { readRecentList } from './mtbrecent';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { mtbAssistLoadApp, theModusToolboxApp } from './mtbappinfo';
+import { mtbAssistLoadApp, theModusToolboxApp } from './mtbapp/mtbappinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
+import { getModusToolboxNotInstallHtml } from './mtbstart';
 
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
@@ -67,6 +68,18 @@ export function activate(context: vscode.ExtensionContext) {
 
 		// Also tell the user via VS code messages
 		vscode.window.showInformationMessage("This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.");
+
+		// Display a web page about ModusToolbox
+		let panel : vscode.WebviewPanel = vscode.window.createWebviewPanel(
+				 'mtbassist', 
+				 'ModusToolbox', 
+				 vscode.ViewColumn.One, 
+				 {
+					 enableScripts: true
+				 }
+			) ;
+
+		panel.webview.html = getModusToolboxNotInstallHtml() ;
 		return;
 	}
 

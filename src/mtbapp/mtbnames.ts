@@ -1,5 +1,5 @@
 //
-// Copyright 2022 by Apollo Software
+// Copyright 2022 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,4 +31,14 @@ export class ModusToolboxEnvVarNames
     static readonly MTB_CACHE_DIR: string = "MTB_CACHE_DIR";
     static readonly MTB_OFFLINE_DIR: string = "MTB_OFFLINE_DIR";
     static readonly MTB_GLOBAL_DIR: string = "MTB_GLOBAL_DIR";
+    static readonly MTB_TYPE: string = "MTB_TYPE" ;
+    static readonly MTB_PROTOCOL: string = "MTB_PROTOCOL" ;
+    static readonly MTB_PROJECTS: string = "MTB_PROJECTS" ;
+}
+
+export class ModusToolboxEnvTypeNames
+{
+    static readonly COMBINED = "COMBINED" ;
+    static readonly APPLICATION = "APPLICATION" ;
+    static readonly PROJECT = "PROJECT" ;
 }
