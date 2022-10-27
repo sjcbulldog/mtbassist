@@ -25,17 +25,16 @@
 // member to see if the loading processes is underway.  If the load fails or has never
 // happened, the isValid member will be false.
 //
-import * as vscode from 'vscode';
 import * as path from 'path' ;
 import * as fs from 'fs' ;
 import * as open from 'open' ;
 
 import { MTBAppInfo, theModusToolboxApp } from "./mtbappinfo";
-import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { getMTBAssetProvider } from './mtbassetprovider';
+import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
+import { getMTBAssetProvider } from '../mtbassetprovider';
 import { platform } from 'os';
 import { env } from 'process';
-import { MTBApp } from './manifest/mtbapp';
+import { MTBApp } from '../manifest/mtbapp';
 
 export class MTBAssetInstance
 {
@@ -207,20 +206,13 @@ export class MTBAssetInstance
 
     public displayDocs() {
         if (theModusToolboxApp?.launch) {
-            let found: boolean = false ;
-            for(var doc of theModusToolboxApp.launch.docs) {
+            theModusToolboxApp.launch.docs.forEach(doc => {
                 if (this.location) {
                     if (MTBAssetInstance.mtbPathCompare(doc.location, this.location)) {
                         open(decodeURIComponent(doc.location)) ;
-                        found = true ;
-                        break ;
                     }
                 }
-            } ;
-
-            if (!found) {
-                vscode.window.showInformationMessage("The asset '" + this.id + "' does not contain documentation") ;
-            }
+            }) ;
         }
     }
 }

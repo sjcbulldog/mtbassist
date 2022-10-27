@@ -31,7 +31,7 @@ import { getModusToolboxAssistantStartupHtml } from './mtbstart';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, theModusToolboxApp } from './mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
-import { MTBAssetInstance } from './mtbassets';
+import { MTBAssetInstance } from './mtbapp/mtbassets';
 
 function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: string, gitpath: string, name: string) {
     let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;

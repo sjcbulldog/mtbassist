@@ -31,23 +31,25 @@ import * as path from 'path' ;
 import * as exec from 'child_process' ;
 import * as fs from 'fs' ;
 
-import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
-import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
-import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { MTBLaunchInfo } from './mtblaunchdata';
-import { addToRecentProjects } from './mtbrecent';
-import { refreshStartPage } from './mtbcommands';
-import { mtbStringToJSON } from './mtbjson';
+import { getMTBDocumentationTreeProvider } from '../mtbdocprovider';
+import { getMTBProgramsTreeProvider } from '../mtbprogramsprovider';
+import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
+import { MTBLaunchInfo } from '../mtblaunchdata';
+import { addToRecentProjects } from '../mtbrecent';
+import { refreshStartPage } from '../mtbcommands';
+import { mtbStringToJSON } from '../mtbjson';
 import { MTBAssetInstance } from './mtbassets';
 import { ModusToolboxEnvVarNames } from './mtbnames';
-import G = require('glob');
-import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
-import { getMTBAssetProvider } from './mtbassetprovider';
+import { getMTBProjectInfoProvider } from '../mtbprojinfoprovider';
+import { MTBProjectInfo } from './mtbprojinfo';
 
 export class MTBAppInfo
 {
     // The top level directory for the application
     public appDir: string ;
+
+    // The list of projects in the application
+    public projects: MTBProjectInfo[];
 
     // The launch information (configurators and documentation) for the application
     public launch?: MTBLaunchInfo ;
@@ -60,44 +62,17 @@ export class MTBAppInfo
 
     // The extension context
     public context: vscode.ExtensionContext ;
-    
-    // The shared directory
-    public sharedDir?: string ;
-
-    // The libs directory
-    public libsDir?: string ;
-
-    // The deps directory
-    public depsDir?: string ;
-
-    // The global directory
-    public globalDir?: string ;
-
-    // The list of assets
-    public assets: MTBAssetInstance[] ;
-
-    // The list of vars from the make get_app_info
-    mtbvars: Map<string, string> = new Map<string, string>() ;
-
-    static oldVarMap: Map<string, string> = new Map<string, string>() ;
 
     //
     // Create the application object and load in the background
     //
     constructor(context: vscode.ExtensionContext, appdir? : string) {
         this.appDir = "" ;
-        this.sharedDir = undefined ;
-        this.libsDir = undefined ;
-        this.depsDir = undefined ;
+        this.projects = [] ;
         this.context = context ;
-        this.assets = [] ;
         this.setLaunchInfo(undefined) ;
 
         MTBExtensionInfo.getMtbExtensionInfo().manifestDb.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
-
-        if (MTBAppInfo.oldVarMap.size === 0) {
-            MTBAppInfo.initOldVarMap() ;
-        }
 
         this.isValid = false ;
         this.isLoading = true ;
@@ -108,10 +83,6 @@ export class MTBAppInfo
                 if (appdir) {
                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
                     vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;
-                    let readme = path.join(appdir, "README.md") ;
-                    if (fs.existsSync(readme)) {
-                        vscode.commands.executeCommand("markdown.showPreview", vscode.Uri.file(readme)) ;
-                    }                    
                 }
             })
             .catch((error) => {
@@ -195,7 +166,13 @@ export class MTBAppInfo
 
     static manifestLoadedCallback() {
         if (theModusToolboxApp) {
-            getMTBAssetProvider().refresh(theModusToolboxApp.assets) ;
+            theModusToolboxApp.updateAssets() ;
+        }
+    }
+
+    private updateAssets() {
+        for(let proj of this.projects) {
+            proj.updateAssets() ;
         }
     }
 
@@ -420,23 +397,7 @@ export class MTBAppInfo
         return ret ;
     }
 
-    static initOldVarMap() {
-        MTBAppInfo.oldVarMap.set("TARGET_DEVICE", ModusToolboxEnvVarNames.MTB_DEVICE);
-        MTBAppInfo.oldVarMap.set("TOOLCHAIN", ModusToolboxEnvVarNames.MTB_TOOLCHAIN);
-        MTBAppInfo.oldVarMap.set("TARGET", ModusToolboxEnvVarNames.MTB_TARGET);
-        MTBAppInfo.oldVarMap.set("COMPONENTS", ModusToolboxEnvVarNames.MTB_COMPONENTS);
-        MTBAppInfo.oldVarMap.set("DISABLE_COMPONENTS", ModusToolboxEnvVarNames.MTB_DISABLED_COMPONENTS);
-        MTBAppInfo.oldVarMap.set("ADDITIONAL_DEVICES", ModusToolboxEnvVarNames.MTB_ADDITIONAL_DEVICES);
-        MTBAppInfo.oldVarMap.set("CY_GETLIBS_PATH", ModusToolboxEnvVarNames.MTB_LIBS);
-        MTBAppInfo.oldVarMap.set("CY_GETLIBS_DEPS_PATH", ModusToolboxEnvVarNames.MTB_DEPS);
-        MTBAppInfo.oldVarMap.set("CY_GETLIBS_SHARED_NAME", ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME);
-        MTBAppInfo.oldVarMap.set("CY_GETLIBS_SHARED_PATH", ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR);
-        MTBAppInfo.oldVarMap.set("CY_TOOLS_PATH", ModusToolboxEnvVarNames.MTB_TOOLS_DIR);
-        MTBAppInfo.oldVarMap.set("APP_NAME", ModusToolboxEnvVarNames.MTB_APP_NAME);
-        MTBAppInfo.oldVarMap.set("CY_GETLIBS_CACHE_PATH", ModusToolboxEnvVarNames.MTB_CACHE_DIR);
-        MTBAppInfo.oldVarMap.set("CY_GETLIBS_OFFLINE_PATH", ModusToolboxEnvVarNames.MTB_OFFLINE_DIR);
-        MTBAppInfo.oldVarMap.set("CY_GETLIBS_GLOBAL_PATH", ModusToolboxEnvVarNames.MTB_GLOBAL_DIR);
-    }
+
 }
 
 //

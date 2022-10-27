@@ -17,13 +17,36 @@
 import * as vscode from 'vscode';
 import { MTBItem } from './manifest/mtbitem';
 import { MtbManifestDb } from './manifest/mtbmanifestdb';
-import { MTBAssetInstance } from './mtbassets';
+import { MTBAssetInstance } from './mtbapp/mtbassets';
 import { MTBExtensionInfo } from './mtbextinfo';
 import { MTBAssistCommand } from './mtbassistcmd';
 
 export class MTBAssetItem extends vscode.TreeItem {
+    private children_ : MTBAssetItem[] ;
+
     constructor(label: string) {
         super(label) ;
+
+        this.children_ = [] ;
+    }
+
+    setChildren(c: MTBAssetItem[]) {
+        this.children_ = c ;
+        if (this.children_.length > 0) {
+            this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded ;
+        } 
+        else {
+            this.collapsibleState = vscode.TreeItemCollapsibleState.None ;
+        }
+    }
+
+    getChildren() : MTBAssetItem[] {
+        return this.children_ ;
+    }
+
+    addChild(child: MTBAssetItem) {
+        this.children_.push(child) ;
+        this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded ;
     }
 }
 
@@ -33,7 +56,7 @@ export class MTBAssistAssetProvider implements vscode.TreeDataProvider<MTBAssetI
     readonly onDidChangeTreeData: vscode.Event<MTBAssetItem | undefined | null | void> = this.onDidChangeTreeData_.event;
 
     constructor() {
-        this.refresh(undefined) ;
+        this.refresh(undefined, undefined) ;
     }
 
     getTreeItem(element: MTBAssetItem): vscode.TreeItem {
@@ -46,13 +69,34 @@ export class MTBAssistAssetProvider implements vscode.TreeDataProvider<MTBAssetI
         if (!element) {
             retval = this.items_ ;
         }
+        else {
+            retval = element.getChildren() ;
+        }
         return Promise.resolve(retval) ;
     }
 
-    refresh(assets?: MTBAssetInstance[]): void {
-        this.items_ = [] ;
+    findTopLevelChild(name: string) : MTBAssetItem | undefined {
+        let ret : MTBAssetItem | undefined = undefined ;
 
-        if (assets) {
+        for(let item of this.items_) {
+            if (item.label && item.label === name) {
+                ret = item ;
+                break ;
+            }
+        }
+
+        return ret ;
+    }
+
+    refresh(name? : string, assets?: MTBAssetInstance[]): void {
+        if (name && assets) {
+            let parent: MTBAssetItem | undefined = this.findTopLevelChild(name) ;
+
+            if (!parent) {
+                parent = new MTBAssetItem(name) ;
+                this.items_.push(parent) ;
+            }
+
             for(var asset of assets) {
                 let item = new MTBAssetItem(asset.id + ", " + asset.version) ;
                 let mandb: MtbManifestDb = MTBExtensionInfo.getMtbExtensionInfo().manifestDb ;
@@ -79,14 +123,16 @@ export class MTBAssistAssetProvider implements vscode.TreeDataProvider<MTBAssetI
                 else if (mandb.isLoading) {
                     item.tooltip = "Loading manifest file ..." ;
                 }
-                this.items_.push(item) ;
+                parent.addChild(item) ;
             } ;
+        }
+        else {
+            this.items_ = [] ;
         }
 
         this.onDidChangeTreeData_.fire();
     }
 }
-
 
 let assets : MTBAssistAssetProvider | undefined ;
 
