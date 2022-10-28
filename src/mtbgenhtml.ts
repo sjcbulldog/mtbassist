@@ -19,6 +19,41 @@ import { getRecentList } from "./mtbrecent";
 
 let titlestr :string = '<p style="font-size:300%;">ModusToolbox Assistant ' + MTBExtensionInfo.version;
 
+export function getImportHtmlInstructions() : string {
+    let html : string = 
+    `<!DOCTYPE html>
+        <head>
+            <meta charset="UTF-8">
+            <script>
+                const vscode = acquireVsCodeApi() ;
+            </script>
+        </head>
+        <body>
+            ####TITLE####
+            <div style="font-size: 150%;">
+            The import command is used to import a ModusToolbox project that is stored in a git repository to your local machine.  This command is used when a team
+            is working on a project.  The project is initially created using the ModusToolbox Project Creator and then stored in a git repository that is accessible
+            by all team members.  Note, the import flow does not work for if the git clone operation must supply a password for the remote repository.<br>
+            The import command prompts for the following information:
+            <ul>
+            <li>The location on the local machine where the project will be stored (LOCALDIR).</li>
+            <li>The location of the repository.  The type may be git, hhttp, https, or ssh as long as no password is required (GITREPO)</li>
+            <li>The name of the project directory (LOCALNAME)
+            </ul>
+            This command basically clones the git repository GITREPO to the path LOCALDIR/LOCALNAME and then runs <i>make getlibs</i> followed by <i>make vscode</i> to
+            ready the project for the local machine.
+
+            <br>
+            <a onclick="vscode.postMessage({ command: 'mtbImportProjectDirect'}) ;" href="#">Click Here To Import Project</a>
+            </div>
+        </body>
+    ` ;
+
+html = html.replace("####TITLE####", titlestr) ;        
+
+return html ;
+}
+
 export function getModusToolboxNotInstallHtml() : string {
     let html : string = 
         `<!DOCTYPE html>

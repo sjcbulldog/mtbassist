@@ -25,7 +25,7 @@ import * as vscode from 'vscode';
 import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
 import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
-import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbRunEditor, mtbShowDoc, mtbSymbolDoc, mtbRunLibraryManager } from './mtbcommands';
+import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbImportProjectDirect, mtbRunEditor, mtbShowDoc, mtbSymbolDoc, mtbRunLibraryManager } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
 import open = require("open");
@@ -34,7 +34,7 @@ import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, theModusToolboxApp } from './mtbapp/mtbappinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
-import { getModusToolboxNotInstallHtml } from './mtbstart';
+import { getModusToolboxNotInstallHtml } from './mtbgenhtml';
 
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
@@ -99,6 +99,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbImportProject', () => {
 		mtbImportProject(context);
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbImportProjectDirect', () => {
+		mtbImportProjectDirect(context);
 	});
 	context.subscriptions.push(disposable);
 

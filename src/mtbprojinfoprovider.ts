@@ -15,12 +15,11 @@
 //
 
 import * as vscode from 'vscode';
-import { theModusToolboxApp } from './mtbapp/mtbappinfo';
+import { AppType, theModusToolboxApp } from './mtbapp/mtbappinfo';
 import { ModusToolboxEnvVarNames } from './mtbapp/mtbnames';
 import { MTBProjectInfo } from './mtbapp/mtbprojinfo';
 
 export class MTBProjectItem extends vscode.TreeItem {
-
 
     private children_: MTBProjectItem[] ;
 
@@ -53,6 +52,7 @@ export class MTBProjectItem extends vscode.TreeItem {
 
 export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBProjectItem> {
     private emptyLabel = "Load Or Create Project" ;
+    private projectTypeLabel = "Type:" ;
     
     private items_ : MTBProjectItem[] = [] ;
     private onDidChangeTreeData_: vscode.EventEmitter<MTBProjectItem | undefined | null | void> = new vscode.EventEmitter<MTBProjectItem | undefined | null | void>();
@@ -97,6 +97,20 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
         if (projinfo) {
             if (this.items_.length === 1 && this.items_[0].label === this.emptyLabel) {
                 this.items_ = [] ;
+
+                let value: string = "Unknown" ;
+
+                if (projinfo.app.appType === AppType.mtb2x) {
+                    value = "MTB 2.X Project" ;
+                }
+                else if (projinfo.app.appType === AppType.multicore) {
+                    value = "MTB 3.X Multi Core Project" ;
+                }
+                else if (projinfo.app.appType === AppType.combined) {
+                    value = "MTB 3.X Single Core Project" ;
+                }
+                let item: MTBProjectItem = new MTBProjectItem("PROJECT TYPE", value) ;
+                this.items_.push(item) ;
             }
 
             let parent: MTBProjectItem | undefined = this.findTopLevelChild(projinfo.name) ;
