@@ -15,6 +15,7 @@
 //
 
 import * as path from 'path' ;
+import * as os from 'os' ;
 
 import { ModusToolboxEnvVarNames } from "./mtbnames";
 import { AppType, MTBAppInfo } from "./mtbappinfo";
@@ -102,9 +103,7 @@ export class MTBProjectInfo
                 this.globalDir = data.get(ModusToolboxEnvVarNames.MTB_GLOBAL_DIR);
             }
             else {
-                let msg: string = "project '" + this.name + "' is missing value '" + ModusToolboxEnvVarNames.MTB_GLOBAL_DIR + "'" ;
-                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;
-                reject(false);
+                this.globalDir = path.join(path.join(os.homedir(), ".modustoolbox"), "global") ;
             }
 
             if (data.has(ModusToolboxEnvVarNames.MTB_DEPS)) {

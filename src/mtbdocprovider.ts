@@ -55,6 +55,16 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
         return title.replace("&trade;", "\u2122") ;
     }
 
+    private findChild(projname: string) : MTBAssistItem | undefined {
+        for(let item of this.items_) {
+            if (item.label === projname) {
+                return item ;
+            }
+        }
+
+        return undefined ;
+    }
+
     refresh(docs?: MTBLaunchDoc[]) {
         this.items_ = [] ;
 
@@ -72,10 +82,17 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
         this.items_.push(item) ;
 
         if (docs) {
-            item = new MTBAssistItem("Application") ;
-            this.items_.push(item) ;
-
             docs.forEach((doc) => {
+                let parent: MTBAssistItem | undefined = undefined ;
+
+                if (doc.project.length > 0) {
+                    parent = this.findChild(doc.project) ;
+                    if (parent === undefined) {
+                        parent = new MTBAssistItem(doc.project) ;
+                        this.items_.push(parent) ;
+                    }
+                }
+
                 let title: string = this.convertTradeMark(doc.title) ;
                 let item : MTBAssistItem = new MTBAssistItem(title) ;
                 item.doc = doc ;
@@ -84,37 +101,13 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
                 item.command.arguments = [] ;
                 item.command.arguments.push(doc) ;
 
-                if (doc.path.length === 0) {
-                    this.items_[1].addChild(item) ;
-                }
-                else {
-                    let index: number = 0 ;
-
-                    while (index < doc.path.length) {
-                        let offset : number ;
-
-                        if (index === 0) {
-                            offset = this.findItem(this.items_, doc.path[index]) ;
-                        }
-                        else {
-                            offset = this.findItem(parent.getChildren(), doc.path[index]) ;
-                        }
-
-                        if (offset === -1) {
-                            let newone:MTBAssistItem = new MTBAssistItem(doc.path[index]) ;
-                            if (index === 0) {
-                                this.items_.push(newone) ;
-                            }
-                            else {
-                                parent.addChild(newone) ;
-                            }
-                            index++ ;
-                            parent = newone ;
-                        }
-                    }
-
+                if (parent !== undefined) {
                     parent.addChild(item) ;
                 }
+                else {
+                    this.items_.push(item) ;
+                }
+
             }) ;
         }
         else {

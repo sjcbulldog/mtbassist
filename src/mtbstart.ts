@@ -17,16 +17,24 @@
 import { MTBExtensionInfo } from "./mtbextinfo";
 import { getRecentList } from "./mtbrecent";
 
+let titlestr :string = '<p style="font-size:300%;">ModusToolbox Assistant ' + MTBExtensionInfo.version;
+
 export function getModusToolboxNotInstallHtml() : string {
     let html : string = 
         `<!DOCTYPE html>
             <head>
             <meta charset="UTF-8">
             <body>
-            <p>ModusToolbox 3.0 or later is not installed.  Please install ModusToolbox 3.0 or later to use this extensison.</p>
-            <a href="https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software/">Go here to download</a>
+            ####TITLE####
+            <div style="font-size: 150%;">
+            <p>The ModusToolbox Assistant extension is designed to be used with ModusToolbox 3.0 or later. However, ModusToolbox 3.0 or later is not installed. 
+            Please install ModusToolbox 3.0 or later to use this extensison.</p>
+            </div>
+            <a href="https://www.infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software/">Click Here To Download ModusToolbox</a>
             </body>
         ` ;
+
+    html = html.replace("####TITLE####", titlestr) ;        
 
     return html ;
 }
@@ -151,8 +159,6 @@ export function getModusToolboxAssistantStartupHtml() : string {
             </div>
         </body>
         </html>` ;    
-
-    let titlestr :string = '<p style="font-size:300%;">ModusToolbox Assistant 1.0' ;
 
     let recentstr : string = "" ;
     let recent : string[] = getRecentList() ;

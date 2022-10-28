@@ -34,6 +34,7 @@ export class MTBExtensionInfo
 
     public static readonly debugModeName : string = "debugMode" ;
     public static readonly showWelcomePageName : string = "showWelcomePage" ;
+    public static readonly version = "1.0.12" ;
 
     public toolsDir: string ;
     public docsDir: string ;
@@ -43,6 +44,7 @@ export class MTBExtensionInfo
     public manifestDb: MtbManifestDb ;
 
     context: vscode.ExtensionContext;
+
 
     constructor(context: vscode.ExtensionContext) {
         this.toolsDir = this.findToolsDir() ;

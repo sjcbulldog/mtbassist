@@ -163,7 +163,27 @@ export class MTBAppInfo
 
     private processMtb2xApp(makevars: Map<string, string>) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
-            resolve() ;
+            let projobj = new MTBProjectInfo(this, path.basename(this.appDir)) ;
+            this.projects.push(projobj) ;
+            projobj.initProjectFromData(makevars)
+                .then((status: boolean) => {
+                    if (!status) {
+                        reject(new Error("cannot initialize project from make get_app_info environment")) ;
+                    }
+                    else {
+                        this.processCommonAppStuff()
+                            .then (() => {
+                                resolve() ;
+                            })
+                            .catch((err : Error) => {
+                                reject(err) ;
+                            }) ;
+
+                    }
+                })
+                .catch((err: Error) => {
+                    reject(err) ;
+                }) ;
         }) ;
 
         return ret ;
@@ -171,7 +191,27 @@ export class MTBAppInfo
 
     private processCombined(makevars: Map<string, string>) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
-            resolve() ;
+            let projobj = new MTBProjectInfo(this, path.basename(this.appDir)) ;
+            this.projects.push(projobj) ;
+            projobj.initProjectFromData(makevars)
+                .then((status: boolean) => {
+                    if (!status) {
+                        reject(new Error("cannot initialize project from make get_app_info environment")) ;
+                    }
+                    else {
+                        this.processCommonAppStuff()
+                            .then (() => {
+                                resolve() ;
+                            })
+                            .catch((err : Error) => {
+                                reject(err) ;
+                            }) ;
+
+                    }
+                })
+                .catch((err: Error) => {
+                    reject(err) ;
+                }) ;
         }) ;
 
         return ret ;
