@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.0.13",
+  "version": "1.0.15",
   "publisher": "C And T Software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -27,6 +27,8 @@
     "onCommand:mtbassist.mtbCreateProject",
     "onCommand:mtbassist.mtbImportProject",
     "onCommand:mtbassist.mtbImportProjectDirect",
+    "onCommand:mtbassist.mtbImportDiskProject",
+    "onCommand:mtbassist.mtbImportDiskProjectDirect",
     "onCommand:mtbassist.mtbRunEditor",
     "onCommand:mtbassist.mtbShowDoc",
     "workspaceContains:Makefile",
@@ -41,11 +43,19 @@
       },
       {
         "command": "mtbassist.mtbImportProject",
-        "title": "ModusToolbox Import Project"
+        "title": "ModusToolbox Import Project From Git Repository"
       },
       {
         "command": "mtbassist.mtbImportProjectDirect",
-        "title": "ModusToolbox Import Project Direct"
+        "title": "ModusToolbox Import Project Direct From Git Repository"
+      },
+      {
+        "command": "mtbassist.mtbImportDiskProject",
+        "title": "ModusToolbox Import Project From Disk"
+      },
+      {
+        "command": "mtbassist.mtbImportDiskProjectDirect",
+        "title": "ModusToolbox Import Project From Disk Direct"
       },
       {
         "command": "mtbassist.mtbRunEditor",

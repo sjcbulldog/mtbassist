@@ -19,6 +19,37 @@ import { getRecentList } from "./mtbrecent";
 
 let titlestr :string = '<p style="font-size:300%;">ModusToolbox Assistant ' + MTBExtensionInfo.version;
 
+export function getImportDiskHtmlInstructions() : string {
+    let html : string = 
+    `<!DOCTYPE html>
+        <head>
+            <meta charset="UTF-8">
+            <script>
+                const vscode = acquireVsCodeApi() ;
+            </script>
+        </head>
+        <body>
+            ####TITLE####
+            <div style="font-size: 150%;">
+            The import command is used to import a ModusToolbox project that is stored locally on your local machine.  This command will ensure all
+            dependencies are up to date and local and then prepare the project for Visual Studio Code
+            The import command prompts for the following information:
+            <ul>
+            <li>The location on the local machine where the project is stored (LOCALDIR).</li>
+            </ul>
+            This command basically runs <i>make getlibs</i> and <i>make vscode</i> in the directory given.
+
+            <br>
+            <a onclick="vscode.postMessage({ command: 'mtbImportProjectDiskDirect'}) ;" href="#">Click Here To Import Project</a>
+            </div>
+        </body>
+    ` ;
+
+    html = html.replace("####TITLE####", titlestr) ;        
+
+    return html ;
+}
+
 export function getImportHtmlInstructions() : string {
     let html : string = 
     `<!DOCTYPE html>
@@ -49,9 +80,9 @@ export function getImportHtmlInstructions() : string {
         </body>
     ` ;
 
-html = html.replace("####TITLE####", titlestr) ;        
+    html = html.replace("####TITLE####", titlestr) ;        
 
-return html ;
+    return html ;
 }
 
 export function getModusToolboxNotInstallHtml() : string {

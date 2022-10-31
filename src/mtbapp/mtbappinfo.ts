@@ -147,6 +147,11 @@ export class MTBAppInfo
                 .then(() => {
                     this.createVSCodeDirectory()
                         .then(() => {
+                            let readme : string = path.join(this.appDir, "README.md") ;
+                            if (fs.existsSync(readme)) {
+                                let uri: vscode.Uri = vscode.Uri.file(readme) ;
+                                vscode.commands.executeCommand("markdown.showPreview", uri) ;
+                            }
                             resolve() ;
                         })
                         .catch((err: Error) => {

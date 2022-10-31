@@ -148,7 +148,7 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
 
             value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_COMPONENTS) ;
             if (value) {
-                let comps :string [] = (value as string).split(' ') ;
+                let comps :string [] = ((value as string).trim()).split(' ') ;
 
                 value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_DISABLED_COMPONENTS) ;
                 let disabled : string[] = (value as string).split(' ') ;
