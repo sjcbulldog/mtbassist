@@ -33,6 +33,96 @@ import { mtbAssistLoadApp, theModusToolboxApp } from './mtbapp/mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
 import { MTBAssetInstance } from './mtbapp/mtbassets';
 
+function outputLines(context: vscode.ExtensionContext, data: string) {
+    let str: string = data.toString().replace(/\r\n/g, "\n") ;
+    let lines: string[] = str.split("\n") ;
+    for(let line of lines) {
+        line = line.trim() ;
+        if (line.length > 0) {
+            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, line) ;
+        }
+    }
+}
+
+function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
+    let ret: Promise<number> = new Promise<number>((resolve, reject) => {
+        let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + cwd + "' ...") ;
+        let cmd = "make getlibs" ;
+        let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: cwd }) ;
+
+        job.stdout.on(('data'), (data: Buffer) => {
+            outputLines(context, data.toString()) ;
+        }) ;
+
+        job.stderr.on(('data'), (data: string) => {
+            outputLines(context, data.toString()) ;
+        }) ;
+
+        job.on('close', (code: number) => {
+            resolve(code) ;
+        }) ;
+    }) ;
+
+    return ret ;
+}
+
+
+function mtbRunMakeVscode(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
+    let ret: Promise<number> = new Promise<number>((resolve, reject) => {
+        let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + cwd + "' ...") ;
+        let cmd = "make vscode" ;
+        let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: cwd }) ;
+
+        job.stdout.on(('data'), (data: Buffer) => {
+            outputLines(context, data.toString()) ;
+        }) ;
+
+        job.stderr.on(('data'), (data: string) => {
+            outputLines(context, data.toString()) ;
+        }) ;
+
+        job.on('close', (code: number) => {
+            resolve(code) ;
+        }) ;
+    }) ;
+
+    return ret ;
+}
+
+function mtbRunGetLibsVSCode(context: vscode.ExtensionContext, cwd: string) : Promise<void> {
+    let ret: Promise<void> = new Promise<void>((resolve, reject) => {
+        mtbRunMakeGetLibs(context, cwd)
+            .then((code) => {
+                if (code === 0) {
+                    mtbRunMakeVscode(context, cwd)
+                        .then((code) => {
+                            if (code === 0) {
+                                let uri: vscode.Uri = vscode.Uri.file(cwd) ;
+                                vscode.commands.executeCommand("vscode.openFolder", uri) ;
+                                resolve() ;
+                            }
+                            else {
+                                reject(new Error("the command 'make vscode' failed")) ;
+                            }
+                        })
+                        .catch((err: Error) => {
+                            reject(err) ;
+                        }) ;
+                }
+                else {
+                    reject(new Error("the command 'make getlibs' failed")) ;
+                }
+            })
+            .catch((err: Error) => {
+                reject(err) ;
+            }) ;
+    }) ;
+
+    return ret ;
+}
+
 function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: string, gitpath: string, name: string) {
     let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
 
@@ -71,53 +161,20 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
 
     job.on('close', (code: number) => {
         if (code === 0) {
-            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ...") ;
-            cmd = "make getlibs" ;
-            job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: finalpath }) ;
+            mtbRunGetLibsVSCode(context, finalpath)
+                .then(() => {
 
-            job.stdout.on(('data'), (data: Buffer) => {
-                let str: string = data.toString().replace(/\r\n/g, "\n") ;
-                MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
-            }) ;
-        
-            job.stderr.on(('data'), (data: string) => {
-                let str: string = data.toString().replace(/\r\n/g, "\n") ;
-                MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
-            }) ;
-
-            job.on('close', (code: number) => {
-                if (code === 0) {
-                    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ...") ;
-                    cmd = "make vscode" ;
-                    job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: finalpath }) ;
-
-                    job.stdout.on(('data'), (data: string) => {
-                        let str: string = data.toString().replace(/\r\n/g, "\n") ;
-                        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
-                    }) ;
-                
-                    job.stderr.on(('data'), (data: string) => {
-                        let str: string = data.toString().replace(/\r\n/g, "\n") ;
-                        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
-                    }) ;
-                    
-                    job.on('close', (code: number) => {
-                        if (code === 0) {
-                            let uri = vscode.Uri.file(finalpath) ;
-                            vscode.commands.executeCommand('vscode.openFolder', uri) ;
-                        }
-                        else {
-                            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ... failed") ;
-                        }
-                    }) ;
-                }
-                else {
-                    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ... failed") ;                    
-                }
-            }) ;
+                })
+                .catch((err: Error) => {
+                    let msg: string = "mtbImportProject: failed in directory '" + finalpath + "' - " + err.message ;
+                    vscode.window.showErrorMessage(msg) ;
+                    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, msg) ;                                        
+                }) ;
         }
         else {
-            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... failed") ;            
+            let msg: string = "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... failed" ;
+            vscode.window.showErrorMessage(msg) ;
+            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, msg) ;            
         }
     }) ;
 }
@@ -130,7 +187,7 @@ export function mtbImportDiskProject(context: vscode.ExtensionContext) {
         return ;
     }
 
-    		// Display a web page about ModusToolbox
+    // Display a web page about ModusToolbox
 	let panel : vscode.WebviewPanel = vscode.window.createWebviewPanel(
         'mtbassist', 
         'ModusToolbox', 
@@ -192,49 +249,17 @@ export function mtbImportDiskProjectDirect(context: vscode.ExtensionContext) {
         .then( (folder) => {
             if (folder) {
                 let finalpath: string = folder[0].fsPath ;
-                MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + finalpath + "' ...") ;
-                let cmd = "make getlibs" ;
-                let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: finalpath }) ;
-    
-                job.stdout.on(('data'), (data: Buffer) => {
-                    let str: string = data.toString().replace(/\r\n/g, "\n") ;
-                    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
-                }) ;
-            
-                job.stderr.on(('data'), (data: string) => {
-                    let str: string = data.toString().replace(/\r\n/g, "\n") ;
-                    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
-                }) ;
-    
-                job.on('close', (code: number) => {
-                    if (code === 0) {
-                        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ...") ;
-                        cmd = "make vscode" ;
-                        job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: finalpath }) ;
+                mtbRunGetLibsVSCode(context, finalpath)
+                    .then(() => {
 
-                        job.stdout.on(('data'), (data: string) => {
-                            let str: string = data.toString().replace(/\r\n/g, "\n") ;
-                            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
-                        }) ;
-                    
-                        job.stderr.on(('data'), (data: string) => {
-                            let str: string = data.toString().replace(/\r\n/g, "\n") ;
-                            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
-                        }) ;
-                        
-                        job.on('close', (code: number) => {
-                            if (code === 0) {
-                                let uri = vscode.Uri.file(finalpath) ;
-                                vscode.commands.executeCommand('vscode.openFolder', uri) ;
-                            }
-                            else {
-                                MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "mtbImportProject: running 'make vscode' in directory '" + finalpath + "' ... failed") ;
-                            }
-                        }) ;
-                    }
-                }) ;
+                    })
+                    .catch((err: Error) => {
+                        let msg: string = "mtbImportProject: failed in directory '" + finalpath + "' - " + err.message ;
+                        vscode.window.showErrorMessage(msg) ;
+                        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, msg) ;     
+                    }) ;
             }
-        }) ;    
+        }) ;
 }
 
 export function mtbImportProjectDirect(context: vscode.ExtensionContext) {
