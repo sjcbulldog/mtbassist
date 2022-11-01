@@ -34,7 +34,7 @@ export class MTBExtensionInfo
 
     public static readonly debugModeName : string = "debugMode" ;
     public static readonly showWelcomePageName : string = "showWelcomePage" ;
-    public static readonly version = "1.0.15" ;
+    public static readonly version = vscode.extensions.getExtension('c_and_t_software.mtbassist')?.packageJSON.version ;
 
     public toolsDir: string ;
     public docsDir: string ;

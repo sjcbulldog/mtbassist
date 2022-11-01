@@ -30,16 +30,13 @@ export function getImportDiskHtmlInstructions() : string {
         </head>
         <body>
             ####TITLE####
+            <h1>Import Application From Disk</h1>
             <div style="font-size: 150%;">
             The import command is used to import a ModusToolbox project that is stored locally on your local machine.  This command will ensure all
-            dependencies are up to date and local and then prepare the project for Visual Studio Code
-            The import command prompts for the following information:
-            <ul>
-            <li>The location on the local machine where the project is stored (LOCALDIR).</li>
-            </ul>
-            This command basically runs <i>make getlibs</i> and <i>make vscode</i> in the directory given.
-
-            <br>
+            dependencies are up to date and local and then prepare the project for Visual Studio Code.
+            <br><br>
+            This command runs <i>make getlibs</i> followed by <i>make vscode</i> in the directory given.
+            <br><br>
             <a onclick="vscode.postMessage({ command: 'mtbImportProjectDiskDirect'}) ;" href="#">Click Here To Import Project</a>
             </div>
         </body>
@@ -61,8 +58,9 @@ export function getImportHtmlInstructions() : string {
         </head>
         <body>
             ####TITLE####
+            <h1>Import Application From Git Repository</h1>
             <div style="font-size: 150%;">
-            The import command is used to import a ModusToolbox project that is stored in a git repository to your local machine.  This command is used when a team
+            The import command is used to import a ModusToolbox project that is stored in a git repository. This command is used when a team
             is working on a project.  The project is initially created using the ModusToolbox Project Creator and then stored in a git repository that is accessible
             by all team members.  Note, the import flow does not work for if the git clone operation must supply a password for the remote repository.<br>
             The import command prompts for the following information:
@@ -71,9 +69,9 @@ export function getImportHtmlInstructions() : string {
             <li>The location of the repository.  The type may be git, hhttp, https, or ssh as long as no password is required (GITREPO)</li>
             <li>The name of the project directory (LOCALNAME)
             </ul>
-            This command basically clones the git repository GITREPO to the path LOCALDIR/LOCALNAME and then runs <i>make getlibs</i> followed by <i>make vscode</i> to
+            <br>
+            This command clones the git repository GITREPO to the path LOCALDIR/LOCALNAME and then runs <i>make getlibs</i> followed by <i>make vscode</i> to
             ready the project for the local machine.
-
             <br>
             <a onclick="vscode.postMessage({ command: 'mtbImportProjectDirect'}) ;" href="#">Click Here To Import Project</a>
             </div>
