@@ -42,9 +42,8 @@ export class MTBExtensionInfo
     public minor: number ;
     public channel: vscode.OutputChannel ;
     public manifestDb: MtbManifestDb ;
-
+    
     context: vscode.ExtensionContext;
-
 
     constructor(context: vscode.ExtensionContext) {
         this.toolsDir = this.findToolsDir() ;

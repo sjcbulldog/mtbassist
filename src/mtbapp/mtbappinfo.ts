@@ -59,6 +59,9 @@ export class MTBAppInfo
     // The type of this application
     public appType : AppType ;
 
+    // If true, make getlibs has been run
+    public buildSupport : boolean ;
+
     // The list of projects in the application
     public projects: MTBProjectInfo[];
 
@@ -83,6 +86,7 @@ export class MTBAppInfo
         this.context = context ;
         this.setLaunchInfo(undefined) ;
         this.appType = AppType.none ;
+        this.buildSupport = false ;
 
         MTBExtensionInfo.getMtbExtensionInfo().manifestDb.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
 
@@ -268,6 +272,12 @@ export class MTBAppInfo
             this.checkAppType()
                 .then ((info : [AppType, Map<string, string>]) => {
                     this.appType = info[0] ;
+                    let value = info[1].get(ModusToolboxEnvVarNames.MTB_DEVICE) ;
+                    if (value && value.length > 0) {
+                        this.buildSupport = true ;
+                    } else {
+                        this.buildSupport = false ;
+                    }
                     
                     if (info[0] === AppType.none) {
                         reject(new Error("this is not a ModusToolbox application")) ;

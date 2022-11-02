@@ -29,6 +29,7 @@
     "onCommand:mtbassist.mtbImportProjectDirect",
     "onCommand:mtbassist.mtbImportDiskProject",
     "onCommand:mtbassist.mtbImportDiskProjectDirect",
+    "onCommand:mtbassist.mtbRunMakeGetlibs",
     "onCommand:mtbassist.mtbRunEditor",
     "onCommand:mtbassist.mtbShowDoc",
     "workspaceContains:Makefile",
@@ -40,6 +41,10 @@
       {
         "command": "mtbassist.mtbCreateProject",
         "title": "ModusToolbox Create Project"
+      },
+      {
+        "command" : "mtbassist.mtbRunMakeGetlibs",
+        "title": "ModusToolbox make getlibs"
       },
       {
         "command": "mtbassist.mtbImportProject",

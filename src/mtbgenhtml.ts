@@ -188,10 +188,11 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">Recent</button>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content1">
-                    <p>There are two ways to get a new ModusToolbox application into Visual Studio Code.<p> 
+                    <p>There are three ways to get a new ModusToolbox application into Visual Studio Code.<p> 
                     <ul>
                     <li>You can <a onclick="vscode.postMessage({ command: 'createNew'}) ;" href="#">create</a> a new project</li>
-                    <li>You can <a onclick="vscode.postMessage({ command: 'importExisting'}) ;" href="#">import</a> an existing project.</li>
+                    <li>You can <a onclick="vscode.postMessage({ command: 'importExisting'}) ;" href="#">import</a> an existing project from a git repository.</li>
+                    <li>You can <a onclick="vscode.postMessage({ command: 'importExistingDisk'}) ;" href="#">import</a> an existing project from a local directory.</li>                    
                     </ul>
                     
                     <p>Creating a new project, starts the project creator where you can create a new project by selecting a target

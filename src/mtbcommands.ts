@@ -461,6 +461,9 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         else if (message.command === "importExisting") {
             vscode.commands.executeCommand("mtbassist.mtbImportProject") ;
         }
+        else if (message.command === "importExistingDisk") {
+            vscode.commands.executeCommand("mtbassist.mtbImportDiskProject") ;
+        }
         else if (message.command === "showModusToolbox") {
             vscode.commands.executeCommand("mtbglobal.focus") ;
         }
@@ -519,6 +522,39 @@ export function mtbRunLibraryManager(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage("Cannot find the tools of type 'library-manager' in the tool list") ;
         }
     }    
+}
+
+export function mtbRunMakeGetLibsCmd(context: vscode.ExtensionContext) {
+    if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
+        vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
+        return ;
+    }
+    if (theModusToolboxApp) {
+        vscode.window.showInformationMessage("Running 'make getlibs'") ;
+        MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow() ;
+        
+        mtbRunMakeGetLibs(context, theModusToolboxApp.appDir)
+            .then((code: number) => {
+                if (code) {
+                    let msg: string = "'make getlibs' failed with exit status " + code.toString() ;
+                    vscode.window.showErrorMessage(msg) ;
+                    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, msg) ;
+                }
+                else {
+                    vscode.window.showInformationMessage("'make getlibs' completed sucessfully, reloading application") ;
+                    if (vscode.workspace.workspaceFolders) {
+                        let appdir : string = vscode.workspace.workspaceFolders[0].uri.fsPath;
+                        mtbAssistLoadApp(context, appdir) ;
+                    }
+                }
+            })
+            .catch((err: Error) => {
+                let msg: string = "'make getlibs' failed - " + err.message ;
+                vscode.window.showErrorMessage(msg) ;
+                MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, msg) ;
+            }) ;
+        }
 }
 
 export function mtbCreateProject(context: vscode.ExtensionContext) {

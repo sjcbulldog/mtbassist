@@ -25,7 +25,8 @@ import * as vscode from 'vscode';
 import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
 import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
-import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbImportProjectDirect, mtbRunEditor, mtbShowDoc, mtbSymbolDoc, mtbRunLibraryManager, mtbImportDiskProject, mtbImportDiskProjectDirect } from './mtbcommands';
+import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbImportProjectDirect, mtbRunEditor, 
+		mtbShowDoc, mtbSymbolDoc, mtbRunLibraryManager, mtbImportDiskProject, mtbImportDiskProjectDirect, mtbRunMakeGetLibsCmd } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
 import open = require("open");
@@ -94,6 +95,11 @@ export function activate(context: vscode.ExtensionContext) {
 	//
 	disposable = vscode.commands.registerCommand('mtbassist.mtbCreateProject', () => {
 		mtbCreateProject(context);
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbRunMakeGetlibs', () => {
+		mtbRunMakeGetLibsCmd(context);
 	});
 	context.subscriptions.push(disposable);
 
