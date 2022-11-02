@@ -4,8 +4,12 @@ This extension is an assistant for using ModusToolbox with the Visual Studio Cod
 
 ## Features
 
-This extension provides the a quick launch panel that makes it easy to launch ModusToolbox
-tools and to view ModusToolbox documentation.
+This extension provides support for the ModusToolbox embedded software devlopment environment.
+This includes the following feature:
+- ModusToolbox welcome page showing recent project, how to create and import a project
+- ModusToolbox shell as a terminal type
+- ModusToolbox view showing project info, available tools, documentation, and assets
+- Command to map a symbol in the "C" source code to the asset documentation for that symbol
 
 ## Requirements
 
@@ -35,3 +39,13 @@ Added in the display of the README.md file if it exists in the current applicati
 
 ### 1.0.15
 Fixed a bug with newlines on Mac OS
+
+### 1.0.16
+Added the import from local directory command (mtbImportDiskProject)
+
+### 1.0.17
+Added the ability to detect ModusToolbox application without build support
+Added the Run 'make getlibs' command
+
+### 1.0.18
+Fixed a bug with retreiving the extension version number

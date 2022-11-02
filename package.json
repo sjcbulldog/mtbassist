@@ -2,13 +2,13 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.0.16",
-  "publisher": "c_and_t_software",
+  "version": "1.0.19",
+  "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sjcbulldog/mtbassist.git "
+    "url": "https://github.com/sjcbulldog/mtbassist.git"
   },
   "engines": {
     "vscode": "^1.71.0"
@@ -43,7 +43,7 @@
         "title": "ModusToolbox Create Project"
       },
       {
-        "command" : "mtbassist.mtbRunMakeGetlibs",
+        "command": "mtbassist.mtbRunMakeGetlibs",
         "title": "ModusToolbox make getlibs"
       },
       {
@@ -146,7 +146,7 @@
     "terminal": {
       "profiles": [
         {
-          "id" : "mtbassist.mtbShell",
+          "id": "mtbassist.mtbShell",
           "title": "ModusToolbox Shell"
         }
       ]
