@@ -51,7 +51,7 @@ export class MTBProjectItem extends vscode.TreeItem {
 }
 
 export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBProjectItem> {
-    private emptyLabel = "Load Or Create Project" ;
+    private emptyLabel = "ModusToolbox Application Not Loaded" ;
     private projectTypeLabel = "Type:" ;
     
     private items_ : MTBProjectItem[] = [] ;

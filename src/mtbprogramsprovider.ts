@@ -110,9 +110,13 @@ export class MTBProgramProvider implements vscode.TreeDataProvider<MTBAssistItem
                 }
             }
         }
-        else {
-            item = new MTBAssistItem("Load application for more ...") ;
-            this.items_.push(item) ;
+
+        if (this.items_[2].getChildren().length === 0) {
+            this.items_.splice(2, 1) ;
+        }
+
+        if (this.items_[1].getChildren().length === 0) {
+            this.items_.splice(1, 1) ;
         }
 
         this.onDidChangeTreeData_.fire();
