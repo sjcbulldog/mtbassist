@@ -44,7 +44,7 @@ function outputLines(context: vscode.ExtensionContext, data: string) {
     }
 }
 
-function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
+export function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
     let ret: Promise<number> = new Promise<number>((resolve, reject) => {
         let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
         MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + cwd + "' ...") ;
