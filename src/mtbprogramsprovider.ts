@@ -53,6 +53,12 @@ export class MTBProgramProvider implements vscode.TreeDataProvider<MTBAssistItem
         let item: MTBAssistItem = new MTBAssistItem("Global") ;
         this.items_.push(item) ;
 
+        item = new MTBAssistItem("Application") ;
+        this.items_.push(item) ;
+
+        item = new MTBAssistItem("BSP") ;
+        this.items_.push(item) ;
+
         item = new MTBAssistItem("Create Project") ;
         item.command = new MTBAssistCommand("Create Project", "mtbassist.mtbCreateProject", "Create Project") ;
         this.items_[0].addChild(item) ;
@@ -64,27 +70,25 @@ export class MTBProgramProvider implements vscode.TreeDataProvider<MTBAssistItem
         item = new MTBAssistItem("Import Project From Disk") ;
         item.command = new MTBAssistCommand("Import Project From Disk", "mtbassist.mtbImportDiskProject", "ImportProjectDisk") ;
         this.items_[0].addChild(item) ;
-
-        item = new MTBAssistItem("Run 'make getlibs'") ;
-        item.command = new MTBAssistCommand("Create Project", "mtbassist.mtbRunMakeGetlibs", "Run 'make getlibs'") ;
-        this.items_[0].addChild(item) ;        
-
+    
         item = new MTBAssistItem("Show Welcome Page") ;
         item.command = new MTBAssistCommand("Import Project", "mtbassist.mtbShowWelcomePage", "Show Welcome Page") ;
         this.items_[0].addChild(item) ;
 
         if (configs !== undefined) {      
-            item = new MTBAssistItem("Application") ;
-            this.items_.push(item) ;
+
+            item = new MTBAssistItem("Run 'make getlibs'") ;
+            item.command = new MTBAssistCommand("Run Make Getlibs", "mtbassist.mtbRunMakeGetlibs", "Run 'make getlibs'") ;
+            this.items_[1].addChild(item) ;
 
             let projects : string[] = this.findProjects(configs) ;
-            projects.forEach((project) => {
+            for(let project of projects) {
                 item = new MTBAssistItem("Project: " + project) ;
                 projmap.set(project, item) ;
                 this.items_.push(item) ;
-            }) ;
+            }
 
-            configs.forEach((config) => {
+            for(let config of configs) {
                 item = new MTBAssistItem(config.displayName) ;
                 item.command = new MTBAssistCommand(config.displayName, "mtbassist.mtbRunEditor", "Run the '" + config.displayName + "' program") ;
                 item.command.arguments = [] ;
@@ -93,14 +97,18 @@ export class MTBProgramProvider implements vscode.TreeDataProvider<MTBAssistItem
 
                 if (config.scope === "global") {
                     if (config.shortName !== "project-creator") {
-                        this.items_[0].addChild(item) ;
+                        //
+                        // We treat project creator special and put it into the true global section
+                        // and not the application section
+                        //
+                        this.items_[1].addChild(item) ;
                     }
                 } else if (config.scope === "bsp") {
-                    this.items_[1].addChild(item) ;
+                    this.items_[2].addChild(item) ;
                 } else if (config.scope === "project") {
                     projmap.get(config.project)?.addChild(item) ;
                 }
-            }) ;
+            }
         }
         else {
             item = new MTBAssistItem("Load application for more ...") ;

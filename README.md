@@ -49,3 +49,12 @@ Added the Run 'make getlibs' command
 
 ### 1.0.18
 Fixed a bug with retreiving the extension version number
+
+### 1.0.19
+Fixed bug with recent projects list not being updated
+
+### 1.0.20
+Cleaned up how the tools are displayed in the ModusToolbox view.
+
+### 1.0.21
+Reduced when the ModusToolbox Assistant log window is displayed

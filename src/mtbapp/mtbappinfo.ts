@@ -42,6 +42,7 @@ import { runMakeGetAppInfo, runMakeVSCode, runMtbLaunch } from './mtbrunprogs';
 import { ModusToolboxEnvTypeNames, ModusToolboxEnvVarNames } from './mtbnames';
 import { App } from 'open';
 import { getHeapStatistics } from 'v8';
+import { addToRecentProjects } from '../mtbrecent';
 
 export enum AppType
 {
@@ -104,6 +105,8 @@ export class MTBAppInfo
                 if (appdir) {
                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
                     vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;
+
+                    addToRecentProjects(context, appdir) ;
                 }
             })
             .catch((error) => {

@@ -59,12 +59,10 @@ export function activate(context: vscode.ExtensionContext) {
 	// It is all accessed through the mtbAssistExtensionInfo object which is created in the
 	// mtbextinfo.ts file.
 	//
-	MTBExtensionInfo.getMtbExtensionInfo(context).showMessageWindow();
 	MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "Starting ModusToolbox assistant");
 
 	if (MTBExtensionInfo.getMtbExtensionInfo(context).major < 3) {
 		// Put the message in the log window
-		MTBExtensionInfo.getMtbExtensionInfo(context).showMessageWindow();
 		MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.");
 
 		// Also tell the user via VS code messages
