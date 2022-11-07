@@ -64,3 +64,6 @@ Reworded some of the text in the ModusToolbox view to make intent more obvious
 When loading a ModusToolbox project but no build support is available, 
 run 'make getlibs' to bring in the required buidl support.  This basically
 eliminates the need for the "import from disk" command.
+
+### 1.0.22
+Fixed a defect with multi-core projects not updating correctly
