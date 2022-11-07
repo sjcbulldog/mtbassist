@@ -123,6 +123,7 @@ export class MTBAppInfo
                         vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;
                     }                    
                     addToRecentProjects(context, appdir) ;
+                    this.updateAssets() ;
                 }
             })
             .catch((error) => {
@@ -293,17 +294,50 @@ export class MTBAppInfo
         return ret ;
     }
 
-    private finishOneProject(projdir: string, makedata: Map<string, string>) : Promise<void> {
+    private createOneProject(projdir: string) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
-            let projobj = new MTBProjectInfo(this, path.basename(projdir)) ;
-            this.projects.push(projobj) ;
-            projobj.initProjectFromData(makedata)
-                .then(() => {
-                    resolve() ;
+            runMakeGetAppInfo(projdir)
+                .then((makedata: Map<string, string>) => {
+                    let projobj = new MTBProjectInfo(this, path.basename(projdir)) ;
+                    this.projects.push(projobj) ;
+                    projobj.initProjectFromData(makedata)
+                        .then(() => {
+                            resolve() ;
+                        })
+                        .catch((err: Error) => {
+                            reject(err) ;
+                        }) ; 
                 })
                 .catch((err: Error) => {
                     reject(err) ;
-                }) ; 
+                }) ;  
+        }) ;
+
+        return ret ;
+    }
+
+    private processMultiAppStuff(projects: string[]) : Promise<void> {
+        let ret : Promise<void> = new Promise<void>((resolve, reject) => {
+            let promiseArray: Promise<void>[] = [];
+
+            for (let project of projects) {
+                let prom: Promise<void> = this.createOneProject(path.join(this.appDir, project)) ;
+                promiseArray.push(prom) ;
+            }
+
+            Promise.all(promiseArray)
+                .then((results) => {
+                    this.processCommonAppStuff()
+                        .then (() => {
+                            resolve() ;
+                        })
+                        .catch((err : Error) => {
+                            reject(err) ;
+                        }) ;
+                })
+                .catch((err: Error) => {
+                    reject(err) ;
+                }) ;
         }) ;
 
         return ret ;
@@ -363,7 +397,7 @@ export class MTBAppInfo
                         mtbRunMakeGetLibs(this.context, this.appDir)
                             .then((code: number) => {
                                 if (code === 0) {
-                                    this.processCommonAppStuff()
+                                    this.processMultiAppStuff(projects)
                                     .then(() => {
                                         resolve() ;
                                     })
@@ -381,7 +415,7 @@ export class MTBAppInfo
                             }) ;
                     }
                     else {
-                        this.processCommonAppStuff()
+                        this.processMultiAppStuff(projects)
                             .then(() => {
                                 resolve() ;
                             })
