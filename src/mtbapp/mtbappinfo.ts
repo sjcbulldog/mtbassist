@@ -35,14 +35,12 @@ import { getMTBDocumentationTreeProvider } from '../mtbdocprovider';
 import { getMTBProgramsTreeProvider } from '../mtbprogramsprovider';
 import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
 import { MTBLaunchInfo } from '../mtblaunchdata';
-import { mtbStringToJSON } from '../mtbjson';
 import { getMTBProjectInfoProvider } from '../mtbprojinfoprovider';
 import { MTBProjectInfo } from './mtbprojinfo';
 import { runMakeGetAppInfo, runMakeVSCode, runMtbLaunch } from './mtbrunprogs';
 import { ModusToolboxEnvTypeNames, ModusToolboxEnvVarNames } from './mtbnames';
-import { App } from 'open';
-import { getHeapStatistics } from 'v8';
 import { addToRecentProjects } from '../mtbrecent';
+import { mtbRunMakeGetLibs } from '../mtbcommands';
 
 export enum AppType
 {
@@ -60,8 +58,8 @@ export class MTBAppInfo
     // The type of this application
     public appType : AppType ;
 
-    // If true, make getlibs has been run
-    public buildSupport : boolean ;
+    // The name of the application
+    public appName : string ;
 
     // The list of projects in the application
     public projects: MTBProjectInfo[];
@@ -78,8 +76,10 @@ export class MTBAppInfo
     // The extension context
     public context: vscode.ExtensionContext ;
 
+    reload: boolean ;
+
     //
-    // Create the application object and load in the background
+    // Create the application object and load its contents in the asynchronously
     //
     constructor(context: vscode.ExtensionContext, appdir : string) {
         this.appDir = "" ;
@@ -87,7 +87,8 @@ export class MTBAppInfo
         this.context = context ;
         this.setLaunchInfo(undefined) ;
         this.appType = AppType.none ;
-        this.buildSupport = false ;
+        this.reload = false ;
+        this.appName = "UNDEFINED" ;
 
         MTBExtensionInfo.getMtbExtensionInfo().manifestDb.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
 
@@ -103,9 +104,24 @@ export class MTBAppInfo
                 }
 
                 if (appdir) {
-                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
-                    vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;
+                    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
+                        //
+                        // The ModusToolbox application directory is loaded, but the workspace file is not
+                        // ModusToolbox works much better when the genreated workspace file is loaded.  If we see
+                        // it, we load the workspace file.
+                        //
+                        let dirname = path.basename(vscode.workspace.workspaceFolders[0].uri.fsPath) ;
+                        let filename = this.appName + ".code-workspace" ;
+                        let wksp : string = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, filename) ;
+                        if (fs.existsSync(wksp)) {
+                            vscode.window.showInformationMessage("Loading worksapce file '" + filename + "'") ;
+                            let wkspuri : vscode.Uri = vscode.Uri.file(wksp) ;
+                            vscode.commands.executeCommand("vscode.openFolder", wkspuri) ;
+                        }
 
+                        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
+                        vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;
+                    }                    
                     addToRecentProjects(context, appdir) ;
                 }
             })
@@ -116,6 +132,11 @@ export class MTBAppInfo
             }) ;
     }
 
+    //
+    // This method determines the application type.  It basically figures out if this is a
+    // single project or multi project application and whether it is a 2x or 3x project.  It
+    // also detects if this is not a ModusToolbox application at all.
+    //
     private checkAppType() : Promise<[AppType, Map<string, string>]> {
         let ret : Promise<[AppType, Map<string, string>]> = new Promise<[AppType, Map<string, string>]>((resolve, reject) => {
             runMakeGetAppInfo(this.appDir)
@@ -148,6 +169,10 @@ export class MTBAppInfo
         return ret ;
     }
 
+    //
+    // This method performs the work that is common to the processing
+    // of an application both single core and multi core.
+    //
     private processCommonAppStuff() : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
             this.mtbUpdateProgs()
@@ -173,26 +198,31 @@ export class MTBAppInfo
         return ret ;
     }
 
-    private processMtb2xApp(makevars: Map<string, string>) : Promise<void> {
-        let ret : Promise<void> = new Promise<void>((resolve, reject) => {
-            let projobj = new MTBProjectInfo(this, path.basename(this.appDir)) ;
-            this.projects.push(projobj) ;
-            projobj.initProjectFromData(makevars)
-                .then((status: boolean) => {
-                    if (!status) {
-                        reject(new Error("cannot initialize project from make get_app_info environment")) ;
-                    }
-                    else {
-                        this.processCommonAppStuff()
-                            .then (() => {
-                                resolve() ;
+    private processOneDir(cwd: string) : Promise<Map<string, string>> {
+        let ret : Promise<Map<string, string>> = new Promise<Map<string, string>>((resolve, reject) => {
+            //
+            // There is no valid MTB_DEVICE value, so this means we don't have build
+            // support.  We need to run 'make getlibs' to get build support.
+            //
+            mtbRunMakeGetLibs(this.context, cwd)
+                .then((code: Number) => {
+                    if (code === 0) {
+                        runMakeGetAppInfo(cwd)
+                            .then((makevars: Map<string, string>) => {
+                                if (!makevars.has(ModusToolboxEnvVarNames.MTB_DEVICE) || makevars.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length === 0) {
+                                    reject(new Error("The ModusToolbox application is not valid, MTB_DEVICE was not supplied")) ;
+                                }
+                                resolve(makevars) ;
                             })
-                            .catch((err : Error) => {
+                            .catch((err: Error) => {
                                 reject(err) ;
                             }) ;
-
                     }
-                })
+                    else {
+                        let msg: string = "The operation 'make getlibs' failed with exit code " + code.toString() ;
+                        reject(new Error(msg)) ;
+                    }
+                }) 
                 .catch((err: Error) => {
                     reject(err) ;
                 }) ;
@@ -201,34 +231,107 @@ export class MTBAppInfo
         return ret ;
     }
 
+    private processProject(makevars: Map<string, string>) : Promise<void> {
+        let ret : Promise<void> = new Promise<void>((resolve, reject) => {
+            //
+            // We get here if we  have a valid build environment (e.g. MTB_DEVICE is defined)
+            //
+            let projobj = new MTBProjectInfo(this, path.basename(this.appDir)) ;
+            this.projects.push(projobj) ;
+            projobj.initProjectFromData(makevars)
+                .then(() => {
+                    this.processCommonAppStuff()
+                        .then (() => {
+                            resolve() ;
+                        })
+                        .catch((err : Error) => {
+                            reject(err) ;
+                        }) ;
+
+                })
+                .catch((err: Error) => {
+                    reject(err) ;
+                }) ;            
+        }) ;
+
+        return ret ;
+    }
+
+    //
+    // Ok , we are processing a combined application and project.  We have the get_app_info
+    // information for the directory, but if we don't have build support we need to run
+    // make getlibs and then get the get_app_info information again.
+    //
     private processCombined(makevars: Map<string, string>) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
-            let projobj = new MTBProjectInfo(this, path.basename(this.appDir)) ;
-            this.projects.push(projobj) ;
-            projobj.initProjectFromData(makevars)
-                .then((status: boolean) => {
-                    if (!status) {
-                        reject(new Error("cannot initialize project from make get_app_info environment")) ;
-                    }
-                    else {
-                        this.processCommonAppStuff()
-                            .then (() => {
-                                resolve() ;
-                            })
-                            .catch((err : Error) => {
-                                reject(err) ;
-                            }) ;
-
-                    }
-                })
-                .catch((err: Error) => {
-                    reject(err) ;
-                }) ;
+            if (!makevars.has(ModusToolboxEnvVarNames.MTB_DEVICE) || makevars.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length === 0) {
+                this.processOneDir(this.appDir)
+                    .then((data: Map<string, string>) => {
+                        this.processProject(data)
+                        .then(() => {
+                            resolve() ;
+                        })
+                        .catch((err: Error) => {
+                            reject(err) ;
+                        }) ;  
+                    })
+                    .catch((err: Error) => {
+                        reject(err) ;
+                    }) ;  
+            }
+            else {
+                this.processProject(makevars)
+                    .then(() => {
+                        resolve() ;
+                    })
+                    .catch((err: Error) => {
+                        reject(err) ;
+                    }) ;  
+            }
         }) ;
 
         return ret ;
     }
-    private processMulticore(makevars: Map<string, string>) : Promise<void> {
+
+    private finishOneProject(projdir: string, makedata: Map<string, string>) : Promise<void> {
+        let ret : Promise<void> = new Promise<void>((resolve, reject) => {
+            let projobj = new MTBProjectInfo(this, path.basename(projdir)) ;
+            this.projects.push(projobj) ;
+            projobj.initProjectFromData(makedata)
+                .then(() => {
+                    resolve() ;
+                })
+                .catch((err: Error) => {
+                    reject(err) ;
+                }) ; 
+        }) ;
+
+        return ret ;
+    }
+
+    private checkOneProject(projdir: string) : Promise<boolean> {
+        let ret : Promise<boolean> = new Promise<boolean>((resolve, reject) => {
+            runMakeGetAppInfo(projdir)
+            .then((makevars: Map<string, string>) => {
+                if (!makevars.has(ModusToolboxEnvVarNames.MTB_DEVICE) || makevars.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length === 0) {
+                    resolve(true) ;
+                }
+                else {
+                    resolve(false) ;
+                }
+            })
+            .catch((err: Error) => {
+                reject(err) ;
+            }) ; 
+        }) ;
+
+        return ret ;
+    }
+
+    //
+    // Process a multi-project application
+    //
+    private processMultiProject(makevars: Map<string, string>) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
             let projstr = makevars.get(ModusToolboxEnvVarNames.MTB_PROJECTS) ;
             if (projstr === undefined) {
@@ -238,23 +341,54 @@ export class MTBAppInfo
             }
             else {
                 let projects : string[] = projstr.split(" ") ;
-                let promiseArray: Promise<void>[] = [];
+                let promiseArray: Promise<boolean>[] = [];
 
                 for (let project of projects) {
-                    let projobj = new MTBProjectInfo(this, project) ;
-                    this.projects.push(projobj) ;
-                    let prom = projobj.initProject() ;
+                    let prom: Promise<boolean> = this.checkOneProject(path.join(this.appDir, project)) ;
                     promiseArray.push(prom) ;
                 }
 
-                Promise.all(promiseArray).then(() => {
-                    this.processCommonAppStuff()
-                        .then(() => {
-                            resolve() ;
-                        })
-                        .catch((err: Error) => {
-                            reject(err) ;
-                        }) ;
+                Promise.all(promiseArray).then((results) => {
+                    let needGetLibs : boolean = false ;
+                    for(let result of results) {
+                        if (result) {
+                            needGetLibs = true ;
+                        }
+                    }
+
+                    if (needGetLibs) {
+                        //
+                        // Run getlibs at the application leve
+                        //
+                        mtbRunMakeGetLibs(this.context, this.appDir)
+                            .then((code: number) => {
+                                if (code === 0) {
+                                    this.processCommonAppStuff()
+                                    .then(() => {
+                                        resolve() ;
+                                    })
+                                    .catch((err: Error) => {
+                                        reject(err) ;
+                                    }) ;
+                                }
+                                else {
+                                    let msg: string = "the operation 'make getlibs' failed in directory '" + this.appDir + "' - exit code " + code.toString() ;
+                                    reject(new Error(msg)) ;
+                                }
+                            })
+                            .catch((err: Error) => {
+                                reject(err) ;
+                            }) ;
+                    }
+                    else {
+                        this.processCommonAppStuff()
+                            .then(() => {
+                                resolve() ;
+                            })
+                            .catch((err: Error) => {
+                                reject(err) ;
+                            }) ;
+                    }
                 })
                 .catch((err: Error) => {
                     reject(err) ;
@@ -276,17 +410,23 @@ export class MTBAppInfo
                 .then ((info : [AppType, Map<string, string>]) => {
                     this.appType = info[0] ;
                     let value = info[1].get(ModusToolboxEnvVarNames.MTB_DEVICE) ;
-                    if (value && value.length > 0) {
-                        this.buildSupport = true ;
+
+                    if (info[1].has(ModusToolboxEnvVarNames.MTB_APP_NAME)) {
+                        this.appName = info[1].get(ModusToolboxEnvVarNames.MTB_APP_NAME)! ;
                     } else {
-                        this.buildSupport = false ;
+                        if (info[1].has(ModusToolboxEnvVarNames.MTB_TYPE) && info[1].get(ModusToolboxEnvVarNames.MTB_TYPE) === ModusToolboxEnvTypeNames.APPLICATION) {
+                            this.appName = path.basename(appdir) ;
+                        }
+                        else {
+                            reject(new Error("this is not a valid ModusToolbox application, the application name was not provided")) ;
+                        }
                     }
                     
                     if (info[0] === AppType.none) {
                         reject(new Error("this is not a ModusToolbox application")) ;
                     }
                     else if (info[0] === AppType.mtb2x) {
-                        this.processMtb2xApp(info[1]).then(() => {
+                        this.processCombined(info[1]).then(() => {
                             resolve() ;
                         })
                         .catch((err : Error) => {
@@ -302,7 +442,7 @@ export class MTBAppInfo
                         }) ;
                     }   
                     else if (info[0] === AppType.multicore) {
-                        this.processMulticore(info[1]).then(() => {
+                        this.processMultiProject(info[1]).then(() => {
                             resolve() ;
                         })
                         .catch((err : Error) => {
@@ -378,8 +518,13 @@ export class MTBAppInfo
                         // The .vscode directory does not exist, create it
                         //
                         runMakeVSCode(this.appDir)
-                            .then( () => { resolve() ;})
-                            .catch( (error) => { reject(error) ;}) ;
+                            .then( () => { 
+                                this.reload = true ;
+                                resolve() ;
+                            })
+                            .catch( (error) => { 
+                                reject(error) ;
+                            }) ;
                     }
                     else {
                         reject(err) ;

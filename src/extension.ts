@@ -26,7 +26,7 @@ import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
 import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
 import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbImportProject, mtbImportProjectDirect, mtbRunEditor, 
-		mtbShowDoc, mtbSymbolDoc, mtbRunLibraryManager, mtbImportDiskProject, mtbImportDiskProjectDirect, mtbRunMakeGetLibsCmd } from './mtbcommands';
+		mtbShowDoc, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
 import open = require("open");
@@ -108,16 +108,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbImportProjectDirect', () => {
 		mtbImportProjectDirect(context);
-	});
-	context.subscriptions.push(disposable);
-
-	disposable = vscode.commands.registerCommand('mtbassist.mtbImportDiskProject', () => {
-		mtbImportDiskProject(context);
-	});
-	context.subscriptions.push(disposable);
-
-	disposable = vscode.commands.registerCommand('mtbassist.mtbImportDiskProjectDirect', () => {
-		mtbImportDiskProjectDirect(context);
 	});
 	context.subscriptions.push(disposable);
 

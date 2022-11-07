@@ -27,7 +27,7 @@ import * as exec from 'child_process' ;
 import * as os from 'os' ;
 
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
-import { getImportDiskHtmlInstructions, getImportHtmlInstructions, getModusToolboxAssistantStartupHtml } from './mtbgenhtml';
+import { getImportHtmlInstructions, getModusToolboxAssistantStartupHtml } from './mtbgenhtml';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, theModusToolboxApp } from './mtbapp/mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
@@ -179,34 +179,6 @@ function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: strin
     }) ;
 }
 
-export function mtbImportDiskProject(context: vscode.ExtensionContext) {
-    
-    if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
-        vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
-        return ;
-    }
-
-    // Display a web page about ModusToolbox
-	let panel : vscode.WebviewPanel = vscode.window.createWebviewPanel(
-        'mtbassist', 
-        'ModusToolbox', 
-        vscode.ViewColumn.One, 
-            {
-                enableScripts: true
-            }
-       ) ;
-
-    panel.webview.html = getImportDiskHtmlInstructions() ;
-
-    panel.webview.onDidReceiveMessage( (message)=> {
-        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "recevied import page command '" + message.command + "'") ;
-        if (message.command === "mtbImportProjectDiskDirect") {
-            vscode.commands.executeCommand('mtbassist.mtbImportDiskProjectDirect') ;
-        }
-    }) ;
-}
-
 export function mtbImportProject(context: vscode.ExtensionContext) {
     
     if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
@@ -233,33 +205,6 @@ export function mtbImportProject(context: vscode.ExtensionContext) {
             vscode.commands.executeCommand('mtbassist.mtbImportProjectDirect') ;
         }
     }) ;
-}
-
-export function mtbImportDiskProjectDirect(context: vscode.ExtensionContext) {
-    let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
-    if (process.platform === "win32") {
-        makepath += ".exe" ;
-    }
-
-    vscode.window.showOpenDialog({
-        defaultUri: vscode.Uri.file("C:/cygwin64/home/butch/mtbprojects/temp"),
-        canSelectFiles : false,
-        canSelectFolders: true,
-        canSelectMany: false })
-        .then( (folder) => {
-            if (folder) {
-                let finalpath: string = folder[0].fsPath ;
-                mtbRunGetLibsVSCode(context, finalpath)
-                    .then(() => {
-
-                    })
-                    .catch((err: Error) => {
-                        let msg: string = "mtbImportProject: failed in directory '" + finalpath + "' - " + err.message ;
-                        vscode.window.showErrorMessage(msg) ;
-                        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, msg) ;     
-                    }) ;
-            }
-        }) ;
 }
 
 export function mtbImportProjectDirect(context: vscode.ExtensionContext) {

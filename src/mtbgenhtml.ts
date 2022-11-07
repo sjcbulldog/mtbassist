@@ -19,34 +19,6 @@ import { getRecentList } from "./mtbrecent";
 
 let titlestr :string = '<p style="font-size:300%;">ModusToolbox Assistant ' + MTBExtensionInfo.version;
 
-export function getImportDiskHtmlInstructions() : string {
-    let html : string = 
-    `<!DOCTYPE html>
-        <head>
-            <meta charset="UTF-8">
-            <script>
-                const vscode = acquireVsCodeApi() ;
-            </script>
-        </head>
-        <body>
-            ####TITLE####
-            <h1>Import Application From Disk</h1>
-            <div style="font-size: 150%;">
-            The import command is used to import a ModusToolbox project that is stored locally on your local machine.  This command will ensure all
-            dependencies are up to date and local and then prepare the project for Visual Studio Code.
-            <br><br>
-            This command runs <i>make getlibs</i> followed by <i>make vscode</i> in the directory given.
-            <br><br>
-            <a onclick="vscode.postMessage({ command: 'mtbImportProjectDiskDirect'}) ;" href="#">Click Here To Import Project</a>
-            </div>
-        </body>
-    ` ;
-
-    html = html.replace("####TITLE####", titlestr) ;        
-
-    return html ;
-}
-
 export function getImportHtmlInstructions() : string {
     let html : string = 
     `<!DOCTYPE html>
@@ -185,14 +157,14 @@ export function getModusToolboxAssistantStartupHtml() : string {
                 <div class="tabbar">
                     <button class="tabbutton" id="tabbutton1" onclick="selectContent(event, '1')">Getting Started</button>
                     <button class="tabbutton" id="tabbutton2" onclick="selectContent(event, '2')">Documentation</button>
-                    <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">Recent</button>
+                    <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">Recent Applications</button>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content1">
-                    <p>There are three ways to get a new ModusToolbox application into Visual Studio Code.<p> 
+                    <p>There are three ways to get a ModusToolbox application into Visual Studio Code.<p> 
                     <ul>
-                    <li>You can <a onclick="vscode.postMessage({ command: 'createNew'}) ;" href="#">create</a> a new project</li>
+                    <li>You can <a onclick="vscode.postMessage({ command: 'createNew'}) ;" href="#">create</a> a new project.</li>
                     <li>You can <a onclick="vscode.postMessage({ command: 'importExisting'}) ;" href="#">import</a> an existing project from a git repository.</li>
-                    <li>You can <a onclick="vscode.postMessage({ command: 'importExistingDisk'}) ;" href="#">import</a> an existing project from a local directory.</li>                    
+                    <li>You can load a project located on your local disk.  It will automatically be prepared for vscode.</li>
                     </ul>
                     
                     <p>Creating a new project, starts the project creator where you can create a new project by selecting a target
@@ -203,9 +175,12 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     then performs a <i>make getlibs</i> operation which readies the project for its location on the local
                     machine.  Finally, the import performs a <i>make vscode</i> operation which initializes the .vscode directory
                     to enable the project to work in the vscode environment.</p>
-                    Finally, note most features of ModusToolbox are available by selecting the 
+
+                    <p>Load a local project by using the File/Open Folder or File/Open Workspace From File... menu items.</p>
+
+                    <p>Finally, note most features of ModusToolbox are available by selecting the 
                     <a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">ModusToolbox</a> icon in the Activity Bar, given by the robot icon.
-                    This displays the ModusToolbox view in the Side Bar.  See this <a href="https://code.visualstudio.com/docs/getstarted/userinterface">page</a> for more details.
+                    This displays the ModusToolbox view in the Side Bar.  See this <a href="https://code.visualstudio.com/docs/getstarted/userinterface">page</a> for more details.</p>
                     <br><br><br>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content2">
@@ -251,7 +226,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
     else {
         checkstr += "unchecked" ;
     }
-    checkstr += '><label for="showWelcomePage">Show ModusToolbox Assistant Welcome Page</label><br>' ;
+    checkstr += '><label for="showWelcomePage">Show ModusToolbox Assistant welcome page on startup</label><br>' ;
 
     html = html.replace("####TITLE####", titlestr) ;
     html = html.replace("####RECENTS####", recentstr) ;

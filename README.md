@@ -58,3 +58,9 @@ Cleaned up how the tools are displayed in the ModusToolbox view.
 
 ### 1.0.21
 Reduced when the ModusToolbox Assistant log window is displayed
+
+Reworded some of the text in the ModusToolbox view to make intent more obvious
+
+When loading a ModusToolbox project but no build support is available, 
+run 'make getlibs' to bring in the required buidl support.  This basically
+eliminates the need for the "import from disk" command.

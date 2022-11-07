@@ -47,6 +47,9 @@ export class MTBProjectInfo
     // The list of assets
     public assets: MTBAssetInstance[] ;
 
+    // If true, build support is in place
+    public buildSupport: boolean ;
+
     // The list of vars from the make get_app_info
     mtbvars: Map<string, string> = new Map<string, string>() ;
 
@@ -54,6 +57,7 @@ export class MTBProjectInfo
         this.app = app ;
         this.name = name ;
         this.assets = [] ;
+        this.buildSupport = false ;
     }
 
     public getVar(varname: string) : string | undefined {
@@ -69,13 +73,8 @@ export class MTBProjectInfo
             runMakeGetAppInfo(this.getProjectDir())
                 .then((data: Map<string, string>) => {
                     this.initProjectFromData(data)
-                        .then((ret: boolean) => {
-                            if (ret) {
-                                resolve() ;
-                            }
-                            else {
-                                reject(new Error("cannot initialize project '" + this.name + "'")) ;
-                            }
+                        .then(() => {
+                            resolve() ;
                         })
                         .catch((err: Error) => {
                             reject(err) ;
@@ -87,8 +86,15 @@ export class MTBProjectInfo
         }) ;
     }
 
-    public initProjectFromData(data: Map<string, string>) : Promise<boolean> {
-        let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
+    public initProjectFromData(data: Map<string, string>) : Promise<void> {
+        let ret: Promise<void> = new Promise<void>((resolve, reject) => {
+
+            if (data.has(ModusToolboxEnvVarNames.MTB_DEVICE) && data.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length > 0) {
+                this.buildSupport = true ;
+            }
+            else {
+                this.buildSupport = false ;
+            }
 
             if (data.has(ModusToolboxEnvVarNames.MTB_LIBS)) {
                 this.libsDir = data.get(ModusToolboxEnvVarNames.MTB_LIBS)
@@ -96,7 +102,7 @@ export class MTBProjectInfo
             else {
                 let msg: string = "project '" + this.name + "' is missing value '" + ModusToolboxEnvVarNames.MTB_LIBS  + "'" ;
                 MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;
-                reject(false);
+                reject(new Error(msg));
             }
 
             if (data.has(ModusToolboxEnvVarNames.MTB_GLOBAL_DIR)) {
@@ -112,7 +118,7 @@ export class MTBProjectInfo
             else {
                 let msg: string = "project '" + this.name + "' is missing value '" + ModusToolboxEnvVarNames.MTB_DEPS + "'" ;
                 MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;
-                reject(false);
+                reject(new Error(msg));
             }
 
             if (data.has(ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR) && data.has(ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME)) {
@@ -124,13 +130,13 @@ export class MTBProjectInfo
                 let msg: string = "project '" + this.name + "' is missing value '" + ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR + "'";
                 msg += " or value '" + ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME + "'" ;
                 MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;  
-                reject(false);          
+                reject(new Error(msg));      
             }
             this.mtbvars = data ;
 
             MTBAssetInstance.mtbLoadAssetInstance(this)
                 .then(() => {
-                    resolve(true) ;
+                    resolve() ;
                 })
                 .catch((err: Error) => {
                     reject(err) ;
