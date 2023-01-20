@@ -34,6 +34,8 @@ export class ModusToolboxEnvVarNames
     static readonly MTB_TYPE: string = "MTB_TYPE" ;
     static readonly MTB_PROTOCOL: string = "MTB_PROTOCOL" ;
     static readonly MTB_PROJECTS: string = "MTB_PROJECTS" ;
+    static readonly MTB_CORE_TYPE: string = "MTB_CORE_TYPE" ;
+    static readonly MTB_CORE_NAME: string = "MTB_CORE_NAME" ;
 }
 
 export class ModusToolboxEnvTypeNames

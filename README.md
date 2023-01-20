@@ -67,3 +67,8 @@ eliminates the need for the "import from disk" command.
 
 ### 1.0.22
 Fixed a defect with multi-core projects not updating correctly
+
+### 1.0.23
+Detect when a project has been moved and can no longer be built.  In this case
+run 'make getlibs' to refresh the project.  Created a status bar item to show
+the status of the current open folder or workspace with respect to ModusToolbox.

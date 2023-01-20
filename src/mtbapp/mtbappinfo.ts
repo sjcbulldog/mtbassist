@@ -76,21 +76,25 @@ export class MTBAppInfo
     // The extension context
     public context: vscode.ExtensionContext ;
 
-    reload: boolean ;
+    public needVSCode: boolean ;
 
     //
     // Create the application object and load its contents in the asynchronously
     //
     constructor(context: vscode.ExtensionContext, appdir : string) {
+
+        let loadingWksc : boolean = false ;
+
         this.appDir = "" ;
         this.projects = [] ;
         this.context = context ;
         this.setLaunchInfo(undefined) ;
         this.appType = AppType.none ;
-        this.reload = false ;
         this.appName = "UNDEFINED" ;
+        this.needVSCode = false ;
 
         MTBExtensionInfo.getMtbExtensionInfo().manifestDb.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
+        MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Checking Application") ;
 
         this.isValid = false ;
         this.isLoading = true ;
@@ -117,18 +121,23 @@ export class MTBAppInfo
                             vscode.window.showInformationMessage("Loading worksapce file '" + filename + "'") ;
                             let wkspuri : vscode.Uri = vscode.Uri.file(wksp) ;
                             vscode.commands.executeCommand("vscode.openFolder", wkspuri) ;
+                            loadingWksc = true ;
                         }
+                    }    
 
+                    if (!loadingWksc) {
                         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
-                        vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;
-                    }                    
-                    addToRecentProjects(context, appdir) ;
-                    this.updateAssets() ;
+                        vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;                        
+                        MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Ready") ;
+                        addToRecentProjects(context, appdir) ;
+                        this.updateAssets() ;
+                    }
                 }
             })
             .catch((error) => {
                 this.isValid = false ;
                 this.isLoading = false ;
+                MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Not Valid") ;
                 MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "the application directory '" + appdir + "' is not a ModusToolbox application") ;
             }) ;
     }
@@ -205,9 +214,11 @@ export class MTBAppInfo
             // There is no valid MTB_DEVICE value, so this means we don't have build
             // support.  We need to run 'make getlibs' to get build support.
             //
+            MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Running 'make getlibs'") ;
             mtbRunMakeGetLibs(this.context, cwd)
                 .then((code: Number) => {
                     if (code === 0) {
+                        MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Loading Application") ;
                         runMakeGetAppInfo(cwd)
                             .then((makevars: Map<string, string>) => {
                                 if (!makevars.has(ModusToolboxEnvVarNames.MTB_DEVICE) || makevars.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length === 0) {
@@ -265,7 +276,7 @@ export class MTBAppInfo
     //
     private processCombined(makevars: Map<string, string>) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
-            if (!makevars.has(ModusToolboxEnvVarNames.MTB_DEVICE) || makevars.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length === 0) {
+            if (!makevars.has(ModusToolboxEnvVarNames.MTB_CORE_TYPE) || makevars.get(ModusToolboxEnvVarNames.MTB_CORE_TYPE)!.length === 0) {
                 this.processOneDir(this.appDir)
                     .then((data: Map<string, string>) => {
                         this.processProject(data)
@@ -296,6 +307,7 @@ export class MTBAppInfo
 
     private createOneProject(projdir: string) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
+            MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Loading Application") ;
             runMakeGetAppInfo(projdir)
                 .then((makedata: Map<string, string>) => {
                     let projobj = new MTBProjectInfo(this, path.basename(projdir)) ;
@@ -347,7 +359,7 @@ export class MTBAppInfo
         let ret : Promise<boolean> = new Promise<boolean>((resolve, reject) => {
             runMakeGetAppInfo(projdir)
             .then((makevars: Map<string, string>) => {
-                if (!makevars.has(ModusToolboxEnvVarNames.MTB_DEVICE) || makevars.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length === 0) {
+                if (!makevars.has(ModusToolboxEnvVarNames.MTB_CORE_TYPE) || makevars.get(ModusToolboxEnvVarNames.MTB_CORE_TYPE)!.length === 0) {
                     resolve(true) ;
                 }
                 else {
@@ -394,6 +406,7 @@ export class MTBAppInfo
                         //
                         // Run getlibs at the application leve
                         //
+                        MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Running 'make getlibs'") ;                        
                         mtbRunMakeGetLibs(this.context, this.appDir)
                             .then((code: number) => {
                                 if (code === 0) {
@@ -442,8 +455,8 @@ export class MTBAppInfo
         let ret : Promise<void> = new Promise<void>( (resolve, reject) => {
             this.checkAppType()
                 .then ((info : [AppType, Map<string, string>]) => {
+                    MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Loading Application") ;
                     this.appType = info[0] ;
-                    let value = info[1].get(ModusToolboxEnvVarNames.MTB_DEVICE) ;
 
                     if (info[1].has(ModusToolboxEnvVarNames.MTB_APP_NAME)) {
                         this.appName = info[1].get(ModusToolboxEnvVarNames.MTB_APP_NAME)! ;
@@ -546,32 +559,32 @@ export class MTBAppInfo
         let ret = new Promise<void>((resolve, reject) => {
             let vscodedir: string = path.join(this.appDir, ".vscode") ;
             fs.stat(vscodedir, (err, stats) => {
-                if (err) {
-                    if (err.code === 'ENOENT') {
-                        //
-                        // The .vscode directory does not exist, create it
-                        //
-                        runMakeVSCode(this.appDir)
-                            .then( () => { 
-                                this.reload = true ;
-                                resolve() ;
-                            })
-                            .catch( (error) => { 
-                                reject(error) ;
-                            }) ;
-                    }
-                    else {
-                        reject(err) ;
-                    }
+                let needvs: boolean = false ;
+
+                if (this.needVSCode) {
+                    needvs = true ;
                 }
-                else 
-                {
-                    if (stats.isDirectory()) {
-                        resolve() ;
-                    }
-                    else {
-                        reject(new Error("the path '" + vscodedir + "' exists but is not a directory")) ;
-                    }
+                else if (err && err.code === 'ENOENT') {
+                    needvs = true ;
+                }
+                else if (err) {
+                    reject(err) ;
+                }
+                if (needvs) {
+                    //
+                    // The .vscode directory does not exist, create it
+                    //
+                    MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Running 'make vscode'") ;
+                    runMakeVSCode(this.appDir)
+                        .then( () => { 
+                            resolve() ;
+                        })
+                        .catch( (error) => { 
+                            reject(error) ;
+                        }) ;
+                }
+                else {
+                    resolve() ;
                 }
             }) ;
         }) ;

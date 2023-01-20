@@ -36,6 +36,8 @@ export class MTBExtensionInfo
     public static readonly showWelcomePageName : string = "showWelcomePage" ;
     public static readonly version = vscode.extensions.getExtension('c-and-t-software.mtbassist')?.packageJSON.version ;
 
+    private staturBarItem: vscode.StatusBarItem ;
+
     public toolsDir: string ;
     public docsDir: string ;
     public major: number ;
@@ -51,6 +53,7 @@ export class MTBExtensionInfo
         this.channel = vscode.window.createOutputChannel("ModusToolbox") ;
         this.context = context ;
         this.manifestDb = new MtbManifestDb() ;
+        this.staturBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100) ;
 
         this.logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
         this.logMessage(MessageType.info, "ModusToolbox install directory: " + this.defaultInstallDir()) ;
@@ -64,6 +67,11 @@ export class MTBExtensionInfo
         if (this.getPresistedBoolean(MTBExtensionInfo.debugModeName, false)) {
             this.logMessage(MessageType.debug, "Debug mode is enabled, you should see debug messages") ;
         }
+    }
+
+    public setStatus(status: string) {
+        this.staturBarItem.text = status ;
+        this.staturBarItem.show() ;
     }
 
     public static getMtbExtensionInfo(context?: vscode.ExtensionContext) : MTBExtensionInfo {

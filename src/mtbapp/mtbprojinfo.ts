@@ -89,7 +89,7 @@ export class MTBProjectInfo
     public initProjectFromData(data: Map<string, string>) : Promise<void> {
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
 
-            if (data.has(ModusToolboxEnvVarNames.MTB_DEVICE) && data.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length > 0) {
+            if (data.has(ModusToolboxEnvVarNames.MTB_CORE_TYPE) && data.get(ModusToolboxEnvVarNames.MTB_CORE_TYPE)!.length > 0) {
                 this.buildSupport = true ;
             }
             else {
@@ -97,7 +97,7 @@ export class MTBProjectInfo
             }
 
             if (data.has(ModusToolboxEnvVarNames.MTB_LIBS)) {
-                this.libsDir = data.get(ModusToolboxEnvVarNames.MTB_LIBS)
+                this.libsDir = data.get(ModusToolboxEnvVarNames.MTB_LIBS);
             }
             else {
                 let msg: string = "project '" + this.name + "' is missing value '" + ModusToolboxEnvVarNames.MTB_LIBS  + "'" ;

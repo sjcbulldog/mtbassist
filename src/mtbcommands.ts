@@ -476,11 +476,11 @@ export function mtbRunMakeGetLibsCmd(context: vscode.ExtensionContext) {
         return ;
     }
     if (theModusToolboxApp) {
-        vscode.window.showInformationMessage("Running 'make getlibs'") ;
         MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow() ;
         
         mtbRunMakeGetLibs(context, theModusToolboxApp.appDir)
             .then((code: number) => {
+                theModusToolboxApp!.needVSCode = true ;
                 if (code) {
                     let msg: string = "'make getlibs' failed with exit status " + code.toString() ;
                     vscode.window.showErrorMessage(msg) ;
