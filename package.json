@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -22,16 +22,8 @@
     "ARM cortex"
   ],
   "activationEvents": [
-    "onView:mtbglobal",
-    "onView:mtbdocs",
-    "onCommand:mtbassist.mtbCreateProject",
-    "onCommand:mtbassist.mtbImportProject",
-    "onCommand:mtbassist.mtbImportProjectDirect",
     "onCommand:mtbassist.mtbImportDiskProject",
     "onCommand:mtbassist.mtbImportDiskProjectDirect",
-    "onCommand:mtbassist.mtbRunMakeGetlibs",
-    "onCommand:mtbassist.mtbRunEditor",
-    "onCommand:mtbassist.mtbShowDoc",
     "workspaceContains:Makefile",
     "onStartupFinished"
   ],

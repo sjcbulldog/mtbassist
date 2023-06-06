@@ -304,7 +304,23 @@ function dropEmptyLines(lines: string[]) : string [] {
     return ret ;
 }
 
-function createProjects(output: Buffer) {
+function createProjects3x(output: Buffer) {
+    let projdata = JSON.parse(output.toString()) ;
+    let projects: any[] = [] ;
+    projdata.projects.forEach((proj: any) => {
+        if (proj.status === "success") {
+            let project = {
+                name: proj.name,
+                location: proj.location
+            } ;
+            projects.push(project);
+        }
+    }) ;
+
+    return projects ;
+}
+
+function createProjects30(output: Buffer) {
     let createout: string = output.toString() ;
     let lines: string[] = dropEmptyLines(createout.split("\r\n")) ;
     
@@ -515,9 +531,19 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
         pcpath += ".exe" ;
     }
 
+    let post30: boolean = false ;
     let outstr : Buffer ;
     try {
-        outstr = exec.execFileSync(pcpath, ["--eclipse", "--ideVersion", "3.0"]) ;
+        let major: number = MTBExtensionInfo.getMtbExtensionInfo(context).major ;
+        let minor: number = MTBExtensionInfo.getMtbExtensionInfo(context).minor ;
+
+        if (major > 3 || minor > 0) {
+            outstr = exec.execFileSync(pcpath, ["--machine-interface", "--ide", "vscode", "--ide-readonly", "--close"]) ;
+            post30 = true ;
+        }
+        else {
+            outstr = exec.execFileSync(pcpath, ["--eclipse", "--ideVersion", "3.0"]) ;
+        }
     }
     catch(error) {
         console.log("error: " + error) ;
@@ -527,7 +553,14 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
     MTBExtensionInfo.getMtbExtensionInfo(context).showMessageWindow() ;
     MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "reading ModusToolbox application state, please wait ...") ;
 
-    let projects = createProjects(outstr) ;
+    let projects : any[] ;
+    
+    if (post30) {
+        projects = createProjects3x(outstr) ;
+    } else {
+        projects = createProjects30(outstr) ;
+    }
+    
     let projpath: string = "" ;
 
     if (projects.length === 0) {
