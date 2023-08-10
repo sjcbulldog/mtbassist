@@ -61,13 +61,15 @@ export class MTBApp extends MTBItem {
 
         for(let ver of app2.versions) {
             if (app1.containsVersion(ver.num)) {
-                let ext: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;
-                //
-                // We cannot have the same version name in both.  Report an error
-                // and skip this element.
-                //
-                ext.logMessage(MessageType.error, "two instances of 'app' contains the same version '" + ver.num + "'") ;
-                ret = undefined ;
+                if (app1.uri !== app2.uri) {
+                    let ext: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;
+                    //
+                    // We cannot have the same version name in both.  Report an error
+                    // and skip this element.
+                    //
+                    ext.logMessage(MessageType.error, "two instances of 'app' contains the same version '" + ver.num + "'") ;
+                    ret = undefined ;
+                }
             }
         }
 

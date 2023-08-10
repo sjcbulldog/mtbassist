@@ -1,5 +1,8 @@
 # Change Log
 
+### 1.0.26
+Updated manifest parsing to be more compatible with manifest requirements
+
 ### 1.0.24
 Added support for ModusToolbox 3.1
 

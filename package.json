@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.0.24",
+  "version": "1.0.26",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
