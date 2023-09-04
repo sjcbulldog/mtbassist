@@ -19,42 +19,6 @@ import { getRecentList } from "./mtbrecent";
 
 let titlestr :string = '<p style="font-size:300%;">ModusToolbox Assistant ' + MTBExtensionInfo.version;
 
-export function getImportHtmlInstructions() : string {
-    let html : string = 
-    `<!DOCTYPE html>
-        <head>
-            <meta charset="UTF-8">
-            <script>
-                const vscode = acquireVsCodeApi() ;
-            </script>
-        </head>
-        <body>
-            ####TITLE####
-            <h1>Import Application From Git Repository</h1>
-            <div style="font-size: 150%;">
-            The import command is used to import a ModusToolbox project that is stored in a git repository. This command is used when a team
-            is working on a project.  The project is initially created using the ModusToolbox Project Creator and then stored in a git repository that is accessible
-            by all team members.  Note, the import flow does not work for if the git clone operation must supply a password for the remote repository.<br>
-            The import command prompts for the following information:
-            <ul>
-            <li>The location on the local machine where the project will be stored (LOCALDIR).</li>
-            <li>The location of the repository.  The type may be git, hhttp, https, or ssh as long as no password is required (GITREPO)</li>
-            <li>The name of the project directory (LOCALNAME)
-            </ul>
-            <br>
-            This command clones the git repository GITREPO to the path LOCALDIR/LOCALNAME and then runs <i>make getlibs</i> followed by <i>make vscode</i> to
-            ready the project for the local machine.
-            <br>
-            <a onclick="vscode.postMessage({ command: 'mtbImportProjectDirect'}) ;" href="#">Click Here To Import Project</a>
-            </div>
-        </body>
-    ` ;
-
-    html = html.replace("####TITLE####", titlestr) ;        
-
-    return html ;
-}
-
 export function getModusToolboxNotInstallHtml() : string {
     let html : string = 
         `<!DOCTYPE html>
@@ -71,7 +35,6 @@ export function getModusToolboxNotInstallHtml() : string {
         ` ;
 
     html = html.replace("####TITLE####", titlestr) ;        
-
     return html ;
 }
 
@@ -160,23 +123,20 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">Recent Applications</button>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content1">
-                    <p>There are three ways to get a ModusToolbox application into Visual Studio Code.<p> 
+                    <p>There are two ways to get a ModusToolbox application into Visual Studio Code.<p> 
                     <ul>
                     <li>You can <a onclick="vscode.postMessage({ command: 'createNew'}) ;" href="#">create</a> a new project.</li>
-                    <li>You can <a onclick="vscode.postMessage({ command: 'importExisting'}) ;" href="#">import</a> an existing project from a git repository.</li>
                     <li>You can load a project located on your local disk.  It will automatically be prepared for vscode.</li>
                     </ul>
                     
                     <p>Creating a new project, starts the project creator where you can create a new project by selecting a target
                     board and an example project supported by the target board.</p>
 
-                    <p>Importing a project provides a method to share a project that has been previously created and stored
-                    in a git repository.  Importing a project clones the project from the source git repository and
-                    then performs a <i>make getlibs</i> operation which readies the project for its location on the local
-                    machine.  Finally, the import performs a <i>make vscode</i> operation which initializes the .vscode directory
-                    to enable the project to work in the vscode environment.</p>
-
-                    <p>Load a local project by using the File/Open Folder or File/Open Workspace From File... menu items.</p>
+                    <p>Load a local project by using the File/Open Folder or File/Open Workspace From File... menu items.
+                    This provides a method to share a project that has been previously created and stored
+                    in a remote repository.  Loading the project locally performs a <i>make getlibs</i> operation which readies 
+                    the project for its location on the local machine.  Finally, the import performs a <i>make vscode</i> 
+                    operation which initializes the .vscode directory to enable the project to work in the vscode environment.</p>
 
                     <p>Finally, note most features of ModusToolbox are available by selecting the 
                     <a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">ModusToolbox</a> icon in the Activity Bar, given by the robot icon.

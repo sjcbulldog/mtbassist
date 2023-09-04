@@ -63,10 +63,6 @@ export class MTBProgramProvider implements vscode.TreeDataProvider<MTBAssistItem
         item.command = new MTBAssistCommand("Create Project", "mtbassist.mtbCreateProject", "Create Project") ;
         this.items_[0].addChild(item) ;
 
-        item = new MTBAssistItem("Import Project From Repository") ;
-        item.command = new MTBAssistCommand("Import Project From Git Repository", "mtbassist.mtbImportProject", "ImportProject") ;
-        this.items_[0].addChild(item) ;
-
         item = new MTBAssistItem("Show Welcome Page") ;
         item.command = new MTBAssistCommand("Import Project", "mtbassist.mtbShowWelcomePage", "Show Welcome Page") ;
         this.items_[0].addChild(item) ;

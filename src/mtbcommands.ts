@@ -27,7 +27,7 @@ import * as exec from 'child_process' ;
 import * as os from 'os' ;
 
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
-import { getImportHtmlInstructions, getModusToolboxAssistantStartupHtml } from './mtbgenhtml';
+import { getModusToolboxAssistantStartupHtml } from './mtbgenhtml';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, theModusToolboxApp } from './mtbapp/mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
@@ -44,10 +44,22 @@ function outputLines(context: vscode.ExtensionContext, data: string) {
     }
 }
 
+export async function mtbResultDecode(context: vscode.ExtensionContext) {
+    const value = await vscode.window.showInputBox({
+        placeHolder: "Enter result code",
+        prompt: "Enter result code as a legal 'C' integer"
+    }) ;
+    
+    if (value === undefined)
+        return ;
+
+    
+}
+
 export function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
     let ret: Promise<number> = new Promise<number>((resolve, reject) => {
         let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + cwd + "' ...") ;
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "ModusToolbox: running 'make getlibs' in directory '" + cwd + "' ...") ;
         let cmd = "make getlibs" ;
         let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: cwd }) ;
 
@@ -67,11 +79,10 @@ export function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string)
     return ret ;
 }
 
-
 function mtbRunMakeVscode(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
     let ret: Promise<number> = new Promise<number>((resolve, reject) => {
         let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: running 'make getlibs' in directory '" + cwd + "' ...") ;
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "ModusToolbox: running 'make getlibs' in directory '" + cwd + "' ...") ;
         let cmd = "make vscode" ;
         let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: cwd }) ;
 
@@ -89,158 +100,6 @@ function mtbRunMakeVscode(context: vscode.ExtensionContext, cwd: string) : Promi
     }) ;
 
     return ret ;
-}
-
-function mtbRunGetLibsVSCode(context: vscode.ExtensionContext, cwd: string) : Promise<void> {
-    let ret: Promise<void> = new Promise<void>((resolve, reject) => {
-        mtbRunMakeGetLibs(context, cwd)
-            .then((code) => {
-                if (code === 0) {
-                    mtbRunMakeVscode(context, cwd)
-                        .then((code) => {
-                            if (code === 0) {
-                                let uri: vscode.Uri = vscode.Uri.file(cwd) ;
-                                vscode.commands.executeCommand("vscode.openFolder", uri) ;
-                                resolve() ;
-                            }
-                            else {
-                                reject(new Error("the command 'make vscode' failed")) ;
-                            }
-                        })
-                        .catch((err: Error) => {
-                            reject(err) ;
-                        }) ;
-                }
-                else {
-                    reject(new Error("the command 'make getlibs' failed")) ;
-                }
-            })
-            .catch((err: Error) => {
-                reject(err) ;
-            }) ;
-    }) ;
-
-    return ret ;
-}
-
-function mtbImportProjectWithLoc(context: vscode.ExtensionContext, locdir: string, gitpath: string, name: string) {
-    let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
-
-    let st = fs.statSync(locdir) ;
-    if (!st) {
-        vscode.window.showErrorMessage("The path '" + locdir + "' does not exist") ;
-        return ;
-    }
-
-    if (!st.isDirectory) {
-        vscode.window.showErrorMessage("The path '" + locdir + "' exists but is not a directory") ;
-        return ;        
-    }
-
-    if (process.platform === "win32") {
-        makepath += ".exe" ;
-    }
-
-    let finalpath: string = path.join(locdir, name) ;
-
-    MTBExtensionInfo.getMtbExtensionInfo(context).showMessageWindow() ;
-    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... ") ;
-
-    let cmd = "git clone " + gitpath + " " + name ;
-    let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: locdir }) ;
-
-    job.stdout.on(('data'), (data: string) => {
-        let str: string = data.toString().replace(/\r\n/g, "\n") ;
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
-    }) ;
-
-    job.stderr.on(('data'), (data: string) => {
-        let str: string = data.toString().replace(/\r\n/g, "\n") ;
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, str) ;
-    }) ;
-
-    job.on('close', (code: number) => {
-        if (code === 0) {
-            mtbRunGetLibsVSCode(context, finalpath)
-                .then(() => {
-
-                })
-                .catch((err: Error) => {
-                    let msg: string = "mtbImportProject: failed in directory '" + finalpath + "' - " + err.message ;
-                    vscode.window.showErrorMessage(msg) ;
-                    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, msg) ;                                        
-                }) ;
-        }
-        else {
-            let msg: string = "mtbImportProject: cloning from from '" + gitpath + "' to location '" + finalpath + "' ... failed" ;
-            vscode.window.showErrorMessage(msg) ;
-            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, msg) ;            
-        }
-    }) ;
-}
-
-export function mtbImportProject(context: vscode.ExtensionContext) {
-    
-    if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
-        vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
-        return ;
-    }
-
-    		// Display a web page about ModusToolbox
-	let panel : vscode.WebviewPanel = vscode.window.createWebviewPanel(
-        'mtbassist', 
-        'ModusToolbox', 
-        vscode.ViewColumn.One, 
-            {
-                enableScripts: true
-            }
-       ) ;
-
-    panel.webview.html = getImportHtmlInstructions() ;
-
-    panel.webview.onDidReceiveMessage( (message)=> {
-        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "recevied import page command '" + message.command + "'") ;
-        if (message.command === "mtbImportProjectDirect") {
-            vscode.commands.executeCommand('mtbassist.mtbImportProjectDirect') ;
-        }
-    }) ;
-}
-
-export function mtbImportProjectDirect(context: vscode.ExtensionContext) {
-
-    vscode.window.showOpenDialog({
-        defaultUri: vscode.Uri.file("C:/cygwin64/home/butch/mtbprojects/temp"),
-        canSelectFiles : false,
-        canSelectFolders: true,
-        canSelectMany: false })
-        .then( (folder) => {
-            if (folder) {
-                let folderarray : vscode.Uri[] = folder as vscode.Uri[] ;
-                let destdir: string = folderarray[0].fsPath ;
-
-                vscode.window.showInputBox({
-                        prompt : "Git Repo Location",
-                        title: "Import Project From Git Repo",
-                        placeHolder : "Enter location of git repo",
-                        value: "https://github.com/sjcbulldog/mtbhelloworld.git"
-                    })
-                    .then( (gitloc) => {
-                        if (gitloc) {
-                            vscode.window.showInputBox({
-                                prompt : "Name of the project",
-                                title: "Import Project From Git Repo",
-                                placeHolder : "Name of the project in target directory",
-                                value: "MyNewProject"
-                            }).then((name) => {
-                                if (name) {
-                                    mtbImportProjectWithLoc(context, destdir, gitloc!, name!) ;
-                                }
-                            }) ;
-                        }
-                    }) ;
-            }
-        }) ;
 }
 
 export function mtbShowDoc(context: vscode.ExtensionContext, args?: any) {
@@ -419,9 +278,6 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         else if (message.command === "createNew") {
             vscode.commands.executeCommand("mtbassist.mtbCreateProject") ;
         }
-        else if (message.command === "importExisting") {
-            vscode.commands.executeCommand("mtbassist.mtbImportProject") ;
-        }
         else if (message.command === "importExistingDisk") {
             vscode.commands.executeCommand("mtbassist.mtbImportDiskProject") ;
         }
@@ -435,9 +291,6 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         }
         else if (message.command === "showWelcomePage") {
             MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true) ;
-        }
-        else if (message.command === "mtbImportProjectDirect") {
-            vscode.commands.executeCommand('mtbassist.mtbImportProjectDirect') ;
         }
         else if (message.command === "hideWelcomePage") {
             MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.showWelcomePageName, false) ;

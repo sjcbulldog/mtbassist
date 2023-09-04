@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.0.26",
+  "version": "1.0.27",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -39,14 +39,6 @@
         "title": "ModusToolbox make getlibs"
       },
       {
-        "command": "mtbassist.mtbImportProject",
-        "title": "ModusToolbox Import Project From Git Repository"
-      },
-      {
-        "command": "mtbassist.mtbImportProjectDirect",
-        "title": "ModusToolbox Import Project Direct From Git Repository"
-      },
-      {
         "command": "mtbassist.mtbRunEditor",
         "title": "ModusToolbox Run Editor"
       },
@@ -73,6 +65,10 @@
       {
         "command": "mtbassist.mtbSymbolDoc",
         "title": "ModusToolbox Documentation"
+      },
+      {
+        "command": "mtbassist.mtbResultDecode",
+        "title": "ModusToolbox Decode Result"
       }
     ],
     "keybindings": [
@@ -124,6 +120,11 @@
           "when": "resourceLangId == c",
           "command": "mtbassist.mtbSymbolDoc",
           "group": "navigation"
+        },
+        {
+          "when": "resourceLangId == c",
+          "command": "mtbassist.mtbResultDecode",
+          "group": "navigation"
         }
       ]
     },
@@ -169,6 +170,5 @@
     "open": "^8.4.0",
     "os": "^0.1.2",
     "xml2js": "^0.4.23"
-  },
-  "preview": true
+  }
 }
