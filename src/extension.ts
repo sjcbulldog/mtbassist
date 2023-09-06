@@ -36,6 +36,7 @@ import { mtbAssistLoadApp, theModusToolboxApp } from './mtbapp/mtbappinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
 import { getModusToolboxNotInstallHtml } from './mtbgenhtml';
+import { mtbDecodeResultsForHover, mtbDecodeDebugAdapterEventProcessor, mtbDecodeInit } from './mtbresults';
 
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
@@ -224,6 +225,18 @@ export function activate(context: vscode.ExtensionContext) {
 			} ;
 		}
 	}) ;
+
+    vscode.languages.registerHoverProvider('c', {
+        provideHover(document: vscode.TextDocument, pos: vscode.Position, token: vscode.CancellationToken) {
+            return mtbDecodeResultsForHover(document, pos, token) ;
+        }
+    });
+
+    vscode.debug.onDidReceiveDebugSessionCustomEvent(event => {
+        mtbDecodeDebugAdapterEventProcessor(event);
+    });
+
+    mtbDecodeInit() ;
 }
 
 // this method is called when your extension is deactivated

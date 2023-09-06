@@ -403,6 +403,8 @@ function getPanel() : vscode.WebviewPanel {
     return panel ;
 }
 
+let session : vscode.DebugSession | undefined = undefined ;
+
 export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
     panel = getPanel() ;
 
