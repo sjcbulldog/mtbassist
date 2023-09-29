@@ -215,6 +215,7 @@ export class MTBAssetInstance
             theModusToolboxApp.launch.docs.forEach(doc => {
                 if (this.location) {
                     if (MTBAssetInstance.mtbPathCompare(undefined, doc.location, this.fullpath)) {
+                        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "launching docs at location '" + doc.location + "'");
                         open(decodeURIComponent(doc.location)) ;
                     }
                 }

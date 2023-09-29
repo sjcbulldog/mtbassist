@@ -53,7 +53,7 @@ export async function mtbResultDecode(context: vscode.ExtensionContext) {
     if (value === undefined)
         return ;
 
-    
+    vscode.window.showInformationMessage("Text '" + value + "'") ;
 }
 
 export function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
@@ -61,29 +61,6 @@ export function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string)
         let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
         MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "ModusToolbox: running 'make getlibs' in directory '" + cwd + "' ...") ;
         let cmd = "make getlibs" ;
-        let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: cwd }) ;
-
-        job.stdout.on(('data'), (data: Buffer) => {
-            outputLines(context, data.toString()) ;
-        }) ;
-
-        job.stderr.on(('data'), (data: string) => {
-            outputLines(context, data.toString()) ;
-        }) ;
-
-        job.on('close', (code: number) => {
-            resolve(code) ;
-        }) ;
-    }) ;
-
-    return ret ;
-}
-
-function mtbRunMakeVscode(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
-    let ret: Promise<number> = new Promise<number>((resolve, reject) => {
-        let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "ModusToolbox: running 'make getlibs' in directory '" + cwd + "' ...") ;
-        let cmd = "make vscode" ;
         let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: cwd }) ;
 
         job.stdout.on(('data'), (data: Buffer) => {
@@ -459,6 +436,7 @@ export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorE
             .then(value => {
                 let locs : vscode.Location[] = value as vscode.Location[] ;
                 if (locs.length > 0) {
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "symbol found in path '" + locs[0].uri.fsPath + "'");
                     let asset: MTBAssetInstance|undefined = MTBAssetInstance.mtbPathToInstance(locs[0].uri.fsPath) ;
                     if (asset) {
                         asset.displayDocs() ;
@@ -468,7 +446,7 @@ export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorE
                     }
                 }
                 else {
-                    vscode.window.showInformationMessage("Symbol under cursors is not part of an asset") ;
+                    vscode.window.showInformationMessage("Text under cursor is not a 'C' symbol") ;
                 }
             }) ;
     }

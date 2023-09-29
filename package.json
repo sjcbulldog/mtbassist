@@ -120,11 +120,6 @@
           "when": "resourceLangId == c",
           "command": "mtbassist.mtbSymbolDoc",
           "group": "navigation"
-        },
-        {
-          "when": "resourceLangId == c",
-          "command": "mtbassist.mtbResultDecode",
-          "group": "navigation"
         }
       ]
     },

@@ -1,7 +1,7 @@
 # Change Log
 
 ### 1.0.27
-Added the cy_rslt_t decoder
+Updated to find documentation when running in WSL from windows
 
 ### 1.0.26
 Updated manifest parsing to be more compatible with manifest requirements
