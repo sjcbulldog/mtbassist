@@ -29,7 +29,6 @@ import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateP
 		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
-import open = require("open");
 import { readRecentList } from './mtbrecent';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, theModusToolboxApp } from './mtbapp/mtbappinfo';

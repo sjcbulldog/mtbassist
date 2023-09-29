@@ -27,7 +27,7 @@
 //
 import * as path from 'path' ;
 import * as fs from 'fs' ;
-import * as open from 'open' ;
+import open from '../open' ;
 
 import { MTBAppInfo, theModusToolboxApp } from "./mtbappinfo";
 import { MessageType, MTBExtensionInfo } from '../mtbextinfo';

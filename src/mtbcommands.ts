@@ -22,7 +22,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path' ;
 import * as fs from 'fs' ;
-import * as open from 'open' ;
+import open from './open' ;
 import * as exec from 'child_process' ;
 import * as os from 'os' ;
 
