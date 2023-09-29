@@ -21,8 +21,6 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path' ;
-import * as fs from 'fs' ;
-import open from './open' ;
 import * as exec from 'child_process' ;
 import * as os from 'os' ;
 
@@ -32,6 +30,7 @@ import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, theModusToolboxApp } from './mtbapp/mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
 import { MTBAssetInstance } from './mtbapp/mtbassets';
+import { browseropen } from './browseropen';
 
 function outputLines(context: vscode.ExtensionContext, data: string) {
     let str: string = data.toString().replace(/\r\n/g, "\n") ;
@@ -49,9 +48,6 @@ export async function mtbResultDecode(context: vscode.ExtensionContext) {
         placeHolder: "Enter result code",
         prompt: "Enter result code as a legal 'C' integer"
     }) ;
-    
-    if (value === undefined)
-        return ;
 
     vscode.window.showInformationMessage("Text '" + value + "'") ;
 }
@@ -87,7 +83,7 @@ export function mtbShowDoc(context: vscode.ExtensionContext, args?: any) {
 
         vscode.window.showInformationMessage("Showing document '" + docobj.title + "'") ;
         let fileuri: vscode.Uri = vscode.Uri.file(docobj.location) ;
-        open(decodeURIComponent(fileuri.toString())) ;
+        browseropen(decodeURIComponent(fileuri.toString())) ;
     }    
 }
 
@@ -264,7 +260,7 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         else if (message.command === "showUserGuide") {
             let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mtb_user_guide.pdf") ;
             let fileuri = vscode.Uri.file(docpath) ;
-            open(decodeURIComponent(fileuri.toString())) ;
+            browseropen(decodeURIComponent(fileuri.toString())) ;
         }
         else if (message.command === "showWelcomePage") {
             MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true) ;
@@ -275,7 +271,7 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         else if (message.command === "showReleaseNotes") {
             let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mt_release_notes.pdf") ;
             let fileuri = vscode.Uri.file(docpath) ;
-            open(decodeURIComponent(fileuri.toString())) ;
+            browseropen(decodeURIComponent(fileuri.toString())) ;
         }
         else if (message.command === "openRecent") {
             let appdir: string = message.projdir ;

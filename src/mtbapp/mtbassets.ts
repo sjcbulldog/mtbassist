@@ -27,12 +27,12 @@
 //
 import * as path from 'path' ;
 import * as fs from 'fs' ;
-import open from '../open' ;
 
 import { MTBAppInfo, theModusToolboxApp } from "./mtbappinfo";
 import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
 import { getMTBAssetProvider } from '../mtbassetprovider';
 import { MTBProjectInfo } from './mtbprojinfo';
+import { browseropen } from '../browseropen';
 
 export class MTBAssetInstance
 {
@@ -216,7 +216,7 @@ export class MTBAssetInstance
                 if (this.location) {
                     if (MTBAssetInstance.mtbPathCompare(undefined, doc.location, this.fullpath)) {
                         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "launching docs at location '" + doc.location + "'");
-                        open(decodeURIComponent(doc.location)) ;
+                        browseropen(decodeURIComponent(doc.location)) ;
                     }
                 }
             }) ;
