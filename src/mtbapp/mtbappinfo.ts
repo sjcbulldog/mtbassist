@@ -211,6 +211,19 @@ export class MTBAppInfo
         return ret ;
     }
 
+    private filterSingleLineComments(str: string) {
+        let ex = /\/\/.*/ ;
+        while (ex.test(str)) {
+            str = str.replace(ex, "") ;
+        }
+        return str ;
+    }
+
+    private writeTasksFile(tasks: Object) {
+        let taskfile: string = path.join(this.appDir, ".vscode", "tasks.json") ;
+        fs.writeFileSync(taskfile, JSON.stringify(tasks, undefined, " ")) ;
+    }
+
     private readTasksFile() : object | undefined {
         let ret = undefined ;
 
@@ -235,12 +248,122 @@ export class MTBAppInfo
     }
 
     private updateBuildTargetsCombined() {
+    }
 
+    private extractTaskNames(tasks: Object) : string [] {
+        let ret: string[] = [] ;
+
+        let tarr = (tasks as any)["tasks"] ;
+        if (tarr) {
+            let tarray: Object[] = (tarr as Object[]) ;
+            for(let one of tarray) {
+                let name = (one as any)["label"] ;
+                if (name) {
+                    ret.push(name) ;
+                }
+            }
+        }
+
+        return ret ;
+    }
+
+    private findTask(tasks: Object, label: string) : Object | undefined {
+        let ret = undefined ;
+        let tarr = (tasks as any)["tasks"] ;
+        if (tarr) {
+            let tarray: Object[] = (tarr as Object[]) ;
+            for(let one of tarray) {
+                let name = (one as any)["label"] ;
+                if (name && name === label) {
+                    ret = one ;
+                    break ;
+                }
+            }
+        }
+
+        return ret ;
+    }
+
+    private addTask(tasks: Object, task: Object) {
+        let ret = undefined ;
+        let tarr = (tasks as any)["tasks"] ;
+        if (tarr) {
+            let tarray: Object[] = (tarr as Object[]) ;
+            tarray.push(task) ;
+        }
+    }
+
+    private changeArgsArray(args : string[], ex: RegExp, newval: string) {
+        for(let i = 0 ; i < args.length ; i++) {
+            let arg : string = args[i] ;
+            if (ex.test(arg)) {
+                args[i] = arg.replace(ex, newval) ;
+            }
+        }
+    }
+
+    private changeArgs(task: Object, ex: RegExp, newval: string, general: boolean, win: boolean) {
+        //
+        // Look for the args array
+        //
+        let args = (task as any)['args'] ;
+        if (args && general) {
+            this.changeArgsArray(args as string[], ex, newval) ;
+        }
+
+        //
+        // Look for the windows/args array
+        //
+        let windows = (task as any)['windows'] ;
+        if (windows && win) {
+            args = (windows as any)['args'] ;
+            if (args) {
+                this.changeArgsArray((args as string[]), ex, newval) ;
+            }
+        }
     }
 
     private updateBuildTargetsMulti() {
         let tasks = this.readTasksFile() ;
-        console.log(tasks) ;
+        if (tasks) {
+            let updated: boolean = false ;
+            let tnames: string[] = this.extractTaskNames(tasks) ;
+            if (tnames.indexOf('Build') !== -1 && tnames.indexOf('Quick Build') === -1) {
+                //
+                // Add application level quick build
+                //
+                let one = this.findTask(tasks, "Build") ;
+                if (one) {
+                    let newone = JSON.parse(JSON.stringify(one)) ;
+                    newone['label'] = 'Quick Build' ;
+                    this.changeArgs(newone, /build/, 'qbuild', true, true) ;
+                    this.addTask(tasks, newone) ;
+                    updated = true ;
+                }
+            }
+
+            for(let proj of this.projects) {
+                let label = "Quick Build " + proj.name ;
+                if (tnames.indexOf(label) === -1) {
+                    //
+                    // Add project quick build
+                    //
+                    let one = this.findTask(tasks, "Quick Build") ;
+                    let newone = JSON.parse(JSON.stringify(one)) ;
+                    newone['label'] = label ;
+                    this.changeArgs(newone, /make/, "cd " + proj.name + "; make ", true, false) ;
+                    this.changeArgs(newone, /;/, "; cd " + proj.name + "; ", false, true) ;
+                    this.changeArgs(newone, /qbuild/, "qbuild_proj", true, true) ;
+                    this.addTask(tasks, newone) ;
+                    updated = true ;
+                }
+            }
+
+            if (updated) {
+                MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Updating build targets") ;
+                this.writeTasksFile(tasks) ;
+            }
+        }
     }
 
     private updateBuildTargets() : Promise<void> {
