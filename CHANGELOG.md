@@ -1,5 +1,15 @@
 # Change Log
 
+### 1.0.29
+Put a work around where the C language server finds a symbol in the wrong
+version of an asset.  This leads to the extension saying the symbols is not
+in an asset, when it really is.
+
+Added code to update build tasks to take advantage of quick builds
+
+### 1.0.28
+Fixed a bug in the WSL support
+
 ### 1.0.27
 Updated to find documentation when running in WSL from windows
 

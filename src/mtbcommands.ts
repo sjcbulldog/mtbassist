@@ -431,15 +431,19 @@ export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorE
         vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, pos)
             .then(value => {
                 let locs : vscode.Location[] = value as vscode.Location[] ;
+                console.log("Length: " + locs.length) ;
                 if (locs.length > 0) {
-                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "symbol found in path '" + locs[0].uri.fsPath + "'");
-                    let asset: MTBAssetInstance|undefined = MTBAssetInstance.mtbPathToInstance(locs[0].uri.fsPath) ;
-                    if (asset) {
-                        asset.displayDocs() ;
+                    for(let loc of locs) {
+                        console.log("Location: '" + loc.uri.fsPath + "'");
+                        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "symbol found in path '" + loc.uri.fsPath + "'");
+                        let asset: MTBAssetInstance|undefined = MTBAssetInstance.mtbPathToInstance(loc.uri.fsPath) ;
+                        if (asset) {
+                            asset.displayDocs() ;
+                            return ;
+                        }
                     }
-                    else {
-                        vscode.window.showInformationMessage("Symbol under cursors is not part of an asset") ;
-                    }
+                    let msg: string = "Symbol under cursors is not part of an asset." ;
+                    vscode.window.showInformationMessage(msg) ;
                 }
                 else {
                     vscode.window.showInformationMessage("Text under cursor is not a 'C' symbol") ;

@@ -189,12 +189,15 @@ export class MTBAppInfo
                 .then(() => {
                     this.createVSCodeDirectory()
                         .then(() => {
-                            let readme : string = path.join(this.appDir, "README.md") ;
-                            if (fs.existsSync(readme)) {
-                                let uri: vscode.Uri = vscode.Uri.file(readme) ;
-                                vscode.commands.executeCommand("markdown.showPreview", uri) ;
-                            }
-                            resolve() ;
+                            this.updateBuildTargets()
+                            .then(()=> {
+                                let readme : string = path.join(this.appDir, "README.md") ;
+                                if (fs.existsSync(readme)) {
+                                    let uri: vscode.Uri = vscode.Uri.file(readme) ;
+                                    vscode.commands.executeCommand("markdown.showPreview", uri) ;
+                                }
+                                resolve() ;
+                            }) ;
                         })
                         .catch((err: Error) => {
                             reject(err) ;
@@ -205,6 +208,58 @@ export class MTBAppInfo
                 }) ;
         }) ;
 
+        return ret ;
+    }
+
+    private readTasksFile() : object | undefined {
+        let ret = undefined ;
+
+        let taskfile: string = path.join(this.appDir, ".vscode", "tasks.json") ;
+        if (!fs.existsSync(taskfile)) {
+            MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: tasks.json does not exists, not updating build targets") ;
+        }
+        else {
+            try {
+                let data = fs.readFileSync(taskfile).toString() ;
+                data = this.filterSingleLineComments(data) ;
+                ret = JSON.parse(data) ;
+            }
+            catch(err) {
+                let errobj: Error = err as Error ;
+                MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: could not read tasks.json - " + errobj.message) ;
+                ret = undefined ;
+            }
+        }
+
+        return ret ;
+    }
+
+    private updateBuildTargetsCombined() {
+
+    }
+
+    private updateBuildTargetsMulti() {
+        let tasks = this.readTasksFile() ;
+        console.log(tasks) ;
+    }
+
+    private updateBuildTargets() : Promise<void> {
+        let ret: Promise<void> = new Promise<void>((resolve, reject) => {
+            if (this.projects.length === 1) {
+                //
+                // This is a combined project
+                //
+                this.updateBuildTargetsCombined() ;
+            }
+            else {
+                //
+                // This is a multiple project application
+                //
+                this.updateBuildTargetsMulti() ;
+            }
+            resolve() ;
+        }) ;
+        
         return ret ;
     }
 
