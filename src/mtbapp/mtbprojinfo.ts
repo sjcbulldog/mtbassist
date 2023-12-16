@@ -60,6 +60,26 @@ export class MTBProjectInfo
         this.buildSupport = false ;
     }
 
+    public getComponents() : string[] {
+        let result: string[] = [] ;
+
+        let value: string | undefined = this.getVar(ModusToolboxEnvVarNames.MTB_COMPONENTS) ;
+        if (value) {
+            result = ((value as string).trim()).split(' ') ;
+
+            value = this.getVar(ModusToolboxEnvVarNames.MTB_DISABLED_COMPONENTS) ;
+            let disabled : string[] = (value as string).split(' ') ;
+            for(var one in disabled) {
+                let index: number = result.indexOf(one) ;
+                if (index !== -1) {
+                    result.splice(index) ;
+                }
+            }
+        }    
+        
+        return result ;
+    }
+
     public getVar(varname: string) : string | undefined {
         return this.mtbvars.get(varname) ;
     }

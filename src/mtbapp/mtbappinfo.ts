@@ -42,6 +42,21 @@ import { ModusToolboxEnvTypeNames, ModusToolboxEnvVarNames } from './mtbnames';
 import { addToRecentProjects } from '../mtbrecent';
 import { mtbRunMakeGetLibs } from '../mtbcommands';
 
+interface LaunchDoc
+{
+    location: string,
+    path: [ string ],
+    project: string,
+    title: string,
+    type: string
+} ;
+
+interface LaunchOutput
+{
+    configs: [any] ;
+    documentation: [LaunchDoc] ;
+}
+
 export enum AppType
 {
     none,
@@ -188,16 +203,13 @@ export class MTBAppInfo
             this.mtbUpdateProgs()
                 .then(() => {
                     this.createVSCodeDirectory()
-                        .then(() => {
-                            this.updateBuildTargets()
-                            .then(()=> {
-                                let readme : string = path.join(this.appDir, "README.md") ;
-                                if (fs.existsSync(readme)) {
-                                    let uri: vscode.Uri = vscode.Uri.file(readme) ;
-                                    vscode.commands.executeCommand("markdown.showPreview", uri) ;
-                                }
-                                resolve() ;
-                            }) ;
+                        .then(()=> {
+                            let readme : string = path.join(this.appDir, "README.md") ;
+                            if (fs.existsSync(readme)) {
+                                let uri: vscode.Uri = vscode.Uri.file(readme) ;
+                                vscode.commands.executeCommand("markdown.showPreview", uri) ;
+                            }
+                            resolve() ;
                         })
                         .catch((err: Error) => {
                             reject(err) ;
@@ -208,58 +220,6 @@ export class MTBAppInfo
                 }) ;
         }) ;
 
-        return ret ;
-    }
-
-    private readTasksFile() : object | undefined {
-        let ret = undefined ;
-
-        let taskfile: string = path.join(this.appDir, ".vscode", "tasks.json") ;
-        if (!fs.existsSync(taskfile)) {
-            MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: tasks.json does not exists, not updating build targets") ;
-        }
-        else {
-            try {
-                let data = fs.readFileSync(taskfile).toString() ;
-                data = this.filterSingleLineComments(data) ;
-                ret = JSON.parse(data) ;
-            }
-            catch(err) {
-                let errobj: Error = err as Error ;
-                MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: could not read tasks.json - " + errobj.message) ;
-                ret = undefined ;
-            }
-        }
-
-        return ret ;
-    }
-
-    private updateBuildTargetsCombined() {
-
-    }
-
-    private updateBuildTargetsMulti() {
-        let tasks = this.readTasksFile() ;
-        console.log(tasks) ;
-    }
-
-    private updateBuildTargets() : Promise<void> {
-        let ret: Promise<void> = new Promise<void>((resolve, reject) => {
-            if (this.projects.length === 1) {
-                //
-                // This is a combined project
-                //
-                this.updateBuildTargetsCombined() ;
-            }
-            else {
-                //
-                // This is a multiple project application
-                //
-                this.updateBuildTargetsMulti() ;
-            }
-            resolve() ;
-        }) ;
-        
         return ret ;
     }
 
@@ -324,14 +284,31 @@ export class MTBAppInfo
         return ret ;
     }
 
+    private needsGetLibs(makevars: Map<string, string>, isMtb2x: boolean) {
+        let ret: boolean = false ;
+
+        if (isMtb2x) {
+            if (!makevars.has(ModusToolboxEnvVarNames.MTB_DEVICE) || makevars.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length === 0) {
+                ret = true ;
+            }
+        }
+        else {
+            if (!makevars.has(ModusToolboxEnvVarNames.MTB_CORE_TYPE) || makevars.get(ModusToolboxEnvVarNames.MTB_CORE_TYPE)!.length === 0) {
+                ret = true ;
+            }
+        }
+
+        return ret ;
+    }
+
     //
     // Ok , we are processing a combined application and project.  We have the get_app_info
     // information for the directory, but if we don't have build support we need to run
     // make getlibs and then get the get_app_info information again.
     //
-    private processCombined(makevars: Map<string, string>) : Promise<void> {
+    private processCombined(makevars: Map<string, string>, isMtb2x: boolean) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
-            if (!makevars.has(ModusToolboxEnvVarNames.MTB_CORE_TYPE) || makevars.get(ModusToolboxEnvVarNames.MTB_CORE_TYPE)!.length === 0) {
+            if (this.needsGetLibs(makevars, isMtb2x)) {
                 this.processOneDir(this.appDir)
                     .then((data: Map<string, string>) => {
                         this.processProject(data)
@@ -528,7 +505,7 @@ export class MTBAppInfo
                         reject(new Error("this is not a ModusToolbox application")) ;
                     }
                     else if (info[0] === AppType.mtb2x) {
-                        this.processCombined(info[1]).then(() => {
+                        this.processCombined(info[1], true).then(() => {
                             resolve() ;
                         })
                         .catch((err : Error) => {
@@ -536,7 +513,7 @@ export class MTBAppInfo
                         }) ;
                     }   
                     else if (info[0] === AppType.combined) {
-                        this.processCombined(info[1]).then(() => {
+                        this.processCombined(info[1], false).then(() => {
                             resolve() ;
                         })
                         .catch((err : Error) => {
@@ -592,11 +569,55 @@ export class MTBAppInfo
         }
     }
 
+    private hasComponent(comp: string) : boolean {
+        for(let proj of this.projects)
+        {
+            if (proj.getComponents().indexOf(comp) !== -1) {
+                return true ;
+            }
+        }
+
+        return false ;
+    }
+    
+    private filterComponents(obj: LaunchOutput) : LaunchOutput {
+        let newobj: LaunchOutput = new Object() as LaunchOutput ;
+        let regex: RegExp = /\/COMPONENT_[a-zA-Z0-9\-_]+\//;
+    
+        if (obj.configs !== undefined) {
+            newobj.configs = obj.configs ;
+        }
+    
+        newobj.documentation = [] as unknown as [LaunchDoc] ;
+    
+
+        for(let doc of obj.documentation)
+        {
+            let add : boolean = true ;
+            let result = regex.exec(doc.location) ;
+            if (result)
+            {
+                let component = result[0].substring(11, result[0].length - 1) ;
+                if (!this.hasComponent(component))
+                {
+                    add = false ;
+                }
+            }
+            if (add)
+            {
+                newobj.documentation.push(doc);
+            }
+        }
+    
+        return newobj ;
+    }    
+
     private mtbUpdateProgs() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             runMtbLaunch(this.appDir)
                 .then ((jsonobj: any) => {
-                    this.setLaunchInfo(new MTBLaunchInfo(jsonobj));
+                    let obj = this.filterComponents(jsonobj);
+                    this.setLaunchInfo(new MTBLaunchInfo(obj as any));
                     resolve() ;
                 })
                 .catch ((error) => {

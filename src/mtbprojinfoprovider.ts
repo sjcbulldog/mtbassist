@@ -146,25 +146,12 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
                 parent.addChild(item) ;
             }
 
-            value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_COMPONENTS) ;
-            if (value) {
-                let comps :string [] = ((value as string).trim()).split(' ') ;
-
-                value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_DISABLED_COMPONENTS) ;
-                let disabled : string[] = (value as string).split(' ') ;
-                for(var one in disabled) {
-                    let index: number = comps.indexOf(one) ;
-                    if (index !== -1) {
-                        comps.splice(index) ;
-                    }
-                }
-
-                let item: MTBProjectItem = new MTBProjectItem("COMPONENTS", "(" + comps.length + ")") ;
-                parent.addChild(item) ;
-                for(var one of comps) {
-                    let sub: MTBProjectItem = new MTBProjectItem(one) ;
-                    item.addChild(sub) ;
-                }
+            let comps = projinfo.getComponents() ;
+            let item: MTBProjectItem = new MTBProjectItem("COMPONENTS", "(" + comps.length + ")") ;
+            parent.addChild(item) ;
+            for(var one of comps) {
+                let sub: MTBProjectItem = new MTBProjectItem(one) ;
+                item.addChild(sub) ;
             }
         }
         else {
