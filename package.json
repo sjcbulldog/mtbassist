@@ -153,7 +153,6 @@
     "@typescript-eslint/parser": "^5.31.0",
     "@vscode/test-electron": "^2.1.5",
     "eslint": "^8.20.0",
-    "glob": "^8.0.3",
     "mocha": "^10.0.0",
     "ts-loader": "^9.3.1",
     "typescript": "^4.7.4",
@@ -161,10 +160,12 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
+    "is-wsl": "^2.2.0",
     "node-fetch": "^3.2.10",
+    "open": "^9.1.0",
+    "openurl": "^1.1.1",
     "os": "^0.1.2",
-    "xml2js": "^0.4.23",
-    "open" : "^9.1.0",
-    "is-wsl": "^2.2.0"    
+    "tmp": "^0.2.1",
+    "xml2js": "^0.4.23"
   }
 }

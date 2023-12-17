@@ -1,5 +1,5 @@
 //
-// Copyright 2022 by C And T Software
+// Copyright 2023 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import path = require('path');
 import fs = require('fs');
 import { readRecentList } from './mtbrecent';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { mtbAssistLoadApp, theModusToolboxApp } from './mtbapp/mtbappinfo';
+import { mtbAssistLoadApp, getModusToolboxApp } from './mtbapp/mtbappinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
 import { getModusToolboxNotInstallHtml } from './mtbgenhtml';
@@ -39,8 +39,8 @@ import { getModusToolboxNotInstallHtml } from './mtbgenhtml';
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
 
-	if (theModusToolboxApp) {
-		ret = theModusToolboxApp.appDir ;
+	if (getModusToolboxApp()) {
+		ret = getModusToolboxApp()!.appDir ;
 	}
 
 	return ret ;

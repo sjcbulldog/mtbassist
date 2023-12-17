@@ -1,5 +1,5 @@
 ///
-// Copyright 2022 by C And T Software
+// Copyright 2023 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import { runMakeGetAppInfo, runMakeVSCode, runMtbLaunch } from './mtbrunprogs';
 import { ModusToolboxEnvTypeNames, ModusToolboxEnvVarNames } from './mtbnames';
 import { addToRecentProjects } from '../mtbrecent';
 import { mtbRunMakeGetLibs } from '../mtbcommands';
+import { MtbFunIndex } from '../mtbfunindex';
 
 interface LaunchDoc
 {
@@ -91,6 +92,8 @@ export class MTBAppInfo
     // The extension context
     public context: vscode.ExtensionContext ;
 
+    public funindex: MtbFunIndex ;
+
     public needVSCode: boolean ;
 
     //
@@ -107,6 +110,7 @@ export class MTBAppInfo
         this.appType = AppType.none ;
         this.appName = "UNDEFINED" ;
         this.needVSCode = false ;
+        this.funindex = new MtbFunIndex() ;
 
         MTBExtensionInfo.getMtbExtensionInfo().manifestDb.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
         MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Checking Application") ;
@@ -146,6 +150,13 @@ export class MTBAppInfo
                         MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Ready") ;
                         addToRecentProjects(context, appdir) ;
                         this.updateAssets() ;
+                        this.funindex.init(this)
+                            .then ((count: number)=> {
+                                vscode.window.showInformationMessage("Loaded " + count + " symbols for documentation") ;
+                            })
+                            .catch((error)=> {
+                                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "error processing symbols for ModusToolbox Documentation command");
+                            }) ;
                     }
                 }
             })
@@ -668,6 +679,12 @@ export class MTBAppInfo
     }
 }
 
+let theModusToolboxApp : MTBAppInfo | undefined = undefined ;
+
+export function getModusToolboxApp() : MTBAppInfo | undefined {
+    return theModusToolboxApp ;
+}
+
 //
 // Load a new application in as the ModusToolbox application being processed
 //
@@ -683,4 +700,4 @@ export function mtbAssistLoadApp(context: vscode.ExtensionContext, appdir?: stri
     }
 }
 
-export let theModusToolboxApp : MTBAppInfo | undefined = undefined ;
+

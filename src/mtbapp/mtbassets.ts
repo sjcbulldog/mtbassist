@@ -1,5 +1,5 @@
 ///
-// Copyright 2022 by C And T Software
+// Copyright 2023 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@
 import * as path from 'path' ;
 import * as fs from 'fs' ;
 
-import { MTBAppInfo, theModusToolboxApp } from "./mtbappinfo";
+import { MTBAppInfo, getModusToolboxApp } from "./mtbappinfo";
 import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
 import { getMTBAssetProvider } from '../mtbassetprovider';
 import { MTBProjectInfo } from './mtbprojinfo';
@@ -84,8 +84,8 @@ export class MTBAssetInstance
     static mtbPathToInstance(path: string) : MTBAssetInstance | undefined {
         let ret : MTBAssetInstance | undefined = undefined ;
 
-        if (theModusToolboxApp) {
-            for(let proj of theModusToolboxApp.projects) {
+        if (getModusToolboxApp()) {
+            for(let proj of getModusToolboxApp()!.projects) {
                 for(let asset of proj.assets) {
                     if (asset.isValid) {
                         if (this.mtbPathCompare(proj, path, asset.location as string)) {
@@ -211,8 +211,8 @@ export class MTBAssetInstance
     }
     
     public displayDocs() {
-        if (theModusToolboxApp?.launch) {
-            theModusToolboxApp.launch.docs.forEach(doc => {
+        if (getModusToolboxApp()?.launch) {
+            getModusToolboxApp()!.launch!.docs.forEach(doc => {
                 if (this.location) {
                     if (MTBAssetInstance.mtbPathCompare(undefined, doc.location, this.fullpath)) {
                         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "launching docs at location '" + doc.location + "'");

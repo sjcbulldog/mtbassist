@@ -1,5 +1,5 @@
 //
-// Copyright 2022 by C And T Software
+// Copyright 2023 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import * as os from 'os' ;
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import { getModusToolboxAssistantStartupHtml } from './mtbgenhtml';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { mtbAssistLoadApp, theModusToolboxApp } from './mtbapp/mtbappinfo';
+import { mtbAssistLoadApp, getModusToolboxApp } from './mtbapp/mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
 import { MTBAssetInstance } from './mtbapp/mtbassets';
 import { browseropen } from './browseropen';
@@ -105,16 +105,12 @@ export function mtbRunEditor(context: vscode.ExtensionContext, args?: any) {
         exec.execFile(cmdobj.cmdline[0], 
             cmdargs, 
             { 
-                cwd: theModusToolboxApp?.appDir
+                cwd: getModusToolboxApp()?.appDir
             }, (error, stdout, stderr) => 
             {
                 if (error) {
                     vscode.window.showErrorMessage(error.message) ;
                 }
-                console.error(`exec error: ${error}`);
-                console.log(`stdout: ${stdout}`);
-                console.error(`stderr: ${stderr}`);
-
                 if (vscode.workspace.workspaceFolders) {
                     let appdir : string = vscode.workspace.workspaceFolders[0].uri.fsPath;
                     mtbAssistLoadApp(context, appdir) ;
@@ -193,17 +189,17 @@ class ApplicationItem implements vscode.QuickPickItem {
 function canRunModusCommand(context: vscode.ExtensionContext) : boolean {
     let ret: boolean = true ;
 
-    if (theModusToolboxApp === undefined) {
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "there is not ModusToolbox application loaded") ;
+    if (getModusToolboxApp() === undefined) {
+        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "there is no ModusToolbox application loaded") ;
         vscode.window.showErrorMessage("You must load a ModusToolbox application for this command to work") ;
         ret = false ;
     }
-    else if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
+    else if (getModusToolboxApp() !== undefined && getModusToolboxApp()!.isLoading) {
         MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
         vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
         ret = false ;
     }
-    else if (theModusToolboxApp.isValid === false) {
+    else if (getModusToolboxApp()!.isValid === false) {
         MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "there was an error loading the ModusToolbox application") ;
         vscode.window.showErrorMessage("There was an error loading the ModusToolbox application") ;
         ret = false ;
@@ -295,8 +291,8 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
 export function mtbRunLibraryManager(context: vscode.ExtensionContext) {
     if (canRunModusCommand(context) === true) {
         let ran: boolean = false ;
-        if (theModusToolboxApp?.launch) {
-            for(const config of theModusToolboxApp.launch.configs) {
+        if (getModusToolboxApp()?.launch) {
+            for(const config of getModusToolboxApp()!.launch!.configs) {
                 if (config.shortName === "library-manager") {
                     vscode.commands.executeCommand("mtbassist.mtbRunEditor", config) ;
                     ran = true ;
@@ -312,17 +308,17 @@ export function mtbRunLibraryManager(context: vscode.ExtensionContext) {
 }
 
 export function mtbRunMakeGetLibsCmd(context: vscode.ExtensionContext) {
-    if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
+    if (getModusToolboxApp() !== undefined && getModusToolboxApp()!.isLoading) {
         MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
         vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
         return ;
     }
-    if (theModusToolboxApp) {
+    if (getModusToolboxApp()) {
         MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow() ;
         
-        mtbRunMakeGetLibs(context, theModusToolboxApp.appDir)
+        mtbRunMakeGetLibs(context, getModusToolboxApp()!.appDir)
             .then((code: number) => {
-                theModusToolboxApp!.needVSCode = true ;
+                getModusToolboxApp()!.needVSCode = true ;
                 if (code) {
                     let msg: string = "'make getlibs' failed with exit status " + code.toString() ;
                     vscode.window.showErrorMessage(msg) ;
@@ -345,7 +341,7 @@ export function mtbRunMakeGetLibsCmd(context: vscode.ExtensionContext) {
 }
 
 export function mtbCreateProject(context: vscode.ExtensionContext) {
-    if (theModusToolboxApp !== undefined && theModusToolboxApp.isLoading) {
+    if (getModusToolboxApp() !== undefined && getModusToolboxApp()!.isLoading) {
         MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
         vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
         return ;
@@ -428,26 +424,41 @@ export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorE
     if (vscode.window.activeTextEditor) {
         let uri: vscode.Uri = editor.document.uri ;
         let pos: vscode.Position = editor.selection.active ;
-        vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, pos)
-            .then(value => {
-                let locs : vscode.Location[] = value as vscode.Location[] ;
-                console.log("Length: " + locs.length) ;
-                if (locs.length > 0) {
-                    for(let loc of locs) {
-                        console.log("Location: '" + loc.uri.fsPath + "'");
-                        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "symbol found in path '" + loc.uri.fsPath + "'");
-                        let asset: MTBAssetInstance|undefined = MTBAssetInstance.mtbPathToInstance(loc.uri.fsPath) ;
-                        if (asset) {
-                            asset.displayDocs() ;
-                            return ;
+
+        //
+        // First try to look up in our symbol index
+        //
+        let range = editor.document.getWordRangeAtPosition(pos) ;
+        let symbol = editor.document.getText(range) ;
+        let appinfo = getModusToolboxApp() ;
+
+        if (appinfo && appinfo.funindex.contains(symbol)) {
+            let url: string | undefined = getModusToolboxApp()!.funindex.getUrl(symbol) ;
+            if (url) {
+                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "launching docs at location '" + url + "'");
+                browseropen(decodeURIComponent(url)) ;            
+            }
+        }
+        else {
+            vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, pos)
+                .then(value => {
+                    let locs : vscode.Location[] = value as vscode.Location[] ;
+                    if (locs.length > 0) {
+                        for(let loc of locs) {
+                            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "symbol found in path '" + loc.uri.fsPath + "'");
+                            let asset: MTBAssetInstance|undefined = MTBAssetInstance.mtbPathToInstance(loc.uri.fsPath) ;
+                            if (asset) {
+                                asset.displayDocs() ;
+                                return ;
+                            }
                         }
+                        let msg: string = "Symbol under cursors is not part of an asset." ;
+                        vscode.window.showInformationMessage(msg) ;
                     }
-                    let msg: string = "Symbol under cursors is not part of an asset." ;
-                    vscode.window.showInformationMessage(msg) ;
-                }
-                else {
-                    vscode.window.showInformationMessage("Text under cursor is not a 'C' symbol") ;
-                }
-            }) ;
+                    else {
+                        vscode.window.showInformationMessage("Text under cursor is not a 'C' symbol") ;
+                    }
+                }) ;
+        }
     }
 }

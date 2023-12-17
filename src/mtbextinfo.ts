@@ -1,5 +1,5 @@
 //
-// Copyright 2022 by C And T Software
+// Copyright 2023 by C And T Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -178,7 +178,7 @@ export class MTBExtensionInfo
 
         paths = paths.sort() ;
         if (paths.length === 0) {
-            console.log("Error, not ModusToolbox tools directory found") ;
+            console.log("Error, no ModusToolbox tools directory found") ;
         }
         else {
             ret = paths[paths.length - 1] ;
