@@ -27,7 +27,7 @@ import * as os from 'os' ;
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import { getModusToolboxAssistantStartupHtml } from './mtbgenhtml';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { mtbAssistLoadApp, getModusToolboxApp } from './mtbapp/mtbappinfo';
+import { mtbAssistLoadApp, getModusToolboxApp, MTBAppInfo } from './mtbapp/mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
 import { MTBAssetInstance } from './mtbapp/mtbassets';
 import { browseropen } from './browseropen';
@@ -460,5 +460,31 @@ export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorE
                     }
                 }) ;
         }
+    }
+}
+
+export function mtbSetIntellisenseProject(context: vscode.ExtensionContext) {
+    const prefix: string = "Intellisense: " ;
+    let app: MTBAppInfo | undefined = getModusToolboxApp() ;
+    if (app === undefined) {
+        vscode.window.showInformationMessage("No ModusToolbox Application Loaded") ;
+    }
+    else {
+        let projnames : string[] = [] ;
+        for(let proj of app.projects) {
+            projnames.push(prefix + proj.name) ;
+        }
+
+        vscode.window.showQuickPick(projnames, { canPickMany: false })
+            .then((picked: string | undefined) => {
+                if (picked) {
+                    let proj: string = picked.substring(prefix.length) ;
+                    let app: MTBAppInfo = getModusToolboxApp()! ;
+                    app.setIntellisenseProject(proj) ;
+                }
+                else {
+                    vscode.window.showInformationMessage("** Intellisense Not Set **") ;                    
+                }
+            }) ;
     }
 }

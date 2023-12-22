@@ -26,7 +26,7 @@ import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
 import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
 import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbRunEditor, 
-		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd } from './mtbcommands';
+		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
 import { readRecentList } from './mtbrecent';
@@ -140,6 +140,10 @@ export function activate(context: vscode.ExtensionContext) {
 		mtbRunLibraryManager(context);
 	});
 	context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerCommand('mtbassist.mtbSetIntellisenseProject', (args: any[]) => {
+        mtbSetIntellisenseProject(context) ;
+    });
 
 	//
 	// Set the tree providers for general information about the ModusToolbox project

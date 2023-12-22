@@ -1,5 +1,10 @@
 # Change Log
 
+### 1.0.32
+Added the ability to find a specific item when asking for ModusToolbox documentation.
+Added the ability to switch between projects for intellisense when in a multiproject
+application.
+
 ### 1.0.31
 Updated to filter out documetation that is hidden below a component that is not
 defined and therefore should not be shown.

@@ -140,18 +140,17 @@ export class MTBAssetInstance
             let extinfo: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;
             extinfo.logMessage(MessageType.debug, "reading MTB file '" + filename + "'") ;
 
-            fs.readFile(filename, (err, buf) => {
-                if (err) {
-                    let errmgs = err as Error ;
-                    let extinfo: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;
-                    extinfo.logMessage(MessageType.error, "error reading mtb file '" + filename + "' - " + errmgs.message) ;
-                    reject(err) ;
-                }
-                else {
-                    let ret = this.processMTBContents(projinfo, buf.toString()) ;
-                    resolve(ret) ;
-                }
-            }) ;
+            try {
+                let buf = fs.readFileSync(filename).toString() ;
+                let ret = this.processMTBContents(projinfo, buf.toString()) ;
+                resolve(ret) ;
+            }
+            catch(err) {
+                let errmgs = err as Error ;
+                let extinfo: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;
+                extinfo.logMessage(MessageType.error, "error reading mtb file '" + filename + "' - " + errmgs.message) ;
+                reject(err) ;
+            }
         }) ;
 
         return ret ;
@@ -175,6 +174,7 @@ export class MTBAssetInstance
 
     static scanOneDir(projinfo: MTBProjectInfo, dirname: string) {
         fs.readdir(dirname, (err, files) => {
+            console.log(dirname) ;
             if (err) {
                 let errmgs = err as Error ;
                 let extinfo: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;

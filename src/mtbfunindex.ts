@@ -108,7 +108,7 @@ export class MtbFunIndex
             for(let asset of proj.assets) {
                 if (asset.location && this.processed.indexOf(asset.location) === -1) {
                     try {
-                        count += await this.initAsset(asset) ;
+                        count += await this.initAsset(proj.getProjectDir(), asset) ;
                         this.processed.push(asset.location) ;
                     }
                     catch(err) {
@@ -300,12 +300,12 @@ export class MtbFunIndex
         return count ;
     }
 
-    private async initAsset(asset: MTBAssetInstance) : Promise<number> {
+    private async initAsset(pdir: string, asset: MTBAssetInstance) : Promise<number> {
         let ret: Promise<number> = new Promise<number>((resolve, reject) => {
             MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "    looking in asset '" + asset.id! + "' for symbols") ;
             let count = 0 ;
             if (asset.location) {
-                let p = path.join(this.appdir, asset.location!, "docs", "html") ;
+                let p = path.join(pdir, asset.location!, "docs", "html") ;
                 let files: string[] = this.findFilesByExt(p, "js") ;
                 for(let file of files) {
                     count += this.processJSFile(file) ;

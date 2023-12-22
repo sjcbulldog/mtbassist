@@ -113,7 +113,7 @@ export class MTBAppInfo
         this.funindex = new MtbFunIndex() ;
 
         MTBExtensionInfo.getMtbExtensionInfo().manifestDb.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
-        MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Checking Application") ;
+        MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Checking Application") ;
 
         this.isValid = false ;
         this.isLoading = true ;
@@ -147,7 +147,7 @@ export class MTBAppInfo
                     if (!loadingWksc) {
                         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
                         vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;                        
-                        MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Ready") ;
+                        MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Ready") ;
                         addToRecentProjects(context, appdir) ;
                         this.updateAssets() ;
                         this.funindex.init(this)
@@ -163,10 +163,69 @@ export class MTBAppInfo
             .catch((error) => {
                 this.isValid = false ;
                 this.isLoading = false ;
-                MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Not Valid") ;
+                MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Not Valid") ;
                 MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "the application directory '" + appdir + "' is not a ModusToolbox application") ;
             }) ;
     }
+
+    public async setIntellisenseProject(projname: string) {
+        const settings: string = "clangd.arguments" ;
+        let proj: MTBProjectInfo | undefined = this.getProjectByName(projname) ;
+        let iset: boolean = false ;
+
+        if (proj) {
+            //
+            // Find the compile commands file
+            //
+            let compilecmds = "${workspaceFolder}/" + proj.name + "/build" ;
+            let config = await vscode.workspace.getConfiguration() ;
+            let clangargs : string[] = config.get(settings) as string[] ;
+            clangargs = this.updateCompileCommands(clangargs, compilecmds) ;
+            config.update(settings, clangargs, vscode.ConfigurationTarget.Workspace)
+                .then((value) => {
+                    vscode.commands.executeCommand('clangd.restart')
+                    .then((obj) => {
+                        MTBExtensionInfo.getMtbExtensionInfo().setIntellisenseProject("Updated Intellisense To Project '" + projname + "'");
+                    });
+                }) ;
+
+
+            iset = true ;
+        }
+
+        if (!iset) {
+            MTBExtensionInfo.getMtbExtensionInfo().setIntellisenseProject("");
+        }
+    }
+
+    private updateCompileCommands(args: string[], cmds: string) : string[] {
+        let option: string = "--compile-commands-dir=" ;
+        let ret: string[] = [] ;
+
+        for(let arg of args) {
+            if (arg.startsWith(option)) {
+                ret.push(option + cmds) ;
+            }
+            else {
+                ret.push(arg);
+            }
+        }
+
+        return ret ;
+    }
+
+    public getProjectByName(name: string) : MTBProjectInfo | undefined {
+        let ret: MTBProjectInfo | undefined = undefined ;
+        for(let proj of this.projects) {
+            if (proj.name === name) {
+                ret = proj ;
+                break ;
+            }
+        }
+
+        return ret ;
+    }
+
 
     //
     // This method determines the application type.  It basically figures out if this is a
@@ -240,11 +299,11 @@ export class MTBAppInfo
             // There is no valid MTB_DEVICE value, so this means we don't have build
             // support.  We need to run 'make getlibs' to get build support.
             //
-            MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Running 'make getlibs'") ;
+            MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Running 'make getlibs'") ;
             mtbRunMakeGetLibs(this.context, cwd)
                 .then((code: Number) => {
                     if (code === 0) {
-                        MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Loading Application") ;
+                        MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Loading Application") ;
                         runMakeGetAppInfo(cwd)
                             .then((makevars: Map<string, string>) => {
                                 if (!makevars.has(ModusToolboxEnvVarNames.MTB_DEVICE) || makevars.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length === 0) {
@@ -350,7 +409,7 @@ export class MTBAppInfo
 
     private createOneProject(projdir: string) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
-            MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Loading Application") ;
+            MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Loading") ;
             runMakeGetAppInfo(projdir)
                 .then((makedata: Map<string, string>) => {
                     let projobj = new MTBProjectInfo(this, path.basename(projdir)) ;
@@ -449,7 +508,7 @@ export class MTBAppInfo
                         //
                         // Run getlibs at the application leve
                         //
-                        MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Running 'make getlibs'") ;                        
+                        MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Running 'make getlibs'") ;                        
                         mtbRunMakeGetLibs(this.context, this.appDir)
                             .then((code: number) => {
                                 if (code === 0) {
@@ -498,7 +557,7 @@ export class MTBAppInfo
         let ret : Promise<void> = new Promise<void>( (resolve, reject) => {
             this.checkAppType()
                 .then ((info : [AppType, Map<string, string>]) => {
-                    MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Loading Application") ;
+                    MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Loading") ;
                     this.appType = info[0] ;
 
                     if (info[1].has(ModusToolboxEnvVarNames.MTB_APP_NAME)) {
@@ -661,7 +720,7 @@ export class MTBAppInfo
                     //
                     // The .vscode directory does not exist, create it
                     //
-                    MTBExtensionInfo.getMtbExtensionInfo().setStatus("ModusToolbox: Running 'make vscode'") ;
+                    MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Running 'make vscode'") ;
                     runMakeVSCode(this.appDir)
                         .then( () => { 
                             resolve() ;

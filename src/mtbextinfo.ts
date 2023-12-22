@@ -36,7 +36,9 @@ export class MTBExtensionInfo
     public static readonly showWelcomePageName : string = "showWelcomePage" ;
     public static readonly version = vscode.extensions.getExtension('c-and-t-software.mtbassist')?.packageJSON.version ;
 
-    private staturBarItem: vscode.StatusBarItem ;
+    private statusBarItem: vscode.StatusBarItem ;
+    private status: string ;
+    private intellisenseProject: string ;
 
     public toolsDir: string ;
     public docsDir: string ;
@@ -53,7 +55,7 @@ export class MTBExtensionInfo
         this.channel = vscode.window.createOutputChannel("ModusToolbox") ;
         this.context = context ;
         this.manifestDb = new MtbManifestDb() ;
-        this.staturBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100) ;
+        this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100) ;
 
         this.logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
         this.logMessage(MessageType.info, "ModusToolbox install directory: " + this.defaultInstallDir()) ;
@@ -67,11 +69,31 @@ export class MTBExtensionInfo
         if (this.getPresistedBoolean(MTBExtensionInfo.debugModeName, false)) {
             this.logMessage(MessageType.debug, "Debug mode is enabled, you should see debug messages") ;
         }
+
+        this.intellisenseProject = "" ;
+        this.status = "" ;
+        this.statusBarItem.command = 'mtbassist.mtbSetIntellisenseProject';
+    }
+
+    public setIntellisenseProject(project: string) {
+        this.intellisenseProject = project ;
+        this.updateStatusBar() ;
     }
 
     public setStatus(status: string) {
-        this.staturBarItem.text = status ;
-        this.staturBarItem.show() ;
+        this.status = status ;
+        this.updateStatusBar() ;
+    }
+
+    private updateStatusBar() {
+        this.statusBarItem.text = this.status ;
+        if (this.intellisenseProject.length > 0) {
+            this.statusBarItem.text += " (" + this.intellisenseProject + ")" ;
+        }
+        else {
+            this.statusBarItem.text += " (Click To Set)" ;
+        }
+        this.statusBarItem.show() ;
     }
 
     public static getMtbExtensionInfo(context?: vscode.ExtensionContext) : MTBExtensionInfo {
