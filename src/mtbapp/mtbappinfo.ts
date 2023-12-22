@@ -63,7 +63,8 @@ export enum AppType
     none,
     mtb2x,
     combined,
-    multicore
+    multicore,
+    malformed
 } ;
 
 export class MTBAppInfo
@@ -236,6 +237,25 @@ export class MTBAppInfo
         let ret : Promise<[AppType, Map<string, string>]> = new Promise<[AppType, Map<string, string>]>((resolve, reject) => {
             runMakeGetAppInfo(this.appDir)
                 .then((data : Map<string, string>) => {
+                    let dir: string | undefined = data.get(ModusToolboxEnvVarNames.MTB_TOOLS_DIR) ;
+                    if (dir) {
+                        if (!fs.existsSync(dir)) {
+                            reject(new Error("the tools directory '" + dir + "' does not exists"))  ;
+                        }
+
+                        if (!fs.statSync(dir).isDirectory()) {
+                            reject(new Error("the tools directory '" + dir + "' is not a directory")) ;
+                        }
+
+                        //
+                        // The initial tools directory found the most recent tools dir to get
+                        // things started.  However, the application we are loading may be using
+                        // a different set of tools, so now that the application can tell us what
+                        // to use, we replace the tools directory.
+                        //
+                        MTBExtensionInfo.getMtbExtensionInfo().updateToolsDir(dir) ;
+                    }
+
                     if (data.has(ModusToolboxEnvVarNames.MTB_TYPE)) {
                         let ptype: string = data.get(ModusToolboxEnvVarNames.MTB_TYPE)! ;
                         if (ptype === ModusToolboxEnvTypeNames.APPLICATION) {

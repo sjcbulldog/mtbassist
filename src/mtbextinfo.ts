@@ -50,7 +50,7 @@ export class MTBExtensionInfo
     context: vscode.ExtensionContext;
 
     constructor(context: vscode.ExtensionContext) {
-        this.toolsDir = this.findToolsDir() ;
+        this.toolsDir = this.findDefaultToolsDir() ;
         this.docsDir = this.toolsDir.replace("tools_", "docs_") ;
         this.channel = vscode.window.createOutputChannel("ModusToolbox") ;
         this.context = context ;
@@ -78,6 +78,10 @@ export class MTBExtensionInfo
     public setIntellisenseProject(project: string) {
         this.intellisenseProject = project ;
         this.updateStatusBar() ;
+    }
+
+    public updateToolsDir(dir: string) {
+        this.toolsDir = dir ;
     }
 
     public setStatus(status: string) {
@@ -180,7 +184,7 @@ export class MTBExtensionInfo
         return ret ;
     }
     
-    private findToolsDir() : string {
+    private findDefaultToolsDir() : string {
         let paths: string[] = [] ;
         let ret: string = "" ;
 
