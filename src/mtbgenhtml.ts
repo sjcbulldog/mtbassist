@@ -38,6 +38,29 @@ export function getModusToolboxNotInstallHtml() : string {
     return html ;
 }
 
+export function getModusToolboxAssistantNewVersion() : string {
+    let html : string = 
+        `<!DOCTYPE html>
+        <head>
+        <meta charset="UTF-8">
+        <style>
+        </head>
+        <body>
+        <h1>Version ####EXTVERSION####</h1>
+        <h2>New Features</h2>
+        <h3>Intellisense</h3>
+        The ModusToolbox Assistant extension manages intellisense to give the best experience.  For applications
+        with multiple projects, a single project is the focus of Intellisense.  The project for Intellisense focus
+        can be changed by clicking the MTB status field at the bottom right of the screen.
+        ` ;
+
+        html = html.replace("####EXTVERSION####", MTBExtensionInfo.version.toString()) ;
+    
+        return html ;        
+
+    return html ;
+}
+
 export function getModusToolboxAssistantStartupHtml() : string {
     let html : string = 
         `<!DOCTYPE html>
@@ -205,7 +228,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
     }
 
     let checkstr: string = '<input type="checkbox" onclick="showWelcomePageChanged(this);" id="showWelcomePage" name="showWelcomePage"' ;
-    if (MTBExtensionInfo.getMtbExtensionInfo().getPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
+    if (MTBExtensionInfo.getMtbExtensionInfo().getPersistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
         checkstr += "checked" ;
     }
     else {

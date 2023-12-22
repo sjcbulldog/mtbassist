@@ -28,6 +28,25 @@ export enum MessageType
     error
 }
 
+
+export enum StatusType
+{
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Ready,          // Everything is loaded and ready
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention    
+    NotValid,       // Directory is not a valid ModusToolbox appliation
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention    
+    Loading,        // Loading application and project information
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    GetLibs,        // Running 'make getlibs'
+    
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    VSCode,         // Running 'make vscode'
+}
+
 export class MTBExtensionInfo
 {
     static mtbAssistExtensionInfo : MTBExtensionInfo | undefined = undefined ;
@@ -37,7 +56,7 @@ export class MTBExtensionInfo
     public static readonly version = vscode.extensions.getExtension('c-and-t-software.mtbassist')?.packageJSON.version ;
 
     private statusBarItem: vscode.StatusBarItem ;
-    private status: string ;
+    private status: StatusType ;
     private intellisenseProject: string | undefined ;
 
     public toolsDir: string ;
@@ -66,12 +85,12 @@ export class MTBExtensionInfo
         this.minor = -1 ;
         this.checkModusToolboxVersion() ;
 
-        if (this.getPresistedBoolean(MTBExtensionInfo.debugModeName, false)) {
+        if (this.getPersistedBoolean(MTBExtensionInfo.debugModeName, false)) {
             this.logMessage(MessageType.debug, "Debug mode is enabled, you should see debug messages") ;
         }
 
         this.intellisenseProject = undefined ;
-        this.status = "" ;
+        this.status = StatusType.NotValid ;
         this.statusBarItem.command = 'mtbassist.mtbSetIntellisenseProject';
     }
 
@@ -88,13 +107,13 @@ export class MTBExtensionInfo
         this.toolsDir = dir ;
     }
 
-    public setStatus(status: string) {
+    public setStatus(status: StatusType) {
         this.status = status ;
         this.updateStatusBar() ;
     }
 
     private updateStatusBar() {
-        this.statusBarItem.text = this.status ;
+        this.statusBarItem.text = this.status.toString() ;
         if (this.intellisenseProject) {
             this.statusBarItem.text += " (" + this.intellisenseProject + ")" ;
         }
@@ -117,7 +136,7 @@ export class MTBExtensionInfo
         return this.mtbAssistExtensionInfo ;
     }
 
-    public getPresistedBoolean(name: string, def: boolean) : boolean {
+    public getPersistedBoolean(name: string, def: boolean) : boolean {
         let ret: boolean = def ;
 
         if (this.context.globalState.keys().indexOf(name) !== -1) {
@@ -130,7 +149,24 @@ export class MTBExtensionInfo
         return ret ;
     }
 
-    public setPresistedBoolean(name: string, value: boolean) {
+    public setPersistedBoolean(name: string, value: boolean) {
+        this.context.globalState.update(name, value) ;
+    }
+
+    public getPersistedString(name: string, def: string) : string {
+        let ret: string = def ;
+
+        if (this.context.globalState.keys().indexOf(name) !== -1) {
+            let obj = this.context.globalState.get(name) ;
+            if (typeof obj === "string") {
+                ret = obj as string ;
+            }
+        }
+
+        return ret ;
+    }
+
+    public setPersistedString(name: string, value: string) {
         this.context.globalState.update(name, value) ;
     }
 
@@ -139,7 +175,7 @@ export class MTBExtensionInfo
     }
 
     public logMessage(type: MessageType, message:string) {
-        if (type !== MessageType.debug || this.getPresistedBoolean(MTBExtensionInfo.debugModeName, false)) {
+        if (type !== MessageType.debug || this.getPersistedBoolean(MTBExtensionInfo.debugModeName, false)) {
             let now : Date = new Date() ;
             let typestr: string = "" ;
 

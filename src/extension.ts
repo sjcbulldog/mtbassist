@@ -222,7 +222,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}) ;
 
 	// Show the user the ModusToolbox assistant welcom page
-	if (MTBExtensionInfo.getMtbExtensionInfo().getPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
+	if (MTBExtensionInfo.getMtbExtensionInfo().getPersistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
 		vscode.commands.executeCommand('mtbassist.mtbShowWelcomePage');
 	}
 

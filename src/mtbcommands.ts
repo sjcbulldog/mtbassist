@@ -259,10 +259,10 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
             browseropen(decodeURIComponent(fileuri.toString())) ;
         }
         else if (message.command === "showWelcomePage") {
-            MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true) ;
+            MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.showWelcomePageName, true) ;
         }
         else if (message.command === "hideWelcomePage") {
-            MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.showWelcomePageName, false) ;
+            MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.showWelcomePageName, false) ;
         }
         else if (message.command === "showReleaseNotes") {
             let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mt_release_notes.pdf") ;
@@ -413,11 +413,11 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
 }
 
 export function mtbTurnOnDebugMode(context: vscode.ExtensionContext) {
-    MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.debugModeName, true) ;
+    MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.debugModeName, true) ;
 }
 
 export function mtbTurnOffDebugMode(context: vscode.ExtensionContext) {
-    MTBExtensionInfo.getMtbExtensionInfo().setPresistedBoolean(MTBExtensionInfo.debugModeName, false) ;
+    MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.debugModeName, false) ;
 }
 
 export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, context: vscode.ExtensionContext) {

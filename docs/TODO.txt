@@ -1,0 +1,3 @@
+Check for missing assets and prompt for 'make getlibs' - solves git pull problem
+Documentation on welcome page
+Show Change Log on welcome page
