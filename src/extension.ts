@@ -188,40 +188,45 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Note: if the appdir is undefined, this means no actual folder is being loaded.  In this case
 	// loading the application sets up the tree providers to show the state of no application loaded
-	mtbAssistLoadApp(context, appdir);
+	mtbAssistLoadApp(context, appdir)
+		.then((status) => {
+			let shpath = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "modus-shell/bin/bash") ;
+			if (process.platform === "win32") {
+				shpath += ".exe" ;
+			}
+
+			vscode.window.registerTerminalProfileProvider('mtbassist.mtbShell', {
+				provideTerminalProfile(token: vscode.CancellationToken) : vscode.ProviderResult<vscode.TerminalProfile> {
+					return {
+						options : {
+							name: "ModusToolbox Shell",
+							shellPath: shpath,
+							shellArgs: ["--login"],
+							cwd: getTerminalWorkingDirectory(),
+							env: {
+								["HOME"] : os.homedir(),
+								["PATH"] : "/bin:/usr/bin",
+								["TEMP"] : "/tmp",
+								["TMP"] : "/tmp",
+								["CHERE_INVOKING"] : getTerminalWorkingDirectory()
+							},
+							strictEnv: false,
+							message: "Welcome To ModusToolbox Shell",	
+						}
+					} ;
+				}
+			}) ;			
+		})
+		.catch((err) => {
+
+		}) ;
 
 	// Show the user the ModusToolbox assistant welcom page
 	if (MTBExtensionInfo.getMtbExtensionInfo().getPresistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
 		vscode.commands.executeCommand('mtbassist.mtbShowWelcomePage');
 	}
 
-	let shpath = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "modus-shell/bin/bash") ;
-	if (process.platform === "win32") {
-		shpath += ".exe" ;
-	}
 
-	vscode.window.registerTerminalProfileProvider('mtbassist.mtbShell', {
-		provideTerminalProfile(token: vscode.CancellationToken) : vscode.ProviderResult<vscode.TerminalProfile> {
-			return {
-				options : {
-					name: "ModusToolbox Shell",
-					shellPath: shpath,
-					shellArgs: ["--login"],
-					cwd: getTerminalWorkingDirectory(),
-					env: {
-						["HOME"] : os.homedir(),
-						["PATH"] : "/bin:/usr/bin",
-						["TEMP"] : "/tmp",
-						["TMP"] : "/tmp",
-						["CHERE_INVOKING"] : getTerminalWorkingDirectory()
-					},
-					strictEnv: false,
-					message: "Welcome To ModusToolbox Shell",
-					
-				}
-			} ;
-		}
-	}) ;
 }
 
 // this method is called when your extension is deactivated

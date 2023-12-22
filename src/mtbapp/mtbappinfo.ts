@@ -98,79 +98,100 @@ export class MTBAppInfo
 
     public needVSCode: boolean ;
 
+    private loadingWksc: boolean ;
+
     //
     // Create the application object and load its contents in the asynchronously
     //
     constructor(context: vscode.ExtensionContext, appdir : string) {
 
-        let loadingWksc : boolean = false ;
-
-        this.appDir = "" ;
+        this.appDir = appdir ;
         this.projects = [] ;
         this.context = context ;
         this.setLaunchInfo(undefined) ;
         this.appType = AppType.none ;
         this.appName = "UNDEFINED" ;
         this.needVSCode = false ;
+        this.isValid = false ;
+        this.isLoading = true ;
+        this.loadingWksc = false ;
         this.funindex = new MtbFunIndex() ;
 
         MTBExtensionInfo.getMtbExtensionInfo().manifestDb.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
         MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Checking Application") ;
+    }
 
-        this.isValid = false ;
-        this.isLoading = true ;
-        this.initApp(appdir)
-            .then (()=> {
-                this.isValid = true ;
-                this.isLoading = false ;
+    private trySetupIntellisense() {
+        vscode.window.showInformationMessage("This ModusToolbox project has more than one project.  " + 
+                "Only one project at a time can be active for intellisense.  Do you want to select the active Intellisense project?",
+                "Yes", "No")
+        .then((answer) => {
+            if (answer === "Yes") {
+                vscode.commands.executeCommand('mtbassist.mtbSetIntellisenseProject');
+            }
+        });
 
-                for(let proj of this.projects) {
-                    getMTBProjectInfoProvider().refresh(proj) ;
-                }
+    }
 
-                if (appdir) {
-                    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
-                        //
-                        // The ModusToolbox application directory is loaded, but the workspace file is not
-                        // ModusToolbox works much better when the genreated workspace file is loaded.  If we see
-                        // it, we load the workspace file.
-                        //
-                        let dirname = path.basename(vscode.workspace.workspaceFolders[0].uri.fsPath) ;
-                        let filename = this.appName + ".code-workspace" ;
-                        let wksp : string = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, filename) ;
-                        if (fs.existsSync(wksp)) {
-                            vscode.window.showInformationMessage("Loading worksapce file '" + filename + "'") ;
-                            let wkspuri : vscode.Uri = vscode.Uri.file(wksp) ;
-                            vscode.commands.executeCommand("vscode.openFolder", wkspuri) ;
-                            loadingWksc = true ;
-                        }
-                    }    
+    public async init() : Promise<boolean> {
+        let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
 
-                    if (!loadingWksc) {
-                        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
-                        vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;                        
-                        MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Ready") ;
-                        if (MTBExtensionInfo.getMtbExtensionInfo().getIntellisenseProject() === undefined) {
-                            setTimeout(() => { vscode.commands.executeCommand('mtbassist.mtbSetIntellisenseProject'); }, 5000) ;
-                        }
-                        addToRecentProjects(context, appdir) ;
-                        this.updateAssets() ;
-                        this.funindex.init(this)
-                            .then ((count: number)=> {
-                                vscode.window.showInformationMessage("Loaded " + count + " symbols for documentation") ;
-                            })
-                            .catch((error)=> {
-                                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "error processing symbols for ModusToolbox Documentation command");
-                            }) ;
+            this.initApp(this.appDir)
+                .then (()=> {
+                    this.isValid = true ;
+                    this.isLoading = false ;
+
+                    for(let proj of this.projects) {
+                        getMTBProjectInfoProvider().refresh(proj) ;
                     }
-                }
-            })
-            .catch((error) => {
-                this.isValid = false ;
-                this.isLoading = false ;
-                MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Not Valid") ;
-                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "the application directory '" + appdir + "' is not a ModusToolbox application") ;
+
+                    if (this.appDir) {
+                        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
+                            //
+                            // The ModusToolbox application directory is loaded, but the workspace file is not
+                            // ModusToolbox works much better when the genreated workspace file is loaded.  If we see
+                            // it, we load the workspace file.
+                            //
+                            let dirname = path.basename(vscode.workspace.workspaceFolders[0].uri.fsPath) ;
+                            let filename = this.appName + ".code-workspace" ;
+                            let wksp : string = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, filename) ;
+                            if (fs.existsSync(wksp)) {
+                                vscode.window.showInformationMessage("Loading worksapce file '" + filename + "'") ;
+                                let wkspuri : vscode.Uri = vscode.Uri.file(wksp) ;
+                                this.loadingWksc = true ;
+                                vscode.commands.executeCommand("vscode.openFolder", wkspuri) ;
+                            }
+                        }    
+
+                        if (!this.loadingWksc) {
+                            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
+                            vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;                        
+                            MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Ready") ;
+                            if (MTBExtensionInfo.getMtbExtensionInfo().getIntellisenseProject() === undefined) {
+                                setTimeout(() => { this.trySetupIntellisense() ; }, 5000) ;
+                            }
+                            addToRecentProjects(this.context, this.appDir) ;
+                            this.updateAssets() ;
+                            this.funindex.init(this)
+                                .then ((count: number)=> {
+                                    vscode.window.showInformationMessage("Loaded " + count + " symbols for documentation") ;
+                                })
+                                .catch((error)=> {
+                                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "error processing symbols for ModusToolbox Documentation command");
+                                }) ;
+                            resolve(true) ;
+                        }
+                    }
+                })
+                .catch((error) => {
+                    this.isValid = false ;
+                    this.isLoading = false ;
+                    MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Not Valid") ;
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "the application directory '" + this.appDir + "' is not a ModusToolbox application") ;
+                    reject(error) ;
+                }) ;
             }) ;
+        return ret ;
     }
 
     public async setIntellisenseProject(projname: string) {
@@ -771,16 +792,29 @@ export function getModusToolboxApp() : MTBAppInfo | undefined {
 //
 // Load a new application in as the ModusToolbox application being processed
 //
-export function mtbAssistLoadApp(context: vscode.ExtensionContext, appdir?: string) {
-    if (appdir && theModusToolboxApp !== undefined && theModusToolboxApp.appDir === appdir && theModusToolboxApp.isLoading) {
-        return ;
-    }
+export async function mtbAssistLoadApp(context: vscode.ExtensionContext, appdir?: string) : Promise<boolean> {
+    let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
+        if (appdir && theModusToolboxApp !== undefined && theModusToolboxApp.appDir === appdir && theModusToolboxApp.isLoading) {
+            reject(new Error("trying to load ModusToolbox application recursively")) ;
+        }
 
-    if (appdir) {
-        theModusToolboxApp = new MTBAppInfo(context, appdir) ;
-    } else {
-        theModusToolboxApp = undefined ;
-    }
+        if (appdir) {
+            theModusToolboxApp = new MTBAppInfo(context, appdir) ;
+            theModusToolboxApp.init()
+                .then((status) => {
+                    resolve(status) ;
+                })
+                .catch((err) => {
+                    reject(err) ;
+                }) ;
+            
+        } else {
+            theModusToolboxApp = undefined ;
+            resolve(false) ;
+        }
+    }) ;
+
+    return ret ;
 }
 
 
