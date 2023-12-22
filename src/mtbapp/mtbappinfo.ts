@@ -121,16 +121,34 @@ export class MTBAppInfo
         MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Checking Application") ;
     }
 
-    private fixDataElements(files: any[]) {
+    private fixDataElements(prefix: string, dirname: string, files: any[]) : any[] {
+        let ret: any[] = [] ;
+        for(let elem of files) {
+            let filename: string | undefined = elem["file"] ;
+            if (!filename) {
+                ret.push(elem) ;
+                continue ;
+            }
 
+            if (filename.startsWith(dirname)) {
+                let comp: string = elem["command"] as string ;
+                let oldstr: string = " " + dirname ;
+                let newstr: string = " " + prefix + "/" + dirname ;
+                comp = comp.replace(oldstr, newstr) ;
+                elem["file"] = path.join(prefix, filename) ;
+                elem["command"] = comp ;
+            }
+        }
+
+        return ret ;
     }
 
-    private checkOneCompileCommandsFile(file: string) {
+    private checkOneCompileCommandsFile(prefix: string, dirname: string, file: string) {
         let result = fs.readFileSync(file).toString() ;
         if (result) {
             let obj = JSON.parse(result.toString()) ;
             if (obj) {
-                this.fixDataElements(obj as any[]) ;
+                this.fixDataElements(prefix, dirname, obj as any[]) ;
                 let text: string = JSON.stringify(obj) ;
                 fs.writeFileSync(file, text);
             }
@@ -139,9 +157,13 @@ export class MTBAppInfo
 
     private checkCompileCommandsFiles() {
         for(let proj of this.projects) {
-            let cmds : string = path.join(proj.getProjectDir(), "build", "compile_commands.json") ;
-            if (fs.existsSync(cmds)) {
-                this.checkOneCompileCommandsFile(cmds) ;
+            let prefix: string | undefined = proj.getVar(ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR) ;
+            let dirname: string | undefined = proj.getVar(ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME) ;
+            if (prefix && dirname) {
+                let cmds : string = path.join(proj.getProjectDir(), "build", "compile_commands.json") ;
+                if (fs.existsSync(cmds)) {
+                    this.checkOneCompileCommandsFile(prefix, dirname, cmds) ;
+                }
             }
         }
     }
@@ -199,6 +221,7 @@ export class MTBAppInfo
             // if necessary so intellisense works with 3.0 and 3.1.
             //
             this.checkCompileCommandsFiles() ;
+            vscode.window.showInformationMessage("Fixed intellisense database from ModusToolbox 3.0 or 3.1");
         }
 
         if (this.projects.length > 1) {
