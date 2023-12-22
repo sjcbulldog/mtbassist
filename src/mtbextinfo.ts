@@ -38,7 +38,7 @@ export class MTBExtensionInfo
 
     private statusBarItem: vscode.StatusBarItem ;
     private status: string ;
-    private intellisenseProject: string ;
+    private intellisenseProject: string | undefined ;
 
     public toolsDir: string ;
     public docsDir: string ;
@@ -70,9 +70,13 @@ export class MTBExtensionInfo
             this.logMessage(MessageType.debug, "Debug mode is enabled, you should see debug messages") ;
         }
 
-        this.intellisenseProject = "" ;
+        this.intellisenseProject = undefined ;
         this.status = "" ;
         this.statusBarItem.command = 'mtbassist.mtbSetIntellisenseProject';
+    }
+
+    public getIntellisenseProject() : string | undefined {
+        return this.intellisenseProject ;
     }
 
     public setIntellisenseProject(project: string) {
@@ -91,7 +95,7 @@ export class MTBExtensionInfo
 
     private updateStatusBar() {
         this.statusBarItem.text = this.status ;
-        if (this.intellisenseProject.length > 0) {
+        if (this.intellisenseProject) {
             this.statusBarItem.text += " (" + this.intellisenseProject + ")" ;
         }
         else {

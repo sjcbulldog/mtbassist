@@ -93,6 +93,7 @@ export class MTBAppInfo
     // The extension context
     public context: vscode.ExtensionContext ;
 
+    // The class that maps a given symbol in the source code to help documentation
     public funindex: MtbFunIndex ;
 
     public needVSCode: boolean ;
@@ -149,6 +150,9 @@ export class MTBAppInfo
                         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
                         vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;                        
                         MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Ready") ;
+                        if (MTBExtensionInfo.getMtbExtensionInfo().getIntellisenseProject() === undefined) {
+                            setTimeout(() => { vscode.commands.executeCommand('mtbassist.mtbSetIntellisenseProject'); }, 5000) ;
+                        }
                         addToRecentProjects(context, appdir) ;
                         this.updateAssets() ;
                         this.funindex.init(this)
@@ -186,7 +190,7 @@ export class MTBAppInfo
                 .then((value) => {
                     vscode.commands.executeCommand('clangd.restart')
                     .then((obj) => {
-                        MTBExtensionInfo.getMtbExtensionInfo().setIntellisenseProject("Updated Intellisense To Project '" + projname + "'");
+                        MTBExtensionInfo.getMtbExtensionInfo().setIntellisenseProject(projname);
                     });
                 }) ;
 

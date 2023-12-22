@@ -482,9 +482,6 @@ export function mtbSetIntellisenseProject(context: vscode.ExtensionContext) {
                     let app: MTBAppInfo = getModusToolboxApp()! ;
                     app.setIntellisenseProject(proj) ;
                 }
-                else {
-                    vscode.window.showInformationMessage("** Intellisense Not Set **") ;                    
-                }
             }) ;
     }
 }

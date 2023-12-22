@@ -119,10 +119,13 @@ export function getModusToolboxAssistantStartupHtml() : string {
             <div class="tabview">
                 <div class="tabbar">
                     <button class="tabbutton" id="tabbutton1" onclick="selectContent(event, '1')">Getting Started</button>
-                    <button class="tabbutton" id="tabbutton2" onclick="selectContent(event, '2')">Documentation</button>
-                    <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">Recent Applications</button>
+                    <button class="tabbutton" id="tabbutton2" onclick="selectContent(event, '2')">ModusToolbox Concepts</button>
+                    <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">ModusToolbox Assistant</button>
+                    <button class="tabbutton" id="tabbutton4" onclick="selectContent(event, '4')">ModusToolbox Documentation</button>
+                    <button class="tabbutton" id="tabbutton5" onclick="selectContent(event, '5')">Recent Applications</button>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content1">
+                    <h1>Getting Started</h1>
                     <p>There are two ways to get a ModusToolbox application into Visual Studio Code.<p> 
                     <ul>
                     <li>You can <a onclick="vscode.postMessage({ command: 'createNew'}) ;" href="#">create</a> a new project.</li>
@@ -144,10 +147,33 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     <br><br><br>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content2">
+                    <h1>ModusToolbox Concepts</h1>
+                    <h2>Applications & Projects</h2>
+                    An <i>application</i> is the top level directory that is managed by ModusToolbox.
+                    An <i>application</i> can contain one or more <i>projects</i>.  If an application contains exactly
+                    one <i>project</i> then the project directory and the application can be the same directory.  This type of 
+                    application is called a <i>combined</i> application.  If an application contains more than a single
+                    <i>project</i>, then there must be a directory per project.  For instance, in a PSoC 6 multi-core application,
+                    there will be a directory named <b>proj_cm0p</b> for the project that runs on the Cortex-M0P core.  There will
+                    also be a directory named <b>proj_cm4</b> for the project that runs on the Cortex-M4 core.
+                    <h2>Assets</h2>
+                    <h3>Types</h3>
+                    Code Examples, Board Support Packages (BSPs), Middleware
+                    <h3>Manifests</h3>
+                    <h3>Library Manager</h3>
+                    <h3>Latest Locking</h3>
+                    <h3>make getlibs</h3>
+                </div>
+                <div style="font-size: 150%;" class="tabcont" id="content3">
+                    <h1>ModusToolbox Assistant</h1>
+                </div>
+                <div style="font-size: 150%;" class="tabcont" id="content4">
+                    <h1>ModusToolbox Documentation<h1>
                    <a onclick="vscode.postMessage({ command: 'showUserGuide'}) ;" href="#">Open ModusToolbox User's Guide</a><br>
                    <a onclick="vscode.postMessage({ command: 'showReleaseNotes'}) ;" href="#">Open ModusToolbox Release Notes</a><br>    
                 </div>
-                <div style="font-size: 150%;" class="tabcont" id="content3">
+                <div style="font-size: 150%;" class="tabcont" id="content5">
+                    <h1>Recent Applications</h1>
                     ####RECENTS####
                 </div>
             </div>
