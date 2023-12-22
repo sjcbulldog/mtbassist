@@ -121,23 +121,114 @@ export class MTBAppInfo
         MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Checking Application") ;
     }
 
-    private trySetupIntellisense() {
-        vscode.window.showInformationMessage("This ModusToolbox project has more than one project.  " + 
-                "Only one project at a time can be active for intellisense.  Do you want to select the active Intellisense project?",
-                "Yes", "No")
-        .then((answer) => {
-            if (answer === "Yes") {
-                vscode.commands.executeCommand('mtbassist.mtbSetIntellisenseProject');
-            }
-        });
+    private fixDataElements(files: any[]) {
 
+    }
+
+    private checkOneCompileCommandsFile(file: string) {
+        let result = fs.readFileSync(file).toString() ;
+        if (result) {
+            let obj = JSON.parse(result.toString()) ;
+            if (obj) {
+                this.fixDataElements(obj as any[]) ;
+                let text: string = JSON.stringify(obj) ;
+                fs.writeFileSync(file, text);
+            }
+        }
+    }
+
+    private checkCompileCommandsFiles() {
+        for(let proj of this.projects) {
+            let cmds : string = path.join(proj.getProjectDir(), "build", "compile_commands.json") ;
+            if (fs.existsSync(cmds)) {
+                this.checkOneCompileCommandsFile(cmds) ;
+            }
+        }
+    }
+
+    private async checkBasicClangdConfig() : Promise<void> {
+        let ret: Promise<void> = new Promise<void>(async (resolve, reject) => {
+            const settings: string = "clangd.arguments" ;
+            let config = await vscode.workspace.getConfiguration() ;
+            let args : string[] = config.get(settings) as string[] ;
+
+            let option: string = "--query-driver=" ;
+            let ret: string[] = [] ;
+            for(let arg of args) {
+                if (!arg.startsWith(option)) {
+                    ret.push(arg);
+                }
+            }
+
+            //
+            // TODO: If a new GCC is supplied via the path mechanism, or if the user has 
+            //       overridden the GCC path this will not work.  Since core-make determines
+            //       the compiler to use, we should have get_app_info output the actual compiler
+            //       path for the compiler.
+            //
+            // Note: Since this is only for intellisense, the default GCC in the tools directory
+            //       works ok for sure and much better than what is there without these changes, so
+            //       defaulting to GCC in the tools directory is not all bad.
+            //
+            ret.push(option + "${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc");
+
+            config.update(settings, args, vscode.ConfigurationTarget.Workspace)
+                .then((value) => { resolve() ; }) ;
+        }) ;
+
+        return ret ;
+    }
+
+    //
+    // Try to set up an reasonable intellisense environment.  We only attach our changes to the
+    // current workspace in memory and not via any on disk settings file.  This way we don't change
+    // the user's development environment
+    //
+    private async trySetupIntellisense() {
+        //
+        // Make sure the query driver is set to match the gcc in the tools directory
+        // for this project.
+        //
+        await this.checkBasicClangdConfig() ;
+
+        let toolsdir: string = MTBExtensionInfo.getMtbExtensionInfo().toolsDir ;
+        if (toolsdir.endsWith('tools_3.0') || toolsdir.endsWith('tools_3.1')) {
+            //
+            // If the tools verison is 3.0 or 3.1, there is a bug in the intellisense database
+            // (compile_commands.json) file.  This will check for that bug and fix the files 
+            // if necessary so intellisense works with 3.0 and 3.1.
+            //
+            this.checkCompileCommandsFiles() ;
+        }
+
+        if (this.projects.length > 1) {
+            //
+            // More than one project, ask the user to choose the intellisense project.
+            //
+            vscode.window.showInformationMessage("This ModusToolbox project has more than one project.  " + 
+                    "Only one project at a time can be active for intellisense.  " + 
+                    "This can be changed at any time by clicking the MTB status item in the right of the status bar. " +
+                    "Do you want to select the active Intellisense project?",
+                    "Yes", "No")
+            .then((answer) => {
+                if (answer === "Yes") {
+                    vscode.commands.executeCommand('mtbassist.mtbSetIntellisenseProject');
+                }
+            });
+        }
+        else if (this.projects.length === 1) {
+            //
+            // Just one project, set it to be the intellisense project
+            //
+            this.setIntellisenseProject(this.projects[0].name) ;
+        }
     }
 
     public async init() : Promise<boolean> {
         let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
 
             this.initApp(this.appDir)
-                .then (()=> {
+                .then (async ()=> {
                     this.isValid = true ;
                     this.isLoading = false ;
 
@@ -168,13 +259,13 @@ export class MTBAppInfo
                             vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;                        
                             MTBExtensionInfo.getMtbExtensionInfo().setStatus("MTB: Ready") ;
                             if (MTBExtensionInfo.getMtbExtensionInfo().getIntellisenseProject() === undefined) {
-                                setTimeout(() => { this.trySetupIntellisense() ; }, 5000) ;
+                                await this.trySetupIntellisense() ;
                             }
                             addToRecentProjects(this.context, this.appDir) ;
                             this.updateAssets() ;
                             this.funindex.init(this)
                                 .then ((count: number)=> {
-                                    vscode.window.showInformationMessage("Loaded " + count + " symbols for documentation") ;
+                                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded " + count + " symbols for documentation") ;
                                 })
                                 .catch((error)=> {
                                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "error processing symbols for ModusToolbox Documentation command");

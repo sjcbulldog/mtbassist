@@ -28,6 +28,9 @@
     "onStartupFinished"
   ],
   "main": "./dist/extension.js",
+  "extensionDependencies" : [
+    "llvm-vs-code-extensions.vscode-clangd"
+  ],
   "contributes": {
     "commands": [
       {

@@ -113,16 +113,14 @@ export function getModusToolboxAssistantStartupHtml() : string {
                 }) ;
             </script>
         </head>
-
         <body>
             ####TITLE####
             <div class="tabview">
                 <div class="tabbar">
                     <button class="tabbutton" id="tabbutton1" onclick="selectContent(event, '1')">Getting Started</button>
-                    <button class="tabbutton" id="tabbutton2" onclick="selectContent(event, '2')">ModusToolbox Concepts</button>
-                    <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">ModusToolbox Assistant</button>
-                    <button class="tabbutton" id="tabbutton4" onclick="selectContent(event, '4')">ModusToolbox Documentation</button>
-                    <button class="tabbutton" id="tabbutton5" onclick="selectContent(event, '5')">Recent Applications</button>
+                    <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '2')">ModusToolbox Assistant</button>
+                    <button class="tabbutton" id="tabbutton4" onclick="selectContent(event, '3')">ModusToolbox Documentation</button>
+                    <button class="tabbutton" id="tabbutton5" onclick="selectContent(event, '4')">Recent Applications</button>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content1">
                     <h1>Getting Started</h1>
@@ -145,8 +143,21 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     <a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">ModusToolbox</a> icon in the Activity Bar, given by the robot icon.
                     This displays the ModusToolbox view in the Side Bar.  See this <a href="https://code.visualstudio.com/docs/getstarted/userinterface">page</a> for more details.</p>
                     <br><br><br>
-                </div>
+
                 <div style="font-size: 150%;" class="tabcont" id="content2">
+                    <h1>ModusToolbox Assistant</h1>
+                </div>
+                <div style="font-size: 150%;" class="tabcont" id="content3">
+                    <h1>ModusToolbox Documentation<h1>
+                   <a onclick="vscode.postMessage({ command: 'showUserGuide'}) ;" href="#">Open ModusToolbox User's Guide</a><br>
+                   <a onclick="vscode.postMessage({ command: 'showReleaseNotes'}) ;" href="#">Open ModusToolbox Release Notes</a><br>    
+                </div>
+                <div style="font-size: 150%;" class="tabcont" id="content4">
+                    <h1>Recent Applications</h1>
+                    ####RECENTS####
+                </div>
+                </div>
+                <div style="font-size: 150%;" class="tabcont" id="content5">
                     <h1>ModusToolbox Concepts</h1>
                     <h2>Applications & Projects</h2>
                     An <i>application</i> is the top level directory that is managed by ModusToolbox.
@@ -163,19 +174,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     <h3>Library Manager</h3>
                     <h3>Latest Locking</h3>
                     <h3>make getlibs</h3>
-                </div>
-                <div style="font-size: 150%;" class="tabcont" id="content3">
-                    <h1>ModusToolbox Assistant</h1>
-                </div>
-                <div style="font-size: 150%;" class="tabcont" id="content4">
-                    <h1>ModusToolbox Documentation<h1>
-                   <a onclick="vscode.postMessage({ command: 'showUserGuide'}) ;" href="#">Open ModusToolbox User's Guide</a><br>
-                   <a onclick="vscode.postMessage({ command: 'showReleaseNotes'}) ;" href="#">Open ModusToolbox Release Notes</a><br>    
-                </div>
-                <div style="font-size: 150%;" class="tabcont" id="content5">
-                    <h1>Recent Applications</h1>
-                    ####RECENTS####
-                </div>
+                </div>                
             </div>
             <hr>
             ####CHECKBOX####
