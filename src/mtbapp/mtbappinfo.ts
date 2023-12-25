@@ -33,7 +33,7 @@ import * as fs from 'fs' ;
 
 import { getMTBDocumentationTreeProvider } from '../mtbdocprovider';
 import { getMTBProgramsTreeProvider } from '../mtbprogramsprovider';
-import { MessageType, MTBExtensionInfo, StatusType } from '../mtbextinfo';
+import { DocStatusType, MessageType, MTBExtensionInfo, StatusType } from '../mtbextinfo';
 import { MTBLaunchInfo } from '../mtblaunchdata';
 import { getMTBProjectInfoProvider } from '../mtbprojinfoprovider';
 import { MTBProjectInfo } from './mtbprojinfo';
@@ -121,51 +121,64 @@ export class MTBAppInfo
         MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading) ;
     }
 
-    private fixDataElements(prefix: string, dirname: string, files: any[]) : any[] {
-        let ret: any[] = [] ;
+    private fixDataElements(prefix: string, dirname: string, files: any[]) : boolean {
+        let fixed: boolean = false ;
+
         for(let elem of files) {
             let filename: string | undefined = elem["file"] ;
             if (!filename) {
-                ret.push(elem) ;
                 continue ;
             }
 
             if (filename.startsWith(dirname)) {
+                fixed = true ;
                 let comp: string = elem["command"] as string ;
                 let oldstr: string = " " + dirname ;
                 let newstr: string = " " + prefix + "/" + dirname ;
                 comp = comp.replace(oldstr, newstr) ;
                 elem["file"] = path.join(prefix, filename) ;
                 elem["command"] = comp ;
+                fixed = true ;
+            }
+        }
+
+        return fixed ;
+    }
+
+    private checkOneCompileCommandsFile(prefix: string, dirname: string, file: string) : boolean {
+        let ret: boolean = false ;
+        let result = fs.readFileSync(file).toString() ;
+        if (result) {
+            let obj = JSON.parse(result.toString()) ;
+            if (obj) {
+                if (this.fixDataElements(prefix, dirname, obj as any[])) {
+                    ret = true ;
+                    let text: string = JSON.stringify(obj) ;
+                    fs.writeFileSync(file, text);
+                }
             }
         }
 
         return ret ;
     }
 
-    private checkOneCompileCommandsFile(prefix: string, dirname: string, file: string) {
-        let result = fs.readFileSync(file).toString() ;
-        if (result) {
-            let obj = JSON.parse(result.toString()) ;
-            if (obj) {
-                this.fixDataElements(prefix, dirname, obj as any[]) ;
-                let text: string = JSON.stringify(obj) ;
-                fs.writeFileSync(file, text);
-            }
-        }
-    }
+    private checkCompileCommandsFiles() : boolean {
+        let fixed: boolean = false ;
 
-    private checkCompileCommandsFiles() {
         for(let proj of this.projects) {
             let prefix: string | undefined = proj.getVar(ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR) ;
             let dirname: string | undefined = proj.getVar(ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME) ;
             if (prefix && dirname) {
                 let cmds : string = path.join(proj.getProjectDir(), "build", "compile_commands.json") ;
                 if (fs.existsSync(cmds)) {
-                    this.checkOneCompileCommandsFile(prefix, dirname, cmds) ;
+                    if (this.checkOneCompileCommandsFile(prefix, dirname, cmds)) {
+                        fixed = true ;
+                    }
                 }
             }
         }
+
+        return fixed ;
     }
 
     private async checkBasicClangdConfig() : Promise<void> {
@@ -189,7 +202,7 @@ export class MTBAppInfo
             //       path for the compiler.
             //
             // Note: Since this is only for intellisense, the default GCC in the tools directory
-            //       works ok for sure and much better than what is there without these changes, so
+            //       works ok for sure and is much better than what is there without these changes, so
             //       defaulting to GCC in the tools directory is not all bad.
             //
             ret.push(option + "${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc");
@@ -220,8 +233,9 @@ export class MTBAppInfo
             // (compile_commands.json) file.  This will check for that bug and fix the files 
             // if necessary so intellisense works with 3.0 and 3.1.
             //
-            this.checkCompileCommandsFiles() ;
-            vscode.window.showInformationMessage("Fixed intellisense database from ModusToolbox 3.0 or 3.1");
+            if (this.checkCompileCommandsFiles()) {
+                vscode.window.showInformationMessage("Fixed intellisense database from ModusToolbox 3.0 or 3.1");
+            }
         }
 
         if (this.projects.length > 1) {
@@ -255,6 +269,9 @@ export class MTBAppInfo
                     this.isValid = true ;
                     this.isLoading = false ;
 
+                    //
+                    // Refresh the project information in the window on the left
+                    //
                     for(let proj of this.projects) {
                         getMTBProjectInfoProvider().refresh(proj) ;
                     }
@@ -281,17 +298,60 @@ export class MTBAppInfo
                             MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded ModusToolbox application '" + this.appDir + "'") ;
                             vscode.window.showInformationMessage("ModusToolbox application loaded and ready") ;                        
                             MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Ready) ;
+
+                            //
+                            // Add the currently loaded project to the recents list for the home page
+                            //
+                            addToRecentProjects(this.context, this.appDir) ;
+
+                            //
+                            // Try to make sure intellisense is initialized to something that works 
+                            // for the current project.
+                            //
                             if (MTBExtensionInfo.getMtbExtensionInfo().getIntellisenseProject() === undefined) {
                                 await this.trySetupIntellisense() ;
                             }
-                            addToRecentProjects(this.context, this.appDir) ;
+  
+                            //
+                            // Update the assets display on the left
+                            //
                             this.updateAssets() ;
+
+                            //
+                            // Be sure we have all of the assets required by the project 
+                            //
+                            let missing: string[] = this.checkAllAssetsPresent() ;
+                            if (missing.length > 0) {
+                                let str : string = "There are assets that are required by this applicadtion that are not " +
+                                "available locally.  Should 'make getlibs' be run to download these assets " +
+                                "from github? " ;
+
+                                str += "Missing Assets:" ;
+                                for(let miss of missing) {
+                                    str += " " + miss ;
+                                }
+
+                                vscode.window.showInformationMessage(str, "Yes", "No")
+                                    .then((answer) => {
+                                        if (answer === "Yes") {
+                                            vscode.commands.executeCommand('mtbassist.mtbRunMakeGetlibs');
+                                        }
+                                    });                                                                     
+                            }
+
+                            //
+                            // Scrub the assets looking for documentation that we might display to the
+                            // user.  This happens in the background.
+                            //
+                            MTBExtensionInfo.getMtbExtensionInfo().setDocStatus(DocStatusType.running) ;
                             this.funindex.init(this)
                                 .then ((count: number)=> {
                                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "loaded " + count + " symbols for documentation") ;
+                                    MTBExtensionInfo.getMtbExtensionInfo().setDocStatus(DocStatusType.complete) ;
                                 })
                                 .catch((error)=> {
                                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "error processing symbols for ModusToolbox Documentation command");
+                                    MTBExtensionInfo.getMtbExtensionInfo().setDocStatus(DocStatusType.error) ;
                                 }) ;
                             resolve(true) ;
                         }
@@ -336,6 +396,27 @@ export class MTBAppInfo
         if (!iset) {
             MTBExtensionInfo.getMtbExtensionInfo().setIntellisenseProject("");
         }
+    }
+
+    private checkAssetsForProject(proj: MTBProjectInfo, ret: string[]) {
+        for(let asset of proj.assets) {
+            if (asset.fullpath && !fs.existsSync(asset.fullpath)) {
+                if (ret.indexOf(asset.id!) === -1) {
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "missing asset '" + asset.id! + "' - location: '" + asset.location! + "'");
+                    ret.push(asset.id!);
+                }
+            }
+        }
+    }
+
+    private checkAllAssetsPresent() : string[] {
+        let ret: string[] = [] ;
+
+        for(let proj of this.projects) {
+            this.checkAssetsForProject(proj, ret) ;
+        }
+
+        return ret;
     }
 
     private updateCompileCommands(args: string[], cmds: string) : string[] {
@@ -452,7 +533,7 @@ export class MTBAppInfo
         return ret ;
     }
 
-    private processOneDir(cwd: string) : Promise<Map<string, string>> {
+    private doMakeGetLibs(cwd: string) : Promise<Map<string, string>> {
         let ret : Promise<Map<string, string>> = new Promise<Map<string, string>>((resolve, reject) => {
             //
             // There is no valid MTB_DEVICE value, so this means we don't have build
@@ -538,7 +619,7 @@ export class MTBAppInfo
     private processCombined(makevars: Map<string, string>, isMtb2x: boolean) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
             if (this.needsGetLibs(makevars, isMtb2x)) {
-                this.processOneDir(this.appDir)
+                this.doMakeGetLibs(this.appDir)
                     .then((data: Map<string, string>) => {
                         this.processProject(data)
                         .then(() => {
@@ -665,7 +746,7 @@ export class MTBAppInfo
 
                     if (needGetLibs) {
                         //
-                        // Run getlibs at the application leve
+                        // Run getlibs at the application level
                         //
                         MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.GetLibs);                    
                         mtbRunMakeGetLibs(this.context, this.appDir)
@@ -708,16 +789,25 @@ export class MTBAppInfo
     }
 
     //
-    // Load the application in the background
+    // Load the application in the background.  Return a promise that will be 
+    // completed when the application is loaded.
     //
     public initApp(appdir: string) : Promise<void> {
         this.appDir = appdir ;
 
         let ret : Promise<void> = new Promise<void>( (resolve, reject) => {
+            MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading);
             this.checkAppType()
                 .then ((info : [AppType, Map<string, string>]) => {
-                    MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading);
+                    //
+                    // checkAppType returns the application type: mtb2x, combined, multicore
+                    // It also returns the set of name value pairs get come from "make get_app_info"
+                    //
                     this.appType = info[0] ;
+
+                    if (info[0] === AppType.none) {
+                        reject(new Error("this is not a ModusToolbox application")) ;
+                    }
 
                     if (info[1].has(ModusToolboxEnvVarNames.MTB_APP_NAME)) {
                         this.appName = info[1].get(ModusToolboxEnvVarNames.MTB_APP_NAME)! ;
@@ -729,11 +819,8 @@ export class MTBAppInfo
                             reject(new Error("this is not a valid ModusToolbox application, the application name was not provided")) ;
                         }
                     }
-                    
-                    if (info[0] === AppType.none) {
-                        reject(new Error("this is not a ModusToolbox application")) ;
-                    }
-                    else if (info[0] === AppType.mtb2x) {
+
+                    if (info[0] === AppType.mtb2x) {
                         this.processCombined(info[1], true).then(() => {
                             resolve() ;
                         })

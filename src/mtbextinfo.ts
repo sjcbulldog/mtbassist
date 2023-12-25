@@ -28,7 +28,6 @@ export enum MessageType
     error
 }
 
-
 export enum StatusType
 {
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -47,6 +46,14 @@ export enum StatusType
     VSCode,         // Running 'make vscode'
 }
 
+export enum DocStatusType
+{
+    none,
+    running,
+    complete,
+    error
+}
+
 export class MTBExtensionInfo
 {
     static mtbAssistExtensionInfo : MTBExtensionInfo | undefined = undefined ;
@@ -57,6 +64,7 @@ export class MTBExtensionInfo
 
     private statusBarItem: vscode.StatusBarItem ;
     private status: StatusType ;
+    private docstat: DocStatusType ;
     private intellisenseProject: string | undefined ;
 
     public toolsDir: string ;
@@ -91,6 +99,7 @@ export class MTBExtensionInfo
 
         this.intellisenseProject = undefined ;
         this.status = StatusType.NotValid ;
+        this.docstat = DocStatusType.none  ;
         this.statusBarItem.command = 'mtbassist.mtbSetIntellisenseProject';
     }
 
@@ -112,14 +121,59 @@ export class MTBExtensionInfo
         this.updateStatusBar() ;
     }
 
+    public setDocStatus(status: DocStatusType) {
+        this.docstat = status ;
+        this.updateStatusBar() ;
+    }
+
     private updateStatusBar() {
-        this.statusBarItem.text = this.status.toString() ;
+        let st: string = "MTB:" ;
+        let tip: string = "" ;
+
+        switch(this.status) {
+            case StatusType.GetLibs:
+                st += " GetLibs" ;
+                break ;
+            case StatusType.Loading:
+                st += " Loading" ;
+                break ;
+            case StatusType.NotValid:
+                st += " NotValid" ;
+                break ;
+            case StatusType.Ready:
+                st += " Ready" ;
+                break ;
+            case StatusType.VSCode:
+                st += " Initializing" ;
+                break ;
+        }
+
+        switch(this.docstat) {
+            case DocStatusType.complete:
+                st += "/C" ;
+                tip += "Documentation: Info Loaded" ;
+                break ;
+            case DocStatusType.error:
+                st += "/E" ;
+                tip += "Documentation: Error" ;
+                break ;
+            case DocStatusType.running:
+                st += "/R" ;
+                tip += "Documentation: Loading ..." ;
+                break ;
+        }
+
         if (this.intellisenseProject) {
-            this.statusBarItem.text += " (" + this.intellisenseProject + ")" ;
+            st += " (" + this.intellisenseProject + ")" ;
+            tip += "\nIntellisense: " + this.intellisenseProject ;
         }
         else {
-            this.statusBarItem.text += " (Click To Set)" ;
+            st += " (Click To Set)" ;
+            tip += "\nIntellisense: " + "Click Here To Set Project" ;
         }
+
+        this.statusBarItem.text = st ;
+        this.statusBarItem.tooltip = tip ;
         this.statusBarItem.show() ;
     }
 

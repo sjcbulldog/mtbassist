@@ -26,7 +26,7 @@ import * as os from 'os' ;
 
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import { getModusToolboxAssistantStartupHtml } from './mtbgenhtml';
-import { MessageType, MTBExtensionInfo } from './mtbextinfo';
+import { MessageType, MTBExtensionInfo, StatusType } from './mtbextinfo';
 import { mtbAssistLoadApp, getModusToolboxApp, MTBAppInfo } from './mtbapp/mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
 import { MTBAssetInstance } from './mtbapp/mtbassets';
@@ -53,6 +53,7 @@ export async function mtbResultDecode(context: vscode.ExtensionContext) {
 }
 
 export function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
+    MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.GetLibs) ;
     let ret: Promise<number> = new Promise<number>((resolve, reject) => {
         let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
         MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "ModusToolbox: running 'make getlibs' in directory '" + cwd + "' ...") ;
