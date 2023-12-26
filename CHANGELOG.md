@@ -1,9 +1,15 @@
 # Change Log
 
 ### 1.0.32
-Added the ability to find a specific item when asking for ModusToolbox documentation.
 Added the ability to switch between projects for intellisense when in a multiproject
-application.
+application.  
+
+ModusToolbox Documentation command on the right click (context) menu can now find the 
+documentation for the specific item under the cursor.
+
+If a ModusToolbox application is loaded and assets are missing, the user is prompted 
+to run 'make getlibs' to download any missing assets.  This can happen if an application
+is shared via git and another developer has added assets via the library manager.
 
 ### 1.0.31
 Updated to filter out documetation that is hidden below a component that is not

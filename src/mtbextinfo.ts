@@ -151,7 +151,7 @@ export class MTBExtensionInfo
         switch(this.docstat) {
             case DocStatusType.complete:
                 st += "/C" ;
-                tip += "Documentation: Info Loaded" ;
+                tip += "Documentation: Loaded" ;
                 break ;
             case DocStatusType.error:
                 st += "/E" ;

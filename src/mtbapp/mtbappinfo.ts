@@ -181,16 +181,31 @@ export class MTBAppInfo
         return fixed ;
     }
 
+    private overrideOption(option: string) : boolean {
+        let ret: boolean = false ;
+        let set: string[] = ["--query-driver", "--background-index"] ;
+
+        for(let opt of set) {
+            if (option.startsWith(opt)) {
+                ret = true ;
+                break ;
+            }
+        }
+
+        return ret;
+    }
+
     private async checkBasicClangdConfig() : Promise<void> {
         let ret: Promise<void> = new Promise<void>(async (resolve, reject) => {
+            let option: string = "--query-driver=" ;
             const settings: string = "clangd.arguments" ;
             let config = await vscode.workspace.getConfiguration() ;
+
             let args : string[] = config.get(settings) as string[] ;
 
-            let option: string = "--query-driver=" ;
             let ret: string[] = [] ;
             for(let arg of args) {
-                if (!arg.startsWith(option)) {
+                if (!this.overrideOption(option)) {
                     ret.push(arg);
                 }
             }
@@ -206,9 +221,13 @@ export class MTBAppInfo
             //       defaulting to GCC in the tools directory is not all bad.
             //
             ret.push(option + "${config:modustoolbox.toolsPath}/gcc/bin/arm-none-eabi-gcc");
+            ret.push("--log=verbose");
+            ret.push("--background-index") ;
 
-            config.update(settings, args, vscode.ConfigurationTarget.Workspace)
-                .then((value) => { resolve() ; }) ;
+            config.update(settings, ret, vscode.ConfigurationTarget.Workspace)
+                .then(() => { 
+                    resolve() ; 
+                }) ;
         }) ;
 
         return ret ;
@@ -424,13 +443,12 @@ export class MTBAppInfo
         let ret: string[] = [] ;
 
         for(let arg of args) {
-            if (arg.startsWith(option)) {
-                ret.push(option + cmds) ;
-            }
-            else {
+            if (!arg.startsWith(option)) {
                 ret.push(arg);
             }
         }
+
+        ret.push(option + cmds) ;
 
         return ret ;
     }

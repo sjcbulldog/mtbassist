@@ -38,29 +38,6 @@ export function getModusToolboxNotInstallHtml() : string {
     return html ;
 }
 
-export function getModusToolboxAssistantNewVersion() : string {
-    let html : string = 
-        `<!DOCTYPE html>
-        <head>
-        <meta charset="UTF-8">
-        <style>
-        </head>
-        <body>
-        <h1>Version ####EXTVERSION####</h1>
-        <h2>New Features</h2>
-        <h3>Intellisense</h3>
-        The ModusToolbox Assistant extension manages intellisense to give the best experience.  For applications
-        with multiple projects, a single project is the focus of Intellisense.  The project for Intellisense focus
-        can be changed by clicking the MTB status field at the bottom right of the screen.
-        ` ;
-
-        html = html.replace("####EXTVERSION####", MTBExtensionInfo.version.toString()) ;
-    
-        return html ;        
-
-    return html ;
-}
-
 export function getModusToolboxAssistantStartupHtml() : string {
     let html : string = 
         `<!DOCTYPE html>
@@ -141,19 +118,19 @@ export function getModusToolboxAssistantStartupHtml() : string {
             <div class="tabview">
                 <div class="tabbar">
                     <button class="tabbutton" id="tabbutton1" onclick="selectContent(event, '1')">Getting Started</button>
-                    <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '2')">ModusToolbox Assistant</button>
-                    <button class="tabbutton" id="tabbutton4" onclick="selectContent(event, '3')">ModusToolbox Documentation</button>
-                    <button class="tabbutton" id="tabbutton5" onclick="selectContent(event, '4')">Recent Applications</button>
+                    <button class="tabbutton" id="tabbutton2" onclick="selectContent(event, '2')">ModusToolbox Assistant</button>
+                    <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">ModusToolbox Documentation</button>
+                    <button class="tabbutton" id="tabbutton4" onclick="selectContent(event, '4')">Recent Applications</button>
                 </div>
-                <div style="font-size: 150%;" class="tabcont" id="content1">
-                    <h1>Getting Started</h1>
+                <div style="font-size: 100%;" class="tabcont" id="content1">
+                    <h3>Getting Started</h3>
                     <p>There are two ways to get a ModusToolbox application into Visual Studio Code.<p> 
                     <ul>
                     <li>You can <a onclick="vscode.postMessage({ command: 'createNew'}) ;" href="#">create</a> a new project.</li>
-                    <li>You can load a project located on your local disk.  It will automatically be prepared for vscode.</li>
+                    <li>You can load a project located on your local disk.</li>
                     </ul>
                     
-                    <p>Creating a new project, starts the project creator where you can create a new project by selecting a target
+                    <p>Creating a new project, starts the project creator where you can select a target
                     board and an example project supported by the target board.</p>
 
                     <p>Load a local project by using the File/Open Folder or File/Open Workspace From File... menu items.
@@ -166,9 +143,31 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     <a onclick="vscode.postMessage({ command: 'showModusToolbox'}) ;" href="#">ModusToolbox</a> icon in the Activity Bar, given by the robot icon.
                     This displays the ModusToolbox view in the Side Bar.  See this <a href="https://code.visualstudio.com/docs/getstarted/userinterface">page</a> for more details.</p>
                     <br><br><br>
-
-                <div style="font-size: 150%;" class="tabcont" id="content2">
-                    <h1>ModusToolbox Assistant</h1>
+                </div>
+                <div style="font-size: 100%;" class="tabcont" id="content2">
+                    <h3>ModusToolbox Assistant</h3>
+                    <h4>Welcome Page</h4>
+                    This is the page you are seeing now.  It provides information about the extension as well as enables recent
+                    projects to be loaded.
+                    <h4>ModusToolbox Side Bar</h4>
+                    The side bar shows information about the loaded applications, the tools that are valid for the current appilcation,
+                    the documentation that is valid for the current application, and the assets that are used in the current application.
+                    If any of these assets have newer versions, it is prefaced with the '*' character.  Clicking on an asset will bring
+                    up the library manager.
+                    <h4>Loading ModusToolbox Applications</h4>
+                    When a directory or workspace is opened in Visual Studio Code, the ModusToolbox assistant does a quick check to determine
+                    if the directory or workspace is a valid ModusToolbox application.  If it is, then the ModusToolbox assistant does the following:
+                    <ul>
+                    <li> checks for the presence of the necessary assets to build and query the application.  If these assets are missing, 'make getlibs' is run
+                    to retreive them.</li>
+                    <li> checks for the presence of a .vscode directory.  If it is missing, runs 'make vscode' to create the directory.</li>
+                    <li> checks to see if there is more than one project in the application.  If there is, prompts the user to select the valid 
+                    Intellisense project</li>
+                    </ul>
+                    <h4>Intellisense</h4>
+                    The <i>clangd</i> extension is a dependency of this extension as the <i>clangd</i> works much better in the ModusToolbox application
+                    structure.
+                    <h4>ModusToolbox Documentation</h4>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content3">
                     <h1>ModusToolbox Documentation<h1>
@@ -179,25 +178,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     <h1>Recent Applications</h1>
                     ####RECENTS####
                 </div>
-                </div>
-                <div style="font-size: 150%;" class="tabcont" id="content5">
-                    <h1>ModusToolbox Concepts</h1>
-                    <h2>Applications & Projects</h2>
-                    An <i>application</i> is the top level directory that is managed by ModusToolbox.
-                    An <i>application</i> can contain one or more <i>projects</i>.  If an application contains exactly
-                    one <i>project</i> then the project directory and the application can be the same directory.  This type of 
-                    application is called a <i>combined</i> application.  If an application contains more than a single
-                    <i>project</i>, then there must be a directory per project.  For instance, in a PSoC 6 multi-core application,
-                    there will be a directory named <b>proj_cm0p</b> for the project that runs on the Cortex-M0P core.  There will
-                    also be a directory named <b>proj_cm4</b> for the project that runs on the Cortex-M4 core.
-                    <h2>Assets</h2>
-                    <h3>Types</h3>
-                    Code Examples, Board Support Packages (BSPs), Middleware
-                    <h3>Manifests</h3>
-                    <h3>Library Manager</h3>
-                    <h3>Latest Locking</h3>
-                    <h3>make getlibs</h3>
-                </div>                
+                </div>         
             </div>
             <hr>
             ####CHECKBOX####
