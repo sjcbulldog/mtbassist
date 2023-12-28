@@ -26,7 +26,7 @@ import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
 import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
 import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbRunEditor, 
-		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject } from './mtbcommands';
+		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbCreateNinjaBuildFile } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
 import { readRecentList } from './mtbrecent';
@@ -143,6 +143,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     disposable = vscode.commands.registerCommand('mtbassist.mtbSetIntellisenseProject', (args: any[]) => {
         mtbSetIntellisenseProject(context) ;
+    });
+
+    disposable = vscode.commands.registerCommand('mtbassist.createNinjaBuildFile', (args: any[]) => {
+        mtbCreateNinjaBuildFile(context) ;
     });
 
 	//

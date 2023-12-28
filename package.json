@@ -72,6 +72,10 @@
       {
         "command" : "mtbassist.mtbSetIntellisenseProject",
         "title" : "ModusToolbox: Set Intellisense Project"
+      },
+      {
+        "command" : "mtbassist.createNinjaBuildFile",
+        "title" : "ModusToolbox: Create Ninja Build File"
       }
     ],
     "keybindings": [

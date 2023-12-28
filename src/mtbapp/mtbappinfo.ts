@@ -28,7 +28,6 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path' ;
-
 import * as fs from 'fs' ;
 
 import { getMTBDocumentationTreeProvider } from '../mtbdocprovider';
@@ -121,6 +120,13 @@ export class MTBAppInfo
         MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading) ;
     }
 
+    public createNinjaBuildFiles() {
+        for(let proj of this.projects) {
+            proj.createNinjaBuildFile() ;
+        }
+        vscode.window.showInformationMessage("Ninja build files created") ;
+    }
+
     private fixDataElements(prefix: string, dirname: string, files: any[]) : boolean {
         let fixed: boolean = false ;
 
@@ -169,7 +175,7 @@ export class MTBAppInfo
             let prefix: string | undefined = proj.getVar(ModusToolboxEnvVarNames.MTB_WKS_SHARED_DIR) ;
             let dirname: string | undefined = proj.getVar(ModusToolboxEnvVarNames.MTB_WKS_SHARED_NAME) ;
             if (prefix && dirname) {
-                let cmds : string = path.join(proj.getProjectDir(), "build", "compile_commands.json") ;
+                let cmds: string = proj.getBuildCommandsFileName() ;
                 if (fs.existsSync(cmds)) {
                     if (this.checkOneCompileCommandsFile(prefix, dirname, cmds)) {
                         fixed = true ;

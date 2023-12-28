@@ -16,6 +16,7 @@
 
 import * as path from 'path' ;
 import * as os from 'os' ;
+import * as fs from 'fs' ;
 
 import { ModusToolboxEnvVarNames } from "./mtbnames";
 import { AppType, MTBAppInfo } from "./mtbappinfo";
@@ -58,6 +59,30 @@ export class MTBProjectInfo
         this.name = name ;
         this.assets = [] ;
         this.buildSupport = false ;
+    }
+
+    private createNinjaFileFromBuildObjects(obj: any[]) : string | undefined {
+        let ret : string = "HELLO WORLD" ;
+        return ret;
+    }
+
+    public createNinjaBuildFile() {
+        let filename: string = path.join(this.getProjectDir(), "build", "build.ninja");
+        let cmds: string = this.getBuildCommandsFileName() ;
+        let result = fs.readFileSync(cmds).toString() ;
+        if (result) {
+            let obj = JSON.parse(result.toString()) ;
+            if (obj) {
+                let ninja: string | undefined = this.createNinjaFileFromBuildObjects(obj as any[]) ;
+                if (ninja) {
+                    fs.writeFileSync(filename, ninja) ;
+                }
+            }
+        }
+    }
+
+    public getBuildCommandsFileName() : string {
+        return path.join(this.getProjectDir(), "build", "compile_commands.json") ;
     }
 
     public getComponents() : string[] {

@@ -464,6 +464,16 @@ export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorE
     }
 }
 
+export function mtbCreateNinjaBuildFile(context: vscode.ExtensionContext) {
+    let app: MTBAppInfo | undefined = getModusToolboxApp() ;
+    if (app === undefined) {
+        vscode.window.showInformationMessage("No ModusToolbox Application Loaded") ;
+        return ;
+    }
+
+    app.createNinjaBuildFiles() ;
+}
+
 export function mtbSetIntellisenseProject(context: vscode.ExtensionContext) {
     const prefix: string = "Intellisense: " ;
     let app: MTBAppInfo | undefined = getModusToolboxApp() ;
