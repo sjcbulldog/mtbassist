@@ -120,13 +120,6 @@ export class MTBAppInfo
         MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading) ;
     }
 
-    public createNinjaBuildFiles() {
-        for(let proj of this.projects) {
-            proj.createNinjaBuildFile() ;
-        }
-        vscode.window.showInformationMessage("Ninja build files created") ;
-    }
-
     private fixDataElements(prefix: string, dirname: string, files: any[]) : boolean {
         let fixed: boolean = false ;
 

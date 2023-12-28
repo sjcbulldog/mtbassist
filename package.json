@@ -22,8 +22,6 @@
     "ARM cortex"
   ],
   "activationEvents": [
-    "onCommand:mtbassist.mtbImportDiskProject",
-    "onCommand:mtbassist.mtbImportDiskProjectDirect",
     "workspaceContains:Makefile",
     "onStartupFinished"
   ],
@@ -72,10 +70,6 @@
       {
         "command" : "mtbassist.mtbSetIntellisenseProject",
         "title" : "ModusToolbox: Set Intellisense Project"
-      },
-      {
-        "command" : "mtbassist.createNinjaBuildFile",
-        "title" : "ModusToolbox: Create Ninja Build File"
       }
     ],
     "keybindings": [
