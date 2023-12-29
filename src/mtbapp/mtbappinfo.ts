@@ -237,12 +237,14 @@ export class MTBAppInfo
     // current workspace in memory and not via any on disk settings file.  This way we don't change
     // the user's development environment
     //
-    private async trySetupIntellisense() {
+    public async trySetupIntellisense() {
         //
         // Make sure the query driver is set to match the gcc in the tools directory
         // for this project.
         //
-        await this.checkBasicClangdConfig() ;
+        if (MTBExtensionInfo.getMtbExtensionInfo().hasClangD) {
+            await this.checkBasicClangdConfig() ;
+        }
 
         let toolsdir: string = MTBExtensionInfo.getMtbExtensionInfo().toolsDir ;
         if (toolsdir.endsWith('tools_3.0') || toolsdir.endsWith('tools_3.1')) {
@@ -256,26 +258,28 @@ export class MTBAppInfo
             }
         }
 
-        if (this.projects.length > 1) {
-            //
-            // More than one project, ask the user to choose the intellisense project.
-            //
-            vscode.window.showInformationMessage("This ModusToolbox project has more than one project.  " + 
-                    "Only one project at a time can be active for intellisense.  " + 
-                    "This can be changed at any time by clicking the MTB status item in the right of the status bar. " +
-                    "Do you want to select the active Intellisense project?",
-                    "Yes", "No")
-            .then((answer) => {
-                if (answer === "Yes") {
-                    vscode.commands.executeCommand('mtbassist.mtbSetIntellisenseProject');
-                }
-            });
-        }
-        else if (this.projects.length === 1) {
-            //
-            // Just one project, set it to be the intellisense project
-            //
-            this.setIntellisenseProject(this.projects[0].name) ;
+        if (MTBExtensionInfo.getMtbExtensionInfo().hasClangD) {
+            if (this.projects.length > 1) {
+                //
+                // More than one project, ask the user to choose the intellisense project.
+                //
+                vscode.window.showInformationMessage("This ModusToolbox project has more than one project.  " + 
+                        "Only one project at a time can be active for intellisense.  " + 
+                        "This can be changed at any time by clicking the MTB status item in the right of the status bar. " +
+                        "Do you want to select the active Intellisense project?",
+                        "Yes", "No")
+                .then((answer) => {
+                    if (answer === "Yes") {
+                        vscode.commands.executeCommand('mtbassist.mtbSetIntellisenseProject');
+                    }
+                });
+            }
+            else if (this.projects.length === 1) {
+                //
+                // Just one project, set it to be the intellisense project
+                //
+                this.setIntellisenseProject(this.projects[0].name) ;
+            }
         }
     }
 
@@ -395,7 +399,15 @@ export class MTBAppInfo
             //
             // Find the compile commands file
             //
-            let compilecmds = "${workspaceFolder}/" + proj.name + "/build" ;
+            let compilecmds: string ;
+
+            if (this.appType === AppType.multicore) {
+                compilecmds = "${workspaceFolder}/" + proj.name + "/build" ;
+            }
+            else {
+                compilecmds = "${workspaceFolder}/build" ;
+            }
+
             let config = await vscode.workspace.getConfiguration() ;
             let clangargs : string[] = config.get(settings) as string[] ;
             clangargs = this.updateCompileCommands(clangargs, compilecmds) ;

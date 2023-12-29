@@ -73,6 +73,7 @@ export class MTBExtensionInfo
     public minor: number ;
     public channel: vscode.OutputChannel ;
     public manifestDb: MtbManifestDb ;
+    public hasClangD: boolean ;
     
     context: vscode.ExtensionContext;
 
@@ -89,6 +90,20 @@ export class MTBExtensionInfo
         this.logMessage(MessageType.info, "ModusToolbox tools directory:" + this.toolsDir) ;
         this.logMessage(MessageType.info, "ModusToolbox docs directory: " + this.docsDir) ;
 
+        let clangd = vscode.extensions.getExtension("llvm-vs-code-extensions.vscode-clangd") ;
+        if (clangd === undefined) {
+            this.hasClangD = false ;
+            this.logMessage(MessageType.info, "CLANGD extension not installed.") ;
+            vscode.window.showInformationMessage("The ModusToolbox Assistant will manage intellisense to provide an optimal experience, " + 
+                "but this only works with the 'clangd' extension.  It is highly recommended the that 'clangd' extension also be installed.") ;
+        } else {
+            this.hasClangD = true ;
+        }
+
+        vscode.extensions.onDidChange((ev) => {
+            this.extensionListChanged(ev) ;
+        });
+
         this.major = -1 ;
         this.minor = -1 ;
         this.checkModusToolboxVersion() ;
@@ -100,7 +115,25 @@ export class MTBExtensionInfo
         this.intellisenseProject = undefined ;
         this.status = StatusType.NotValid ;
         this.docstat = DocStatusType.none  ;
+
         this.statusBarItem.command = 'mtbassist.mtbSetIntellisenseProject';
+    }
+
+    private extensionListChanged(ev: any) {
+        let clangd = vscode.extensions.getExtension("llvm-vs-code-extensions.vscode-clangd") ;
+
+        if (this.hasClangD && clangd === undefined) {
+            // Clang was uninstalled
+            this.hasClangD = false ;
+            vscode.window.showInformationMessage("The 'clangd' extension was uninstalled or disabled.  Intellisense will no longer be managed by the ModusToolbox Assistant extension.");
+        }
+        else {
+            // Clang was installed
+            this.hasClangD = true ;
+
+            vscode.window.showInformationMessage("The 'clangd' extension was uninstalled or disabled.  Intellisense will no longer be managed by the ModusToolbox Assistant extension.");
+            
+        }
     }
 
     public getIntellisenseProject() : string | undefined {
@@ -168,7 +201,9 @@ export class MTBExtensionInfo
             tip += "\nIntellisense: " + this.intellisenseProject ;
         }
         else {
-            st += " (Click To Set)" ;
+            if (this.status === StatusType.Ready) {
+                st += " (Click To Set)" ;
+            }
             tip += "\nIntellisense: " + "Click Here To Set Project" ;
         }
 

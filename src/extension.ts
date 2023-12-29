@@ -48,7 +48,7 @@ function getTerminalWorkingDirectory() : string {
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 	let disposable;
 
 	//
@@ -59,6 +59,18 @@ export function activate(context: vscode.ExtensionContext) {
 	// mtbextinfo.ts file.
 	//
 	MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "Starting ModusToolbox assistant");
+
+	try {
+		//
+		// This eliminates issues with the life cycle of the clangd extension.
+		//
+		MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "Activating 'clangd' extension");
+		await vscode.commands.executeCommand('clangd.activate');
+	}
+	catch(err) {
+		let errobj: Error = (err as any) as Error ;
+		MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.warning, "Cannot activate extension 'clangd' - " + errobj.message);
+	}
 
 	if (MTBExtensionInfo.getMtbExtensionInfo(context).major < 3) {
 		// Put the message in the log window

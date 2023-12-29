@@ -1,15 +1,25 @@
 # Change Log
 
 ### 1.0.32
+
+If you are using clangd (recommended) for Intellisense, the extension can configure clangd
+to provide the best possible Intellisense experience.
+
 Added the ability to switch between projects for intellisense when in a multiproject
-application.  
+application.  Right clicking on the status indicator (MTB) in the bottom right will
+bring up a selection of projects that exist in the current application.
 
 ModusToolbox Documentation command on the right click (context) menu can now find the 
 documentation for the specific item under the cursor.
 
 If a ModusToolbox application is loaded and assets are missing, the user is prompted 
 to run 'make getlibs' to download any missing assets.  This can happen if an application
-is shared via git and another developer has added assets via the library manager.
+is shared via git and another developer has added assets via the library manager. This
+will happen if you are working with others on an application and someone else adds an asset
+to the project and you pull the changes.  The requirement for the asset will be present
+via a .mtb file, but the actual asset will be missing.
+
+Added a brief overview of the features of this extension in the extension welcome page.
 
 ### 1.0.31
 Updated to filter out documetation that is hidden below a component that is not

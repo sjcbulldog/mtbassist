@@ -21,6 +21,7 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path' ;
+import * as fs from 'fs' ;
 import * as exec from 'child_process' ;
 import * as os from 'os' ;
 
@@ -81,10 +82,7 @@ export function mtbShowDoc(context: vscode.ExtensionContext, args?: any) {
 
     if (typestr === "object") {
         let docobj: MTBLaunchDoc = args as MTBLaunchDoc ;
-
-        vscode.window.showInformationMessage("Showing document '" + docobj.title + "'") ;
-        let fileuri: vscode.Uri = vscode.Uri.file(docobj.location) ;
-        browseropen(decodeURIComponent(fileuri.toString())) ;
+        browseropen(docobj.location) ;
     }    
 }
 
@@ -256,8 +254,16 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         }
         else if (message.command === "showUserGuide") {
             let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mtb_user_guide.pdf") ;
-            let fileuri = vscode.Uri.file(docpath) ;
-            browseropen(decodeURIComponent(fileuri.toString())) ;
+            browseropen(docpath) ;
+        }
+        else if (message.command === "showVSCodeGuide") {
+            let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mt_vscode_user_guide.pdf") ;
+            if (fs.existsSync(docpath)) {
+                browseropen(docpath) ;
+            }
+            else {
+                vscode.window.showErrorMessage("The 'Visual Studio Code For ModusToolbox users guide' does not exist in the current verison of ModusToolbox.");
+            }
         }
         else if (message.command === "showWelcomePage") {
             MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.showWelcomePageName, true) ;
@@ -267,8 +273,7 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         }
         else if (message.command === "showReleaseNotes") {
             let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mt_release_notes.pdf") ;
-            let fileuri = vscode.Uri.file(docpath) ;
-            browseropen(decodeURIComponent(fileuri.toString())) ;
+            browseropen(decodeURIComponent(docpath)) ;
         }
         else if (message.command === "openRecent") {
             let appdir: string = message.projdir ;
@@ -469,6 +474,9 @@ export function mtbSetIntellisenseProject(context: vscode.ExtensionContext) {
     let app: MTBAppInfo | undefined = getModusToolboxApp() ;
     if (app === undefined) {
         vscode.window.showInformationMessage("No ModusToolbox Application Loaded") ;
+    }
+    else if (!MTBExtensionInfo.getMtbExtensionInfo().hasClangD) {
+        vscode.window.showInformationMessage("The 'clangd' extension is not installed. The ModusToolbox Assistant cannot manage intellisense.");
     }
     else {
         let projnames : string[] = [] ;

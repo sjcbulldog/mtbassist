@@ -109,7 +109,7 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
                 else if (projinfo.app.appType === AppType.combined) {
                     value = "MTB 3.X Single Core Project" ;
                 }
-                let item: MTBProjectItem = new MTBProjectItem("PROJECT TYPE", value) ;
+                let item: MTBProjectItem = new MTBProjectItem("TYPE", value) ;
                 this.items_.push(item) ;
             }
 
@@ -136,13 +136,13 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
 
             value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_DEVICE) ;
             if (value) {
-                let item: MTBProjectItem = new MTBProjectItem("DEVICE", value) ;
+                let item: MTBProjectItem = new MTBProjectItem("MCU DEVICE", value) ;
                 parent.addChild(item) ;
             }
 
             value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_ADDITIONAL_DEVICES) ;
             if (value && value.length > 0) {
-                let item: MTBProjectItem = new MTBProjectItem("ADDITIONAL", value) ;
+                let item: MTBProjectItem = new MTBProjectItem("OTHER DEVICES", value) ;
                 parent.addChild(item) ;
             }
 

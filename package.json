@@ -2,10 +2,11 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.0.32",
+  "version": "1.0.33",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
+  "preview": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/sjcbulldog/mtbassist.git"
@@ -26,9 +27,7 @@
     "onStartupFinished"
   ],
   "main": "./dist/extension.js",
-  "extensionDependencies" : [
-    "llvm-vs-code-extensions.vscode-clangd"
-  ],
+
   "contributes": {
     "commands": [
       {
@@ -91,25 +90,25 @@
       "mtbcontainer": [
         {
           "id": "mtbprojinfo",
-          "name": "Project Info",
+          "name": "Application Info",
           "icon": "media/bot.png",
-          "contextualTitle": "Project Info"
+          "contextualTitle": "Application Info"
         },
         {
           "id": "mtbglobal",
-          "name": "Tools",
+          "name": "ModusToolbox Tools",
           "icon": "media/bot.png",
           "contextualTitle": "Global Programs"
         },
         {
           "id": "mtbdocs",
-          "name": "Documentation",
+          "name": "ModusToolbox Documentation",
           "icon": "media/bot.png",
           "contextualTitle": "Global Docs"
         },
         {
           "id": "mtbassets",
-          "name": "Assets",
+          "name": "ModusToolbox Assets",
           "icon": "media/bot.png",
           "contextualTitle": "ModusToolbox Assets"
         }

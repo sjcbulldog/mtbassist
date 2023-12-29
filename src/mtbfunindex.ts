@@ -121,8 +121,42 @@ export class MtbFunIndex
         }) ;
         return ret ;
     }
+    
+    //
+    // Find all
+    //
+    private findFilesByName(name: string, path: string) {
+        let ret: string[] = [] ;
+        this.findFilesByNameInt(name, path, ret) ;
+        return ret;
+    }
 
-    private findFilesByExtInt(p: string, ext: string, result: string[]) {
+    private findFilesByNameInt(name: string, p: string, dirs: string[]) {
+        let entries: string[] ;
+
+        try {
+            entries = fs.readdirSync(p) ;
+        }
+        catch(err) {
+            return ;
+        }        
+
+        for(let entry of entries) {
+            let fullentry = path.join(p, entry) ;
+            let st = fs.statSync(fullentry) ;
+            if (st.isFile()) {
+                if (entry === name) {
+                    dirs.push(p) ;
+                }
+            }
+            else if (st.isDirectory()) {
+                let fullpath: string = path.join(p, entry) ;
+                this.findFilesByNameInt(name, fullpath, dirs) ;
+            }
+        }
+    }
+
+    private findFilesByExt(p: string, ext: string, result: string[]) {
         let entries: string[] ;
         
         try {
@@ -142,15 +176,9 @@ export class MtbFunIndex
                 }
             }
             else if (st.isDirectory()) {
-                this.findFilesByExtInt(fullentry, ext, result) ;
+                this.findFilesByExt(fullentry, ext, result) ;
             }
         }
-    }
-
-    private findFilesByExt(path: string, ext: string) : string[] {
-        let ret: string[] = [] ;
-        this.findFilesByExtInt(path, ext, ret) ;
-        return ret ;
     }
 
     private skipSpaces(toparse: string, index: number) : number {
@@ -300,15 +328,23 @@ export class MtbFunIndex
         return count ;
     }
 
+
     private async initAsset(pdir: string, asset: MTBAssetInstance) : Promise<number> {
         let ret: Promise<number> = new Promise<number>((resolve, reject) => {
             MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "    looking in asset '" + asset.id! + "' for symbols") ;
             let count = 0 ;
             if (asset.location) {
-                let p = path.join(pdir, asset.location!, "docs", "html") ;
-                let files: string[] = this.findFilesByExt(p, "js") ;
+                let full: string = path.join(pdir, asset.location) ;
+                let dirs: string[] = this.findFilesByName('api_reference_manual.html', full) ;
+                let files: string[] = [] ;
+
+                for(let dir of dirs) {
+                    this.findFilesByExt(dir, "js", files) ;
+                }
+
                 for(let file of files) {
                     count += this.processJSFile(file) ;
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "        parsing file '" + file + "' for symbols") ;
                 }
             }
 
