@@ -19,6 +19,7 @@ import exec = require("child_process") ;
 import path = require("path") ;
 import fs = require('fs');
 import { MtbManifestDb } from './manifest/mtbmanifestdb';
+import { MTBDevKitMgr } from './mtbdevicekits';
 
 export enum MessageType
 {
@@ -66,6 +67,8 @@ export class MTBExtensionInfo
     private status: StatusType ;
     private docstat: DocStatusType ;
     private intellisenseProject: string | undefined ;
+
+    private devKitMgr: MTBDevKitMgr | undefined = undefined ;
 
     public toolsDir: string ;
     public docsDir: string ;
@@ -117,6 +120,26 @@ export class MTBExtensionInfo
         this.docstat = DocStatusType.none  ;
 
         this.statusBarItem.command = 'mtbassist.mtbSetIntellisenseProject';
+    }
+
+    private async loadDevKits() : Promise<MTBDevKitMgr> {
+        let ret: Promise<MTBDevKitMgr> = new Promise<MTBDevKitMgr>((resolve, reject) => {
+            let mgr: MTBDevKitMgr = new MTBDevKitMgr() ;
+            mgr.init()
+                .then((status) => {
+                    if (status) {
+                        resolve(mgr) ;
+                    }
+                    else {
+                        reject(new Error("could not create dev kit manager")) ;
+                    }
+                })
+                .catch((err) => {
+                    reject(err) ;
+                });
+        }) ;
+
+        return ret;
     }
 
     private extensionListChanged(ev: any) {
@@ -212,6 +235,18 @@ export class MTBExtensionInfo
         this.statusBarItem.show() ;
     }
 
+    private initDevKitMgr() {               
+        this.loadDevKits()
+        .then((mgr) => {
+            this.logMessage(MessageType.debug, "sucessfully created devkit manager") ;
+            this.devKitMgr = mgr ;
+        })
+        .catch((err) => {
+            let errobj: Error = err as Error ;
+            this.logMessage(MessageType.debug, "could not create devkit manager - " + errobj.message) ;
+        }) ;        
+    }
+
     public static getMtbExtensionInfo(context?: vscode.ExtensionContext) : MTBExtensionInfo {
         if (this.mtbAssistExtensionInfo === undefined) {
             if (context === undefined) {
@@ -219,6 +254,7 @@ export class MTBExtensionInfo
             }
             else {
                 this.mtbAssistExtensionInfo = new MTBExtensionInfo(context) ;
+                this.mtbAssistExtensionInfo.initDevKitMgr() ;
             }
         }
 

@@ -230,7 +230,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			}) ;			
 		})
 		.catch((err) => {
-
 		}) ;
 
 	// Show the user the ModusToolbox assistant welcom page
