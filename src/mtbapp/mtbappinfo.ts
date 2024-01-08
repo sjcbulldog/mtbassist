@@ -42,6 +42,8 @@ import { addToRecentProjects } from '../mtbrecent';
 import { mtbRunMakeGetLibs } from '../mtbcommands';
 import { MtbFunIndex } from '../mtbfunindex';
 
+
+
 interface LaunchDoc
 {
     location: string,
@@ -118,6 +120,19 @@ export class MTBAppInfo
 
         MTBExtensionInfo.getMtbExtensionInfo().manifestDb.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
         MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading) ;
+
+        vscode.tasks.onDidEndTask((e: vscode.TaskEndEvent) => {
+            let t = e.execution.task.name ;
+            if (t === 'Build') {
+                this.buildTaskEnded() ;
+            }
+        }) ;
+    }
+
+    private buildTaskEnded() {
+        if (this.checkCompileCommandsFiles()) {
+            vscode.window.showInformationMessage("Fixed intellisense database from ModusToolbox 3.0 or 3.1");            
+        }
     }
 
     private fixDataElements(prefix: string, dirname: string, files: any[]) : boolean {
