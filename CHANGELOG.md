@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.0.34
+Fixed the intellisense data file (compile_commands.json) that is malformed out of ModusToolbox
+3.1 after each build so that intellisense continues to work.
+
+### 1.0.33
+
 ### 1.0.32
 
 If you are using clangd (recommended) for Intellisense, the extension can configure clangd
