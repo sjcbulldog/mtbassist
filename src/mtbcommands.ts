@@ -32,6 +32,7 @@ import { mtbAssistLoadApp, getModusToolboxApp, MTBAppInfo } from './mtbapp/mtbap
 import { checkRecent, removeRecent } from './mtbrecent';
 import { MTBAssetInstance } from './mtbapp/mtbassets';
 import { browseropen } from './browseropen';
+import { MTBDevKitMgr } from './mtbdevicekits';
 
 function outputLines(context: vscode.ExtensionContext, data: string) {
     let str: string = data.toString().replace(/\r\n/g, "\n") ;
@@ -233,6 +234,11 @@ function getPanel() : vscode.WebviewPanel {
 export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
     panel = getPanel() ;
 
+    let kitmgr: MTBDevKitMgr | undefined = MTBExtensionInfo.getMtbExtensionInfo().getKitMgr() ;
+    if (kitmgr) {
+        kitmgr.addKitsChangedCallback(refreshStartPage);
+    }
+
     panel.onDidDispose(()=> {
         panel = undefined ;
     }) ;
@@ -274,6 +280,9 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         else if (message.command === "showReleaseNotes") {
             let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mt_release_notes.pdf") ;
             browseropen(decodeURIComponent(docpath)) ;
+        }
+        else if (message.command === "updatefirmware") {
+            MTBExtensionInfo.getMtbExtensionInfo().getKitMgr().updateFirmware(message.serial) ;
         }
         else if (message.command === "openRecent") {
             let appdir: string = message.projdir ;

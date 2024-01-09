@@ -122,13 +122,19 @@ export class MTBExtensionInfo
         this.statusBarItem.command = 'mtbassist.mtbSetIntellisenseProject';
     }
 
-    private async loadDevKits() : Promise<MTBDevKitMgr> {
-        let ret: Promise<MTBDevKitMgr> = new Promise<MTBDevKitMgr>((resolve, reject) => {
-            let mgr: MTBDevKitMgr = new MTBDevKitMgr() ;
+    public getKitMgr() : MTBDevKitMgr {
+        return this.devKitMgr! ;
+    }
+
+    private async loadDevKits(mgr: MTBDevKitMgr) : Promise<void> {
+        let ret: Promise<void> = new Promise<void>((resolve, reject) => {
             mgr.init()
                 .then((status) => {
                     if (status) {
-                        resolve(mgr) ;
+                        if (mgr.needsUpgrade()) {
+                            vscode.window.showInformationMessage("There are connected kits that need firmware upgraded.  Go to the MTB Assistant welcome page for more information.") ;
+                        }
+                        resolve() ;
                     }
                     else {
                         reject(new Error("could not create dev kit manager")) ;
@@ -235,11 +241,12 @@ export class MTBExtensionInfo
         this.statusBarItem.show() ;
     }
 
-    private initDevKitMgr() {               
-        this.loadDevKits()
+    private initDevKitMgr() {      
+        let mgr: MTBDevKitMgr = new MTBDevKitMgr() ;
+        this.devKitMgr = mgr ;         
+        this.loadDevKits(mgr)
         .then((mgr) => {
             this.logMessage(MessageType.debug, "sucessfully created devkit manager") ;
-            this.devKitMgr = mgr ;
         })
         .catch((err) => {
             let errobj: Error = err as Error ;

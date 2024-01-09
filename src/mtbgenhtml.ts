@@ -14,6 +14,7 @@
 // limitations under the License.
 //
 
+import { MTBDevKitMgr } from "./mtbdevicekits";
 import { MTBExtensionInfo } from "./mtbextinfo";
 import { getRecentList } from "./mtbrecent";
 
@@ -38,12 +39,54 @@ export function getModusToolboxNotInstallHtml() : string {
     return html ;
 }
 
+function getKitString() : string {
+    let ret: string = "<h2>Detecting ...</h2>" ;
+
+    let mgr: MTBDevKitMgr | undefined = MTBExtensionInfo.getMtbExtensionInfo().getKitMgr() ;
+    if (mgr) {
+        ret = "" ;
+        ret += "<table>" ;
+        ret += "<tr>" ;
+        ret += "<th>Name</th>" ;
+        ret += "<th>Version</th>" ;
+        ret += "<th>Mode</th>" ;
+        ret += "<th>Serial</th>" ;
+        ret += "<th>Status</th>" ;
+        ret += "</tr>" ;
+        for(let kit of mgr.kits) {
+            ret += "<tr>" ;
+            if (kit.name) {
+                ret += "<td>" + kit.name + "</td>" ;
+            }
+            else {
+                ret += "<td>Unknown</td>" ;
+            }
+            ret += "<td>" + kit.version + "</td>" ;
+            ret += "<td>" + kit.mode + "</td>" ;
+            ret += "<td>" + kit.serial + "</td>" ;
+            if (kit.outdated) {
+                ret += '<td><a onclick="vscode.postMessage({ command: \'updatefirmware\', serial: \'' + kit.serial + '\'}) ;" href="#">Needs Update</td>' ;
+            }
+            else {
+                ret += "<td>OK</td>" ;
+            }
+            ret += "</tr>" ;
+        }
+        ret += "</table>" ;
+    }
+    return ret ;
+}
+
 export function getModusToolboxAssistantStartupHtml() : string {
     let html : string = 
         `<!DOCTYPE html>
             <head>
             <meta charset="UTF-8">
             <style>
+                th, td {
+                    padding: 15px;
+                }
+
                 div.tabbar
                 {
                     overflow: hidden;
@@ -120,7 +163,8 @@ export function getModusToolboxAssistantStartupHtml() : string {
                     <button class="tabbutton" id="tabbutton1" onclick="selectContent(event, '1')">Getting Started</button>
                     <button class="tabbutton" id="tabbutton2" onclick="selectContent(event, '2')">ModusToolbox Assistant</button>
                     <button class="tabbutton" id="tabbutton3" onclick="selectContent(event, '3')">ModusToolbox Documentation</button>
-                    <button class="tabbutton" id="tabbutton4" onclick="selectContent(event, '4')">Recent Applications</button>
+                    <button class="tabbutton" id="tabbutton4" onclick="selectContent(event, '4')">Connected Dev Kits</button>
+                    <button class="tabbutton" id="tabbutton5" onclick="selectContent(event, '5')">Recent Applications</button>
                 </div>
                 <div style="font-size: 100%;" class="tabcont" id="content1">
                     <h3>Getting Started</h3>
@@ -216,6 +260,10 @@ export function getModusToolboxAssistantStartupHtml() : string {
                    <br>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content4">
+                    <h1>Connected Development Kits</h1>
+                    ####DEVKITS####
+                </div>
+                <div style="font-size: 150%;" class="tabcont" id="content5">
                     <h1>Recent Applications</h1>
                     ####RECENTS####
                 </div>
@@ -261,6 +309,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
     html = html.replace("####TITLE####", titlestr) ;
     html = html.replace("####RECENTS####", recentstr) ;
     html = html.replace("####CHECKBOX####", checkstr) ;
+    html = html.replace("####DEVKITS####", getKitString()) ;
 
     return html ;
 }
