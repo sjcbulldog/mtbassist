@@ -45,7 +45,8 @@ function getKitString() : string {
     let mgr: MTBDevKitMgr | undefined = MTBExtensionInfo.getMtbExtensionInfo().getKitMgr() ;
     if (mgr) {
         ret = "" ;
-        ret += "<table>" ;
+        ret += '<table class="device-table">';
+        ret += "<thead>";
         ret += "<tr>" ;
         ret += "<th>Name</th>" ;
         ret += "<th>Version</th>" ;
@@ -53,6 +54,7 @@ function getKitString() : string {
         ret += "<th>Serial</th>" ;
         ret += "<th>Status</th>" ;
         ret += "</tr>" ;
+        ret += "</thread>" ;
         for(let kit of mgr.kits) {
             ret += "<tr>" ;
             if (kit.name) {
@@ -65,7 +67,7 @@ function getKitString() : string {
             ret += "<td>" + kit.mode + "</td>" ;
             ret += "<td>" + kit.serial + "</td>" ;
             if (kit.outdated) {
-                ret += '<td><a onclick="vscode.postMessage({ command: \'updatefirmware\', serial: \'' + kit.serial + '\'}) ;" href="#">Needs Update</td>' ;
+                ret += '<td><a title="Update Firmware" class="dev-link" onclick="vscode.postMessage({ command: \'updatefirmware\', serial: \'' + kit.serial + '\'}) ;">Needs Update</td>' ;
             }
             else {
                 ret += "<td>OK</td>" ;
@@ -83,9 +85,46 @@ export function getModusToolboxAssistantStartupHtml(page: string) : string {
             <head>
             <meta charset="UTF-8">
             <style>
-                th, td {
-                    padding: 15px;
+                .dev-link a:link {
+                    color: #34eb55
                 }
+                .dev-link a:visited {
+                    color: #34eb55
+                }
+                .device-table {
+                    border-collapse: collapse ;
+                    margin: 25px 0;
+                    font-size: 0.9em;
+                    font-family: sans-serif;
+                    min-width: 400px;
+                    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                }
+                .device-table thead tr {
+                    background-color: #009879;
+                    color: #ffffff;
+                    text-align: left;
+                }
+                .device-table th,
+                .device-table td {
+                    padding: 12px 15px;
+                }
+
+                .device-table tbody tr {
+                    border-bottom: 1px solid #dddddd;
+                }
+                
+                .device-table tbody tr:nth-of-type(even) {
+                    background-color: #f3f3f3;
+                }
+                
+                .device-table tbody tr:last-of-type {
+                    border-bottom: 2px solid #009879;
+                }     
+                
+                .device-table tbody tr.active-row {
+                    font-weight: bold;
+                    color: #009879;
+                }                
 
                 div.tabbar
                 {
@@ -260,7 +299,7 @@ export function getModusToolboxAssistantStartupHtml(page: string) : string {
                    <br>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content4">
-                    <h1>Connected Development Kits <a onclick="vscode.postMessage({ command: 'refreshKits'}) ;" href="#">(Refresh)</a></h1>
+                    <h1>Connected Development Kits <a onclick="vscode.postMessage({ command: 'refreshKits'}) ;">(Refresh)</a></h1>
                     ####DEVKITS####
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content5">
