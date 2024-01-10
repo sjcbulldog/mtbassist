@@ -20,6 +20,7 @@ import path = require("path") ;
 import fs = require('fs');
 import { MtbManifestDb } from './manifest/mtbmanifestdb';
 import { MTBDevKitMgr } from './mtbdevicekits';
+import { mtbShowWelcomePage } from './mtbcommands';
 
 export enum MessageType
 {
@@ -61,7 +62,7 @@ export class MTBExtensionInfo
 
     public static readonly debugModeName : string = "debugMode" ;
     public static readonly showWelcomePageName : string = "showWelcomePage" ;
-    public static readonly version = vscode.extensions.getExtension('c-and-t-software.mtbassist')?.packageJSON.version ;
+    public static version: string = "" ;
 
     private statusBarItem: vscode.StatusBarItem ;
     private status: StatusType ;
@@ -81,6 +82,9 @@ export class MTBExtensionInfo
     context: vscode.ExtensionContext;
 
     constructor(context: vscode.ExtensionContext) {
+        let ext = vscode.extensions.getExtension('c-and-t-software.mtbassist');
+        MTBExtensionInfo.version = ext!.packageJSON.version ;
+        
         this.toolsDir = this.findDefaultToolsDir() ;
         this.docsDir = this.toolsDir.replace("tools_", "docs_") ;
         this.channel = vscode.window.createOutputChannel("ModusToolbox") ;
@@ -132,7 +136,7 @@ export class MTBExtensionInfo
                 .then((status) => {
                     if (status) {
                         if (mgr.needsUpgrade()) {
-                            vscode.window.showInformationMessage("There are connected kits that need firmware upgraded.  Go to the MTB Assistant welcome page for more information.") ;
+                            mtbShowWelcomePage(this.context, '4');
                         }
                         resolve() ;
                     }

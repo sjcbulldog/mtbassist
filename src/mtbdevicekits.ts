@@ -120,6 +120,27 @@ export class MTBDevKitMgr {
         }
     }
 
+    public updateAllFirmware() {
+        let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
+        if (process.platform === "win32") {
+            fwload += ".exe" ;
+        }
+
+        let args: string[] = [] ;
+        args.push('--update-kp3');
+        args.push('all') ;
+        vscode.window.showInformationMessage('Updating kitprog device - please wait', 'OK');
+        this.runCmdLogOutput(os.homedir(), fwload, args)
+        .then((result) => {
+            this.scanForDevKits()
+            .then((st: boolean) => {
+                vscode.window.showInformationMessage("All KitProg3 devices have been updated");
+            }) ;
+        })
+        .catch((err) => { 
+        }) ;
+    }
+
     public scanForDevKits() : Promise<boolean> {
         let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
             if (this.scanning) {
@@ -136,16 +157,18 @@ export class MTBDevKitMgr {
 
                 this.runCmdCaptureOutput(os.homedir(), fwload, args)
                     .then((result) => {
-                        let res: [number, string[]] = result as [number, string[]] ;
-                        if (res[0] !== 0) {
-                            this.scanning = false ;
-                            reject(new Error("fw-loader returned exit code " + res[0]));
-                        }
-                        else {
-                            this.extractKits(res[1]);
-                            this.scanning = false ;
-                            resolve(true) ;
-                        }
+                            (async() => { 
+                            let res: [number, string[]] = result as [number, string[]] ;
+                            if (res[0] !== 0) {
+                                this.scanning = false ;
+                                reject(new Error("fw-loader returned exit code " + res[0]));
+                            }
+                            else {
+                                await this.extractKits(res[1]);
+                                this.scanning = false ;
+                                resolve(true) ;
+                            }
+                        })() ;
                     })
                     .catch((err) => {
                         this.scanning = false ;
@@ -314,30 +337,38 @@ export class MTBDevKitMgr {
         return ret;
     }
 
-    private async extractKits(lines: string[]) {
-        for(let kit of this.kits) {
-            kit.present = false ;
-        }
+    private async extractKits(lines: string[]) : Promise<void> {
+        let ret: Promise<void> = new Promise<void>((resolve, reject) => { 
+            (async() => { 
+                for(let kit of this.kits) {
+                    kit.present = false ;
+                }
 
-        for(let line of lines) {
-            if (MTBDevKitMgr.kitLineMatch.test(line)) {
-                await this.extractOneKit(line);
-            }
-        }
+                for(let line of lines) {
+                    if (MTBDevKitMgr.kitLineMatch.test(line)) {
+                        await this.extractOneKit(line);
+                    }
+                }
 
-        let i: number = 0 ;
-        while (i < this.kits.length) {
-            if (this.kits[i].present) {
-                i++ ;
-            }
-            else {
-                this.kits.splice(i, 1) ;
-            }
-        }        
+                let i: number = 0 ;
+                while (i < this.kits.length) {
+                    if (this.kits[i].present) {
+                        i++ ;
+                    }
+                    else {
+                        this.kits.splice(i, 1) ;
+                    }
+                }        
 
-        for(let cb of this.changedCallbacks) {
-            cb() ;
-        }
+                for(let cb of this.changedCallbacks) {
+                    cb() ;
+                }
+
+                resolve() ;
+            })() ;
+        }) ;
+
+        return ret ;
     }
 
     private async runCmdCaptureOutput(cwd: string, cmd: string, args: string[]) : Promise<[number, string[]]> {

@@ -18,8 +18,6 @@ import { MTBDevKitMgr } from "./mtbdevicekits";
 import { MTBExtensionInfo } from "./mtbextinfo";
 import { getRecentList } from "./mtbrecent";
 
-let titlestr :string = '<p style="font-size:300%;">ModusToolbox Assistant ' + MTBExtensionInfo.version;
-
 export function getModusToolboxNotInstallHtml() : string {
     let html : string = 
         `<!DOCTYPE html>
@@ -35,6 +33,7 @@ export function getModusToolboxNotInstallHtml() : string {
             </body>
         ` ;
 
+    let titlestr :string = '<p style="font-size:300%;">ModusToolbox Assistant ' + MTBExtensionInfo.version;
     html = html.replace("####TITLE####", titlestr) ;        
     return html ;
 }
@@ -61,20 +60,29 @@ function getKitString() : string {
                 ret += "<td>" + kit.name + "</td>" ;
             }
             else {
-                ret += "<td>Unknown</td>" ;
+                ret += "<td>-</td>" ;
             }
             ret += "<td>" + kit.version + "</td>" ;
             ret += "<td>" + kit.mode + "</td>" ;
             ret += "<td>" + kit.serial + "</td>" ;
             if (kit.outdated) {
-                ret += '<td><a title="Update Firmware" class="dev-link" onclick="vscode.postMessage({ command: \'updatefirmware\', serial: \'' + kit.serial + '\'}) ;">Needs Update</td>' ;
+                ret += '<td><a title="Update Firmware" class="dev-link" onclick="vscode.postMessage({ command: \'updatefirmware\', serial: \'' + kit.serial + '\'}) ;">Needs Update</a></td>' ;
             }
             else {
                 ret += "<td>OK</td>" ;
             }
             ret += "</tr>" ;
         }
+        if (mgr.needsUpgrade()) {
+            ret += "<tr>" ;
+            ret += '<td style="text-align:center" colspan="5">';
+            ret += '<a class="dev-link" title="Update All Devices" onclick="vscode.postMessage({ command: \'updateallfirmware\'});">Update All Devices</a>' ;
+            ret += "</td>" ;
+            ret += "</tr>" ;
+        }
         ret += "</table>" ;
+
+
     }
     return ret ;
 }
@@ -85,11 +93,10 @@ export function getModusToolboxAssistantStartupHtml(page: string) : string {
             <head>
             <meta charset="UTF-8">
             <style>
-                .dev-link a:link {
-                    color: #34eb55
-                }
-                .dev-link a:visited {
-                    color: #34eb55
+                a {
+                    color: white ;
+                    text-decoration: underline;
+                    cursor: pointer;
                 }
                 .device-table {
                     border-collapse: collapse ;
@@ -345,6 +352,7 @@ export function getModusToolboxAssistantStartupHtml(page: string) : string {
     }
     checkstr += '><label for="showWelcomePage">Show ModusToolbox Assistant welcome page on startup</label><br>' ;
 
+    let titlestr :string = '<p style="font-size:300%;">ModusToolbox Assistant ' + MTBExtensionInfo.version;    
     html = html.replace("####TITLE####", titlestr) ;
     html = html.replace("####RECENTS####", recentstr) ;
     html = html.replace("####CHECKBOX####", checkstr) ;

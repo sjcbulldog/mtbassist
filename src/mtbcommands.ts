@@ -222,7 +222,7 @@ export function refreshStartPageWithPage(page: string) {
     }
 }
 
-function getPanel() : vscode.WebviewPanel {
+function getPanel(page: string | undefined) : vscode.WebviewPanel {
     if (panel === undefined) {
         panel = vscode.window.createWebviewPanel(
              'mtbassist', 
@@ -233,7 +233,11 @@ function getPanel() : vscode.WebviewPanel {
              }
         ) ;
     }
-    panel.webview.html = getModusToolboxAssistantStartupHtml('1') ;
+
+    if (page === undefined) {
+        page = '1' ;
+    }
+    panel.webview.html = getModusToolboxAssistantStartupHtml(page) ;
     return panel ;
 }
 
@@ -241,8 +245,8 @@ function refreshStartPageKits() {
     refreshStartPageWithPage('4') ;
 }
 
-export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
-    panel = getPanel() ;
+export function mtbShowWelcomePage(context: vscode.ExtensionContext, page: string | undefined = undefined) {
+    panel = getPanel(page) ;
 
     let kitmgr: MTBDevKitMgr | undefined = MTBExtensionInfo.getMtbExtensionInfo().getKitMgr() ;
     if (kitmgr) {
@@ -296,6 +300,9 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         }
         else if (message.command === "updatefirmware") {
             MTBExtensionInfo.getMtbExtensionInfo().getKitMgr().updateFirmware(message.serial) ;
+        }
+        else if (message.command === "updateallfirmware") {
+            MTBExtensionInfo.getMtbExtensionInfo().getKitMgr().updateAllFirmware() ;
         }
         else if (message.command === "openRecent") {
             let appdir: string = message.projdir ;
