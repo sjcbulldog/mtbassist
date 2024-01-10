@@ -212,7 +212,13 @@ let panel: vscode.WebviewPanel | undefined ;
 
 export function refreshStartPage() {
     if (panel !== undefined) {
-        panel.webview.html = getModusToolboxAssistantStartupHtml() ;
+        panel.webview.html = getModusToolboxAssistantStartupHtml('1') ;
+    }
+}
+
+export function refreshStartPageWithPage(page: string) {
+    if (panel !== undefined) {
+        panel.webview.html = getModusToolboxAssistantStartupHtml(page) ;
     }
 }
 
@@ -227,8 +233,12 @@ function getPanel() : vscode.WebviewPanel {
              }
         ) ;
     }
-    panel.webview.html = getModusToolboxAssistantStartupHtml() ;
+    panel.webview.html = getModusToolboxAssistantStartupHtml('1') ;
     return panel ;
+}
+
+function refreshStartPageKits() {
+    refreshStartPageWithPage('4') ;
 }
 
 export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
@@ -236,7 +246,7 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
 
     let kitmgr: MTBDevKitMgr | undefined = MTBExtensionInfo.getMtbExtensionInfo().getKitMgr() ;
     if (kitmgr) {
-        kitmgr.addKitsChangedCallback(refreshStartPage);
+        kitmgr.addKitsChangedCallback(refreshStartPageKits);
     }
 
     panel.onDidDispose(()=> {
@@ -280,6 +290,9 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext) {
         else if (message.command === "showReleaseNotes") {
             let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mt_release_notes.pdf") ;
             browseropen(decodeURIComponent(docpath)) ;
+        }
+        else if (message.command === "refreshKits") {
+            vscode.commands.executeCommand('mtbassist.mtbRefreshDevKits');
         }
         else if (message.command === "updatefirmware") {
             MTBExtensionInfo.getMtbExtensionInfo().getKitMgr().updateFirmware(message.serial) ;
@@ -502,4 +515,8 @@ export function mtbSetIntellisenseProject(context: vscode.ExtensionContext) {
                 }
             }) ;
     }
+}
+
+export function mtbRefreshDevKits(context: vscode.ExtensionContext) {
+    MTBExtensionInfo.getMtbExtensionInfo().getKitMgr().scanForDevKits() ;
 }

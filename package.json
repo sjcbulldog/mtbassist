@@ -27,7 +27,6 @@
     "onStartupFinished"
   ],
   "main": "./dist/extension.js",
-
   "contributes": {
     "commands": [
       {
@@ -67,8 +66,12 @@
         "title": "ModusToolbox: Documentation"
       },
       {
-        "command" : "mtbassist.mtbSetIntellisenseProject",
-        "title" : "ModusToolbox: Set Intellisense Project"
+        "command": "mtbassist.mtbSetIntellisenseProject",
+        "title": "ModusToolbox: Set Intellisense Project"
+      },
+      {
+        "command": "mtbassist.mtbRefreshDevKits",
+        "title": "ModusToolbox: Refresh Development Kit List"
       }
     ],
     "keybindings": [

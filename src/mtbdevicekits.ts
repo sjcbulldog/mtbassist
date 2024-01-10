@@ -6,10 +6,11 @@ import { MTBExtensionInfo, MessageType } from './mtbextinfo';
 import { mtbRunMakeGetLibs } from './mtbcommands';
 
 export class MTBDevKit {
+    public readonly kptype: string ;
     public readonly serial : string ;
     public readonly mode: string;
     public readonly version: string ;
-    public readonly outdated: boolean ;
+    public outdated: boolean ;
     public name: string | undefined ;
     public siliconID: string | undefined ;
     public targetInfo: string | undefined ;
@@ -20,8 +21,10 @@ export class MTBDevKit {
     public connectivityOptions: string | undefined ;
     public fram: string | undefined ;
     public boardFeatures: string[] = [] ;
+    public present: boolean = true ;
 
-    public constructor(serial: string, mode: string, version: string, outdated: boolean) {
+    public constructor(kptype: string, serial: string, mode: string, version: string, outdated: boolean) {
+        this.kptype = kptype ;
         this.serial = serial ;
         this.mode = mode;
         this.version = version ;
@@ -32,6 +35,7 @@ export class MTBDevKit {
 export class MTBDevKitMgr {
     public kits : MTBDevKit[] = [] ;
     private changedCallbacks: (() => void)[] = [] ;
+    private scanning: boolean = false ;
 
     private static vmatch: RegExp = new RegExp("[0-9]+\\.[0-9]+\\.[0-9]+") ;
     private static tags: string[] = ['Bootloader-', 'CMSIS-DAP HID-', 'CMSIS-DAP BULK-'] ;
@@ -67,26 +71,62 @@ export class MTBDevKitMgr {
         this.changedCallbacks.push(cb) ;
     }
 
+    public getKitBySerial(serial: string) : MTBDevKit | undefined {
+        for(let kit of this.kits) {
+            if (kit.serial === serial) {
+                return kit ;
+            }
+        }
+
+        return undefined ;
+    }
+
     public updateFirmware(serial: string) {
         let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
         if (process.platform === "win32") {
             fwload += ".exe" ;
         }
 
-        let args: string[] = ["--update-kp3", serial] ;
+        let kit: MTBDevKit | undefined = this.getKitBySerial(serial) ;
 
-        this.runCmdCaptureOutput(os.homedir(), fwload, args)
-            .then((result) => {
-                vscode.window.showInformationMessage("Kit Prog 3 [" + serial + "] has been updated") ;
-            })
-            .catch((err) => { 
+        if (kit) {
+            let args: string[] = [] ;
+            
+            if (kit.kptype === 'kp3') {
+                args.push('--update-kp3');
+            }
+            else if (kit.kptype === 'kp2') {
+                args.push('--update-kp2');
+            }
+            else {
+                vscode.window.showErrorMessage('Unknown kitprog type/version - update failed') ;
+                return ;
+            }
 
-            }) ;
+            args.push(serial) ;
+            vscode.window.showInformationMessage('Updating kitprog device - please wait', 'OK');
+            this.runCmdLogOutput(os.homedir(), fwload, args)
+                .then((result) => {
+                    this.scanForDevKits()
+                    .then((st: boolean) => {
+                        vscode.window.showInformationMessage("Kit Prog 3 [" + serial + "] has been updated") ;
+                    }) ;
+                })
+                .catch((err) => { 
+                }) ;
+        }
+        else {
+            vscode.window.showInformationMessage("The device with serial number '" + serial + "' has been removed") ;
+        }
     }
 
-    public init() : Promise<boolean> {
+    public scanForDevKits() : Promise<boolean> {
         let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
+            if (this.scanning) {
+                reject(new Error("nested device scans not allowed"));
+            }
             (async() => {
+                this.scanning = true ;
                 let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
                 if (process.platform === "win32") {
                     fwload += ".exe" ;
@@ -98,17 +138,20 @@ export class MTBDevKitMgr {
                     .then((result) => {
                         let res: [number, string[]] = result as [number, string[]] ;
                         if (res[0] !== 0) {
+                            this.scanning = false ;
                             reject(new Error("fw-loader returned exit code " + res[0]));
                         }
                         else {
                             this.extractKits(res[1]);
+                            this.scanning = false ;
                             resolve(true) ;
                         }
                     })
                     .catch((err) => {
+                        this.scanning = false ;
                         reject(err);
                     }) ;
-                })() ;
+            })() ;
         }) ;
         return ret;
     }
@@ -129,6 +172,7 @@ export class MTBDevKitMgr {
     private async extractOneKit(line: string) : Promise<void> {
         let ret: Promise<void> = new Promise<void>((resolve, reject) => { 
             (async () => {
+                let kptype: string = "?" ;
                 let outdated: boolean = false ;
                 let serial: string = "" ;
                 let mode: string = "" ;
@@ -157,21 +201,39 @@ export class MTBDevKitMgr {
                     }
                 }
 
-                if (line.indexOf('outdated')) {
-                    outdated = true ;
-                }
-
                 if (found) {
-                    let kit: MTBDevKit = new MTBDevKit(serial, mode, version, outdated) ;
-                    try {
-                        await this.getKitDetails(kit) ;
-                        this.kits.push(kit);
-                        resolve() ;
+                    if (line.indexOf('outdated') !== -1) {
+                        outdated = true ;
                     }
-                    catch(err) {
-                        let errobj: Error = err as Error ;
-                        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "cannot get kit details - " + errobj.message) ;
-                        reject(err);
+
+                    if (line.indexOf('KitProg3') !== -1) {
+                        kptype = 'kp3' ;
+                    }
+                    else if (line.indexOf('KitProg2') !== -1) {
+                        kptype = 'kp2' ;
+                    }
+
+                    let kit: MTBDevKit | undefined = this.getKitBySerial(serial) ;
+                    if (kit === undefined) {
+                        kit = new MTBDevKit(kptype, serial, mode, version, outdated) ;
+                        try {
+                            await this.getKitDetails(kit) ;
+                            this.kits.push(kit);
+                            resolve() ;
+                        }
+                        catch(err) {
+                            let errobj: Error = err as Error ;
+                            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "cannot get kit details - " + errobj.message) ;
+                            reject(err);
+                        }
+                    }
+                    else {
+                        //
+                        // This could have been updated
+                        //
+                        kit.outdated = outdated ;
+                        kit.present = true ;
+                        resolve();
                     }
                 }
             })() ;
@@ -179,7 +241,6 @@ export class MTBDevKitMgr {
 
         return ret;
     }
-
 
     private extractAfter(tag:string, line: string) : string {
         return line.substring(tag.length).trim() ;
@@ -218,6 +279,7 @@ export class MTBDevKitMgr {
                 kit.boardFeatures = this.extractAfter(MTBDevKitMgr.theBoardFeatures, line).split(',');
             }
         }
+
         return true ;
     }
 
@@ -253,11 +315,25 @@ export class MTBDevKitMgr {
     }
 
     private async extractKits(lines: string[]) {
+        for(let kit of this.kits) {
+            kit.present = false ;
+        }
+
         for(let line of lines) {
             if (MTBDevKitMgr.kitLineMatch.test(line)) {
                 await this.extractOneKit(line);
             }
         }
+
+        let i: number = 0 ;
+        while (i < this.kits.length) {
+            if (this.kits[i].present) {
+                i++ ;
+            }
+            else {
+                this.kits.splice(i, 1) ;
+            }
+        }        
 
         for(let cb of this.changedCallbacks) {
             cb() ;
@@ -296,4 +372,55 @@ export class MTBDevKitMgr {
 
         return ret;
     }
+
+    private sendToLog(text: string) : string {
+        while (true) {
+            let index: number = text.indexOf('\n') ;
+            if (index === -1) {
+                break ;
+            }
+
+            let line: string = text.substring(0, index).trim() ;
+            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, line) ;
+            MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow() ;
+            text = text.substring(index).trim() ;
+        }
+
+        return text ;
+    }
+
+    private async runCmdLogOutput(cwd: string, cmd: string, args: string[]) : Promise<[number, string[]]> {
+        let ret: Promise<[number, string[]]> = new Promise<[number, string[]]>((resolve, reject) => {
+            (async () => {
+                let text: string = "" ;
+                let cp: exec.ChildProcess = exec.spawn(cmd, args , 
+                    {
+                        cwd: cwd,
+                        windowsHide: true
+                    }) ;
+
+                cp.stdout?.on('data', (data) => {
+                    text += (data as Buffer).toString() ;
+                    text = this.sendToLog(text) ;
+                }) ;
+                cp.stderr?.on('data', (data) => {
+                    text += (data as Buffer).toString() ;
+                    text = this.sendToLog(text) ;
+                }) ;
+                cp.on('error', (err) => {
+                    reject(err);
+                }) ;
+                cp.on('close', (code) => {
+                    if (!code) {
+                        code = 0 ;
+                    }
+
+                    let ret: string[] = text.split('\n') ;
+                    resolve([code, ret]);
+                });
+            })() ;
+        }) ;
+
+        return ret;
+    }    
 }

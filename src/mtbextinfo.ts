@@ -128,7 +128,7 @@ export class MTBExtensionInfo
 
     private async loadDevKits(mgr: MTBDevKitMgr) : Promise<void> {
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
-            mgr.init()
+            mgr.scanForDevKits()
                 .then((status) => {
                     if (status) {
                         if (mgr.needsUpgrade()) {
@@ -251,7 +251,7 @@ export class MTBExtensionInfo
         .catch((err) => {
             let errobj: Error = err as Error ;
             this.logMessage(MessageType.debug, "could not create devkit manager - " + errobj.message) ;
-        }) ;        
+        }) ;
     }
 
     public static getMtbExtensionInfo(context?: vscode.ExtensionContext) : MTBExtensionInfo {

@@ -77,7 +77,7 @@ function getKitString() : string {
     return ret ;
 }
 
-export function getModusToolboxAssistantStartupHtml() : string {
+export function getModusToolboxAssistantStartupHtml(page: string) : string {
     let html : string = 
         `<!DOCTYPE html>
             <head>
@@ -152,7 +152,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
                 }
 
                 document.addEventListener("DOMContentLoaded", function() {
-                    selectContent(undefined, "1") ;
+                    selectContent(undefined, "####PAGE####") ;
                 }) ;
             </script>
         </head>
@@ -260,7 +260,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
                    <br>
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content4">
-                    <h1>Connected Development Kits</h1>
+                    <h1>Connected Development Kits <a onclick="vscode.postMessage({ command: 'refreshKits'}) ;" href="#">(Refresh)</a></h1>
                     ####DEVKITS####
                 </div>
                 <div style="font-size: 150%;" class="tabcont" id="content5">
@@ -310,6 +310,7 @@ export function getModusToolboxAssistantStartupHtml() : string {
     html = html.replace("####RECENTS####", recentstr) ;
     html = html.replace("####CHECKBOX####", checkstr) ;
     html = html.replace("####DEVKITS####", getKitString()) ;
+    html = html.replace("####PAGE####", page) ;
 
     return html ;
 }
