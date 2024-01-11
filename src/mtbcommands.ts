@@ -210,19 +210,19 @@ function canRunModusCommand(context: vscode.ExtensionContext) : boolean {
 
 let panel: vscode.WebviewPanel | undefined ;
 
-export function refreshStartPage() {
+export function refreshStartPage(context: vscode.ExtensionContext) {
     if (panel !== undefined) {
-        panel.webview.html = getModusToolboxAssistantStartupHtml('1') ;
+        panel.webview.html = getModusToolboxAssistantStartupHtml('1', context) ;
     }
 }
 
-export function refreshStartPageWithPage(page: string) {
+export function refreshStartPageWithPage(page: string, context: vscode.ExtensionContext) {
     if (panel !== undefined) {
-        panel.webview.html = getModusToolboxAssistantStartupHtml(page) ;
+        panel.webview.html = getModusToolboxAssistantStartupHtml(page, context) ;
     }
 }
 
-function getPanel(page: string | undefined) : vscode.WebviewPanel {
+function getPanel(page: string | undefined, context: vscode.ExtensionContext) : vscode.WebviewPanel {
     if (panel === undefined) {
         panel = vscode.window.createWebviewPanel(
              'mtbassist', 
@@ -237,16 +237,19 @@ function getPanel(page: string | undefined) : vscode.WebviewPanel {
     if (page === undefined) {
         page = '1' ;
     }
-    panel.webview.html = getModusToolboxAssistantStartupHtml(page) ;
+    panel.webview.html = getModusToolboxAssistantStartupHtml(page, context) ;
     return panel ;
 }
 
 function refreshStartPageKits() {
-    refreshStartPageWithPage('4') ;
+    let extinfo = MTBExtensionInfo.getMtbExtensionInfo() ;
+    if (extinfo && extinfo.context) {
+        refreshStartPageWithPage('4', extinfo.context) ;
+    }
 }
 
 export function mtbShowWelcomePage(context: vscode.ExtensionContext, page: string | undefined = undefined) {
-    panel = getPanel(page) ;
+    panel = getPanel(page, context) ;
 
     let kitmgr: MTBDevKitMgr | undefined = MTBExtensionInfo.getMtbExtensionInfo().getKitMgr() ;
     if (kitmgr) {
@@ -315,7 +318,10 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext, page: strin
                     .then((answer) => {
                         if (answer === "Yes") {
                             removeRecent(context, appdir) ;
-                            refreshStartPage() ;
+                            let extinfo = MTBExtensionInfo.getMtbExtensionInfo() ;
+                            if (extinfo && extinfo.context) {
+                                refreshStartPage(extinfo.context) ;
+                            }
                         }
                 }) ;
             }
