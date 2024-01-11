@@ -1,6 +1,10 @@
+body {
+    background-color: lightblue;
+}
 a {
     color: white ;
     text-decoration: underline;
+    background-color: red;
     cursor: pointer;
 }
 .device-table {

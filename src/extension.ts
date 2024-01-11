@@ -34,7 +34,7 @@ import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, getModusToolboxApp } from './mtbapp/mtbappinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
-import { getModusToolboxNotInstallHtml } from './mtbgenhtml';
+import { getModusToolboxAssistantHTMLPage } from './mtbgenhtml';
 
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
@@ -89,7 +89,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				 }
 			) ;
 
-		panel.webview.html = getModusToolboxNotInstallHtml() ;
+		panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'notinstalled.html') ;
 		return;
 	}
 

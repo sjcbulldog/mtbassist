@@ -26,7 +26,7 @@ import * as exec from 'child_process' ;
 import * as os from 'os' ;
 
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
-import { getModusToolboxAssistantStartupHtml } from './mtbgenhtml';
+import { getModusToolboxAssistantHTMLPage } from './mtbgenhtml';
 import { MessageType, MTBExtensionInfo, StatusType } from './mtbextinfo';
 import { mtbAssistLoadApp, getModusToolboxApp, MTBAppInfo } from './mtbapp/mtbappinfo';
 import { checkRecent, removeRecent } from './mtbrecent';
@@ -210,41 +210,47 @@ function canRunModusCommand(context: vscode.ExtensionContext) : boolean {
 
 let panel: vscode.WebviewPanel | undefined ;
 
-export function refreshStartPage(context: vscode.ExtensionContext) {
+export function refreshStartPage() {
     if (panel !== undefined) {
-        panel.webview.html = getModusToolboxAssistantStartupHtml('1', context) ;
+        panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'welcome.html') ;
     }
 }
 
-export function refreshStartPageWithPage(page: string, context: vscode.ExtensionContext) {
+export function refreshStartPageWithPage() {
     if (panel !== undefined) {
-        panel.webview.html = getModusToolboxAssistantStartupHtml(page, context) ;
+        panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'welcome.html') ;
     }
 }
 
 function getPanel(page: string | undefined, context: vscode.ExtensionContext) : vscode.WebviewPanel {
     if (panel === undefined) {
+        let jspath: vscode.Uri =  vscode.Uri.joinPath(context.extensionUri, 'content', 'js') ;
+        let csspath: vscode.Uri =  vscode.Uri.joinPath(context.extensionUri, 'content', 'css') ;
         panel = vscode.window.createWebviewPanel(
              'mtbassist', 
              'ModusToolbox', 
              vscode.ViewColumn.One, 
              {
-                 enableScripts: true
+                enableScripts: true,
+                localResourceRoots: [ jspath, csspath ]
              }
         ) ;
     }
 
+    let view = panel.webview ;
+    let x = view.cspSource ;
+
     if (page === undefined) {
         page = '1' ;
     }
-    panel.webview.html = getModusToolboxAssistantStartupHtml(page, context) ;
+    panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'welcome.html');
     return panel ;
 }
 
 function refreshStartPageKits() {
     let extinfo = MTBExtensionInfo.getMtbExtensionInfo() ;
     if (extinfo && extinfo.context) {
-        refreshStartPageWithPage('4', extinfo.context) ;
+        refreshStartPageWithPage();
     }
 }
 
@@ -320,7 +326,7 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext, page: strin
                             removeRecent(context, appdir) ;
                             let extinfo = MTBExtensionInfo.getMtbExtensionInfo() ;
                             if (extinfo && extinfo.context) {
-                                refreshStartPage(extinfo.context) ;
+                                refreshStartPage() ;
                             }
                         }
                 }) ;
