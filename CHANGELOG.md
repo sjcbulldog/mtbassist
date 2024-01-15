@@ -1,5 +1,8 @@
 # Change Log
 
+### 1.1.4
+Fixed a bug with the recent ModusToolbox applications page
+
 ### 1.1.3
 Fixed bug with welcome page not being displayed under some conditions
 

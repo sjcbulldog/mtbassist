@@ -105,27 +105,35 @@ export class RecentAppManager {
         }
         else {
             let rarray: any[] = obj ;
-            if (rarray.length > 0) {
-                let entry = rarray[0] ;
-                if (typeof entry === "string") {
-                    //
-                    // Old style recent file, array of strings
-                    //
-                    for(let appdir of rarray) {
-                        if (typeof appdir === "string") {
-                            let entry = {
-                                apppath: appdir,
-                                lastopened: new Date(0)
-                            } ;
-                            this.recentList.push(entry);
-                        }
-                    }
+            for(let one of rarray) {
+                if (typeof one === "string") {
+                    let entry = {
+                        apppath: one,
+                        lastopened: new Date(0)
+                    } ;
+                    this.recentList.push(entry);
                 }
                 else {
-                    this.recentList = rarray ;
+                    this.recentList.push(one as RecentEntry) ;
                 }
             }
         }
+    }
+
+    private removeDuplicates() : boolean {
+        let ret: boolean = false ;
+        let entries: RecentEntry[] = this.recentList ;
+        this.recentList = [] ;
+
+        for(let entry of entries) {
+            if (this.findRecentEntryByPath(entry.apppath) !== -1) {
+                ret = true ;
+            }
+            else {
+                this.recentList.push(entry) ;
+            }
+        }
+        return ret;
     }
 
     public readRecentList() {
@@ -162,6 +170,12 @@ export class RecentAppManager {
             if (obj.projects !== undefined) {
                 this.assignRecentsList(obj.projects) ;
             }
+        }
+
+        //
+        // By design, there should be no
+        if (this.removeDuplicates()) {
+            this.storeRecentList(MTBExtensionInfo.getMtbExtensionInfo().context) ;
         }
 
         if (this.recentList.length === 1) {

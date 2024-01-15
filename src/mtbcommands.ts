@@ -263,7 +263,6 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext, tab: number
 
     let recentmgr: RecentAppManager = MTBExtensionInfo.getMtbExtensionInfo().getRecentAppMgr() ;
     recentmgr.addChangedCallback(refreshStartPage);
-    
 
     panel.onDidDispose(()=> {
         panel = undefined ;

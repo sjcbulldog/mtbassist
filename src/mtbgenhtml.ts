@@ -35,23 +35,25 @@ function computeRecentHtml() : string {
         ret += "</tr>" ;
         ret += "</thead>";
         for(let i : number = recent.length - 1 ; i >= 0 ; i--) {
-            const appdir: string = recent[i].apppath.replace(/\\/g,"/") ;
-            const recentname: string = path .basename(appdir);
+            if (recent[i].apppath && recent[i].lastopened) {
+                const appdir: string = recent[i].apppath.replace(/\\/g,"/") ;
+                const recentname: string = path .basename(appdir);
 
-            ret += "<tr>" ;
-            ret += "<td>" ;
-            ret += '<a onclick="vscode.postMessage({ command: \'openRecent\', projdir: \'' + appdir + '\'}) ;" href="#">' + recentname + '</a>' ;
-            ret += "</td>" ;
+                ret += "<tr>" ;
+                ret += "<td>" ;
+                ret += '<a onclick="vscode.postMessage({ command: \'openRecent\', projdir: \'' + appdir + '\'}) ;" href="#">' + recentname + '</a>' ;
+                ret += "</td>" ;
 
-            ret += "<td>" ;
-            ret += appdir ;
-            ret += "</td>" ;
+                ret += "<td>" ;
+                ret += appdir ;
+                ret += "</td>" ;
 
-            ret += "<td>" ;
-            ret += recent[i].lastopened.toString() ;
-            ret += "</td>" ;
+                ret += "<td>" ;
+                ret += recent[i].lastopened.toString() ;
+                ret += "</td>" ;
 
-            ret += "</tr>" ;
+                ret += "</tr>" ;
+            }
         }
         ret += "</table>" ;
     }
@@ -123,8 +125,15 @@ function computeKitHtml() : string {
 }
 
 function replaceTokens(token: string, value: string, html: string) : string {
-    while (html.indexOf(token) !== -1) {
-        html = html.replace(token, value) ;
+    let orig: string = html ;
+
+    try {
+        while (html.indexOf(token) !== -1) {
+            html = html.replace(token, value) ;
+        }
+    }
+    catch(err) {
+        html = orig ;
     }
 
     return html ;
