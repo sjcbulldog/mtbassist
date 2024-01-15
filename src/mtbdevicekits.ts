@@ -68,7 +68,9 @@ export class MTBDevKitMgr {
     }
 
     public addKitsChangedCallback(cb: () => void) {
-        this.changedCallbacks.push(cb) ;
+        if (this.changedCallbacks.indexOf(cb) === -1) {
+            this.changedCallbacks.push(cb) ;
+        }
     }
 
     public getKitBySerial(serial: string) : MTBDevKit | undefined {

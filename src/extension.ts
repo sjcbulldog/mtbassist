@@ -29,7 +29,6 @@ import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateP
 		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbRefreshDevKits } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
-import { readRecentList } from './mtbrecent';
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, getModusToolboxApp } from './mtbapp/mtbappinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
@@ -52,29 +51,28 @@ export async function activate(context: vscode.ExtensionContext) {
 	let disposable;
 
 	//
-	// The extesion information has information about where modus toolbox is located,
-	// what version it is, and where the documentation directory is located.  This is call
-	// created and stored in an extension global object when the extension is loaded.
-	// It is all accessed through the mtbAssistExtensionInfo object which is created in the
-	// mtbextinfo.ts file.
+	// Initialize the extension context.  This has all of the information needed for the
+	// extension in one place and is a singleton.
 	//
-	MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "Starting ModusToolbox assistant");
+	MTBExtensionInfo.initExtension(context) ;
+
+	MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "Starting ModusToolbox assistant");
 
 	try {
 		//
 		// This eliminates issues with the life cycle of the clangd extension.
 		//
-		MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "Activating 'clangd' extension");
+		MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "Activating 'clangd' extension");
 		await vscode.commands.executeCommand('clangd.activate');
 	}
 	catch(err) {
 		let errobj: Error = (err as any) as Error ;
-		MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.warning, "Cannot activate extension 'clangd' - " + errobj.message);
+		MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.warning, "Cannot activate extension 'clangd' - " + errobj.message);
 	}
 
-	if (MTBExtensionInfo.getMtbExtensionInfo(context).major < 3) {
+	if (MTBExtensionInfo.getMtbExtensionInfo().major < 3) {
 		// Put the message in the log window
-		MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.");
+		MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.");
 
 		// Also tell the user via VS code messages
 		vscode.window.showInformationMessage("This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.");
@@ -89,15 +87,9 @@ export async function activate(context: vscode.ExtensionContext) {
 				 }
 			) ;
 
-		panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'notinstalled.html') ;
+		panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'notinstalled.html', undefined) ;
 		return;
 	}
-
-	//
-	// Read the list of recently located applications, these are stored in a JSON files in the
-	// global, extension specific storage
-	//
-	readRecentList(context);
 
 	//
 	// Register the various commands that are listed in the package.json file.
@@ -123,7 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbShowWelcomePage', (args: any[]) => {
-		mtbShowWelcomePage(context);
+		mtbShowWelcomePage(context, 1);
 	});
 	context.subscriptions.push(disposable);
 

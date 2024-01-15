@@ -29,10 +29,10 @@ import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import { getModusToolboxAssistantHTMLPage } from './mtbgenhtml';
 import { MessageType, MTBExtensionInfo, StatusType } from './mtbextinfo';
 import { mtbAssistLoadApp, getModusToolboxApp, MTBAppInfo } from './mtbapp/mtbappinfo';
-import { checkRecent, removeRecent } from './mtbrecent';
 import { MTBAssetInstance } from './mtbapp/mtbassets';
 import { browseropen } from './browseropen';
 import { MTBDevKitMgr } from './mtbdevicekits';
+import { RecentAppManager } from './mtbrecent';
 
 function outputLines(context: vscode.ExtensionContext, data: string) {
     let str: string = data.toString().replace(/\r\n/g, "\n") ;
@@ -40,7 +40,7 @@ function outputLines(context: vscode.ExtensionContext, data: string) {
     for(let line of lines) {
         line = line.trim() ;
         if (line.length > 0) {
-            MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, line) ;
+            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, line) ;
         }
     }
 }
@@ -57,8 +57,8 @@ export async function mtbResultDecode(context: vscode.ExtensionContext) {
 export function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
     MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.GetLibs) ;
     let ret: Promise<number> = new Promise<number>((resolve, reject) => {
-        let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "modus-shell", "bin", "bash") ;
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "ModusToolbox: running 'make getlibs' in directory '" + cwd + "' ...") ;
+        let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "modus-shell", "bin", "bash") ;
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "ModusToolbox: running 'make getlibs' in directory '" + cwd + "' ...") ;
         let cmd = "make getlibs" ;
         let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: cwd }) ;
 
@@ -133,7 +133,17 @@ function dropEmptyLines(lines: string[]) : string [] {
 }
 
 function createProjects3x(output: Buffer) {
-    let projdata = JSON.parse(output.toString()) ;
+    let projdata: any ;
+
+    try {
+        projdata = JSON.parse(output.toString()) ;
+    }
+    catch(err) {
+        let msg: string =  "Output from ModusToolbox project creator is not valid.  Check ModusToolbox installation." ;
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, msg);
+        vscode.window.showErrorMessage(msg);        
+    }
+
     let projects: any[] = [] ;
     projdata.projects.forEach((proj: any) => {
         if (proj.status === "success") {
@@ -190,17 +200,17 @@ function canRunModusCommand(context: vscode.ExtensionContext) : boolean {
     let ret: boolean = true ;
 
     if (getModusToolboxApp() === undefined) {
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "there is no ModusToolbox application loaded") ;
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "there is no ModusToolbox application loaded") ;
         vscode.window.showErrorMessage("You must load a ModusToolbox application for this command to work") ;
         ret = false ;
     }
     else if (getModusToolboxApp() !== undefined && getModusToolboxApp()!.isLoading) {
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
         vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
         ret = false ;
     }
     else if (getModusToolboxApp()!.isValid === false) {
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "there was an error loading the ModusToolbox application") ;
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "there was an error loading the ModusToolbox application") ;
         vscode.window.showErrorMessage("There was an error loading the ModusToolbox application") ;
         ret = false ;
     }
@@ -210,19 +220,23 @@ function canRunModusCommand(context: vscode.ExtensionContext) : boolean {
 
 let panel: vscode.WebviewPanel | undefined ;
 
-export function refreshStartPage() {
+function refreshStartPage() {
     if (panel !== undefined) {
-        panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'welcome.html') ;
+        panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'welcome.html', 1) ;
     }
 }
 
-export function refreshStartPageWithPage() {
+function refreshStartPageForKits() {
+    refreshStartPageWithPage(4);
+}
+
+function refreshStartPageWithPage(tab: number) {
     if (panel !== undefined) {
-        panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'welcome.html') ;
+        panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'welcome.html', tab) ;
     }
 }
 
-function getPanel(page: string | undefined, context: vscode.ExtensionContext) : vscode.WebviewPanel {
+function getPanel(page: string, context: vscode.ExtensionContext, tab: number | undefined) : vscode.WebviewPanel {
     if (panel === undefined) {
         let jspath: vscode.Uri =  vscode.Uri.joinPath(context.extensionUri, 'content', 'js') ;
         let csspath: vscode.Uri =  vscode.Uri.joinPath(context.extensionUri, 'content', 'css') ;
@@ -237,30 +251,19 @@ function getPanel(page: string | undefined, context: vscode.ExtensionContext) : 
         ) ;
     }
 
-    let view = panel.webview ;
-    let x = view.cspSource ;
-
-    if (page === undefined) {
-        page = '1' ;
-    }
-    panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'welcome.html');
+    panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, page, tab);
     return panel ;
 }
 
-function refreshStartPageKits() {
-    let extinfo = MTBExtensionInfo.getMtbExtensionInfo() ;
-    if (extinfo && extinfo.context) {
-        refreshStartPageWithPage();
-    }
-}
+export function mtbShowWelcomePage(context: vscode.ExtensionContext, tab: number | undefined) {
+    panel = getPanel("welcome.html", context, tab) ;
 
-export function mtbShowWelcomePage(context: vscode.ExtensionContext, page: string | undefined = undefined) {
-    panel = getPanel(page, context) ;
+    let kitmgr: MTBDevKitMgr = MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr() ;
+    kitmgr.addKitsChangedCallback(refreshStartPageForKits);
 
-    let kitmgr: MTBDevKitMgr | undefined = MTBExtensionInfo.getMtbExtensionInfo().getKitMgr() ;
-    if (kitmgr) {
-        kitmgr.addKitsChangedCallback(refreshStartPageKits);
-    }
+    let recentmgr: RecentAppManager = MTBExtensionInfo.getMtbExtensionInfo().getRecentAppMgr() ;
+    recentmgr.addChangedCallback(refreshStartPage);
+    
 
     panel.onDidDispose(()=> {
         panel = undefined ;
@@ -275,18 +278,15 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext, page: strin
         else if (message.command === "createNew") {
             vscode.commands.executeCommand("mtbassist.mtbCreateProject") ;
         }
-        else if (message.command === "importExistingDisk") {
-            vscode.commands.executeCommand("mtbassist.mtbImportDiskProject") ;
-        }
         else if (message.command === "showModusToolbox") {
             vscode.commands.executeCommand("mtbglobal.focus") ;
         }
         else if (message.command === "showUserGuide") {
-            let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mtb_user_guide.pdf") ;
+            let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().docsDir, "mtb_user_guide.pdf") ;
             browseropen(docpath) ;
         }
         else if (message.command === "showVSCodeGuide") {
-            let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mt_vscode_user_guide.pdf") ;
+            let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().docsDir, "mt_vscode_user_guide.pdf") ;
             if (fs.existsSync(docpath)) {
                 browseropen(docpath) ;
             }
@@ -301,29 +301,29 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext, page: strin
             MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.showWelcomePageName, false) ;
         }
         else if (message.command === "showReleaseNotes") {
-            let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).docsDir, "mt_release_notes.pdf") ;
+            let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().docsDir, "mt_release_notes.pdf") ;
             browseropen(decodeURIComponent(docpath)) ;
         }
         else if (message.command === "refreshKits") {
             vscode.commands.executeCommand('mtbassist.mtbRefreshDevKits');
         }
         else if (message.command === "updatefirmware") {
-            MTBExtensionInfo.getMtbExtensionInfo().getKitMgr().updateFirmware(message.serial) ;
+            MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().updateFirmware(message.serial) ;
         }
         else if (message.command === "updateallfirmware") {
-            MTBExtensionInfo.getMtbExtensionInfo().getKitMgr().updateAllFirmware() ;
+            MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().updateAllFirmware() ;
         }
         else if (message.command === "openRecent") {
             let appdir: string = message.projdir ;
 
-            if (checkRecent(appdir)) {
+            if (RecentAppManager.checkRecent(appdir)) {
                 let uri = vscode.Uri.file(appdir) ;
                 vscode.commands.executeCommand('vscode.openFolder', uri) ;
             } else {
                 vscode.window.showInformationMessage("The application '" + appdir + "' does not exist.  Remove it from the recent list?", "Yes", "No")
                     .then((answer) => {
                         if (answer === "Yes") {
-                            removeRecent(context, appdir) ;
+                            MTBExtensionInfo.getMtbExtensionInfo().getRecentAppMgr().removeRecent(context, appdir) ;
                             let extinfo = MTBExtensionInfo.getMtbExtensionInfo() ;
                             if (extinfo && extinfo.context) {
                                 refreshStartPage() ;
@@ -356,7 +356,7 @@ export function mtbRunLibraryManager(context: vscode.ExtensionContext) {
 
 export function mtbRunMakeGetLibsCmd(context: vscode.ExtensionContext) {
     if (getModusToolboxApp() !== undefined && getModusToolboxApp()!.isLoading) {
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
         vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
         return ;
     }
@@ -369,7 +369,7 @@ export function mtbRunMakeGetLibsCmd(context: vscode.ExtensionContext) {
                 if (code) {
                     let msg: string = "'make getlibs' failed with exit status " + code.toString() ;
                     vscode.window.showErrorMessage(msg) ;
-                    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, msg) ;
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;
                 }
                 else {
                     vscode.window.showInformationMessage("'make getlibs' completed sucessfully, reloading application") ;
@@ -382,19 +382,19 @@ export function mtbRunMakeGetLibsCmd(context: vscode.ExtensionContext) {
             .catch((err: Error) => {
                 let msg: string = "'make getlibs' failed - " + err.message ;
                 vscode.window.showErrorMessage(msg) ;
-                MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, msg) ;
+                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, msg) ;
             }) ;
         }
 }
 
 export function mtbCreateProject(context: vscode.ExtensionContext) {
     if (getModusToolboxApp() !== undefined && getModusToolboxApp()!.isLoading) {
-        MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
         vscode.window.showErrorMessage("You must wait for the current ModusToolbox application to finish loading") ;
         return ;
     }
     
-    let pcpath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo(context).toolsDir, "project-creator", "project-creator") ;
+    let pcpath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "project-creator", "project-creator") ;
     
     if (process.platform === "win32") {
         pcpath += ".exe" ;
@@ -403,8 +403,8 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
     let post30: boolean = false ;
     let outstr : Buffer ;
     try {
-        let major: number = MTBExtensionInfo.getMtbExtensionInfo(context).major ;
-        let minor: number = MTBExtensionInfo.getMtbExtensionInfo(context).minor ;
+        let major: number = MTBExtensionInfo.getMtbExtensionInfo().major ;
+        let minor: number = MTBExtensionInfo.getMtbExtensionInfo().minor ;
 
         if (major > 3 || minor > 0) {
             outstr = exec.execFileSync(pcpath, ["--machine-interface", "--ide", "vscode", "--ide-readonly", "--close"]) ;
@@ -419,10 +419,20 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
         return ;
     }
 
-    MTBExtensionInfo.getMtbExtensionInfo(context).showMessageWindow() ;
-    MTBExtensionInfo.getMtbExtensionInfo(context).logMessage(MessageType.info, "reading ModusToolbox application state, please wait ...") ;
+    MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow() ;
+    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "reading ModusToolbox application state, please wait ...") ;
 
     let projects : any[] ;
+
+    if (outstr.length === 0) {
+        //
+        // Something happened, we did not get any output
+        //
+        let msg: string =  "No output detected from ModusToolbox project creator.  Did you close the window prematurely?" ;
+        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, msg);
+        vscode.window.showErrorMessage(msg);
+        return ;
+    }
     
     if (post30) {
         projects = createProjects3x(outstr) ;
@@ -537,5 +547,5 @@ export function mtbSetIntellisenseProject(context: vscode.ExtensionContext) {
 }
 
 export function mtbRefreshDevKits(context: vscode.ExtensionContext) {
-    MTBExtensionInfo.getMtbExtensionInfo().getKitMgr().scanForDevKits() ;
+    MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().scanForDevKits() ;
 }

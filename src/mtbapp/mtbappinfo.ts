@@ -38,7 +38,6 @@ import { getMTBProjectInfoProvider } from '../mtbprojinfoprovider';
 import { MTBProjectInfo } from './mtbprojinfo';
 import { runMakeGetAppInfo, runMakeVSCode, runMtbLaunch } from './mtbrunprogs';
 import { ModusToolboxEnvTypeNames, ModusToolboxEnvVarNames } from './mtbnames';
-import { addToRecentProjects } from '../mtbrecent';
 import { mtbRunMakeGetLibs } from '../mtbcommands';
 import { MtbFunIndex } from '../mtbfunindex';
 
@@ -339,7 +338,7 @@ export class MTBAppInfo
                             //
                             // Add the currently loaded project to the recents list for the home page
                             //
-                            addToRecentProjects(this.context, this.appDir) ;
+                            MTBExtensionInfo.getMtbExtensionInfo().getRecentAppMgr().addToRecentProjects(this.context, this.appDir) ;
 
                             //
                             // Try to make sure intellisense is initialized to something that works 

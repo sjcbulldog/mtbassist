@@ -1,5 +1,19 @@
 # Change Log
 
+### 1.1.3
+Fixed bug with welcome page not being displayed under some conditions
+
+### 1.1.2
+Added a notification about kits being out of date
+
+### 1.1.1
+Added a message when the welcome page is displayed because of out of date kits.
+
+### 1.1.0
+Added the ability to detect ModusToolbox supported kits attached to the local machine and display
+the list of kits.  If the firmware for these kits are out of date, provide an option to update the
+firmware.
+
 ### 1.0.34
 Fixed the intellisense data file (compile_commands.json) that is malformed out of ModusToolbox
 3.1 after each build so that intellisense continues to work.

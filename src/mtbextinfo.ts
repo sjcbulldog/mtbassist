@@ -21,6 +21,7 @@ import fs = require('fs');
 import { MtbManifestDb } from './manifest/mtbmanifestdb';
 import { MTBDevKitMgr } from './mtbdevicekits';
 import { mtbShowWelcomePage } from './mtbcommands';
+import { RecentAppManager } from './mtbrecent';
 
 export enum MessageType
 {
@@ -70,6 +71,7 @@ export class MTBExtensionInfo
     private intellisenseProject: string | undefined ;
 
     private devKitMgr: MTBDevKitMgr | undefined = undefined ;
+    private recentAppMgr: RecentAppManager | undefined = undefined ;
 
     public toolsDir: string ;
     public docsDir: string ;
@@ -78,7 +80,7 @@ export class MTBExtensionInfo
     public channel: vscode.OutputChannel ;
     public manifestDb: MtbManifestDb ;
     public hasClangD: boolean ;
-    
+   
     context: vscode.ExtensionContext;
 
     constructor(context: vscode.ExtensionContext) {
@@ -126,9 +128,16 @@ export class MTBExtensionInfo
         this.statusBarItem.command = 'mtbassist.mtbSetIntellisenseProject';
     }
 
-    public getKitMgr() : MTBDevKitMgr {
+    public getDevKitMgr() : MTBDevKitMgr {
         return this.devKitMgr! ;
     }
+
+    public getRecentAppMgr() : RecentAppManager {
+        if (this.recentAppMgr === undefined) {
+            this.recentAppMgr = new RecentAppManager() ;
+        }
+        return this.recentAppMgr ;
+    }    
 
     private async loadDevKits(mgr: MTBDevKitMgr) : Promise<void> {
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
@@ -136,7 +145,8 @@ export class MTBExtensionInfo
                 .then((status) => {
                     if (status) {
                         if (mgr.needsUpgrade()) {
-                            mtbShowWelcomePage(this.context, '4');
+                            mtbShowWelcomePage(this.context, 3);
+                            vscode.window.showInformationMessage('There are ModusToolbox supported kits with out of date firmware.  Check the ModusToolbox Welcome page for more details.') ;
                         }
                         resolve() ;
                     }
@@ -160,12 +170,10 @@ export class MTBExtensionInfo
             this.hasClangD = false ;
             vscode.window.showInformationMessage("The 'clangd' extension was uninstalled or disabled.  Intellisense will no longer be managed by the ModusToolbox Assistant extension.");
         }
-        else {
+        else if (!this.hasClangD && clangd) {
             // Clang was installed
             this.hasClangD = true ;
-
-            vscode.window.showInformationMessage("The 'clangd' extension was uninstalled or disabled.  Intellisense will no longer be managed by the ModusToolbox Assistant extension.");
-            
+            vscode.window.showInformationMessage("The 'clangd' extension was installed.  Intellisense will be managed by the ModusToolbox Assistant.") ;            
         }
     }
 
@@ -258,17 +266,20 @@ export class MTBExtensionInfo
         }) ;
     }
 
-    public static getMtbExtensionInfo(context?: vscode.ExtensionContext) : MTBExtensionInfo {
-        if (this.mtbAssistExtensionInfo === undefined) {
-            if (context === undefined) {
-                throw new Error("mtbassist initialization error, the context must be set when creating the extension info object") ;
-            }
-            else {
-                this.mtbAssistExtensionInfo = new MTBExtensionInfo(context) ;
-                this.mtbAssistExtensionInfo.initDevKitMgr() ;
-            }
+    public static initExtension(context: vscode.ExtensionContext) {
+        if (context === undefined) {
+            throw new Error("mtbassist initialization error, the context must be set when creating the extension info object") ;
         }
+        else {
+            this.mtbAssistExtensionInfo = new MTBExtensionInfo(context) ;
+            this.mtbAssistExtensionInfo.initDevKitMgr() ;
+        }
+    }
 
+    public static getMtbExtensionInfo() : MTBExtensionInfo {
+        if (this.mtbAssistExtensionInfo === undefined) {
+            throw new Error("invalid initialization sequence - initExtension() should be called before getMtbExtensionInfo()") ;
+        }
         return this.mtbAssistExtensionInfo ;
     }
 

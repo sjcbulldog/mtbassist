@@ -1,3 +1,98 @@
 body {
-    background-color: lightblue;
+    color: white;
+    background-color: black;
+}
+a {
+    color: lightblue ;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.tabcont {
+    color: white;
+    background-color: black;
+}
+.tabcont a {
+    color: lightblue ;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.div {
+    color: white;
+}
+.ui-tabs {
+    color: white;
+    background-color: black;
+}
+.ui-tabs-nav {
+    color: white;
+    background-color: black;
+}
+.ui-tabs-tabs {
+    color: white;
+    background-color: black;
+}
+
+.device-table {
+    border-collapse: collapse ;
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+    border-radius: 5%;
+    border: 2px solid;
+}
+.device-table thead tr {
+    background-color: black;
+    color: white;
+    text-align: left;
+    border: 2px solid;
+}
+.device-table th,
+.device-table td {
+    padding: 12px 15px;
+    border: 1px dashed;
+}
+
+.device-table tbody tr {
+    border-bottom: 1px solid black
+}
+
+.device-table tbody tr:nth-of-type(even) {
+    background-color: blue
+}
+
+.device-table tbody tr:last-of-type {
+    border-bottom: 2px solid blue
+}     
+
+.device-table tbody tr.active-row {
+    font-weight: bold;
+    color: blue
+}
+.upgrade-all {
+    font-size: 1.5em;
+    text-align: center;
+}
+.recent-table {
+    border-collapse: collapse ;
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+.recent-table thead tr {
+    background-color: lightgray;
+    color: black;
+    text-align: left;
+}
+.recent-table th,
+.recent-table td {
+    padding: 12px 15px;
+}
+
+.recent-table tbody tr {
+    border-bottom: 1px solid black
 }
