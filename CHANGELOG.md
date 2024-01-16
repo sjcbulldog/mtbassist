@@ -1,5 +1,8 @@
 # Change Log
 
+### 1.1.5
+Make the firmware update message stand out more so that it is not missed
+
 ### 1.1.4
 Fixed a bug with the recent ModusToolbox applications page
 

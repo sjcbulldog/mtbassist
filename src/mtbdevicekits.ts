@@ -122,24 +122,32 @@ export class MTBDevKitMgr {
         }
     }
 
-    public updateAllFirmware() {
-        let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
-        if (process.platform === "win32") {
-            fwload += ".exe" ;
-        }
+    public async updateAllFirmware() : Promise<void> {
+        let ret: Promise<void> = new Promise<void>((resolve, reject) => {
+            MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow();
+            let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
+            if (process.platform === "win32") {
+                fwload += ".exe" ;
+            }
 
-        let args: string[] = [] ;
-        args.push('--update-kp3');
-        args.push('all') ;
-        vscode.window.showInformationMessage('Updating kitprog device - please wait', 'OK');
-        this.runCmdLogOutput(os.homedir(), fwload, args)
-        .then((result) => {
-            this.scanForDevKits()
-            .then((st: boolean) => {
-                vscode.window.showInformationMessage("All KitProg3 devices have been updated");
+            let args: string[] = [] ;
+            args.push('--update-kp3');
+            args.push('all') ;
+            let opts = {
+                modal: true
+            } ;
+            vscode.window.showInformationMessage('Updating kitprog device - please wait');
+            this.runCmdLogOutput(os.homedir(), fwload, args)
+            .then((result) => {
+                this.scanForDevKits()
+                .then((st: boolean) => {
+                    vscode.window.showInformationMessage("All KitProg3 devices have been updated")
+                        .then(() => resolve()) ;
+                }) ;
+            })
+            .catch((err) => { 
+                reject(err);
             }) ;
-        })
-        .catch((err) => { 
         }) ;
     }
 

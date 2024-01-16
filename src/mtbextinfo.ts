@@ -145,8 +145,17 @@ export class MTBExtensionInfo
                 .then((status) => {
                     if (status) {
                         if (mgr.needsUpgrade()) {
-                            mtbShowWelcomePage(this.context, 3);
-                            vscode.window.showInformationMessage('There are ModusToolbox supported kits with out of date firmware.  Check the ModusToolbox Welcome page for more details.') ;
+                            let opts = {
+                                detail: "Select yes to upgrade all attached development kits to the latest firmware",
+                                modal: true
+                            } ;
+                            vscode.window.showInformationMessage('There are ModusToolbox supported kits with out of date firmware. Would you like to upgrade the firmware?', opts, "Yes", "No")
+                                .then((ans) => {
+                                    if (ans === "Yes") {
+                                        MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().updateAllFirmware()
+                                            .then(() => { mtbShowWelcomePage(MTBExtensionInfo.getMtbExtensionInfo().context, 3); }) ;
+                                    }
+                                }) ;
                         }
                         resolve() ;
                     }
