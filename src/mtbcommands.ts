@@ -223,6 +223,7 @@ function canRunModusCommand(context: vscode.ExtensionContext) : boolean {
 }
 
 let panel: vscode.WebviewPanel | undefined ;
+let aipanel: vscode.WebviewPanel | undefined ;
 
 function refreshStartPage() {
     if (panel !== undefined) {
@@ -553,14 +554,35 @@ export function mtbRefreshDevKits(context: vscode.ExtensionContext) {
     MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().scanForDevKits() ;
 }
 
+function displayAnswer(answer: string) {
+    if (aipanel === undefined) {
+        aipanel = vscode.window.createWebviewPanel(
+            'mtbassist', 
+            'ModusToolbox Answers',
+            vscode.ViewColumn.One, 
+            {
+            }
+       ) ;        
+    }
+
+    aipanel.webview.html = answer ;
+}
+
 export function mtbEPTAISearch(context: vscode.ExtensionContext) {
     vscode.window.showInputBox( {
+        ignoreFocusOut: true,
         placeHolder: "Question",
         prompt: "Enter question about Infineon products"
         })
     .then((query) => {
         if (typeof query === "string") {
-            askQuestion(query as string) ;
+            askQuestion(query as string)
+            .then((answer) => {
+                displayAnswer(answer) ;
+            })
+            .catch((err) => {
+                console.log(err);
+            }) ;
         }
     }) ;
 }
