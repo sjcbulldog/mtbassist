@@ -153,7 +153,7 @@ export async function activate(context: vscode.ExtensionContext) {
         mtbRefreshDevKits(context) ;
     });
 
-    disposable = vscode.commands.registerCommand('mtbassist.mtbEPTAISearch', (args: any[]) => {
+    disposable = vscode.commands.registerCommand('mtbassist.mtbAISearch', (args: any[]) => {
         mtbEPTAISearch(context) ;
     });	
 

@@ -36,6 +36,7 @@ import { MTBDevKitMgr } from './mtbdevicekits';
 import { RecentAppManager } from './mtbrecent';
 import { ClientRequest } from 'http';
 import { Headers, Request, RequestInfo } from 'node-fetch';
+import { askQuestion } from './mtbeptapi';
 
 function outputLines(context: vscode.ExtensionContext, data: string) {
     let str: string = data.toString().replace(/\r\n/g, "\n") ;
@@ -552,29 +553,14 @@ export function mtbRefreshDevKits(context: vscode.ExtensionContext) {
     MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().scanForDevKits() ;
 }
 
-function askQuestion(question: String) : Promise<String> {
-    const headers: Headers = new Headers() ;
-    headers.set('Content-Type', 'application/json') ;
-    headers.set('Accept', 'application/json') ;
-    headers.set('Access-Control-Allow-Headers', 'Content-Type') ;
-    headers.set('x-api-key', 'oR9t6SSWyP1PXsD7pg3yQ5dZSN4yukl05oHsOZyt');
-
-    let reqobj = {
-        question : question,
-        user_id : "butch.griffin@infineon.com"
-    } ;
-    let text: string = JSON.stringify(reqobj) ;
-
-    let url: String = "https://conversations-api.ept.ai/conversation";
-}
-
 export function mtbEPTAISearch(context: vscode.ExtensionContext) {
-
-
-
-
-
-    return fetch(request)
-        .then(res => res.json())        
+    vscode.window.showInputBox( {
+        placeHolder: "Question",
+        prompt: "Enter question about Infineon products"
+        })
+    .then((query) => {
+        if (typeof query === "string") {
+            askQuestion(query as string) ;
+        }
+    }) ;
 }
-
