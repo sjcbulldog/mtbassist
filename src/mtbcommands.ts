@@ -24,6 +24,7 @@ import * as path from 'path' ;
 import * as fs from 'fs' ;
 import * as exec from 'child_process' ;
 import * as os from 'os' ;
+import * as https from 'https' ;
 
 import { MTBLaunchConfig, MTBLaunchDoc } from './mtblaunchdata';
 import { getModusToolboxAssistantHTMLPage } from './mtbgenhtml';
@@ -33,6 +34,8 @@ import { MTBAssetInstance } from './mtbapp/mtbassets';
 import { browseropen } from './browseropen';
 import { MTBDevKitMgr } from './mtbdevicekits';
 import { RecentAppManager } from './mtbrecent';
+import { ClientRequest } from 'http';
+import { Headers, Request, RequestInfo } from 'node-fetch';
 
 function outputLines(context: vscode.ExtensionContext, data: string) {
     let str: string = data.toString().replace(/\r\n/g, "\n") ;
@@ -548,3 +551,30 @@ export function mtbSetIntellisenseProject(context: vscode.ExtensionContext) {
 export function mtbRefreshDevKits(context: vscode.ExtensionContext) {
     MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().scanForDevKits() ;
 }
+
+function askQuestion(question: String) : Promise<String> {
+    const headers: Headers = new Headers() ;
+    headers.set('Content-Type', 'application/json') ;
+    headers.set('Accept', 'application/json') ;
+    headers.set('Access-Control-Allow-Headers', 'Content-Type') ;
+    headers.set('x-api-key', 'oR9t6SSWyP1PXsD7pg3yQ5dZSN4yukl05oHsOZyt');
+
+    let reqobj = {
+        question : question,
+        user_id : "butch.griffin@infineon.com"
+    } ;
+    let text: string = JSON.stringify(reqobj) ;
+
+    let url: String = "https://conversations-api.ept.ai/conversation";
+}
+
+export function mtbEPTAISearch(context: vscode.ExtensionContext) {
+
+
+
+
+
+    return fetch(request)
+        .then(res => res.json())        
+}
+

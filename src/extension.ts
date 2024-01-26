@@ -26,7 +26,7 @@ import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
 import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
 import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbRunEditor, 
-		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbRefreshDevKits } from './mtbcommands';
+		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbRefreshDevKits, mtbEPTAISearch } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
@@ -152,6 +152,10 @@ export async function activate(context: vscode.ExtensionContext) {
     disposable = vscode.commands.registerCommand('mtbassist.mtbRefreshDevKits', (args: any[]) => {
         mtbRefreshDevKits(context) ;
     });
+
+    disposable = vscode.commands.registerCommand('mtbassist.mtbEPTAISearch', (args: any[]) => {
+        mtbEPTAISearch(context) ;
+    });	
 
 	//
 	// Set the tree providers for general information about the ModusToolbox project

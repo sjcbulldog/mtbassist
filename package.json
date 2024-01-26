@@ -72,6 +72,10 @@
       {
         "command": "mtbassist.mtbRefreshDevKits",
         "title": "ModusToolbox: Refresh Development Kit List"
+      },
+      {
+        "command" : "mtbassist.mtbAISearch",
+        "title" : "ModusToolbox: Use the EPI AI site to ask questions"
       }
     ],
     "keybindings": [
