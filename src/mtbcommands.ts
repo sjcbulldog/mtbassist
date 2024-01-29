@@ -227,7 +227,7 @@ function refreshStartPage() {
 }
 
 function refreshStartPageForKits() {
-    refreshStartPageWithPage(4);
+    refreshStartPageWithPage(3);
 }
 
 function refreshStartPageWithPage(tab: number) {

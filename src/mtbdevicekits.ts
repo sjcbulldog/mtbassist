@@ -143,6 +143,9 @@ export class MTBDevKitMgr {
                 .then((st: boolean) => {
                     vscode.window.showInformationMessage("All KitProg3 devices have been updated")
                         .then(() => resolve()) ;
+                })
+                .catch((err) => {
+                    reject(err);
                 }) ;
             })
             .catch((err) => { 

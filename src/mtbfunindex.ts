@@ -143,15 +143,22 @@ export class MtbFunIndex
 
         for(let entry of entries) {
             let fullentry = path.join(p, entry) ;
-            let st = fs.statSync(fullentry) ;
-            if (st.isFile()) {
-                if (entry === name) {
-                    dirs.push(p) ;
+            try {
+                let st = fs.statSync(fullentry) ;
+                if (st.isFile()) {
+                    if (entry === name) {
+                        dirs.push(p) ;
+                    }
+                }
+                else if (st.isDirectory()) {
+                    let fullpath: string = path.join(p, entry) ;
+                    this.findFilesByNameInt(name, fullpath, dirs) ;
                 }
             }
-            else if (st.isDirectory()) {
-                let fullpath: string = path.join(p, entry) ;
-                this.findFilesByNameInt(name, fullpath, dirs) ;
+            catch(err) {
+                //
+                // If there are things in an asset we cannot search, we just ignore them
+                //
             }
         }
     }
