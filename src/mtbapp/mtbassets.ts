@@ -174,7 +174,6 @@ export class MTBAssetInstance
 
     static scanOneDir(projinfo: MTBProjectInfo, dirname: string) {
         fs.readdir(dirname, (err, files) => {
-            console.log(dirname) ;
             if (err) {
                 let errmgs = err as Error ;
                 let extinfo: MTBExtensionInfo = MTBExtensionInfo.getMtbExtensionInfo() ;

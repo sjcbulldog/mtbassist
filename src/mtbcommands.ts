@@ -222,7 +222,7 @@ let panel: vscode.WebviewPanel | undefined ;
 
 function refreshStartPage() {
     if (panel !== undefined) {
-        panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'welcome.html', 1) ;
+        panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'welcome.html', 0) ;
     }
 }
 

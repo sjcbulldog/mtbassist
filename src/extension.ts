@@ -115,7 +115,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbShowWelcomePage', (args: any[]) => {
-		mtbShowWelcomePage(context, 1);
+		mtbShowWelcomePage(context, 0);
 	});
 	context.subscriptions.push(disposable);
 
