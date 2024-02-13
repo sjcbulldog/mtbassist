@@ -45,6 +45,79 @@ function getTerminalWorkingDirectory() : string {
 	return ret ;
 }
 
+function modusToolboxNotInstalled() {
+	let opts = {
+		modal: true
+	} ;
+	vscode.window.showErrorMessage("ModusToolbox 3.0 or later is not installed.  Please install ModusToolbox 3.0 or later and try again.", opts) ;
+}
+
+function noModusToolbox(context: vscode.ExtensionContext) {
+	let disposable;
+
+	//
+	// Register the various commands that are listed in the package.json file.
+	//
+	disposable = vscode.commands.registerCommand('mtbassist.mtbCreateProject', () => {
+		modusToolboxNotInstalled();
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbRunMakeGetlibs', () => {
+		modusToolboxNotInstalled();
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbRunEditor', (args: any[]) => {
+		modusToolboxNotInstalled();
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbShowDoc', (args: any[]) => {
+		modusToolboxNotInstalled();
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbShowWelcomePage', (args: any[]) => {
+		modusToolboxNotInstalled();
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOnDebugMode', (args: any[]) => {
+		mtbTurnOnDebugMode(context);
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOffDebugMode', (args: any[]) => {
+		mtbTurnOffDebugMode(context);
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerTextEditorCommand('mtbassist.mtbSymbolDoc', 
+		(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
+			modusToolboxNotInstalled();
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbResultDecode', (args: any[]) => {
+		modusToolboxNotInstalled();
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbRunLibraryManager', (args: any[]) => {
+		modusToolboxNotInstalled();
+	});
+	context.subscriptions.push(disposable);
+
+    disposable = vscode.commands.registerCommand('mtbassist.mtbSetIntellisenseProject', (args: any[]) => {
+		modusToolboxNotInstalled();
+    });
+
+    disposable = vscode.commands.registerCommand('mtbassist.mtbRefreshDevKits', (args: any[]) => {
+		modusToolboxNotInstalled();
+    });	
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
@@ -55,7 +128,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	// extension in one place and is a singleton.
 	//
 	MTBExtensionInfo.initExtension(context) ;
-
 	MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "Starting ModusToolbox assistant");
 
 	try {
@@ -68,9 +140,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	catch(err) {
 		let errobj: Error = (err as any) as Error ;
 		MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.warning, "Cannot activate extension 'clangd' - " + errobj.message);
-	}
+	}	
 
-	if (MTBExtensionInfo.getMtbExtensionInfo().major < 3) {
+	if (!MTBExtensionInfo.getMtbExtensionInfo().isModusToolboxValid) {
+		noModusToolbox(context) ;
+
 		// Put the message in the log window
 		MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.");
 
@@ -91,6 +165,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		return;
 	}
 
+
 	//
 	// Register the various commands that are listed in the package.json file.
 	//
@@ -98,6 +173,16 @@ export async function activate(context: vscode.ExtensionContext) {
 		mtbCreateProject(context);
 	});
 	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOnDebugMode', (args: any[]) => {
+		mtbTurnOnDebugMode(context);
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOffDebugMode', (args: any[]) => {
+		mtbTurnOffDebugMode(context);
+	});
+	context.subscriptions.push(disposable);	
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbRunMakeGetlibs', () => {
 		mtbRunMakeGetLibsCmd(context);
@@ -116,16 +201,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbShowWelcomePage', (args: any[]) => {
 		mtbShowWelcomePage(context, 0);
-	});
-	context.subscriptions.push(disposable);
-
-	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOnDebugMode', (args: any[]) => {
-		mtbTurnOnDebugMode(context);
-	});
-	context.subscriptions.push(disposable);
-
-	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOffDebugMode', (args: any[]) => {
-		mtbTurnOffDebugMode(context);
 	});
 	context.subscriptions.push(disposable);
 

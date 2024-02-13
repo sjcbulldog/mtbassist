@@ -64,8 +64,12 @@ export class MTBProgramProvider implements vscode.TreeDataProvider<MTBAssistItem
         this.items_[0].addChild(item) ;
 
         item = new MTBAssistItem("Show Welcome Page") ;
-        item.command = new MTBAssistCommand("Import Project", "mtbassist.mtbShowWelcomePage", "Show Welcome Page") ;
+        item.command = new MTBAssistCommand("Show Welcome Page", "mtbassist.mtbShowWelcomePage", "Show Welcome Page") ;
         this.items_[0].addChild(item) ;
+
+        item = new MTBAssistItem("Show Development Kits") ;
+        item.command = new MTBAssistCommand("Show Development Kits", "mtbassist.mtbRefreshDevKits", "Show Development Kits") ;
+        this.items_[0].addChild(item) ;        
 
         // item = new MTBAssistItem("Decode cy_rslt_t code") ;
         // item.command = new MTBAssistCommand("Decode cy_rslt_t code", "mtbassist.mtbResultDecode", "Decode Result Code") ;

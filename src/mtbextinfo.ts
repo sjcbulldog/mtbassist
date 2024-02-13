@@ -78,7 +78,7 @@ export class MTBExtensionInfo
     public major: number ;
     public minor: number ;
     public channel: vscode.OutputChannel ;
-    public manifestDb: MtbManifestDb ;
+    public manifestDb: MtbManifestDb | undefined ;
     public hasClangD: boolean ;
    
     context: vscode.ExtensionContext;
@@ -91,7 +91,7 @@ export class MTBExtensionInfo
         this.docsDir = this.toolsDir.replace("tools_", "docs_") ;
         this.channel = vscode.window.createOutputChannel("ModusToolbox") ;
         this.context = context ;
-        this.manifestDb = new MtbManifestDb() ;
+
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100) ;
 
         this.logMessage(MessageType.info, "Starting ModusToolbox assistant") ;
@@ -117,8 +117,13 @@ export class MTBExtensionInfo
         this.minor = -1 ;
         this.checkModusToolboxVersion() ;
 
+        if (this.isModusToolboxValid) {
+            this.manifestDb = new MtbManifestDb() ;
+        }
+
         if (this.getPersistedBoolean(MTBExtensionInfo.debugModeName, false)) {
             this.logMessage(MessageType.debug, "Debug mode is enabled, you should see debug messages") ;
+            this.showMessageWindow() ;
         }
 
         this.intellisenseProject = undefined ;
@@ -126,6 +131,10 @@ export class MTBExtensionInfo
         this.docstat = DocStatusType.none  ;
 
         this.statusBarItem.command = 'mtbassist.mtbSetIntellisenseProject';
+    }
+
+    public get isModusToolboxValid() : boolean {
+        return this.major >= 3 ;
     }
 
     public getDevKitMgr() : MTBDevKitMgr {
@@ -281,7 +290,13 @@ export class MTBExtensionInfo
         }
         else {
             this.mtbAssistExtensionInfo = new MTBExtensionInfo(context) ;
-            this.mtbAssistExtensionInfo.initDevKitMgr() ;
+            if (this.mtbAssistExtensionInfo.isModusToolboxValid) {
+                //
+                // Only probe dev kits if we are in a valid ModusToolbox environment. Otherwise, we don't know
+                // how the fw loader that we use may behave.
+                //
+                this.mtbAssistExtensionInfo.initDevKitMgr() ;
+            }
         }
     }
 

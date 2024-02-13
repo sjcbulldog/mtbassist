@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -31,47 +31,47 @@
     "commands": [
       {
         "command": "mtbassist.mtbCreateProject",
-        "title": "ModusToolbox: Create Project"
+        "title": "ModusToolbox Assistant: Create Project"
       },
       {
         "command": "mtbassist.mtbRunMakeGetlibs",
-        "title": "ModusToolbox: Make Getlibs"
+        "title": "ModusToolbox Assistant: Make Getlibs"
       },
       {
         "command": "mtbassist.mtbRunEditor",
-        "title": "ModusToolbox: Run Editor"
+        "title": "ModusToolbox Assistant: Run Editor"
       },
       {
         "command": "mtbassist.mtbShowDoc",
-        "title": "ModusToolbox: Show Document"
+        "title": "ModusToolbox Assistant: Show Document"
       },
       {
         "command": "mtbassist.mtbShowWelcomePage",
-        "title": "ModusToolbox: Show Welcome Page"
+        "title": "ModusToolbox Assistant: Show Welcome Page"
       },
       {
         "command": "mtbassist.mtbTurnOnDebugMode",
-        "title": "ModusToolbox: Turn On Debug Mode"
+        "title": "ModusToolbox Assistant: Turn On Debug Mode"
       },
       {
         "command": "mtbassist.mtbTurnOffDebugMode",
-        "title": "ModusToolbox: Turn Off Debug Mode"
+        "title": "ModusToolbox Assistant: Turn Off Debug Mode"
       },
       {
         "command": "mtbassist.mtbRunLibraryManager",
-        "title": "ModusToolbox: Library Manager"
+        "title": "ModusToolbox Assistant: Library Manager"
       },
       {
         "command": "mtbassist.mtbSymbolDoc",
-        "title": "ModusToolbox: Documentation"
+        "title": "ModusToolbox Assistant: Documentation"
       },
       {
         "command": "mtbassist.mtbSetIntellisenseProject",
-        "title": "ModusToolbox: Set Intellisense Project"
+        "title": "ModusToolbox Assistant: Set Intellisense Project"
       },
       {
         "command": "mtbassist.mtbRefreshDevKits",
-        "title": "ModusToolbox: Refresh Development Kit List"
+        "title": "ModusToolbox Assistant: Refresh Development Kit List"
       }
     ],
     "keybindings": [

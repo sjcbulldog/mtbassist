@@ -117,7 +117,7 @@ export class MTBAppInfo
         this.loadingWksc = false ;
         this.funindex = new MtbFunIndex() ;
 
-        MTBExtensionInfo.getMtbExtensionInfo().manifestDb.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
+        MTBExtensionInfo.getMtbExtensionInfo().manifestDb!.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
         MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading) ;
 
         vscode.tasks.onDidEndTask((e: vscode.TaskEndEvent) => {

@@ -546,5 +546,11 @@ export function mtbSetIntellisenseProject(context: vscode.ExtensionContext) {
 }
 
 export function mtbRefreshDevKits(context: vscode.ExtensionContext) {
-    MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().scanForDevKits() ;
+    MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().scanForDevKits()
+        .then((status: boolean) => { 
+            mtbShowWelcomePage(context, 3) ;
+        })
+        .catch((err) => { 
+            vscode.window.showErrorMessage("Error scanning for development kits: " + err.message) ;
+        }) ;
 }

@@ -112,6 +112,9 @@ export class MTBDevKitMgr {
                     this.scanForDevKits()
                     .then((st: boolean) => {
                         vscode.window.showInformationMessage("Kit Prog 3 [" + serial + "] has been updated") ;
+                    })
+                    .catch((err) => {
+                        vscode.window.showErrorMessage('Kit Prog 3 [' + serial + '] update failed - ' + err.message) ;
                     }) ;
                 })
                 .catch((err) => { 
@@ -174,6 +177,10 @@ export class MTBDevKitMgr {
                             let res: [number, string[]] = result as [number, string[]] ;
                             if (res[0] !== 0) {
                                 this.scanning = false ;
+                                for(let line of res[1]) {
+                                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, line) ;
+                                }
+                                MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow() ;
                                 reject(new Error("fw-loader returned exit code " + res[0]));
                             }
                             else {
@@ -331,6 +338,10 @@ export class MTBDevKitMgr {
             .then((result) => {
                 let res: [number, string[]] = result as [number, string[]] ;
                 if (res[0] !== 0) {
+                    for(let line of res[1]) {
+                        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, line) ;
+                    }
+                    MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow() ;                    
                     reject(new Error("fw-loader returned exit code " + res[0]));
                 }
                 else {

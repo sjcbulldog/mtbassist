@@ -100,7 +100,7 @@ export class MTBAssistAssetProvider implements vscode.TreeDataProvider<MTBAssetI
             parent.setChildren([]) ;
             for(var asset of assets) {
                 let item = new MTBAssetItem(asset.id + ", " + asset.version) ;
-                let mandb: MtbManifestDb = MTBExtensionInfo.getMtbExtensionInfo().manifestDb ;
+                let mandb: MtbManifestDb = MTBExtensionInfo.getMtbExtensionInfo().manifestDb! ;
                 if (mandb.isLoaded) {
                     if (asset.id && asset.version) {
                         let mitem: MTBItem | undefined = mandb.findItemByID(asset.id) ;
