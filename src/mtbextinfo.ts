@@ -62,6 +62,7 @@ export class MTBExtensionInfo
     static mtbAssistExtensionInfo : MTBExtensionInfo | undefined = undefined ;
 
     public static readonly debugModeName : string = "debugMode" ;
+    public static readonly readmeName : string = "readmeOnOff" ;
     public static readonly showWelcomePageName : string = "showWelcomePage" ;
     public static version: string = "" ;
 
@@ -158,11 +159,10 @@ export class MTBExtensionInfo
                                 detail: "Select yes to upgrade all attached development kits to the latest firmware",
                                 modal: true
                             } ;
-                            vscode.window.showInformationMessage('There are ModusToolbox supported kits with out of date firmware. Would you like to upgrade the firmware?', opts, "Yes", "No")
+                            vscode.window.showInformationMessage('There are ModusToolbox supported kits with out of date firmware. Would you like to see the development kits attached?', opts, "Yes")
                                 .then((ans) => {
                                     if (ans === "Yes") {
-                                        MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().updateAllFirmware()
-                                            .then(() => { mtbShowWelcomePage(MTBExtensionInfo.getMtbExtensionInfo().context, 3); }) ;
+                                        mtbShowWelcomePage(MTBExtensionInfo.getMtbExtensionInfo().context, 3);
                                     }
                                 }) ;
                         }
@@ -237,21 +237,6 @@ export class MTBExtensionInfo
                 break ;
             case StatusType.VSCode:
                 st += " Initializing" ;
-                break ;
-        }
-
-        switch(this.docstat) {
-            case DocStatusType.complete:
-                st += "/C" ;
-                tip += "Documentation: Loaded" ;
-                break ;
-            case DocStatusType.error:
-                st += "/E" ;
-                tip += "Documentation: Error" ;
-                break ;
-            case DocStatusType.running:
-                st += "/R" ;
-                tip += "Documentation: Loading ..." ;
                 break ;
         }
 

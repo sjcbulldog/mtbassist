@@ -27,6 +27,7 @@
 //
 import * as path from 'path' ;
 import * as fs from 'fs' ;
+import * as vscode from 'vscode';
 
 import { MTBAppInfo, getModusToolboxApp } from "./mtbappinfo";
 import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
@@ -38,6 +39,7 @@ export class MTBAssetInstance
 {
     static readonly mtbAssetName: string = "$$ASSET_REPO$$" ;
     static readonly mtbLocalName: string = "$$LOCAL$$" ;
+    static readonly mtbGlobalName: string = "$$GLOBAL$$" ;
 
     public id?: string ;
     public url?: string ;
@@ -120,6 +122,9 @@ export class MTBAssetInstance
                 }
                 else if (loc.startsWith(this.mtbLocalName)) {
                     ret.location = path.join(projinfo.libsDir!, loc.substring(this.mtbLocalName.length));
+                }
+                else if (loc.startsWith(this.mtbGlobalName)) {
+                    ret.location = path.join(projinfo.globalDir!, loc.substring(this.mtbGlobalName.length));
                 }
                 else {
                     ret.location = path.join(projinfo.getProjectDir(), loc) ;
@@ -209,16 +214,22 @@ export class MTBAssetInstance
         return ret ;
     }
     
-    public displayDocs() {
+    public displayDocs(symbol: String) {
         if (getModusToolboxApp()?.launch) {
+            let found: boolean = false ;
             getModusToolboxApp()!.launch!.docs.forEach(doc => {
                 if (this.location) {
                     if (MTBAssetInstance.mtbPathCompare(undefined, doc.location, this.fullpath)) {
+                        found = true ;
                         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "launching docs at location '" + doc.location + "'");
                         browseropen(decodeURIComponent(doc.location)) ;
                     }
                 }
             }) ;
+
+            if (!found) {
+                vscode.window.showInformationMessage("There is no documentation for the asset containing the symbol '" + symbol + "'.");
+            }
         }
     }
 }

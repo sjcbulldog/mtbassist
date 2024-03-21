@@ -52,7 +52,7 @@ export function runModusCommandThroughShell(cmd: string, cwd: string) : Promise<
             if (error) {
                 let errmsg : Error = error as Error ;
                 MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "running command '" + cmd + "' - " + errmsg.message) ;
-                reject(error) ;
+                reject([error, stdout, stderr]) ;
             }
 
             if (stderr) {
@@ -79,8 +79,11 @@ export function runMakeVSCode(cwd: string) : Promise<void> {
             .then ((output: string) => {
                 resolve() ;
             })
-            .catch ((error) => {
-                reject(error) ;
+            .catch ((info) => {
+                let error = info[0] ;
+                let stdout = info[1] ;
+                let stderr = info[2] ;
+                reject(info) ;
             }) ;
     }) ;
     return ret ;
@@ -146,7 +149,10 @@ export function runMakeGetAppInfo(cwd: string) : Promise<Map<string, string>> {
                 let outmap : Map<string, string> = makeOutputToMap(output) ;
                 resolve(outmap) ;
             })
-            .catch ((error) => {
+            .catch ((info) => {
+                let error = info[0] ;
+                let stdout = info[1] ;
+                let stderr = info[2] ;
                 reject(error) ;
             }) ;
     }) ;

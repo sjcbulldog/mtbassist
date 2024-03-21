@@ -358,7 +358,7 @@ export class MTBAppInfo
                             //
                             let missing: string[] = this.checkAllAssetsPresent() ;
                             if (missing.length > 0) {
-                                let str : string = "There are assets that are required by this applicadtion that are not " +
+                                let str : string = "There are assets that are required by this application that are not " +
                                 "available locally.  Should 'make getlibs' be run to download these assets " +
                                 "from github? " ;
 
@@ -551,6 +551,7 @@ export class MTBAppInfo
     // This method performs the work that is common to the processing
     // of an application both single core and multi core.
     //
+    private static devicedbmsg = "this application is missing a reference to any device database" ;
     private processCommonAppStuff() : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
             this.mtbUpdateProgs()
@@ -559,13 +560,36 @@ export class MTBAppInfo
                         .then(()=> {
                             let readme : string = path.join(this.appDir, "README.md") ;
                             if (fs.existsSync(readme)) {
-                                let uri: vscode.Uri = vscode.Uri.file(readme) ;
-                                vscode.commands.executeCommand("markdown.showPreview", uri) ;
+                                let info = MTBExtensionInfo.getMtbExtensionInfo() ;
+                                if (info.getPersistedBoolean(MTBExtensionInfo.readmeName, true)) {
+                                    let uri: vscode.Uri = vscode.Uri.file(readme) ;
+                                    vscode.commands.executeCommand("markdown.showPreview", uri) ;
+                                }
                             }
                             resolve() ;
                         })
-                        .catch((err: Error) => {
-                            reject(err) ;
+                        .catch((info) => {
+                            let err = info[0] ;
+                            let stderr : string = info[2]  ;
+                            if (stderr.includes(MTBAppInfo.devicedbmsg)) {
+                                let info = MTBExtensionInfo.getMtbExtensionInfo() ;                                
+                                mtbRunMakeGetLibs(info.context, this.appDir)
+                                    .then((number) => {
+                                        this.processCommonAppStuff()
+                                            .then(() => {
+                                                resolve() ;
+                                            })
+                                            .catch((err) => {
+                                                reject(err) ;
+                                            }) ;
+                                    })
+                                    .catch((err) => {
+                                        reject(err) ;
+                                    }) ;
+                            }
+                            else {
+                                reject(err) ;
+                            }
                         }) ;
                 })
                 .catch((err: Error) => {

@@ -77,7 +77,7 @@ export class MTBProgramProvider implements vscode.TreeDataProvider<MTBAssistItem
 
         if (configs !== undefined) {      
 
-            item = new MTBAssistItem("Run 'make getlibs'") ;
+            item = new MTBAssistItem("Refresh dependent assets (make getlibs)") ;
             item.command = new MTBAssistCommand("Run Make Getlibs", "mtbassist.mtbRunMakeGetlibs", "Run 'make getlibs'") ;
             this.items_[1].addChild(item) ;
 

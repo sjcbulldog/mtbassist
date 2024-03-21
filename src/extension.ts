@@ -26,7 +26,7 @@ import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
 import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
 import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbRunEditor, 
-		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbRefreshDevKits } from './mtbcommands';
+		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbRefreshDevKits, mtbTurnOnCodeExampleReadme, mtbTurnOffCodeExampleReadme } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
@@ -203,6 +203,16 @@ export async function activate(context: vscode.ExtensionContext) {
 		mtbShowWelcomePage(context, 0);
 	});
 	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOnCodeExampleReadme', (args: any[]) => {
+		mtbTurnOnCodeExampleReadme(context);
+	});
+	context.subscriptions.push(disposable);    
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOffCodeExampleReadme', (args: any[]) => {
+		mtbTurnOffCodeExampleReadme(context);
+	});
+	context.subscriptions.push(disposable);     
 
 	disposable = vscode.commands.registerTextEditorCommand('mtbassist.mtbSymbolDoc', 
 		(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {

@@ -476,6 +476,14 @@ export function mtbTurnOffDebugMode(context: vscode.ExtensionContext) {
     MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.debugModeName, false) ;
 }
 
+export function mtbTurnOnCodeExampleReadme(context: vscode.ExtensionContext) {
+    MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.readmeName, true) ;
+}
+
+export function mtbTurnOffCodeExampleReadme(context: vscode.ExtensionContext) {
+    MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.readmeName, false) ;
+}
+
 export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, context: vscode.ExtensionContext) {
     if (vscode.window.activeTextEditor) {
         let uri: vscode.Uri = editor.document.uri ;
@@ -504,7 +512,7 @@ export function mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorE
                             MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "symbol found in path '" + loc.uri.fsPath + "'");
                             let asset: MTBAssetInstance|undefined = MTBAssetInstance.mtbPathToInstance(loc.uri.fsPath) ;
                             if (asset) {
-                                asset.displayDocs() ;
+                                asset.displayDocs(symbol) ;
                                 return ;
                             }
                         }

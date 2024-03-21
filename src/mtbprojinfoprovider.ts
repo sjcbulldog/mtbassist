@@ -125,24 +125,28 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
             let value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_APP_NAME) ;
             if (value) {
                 let item: MTBProjectItem = new MTBProjectItem("APP NAME", value) ;
+                item.tooltip = value ;
                 parent.addChild(item) ;
             }
 
             value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_TARGET) ;
             if (value) {
                 let item: MTBProjectItem = new MTBProjectItem("TARGET", value) ;
+                item.tooltip = value ;
                 parent.addChild(item) ;
             }
 
             value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_DEVICE) ;
             if (value) {
                 let item: MTBProjectItem = new MTBProjectItem("MCU DEVICE", value) ;
+                item.tooltip = value ;
                 parent.addChild(item) ;
             }
 
             value = projinfo.getVar(ModusToolboxEnvVarNames.MTB_ADDITIONAL_DEVICES) ;
             if (value && value.length > 0) {
                 let item: MTBProjectItem = new MTBProjectItem("OTHER DEVICES", value) ;
+                item.tooltip = value ;
                 parent.addChild(item) ;
             }
 

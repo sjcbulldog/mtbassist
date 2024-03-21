@@ -58,6 +58,14 @@
         "title": "ModusToolbox Assistant: Turn Off Debug Mode"
       },
       {
+        "command": "mtbassist.mtbTurnOnCodeExampleReadme",
+        "title": "ModusToolbox: Turn On Code Example Readme"
+      },
+      {
+        "command": "mtbassist.mtbTurnOffCodeExampleReadme",
+        "title": "ModusToolbox: Turn Off Code Example Readme"
+      },      
+      {
         "command": "mtbassist.mtbRunLibraryManager",
         "title": "ModusToolbox Assistant: Library Manager"
       },
@@ -163,6 +171,7 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
+    "@vscode/vsce": "^2.23.0",
     "is-wsl": "^2.2.0",
     "node-fetch": "^3.2.10",
     "open": "^9.1.0",
