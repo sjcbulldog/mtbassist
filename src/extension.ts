@@ -296,6 +296,7 @@ export async function activate(context: vscode.ExtensionContext) {
 							shellPath: shpath,
 							shellArgs: ["--login"],
 							cwd: getTerminalWorkingDirectory(),
+                            isTransient: true,
 							env: {
 								["HOME"] : os.homedir(),
 								["PATH"] : "/bin:/usr/bin",
