@@ -299,8 +299,6 @@ export async function activate(context: vscode.ExtensionContext) {
 							env: {
 								["HOME"] : os.homedir(),
 								["PATH"] : "/bin:/usr/bin",
-								["TEMP"] : "/tmp",
-								["TMP"] : "/tmp",
 								["CHERE_INVOKING"] : getTerminalWorkingDirectory()
 							},
 							strictEnv: false,
