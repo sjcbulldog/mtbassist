@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.1.7
+Fixed bug with some tightly managed environments where starting the ModusToolbox shell via the
+terminal command caused error "/tmp not found" and locked up other ModusToolbox commands.  Note
+you should close any ModusToolbox terminals in any VS Code sessions and restart VS Code to get the
+updated (and fixed) behavior.
+
 ### 1.1.6
 Added command to turn off showing code example README file.
 
