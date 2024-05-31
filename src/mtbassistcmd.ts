@@ -23,10 +23,10 @@ export class MTBAssistCommand implements vscode.Command
     public tooltip: string ;
     public arguments?: any[] ;
 
-    constructor(t: string, c: string, s:string) {
+    constructor(t: string, c: string, s:string, args?: any[]) {
         this.title = t ;
         this.command = c ;
         this.tooltip = s ;
-        this.arguments = undefined ;
-    }
+        this.arguments = args ;
+    }    
 }

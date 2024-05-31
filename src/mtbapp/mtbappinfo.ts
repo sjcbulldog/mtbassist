@@ -41,8 +41,6 @@ import { ModusToolboxEnvTypeNames, ModusToolboxEnvVarNames } from './mtbnames';
 import { mtbRunMakeGetLibs } from '../mtbcommands';
 import { MtbFunIndex } from '../mtbfunindex';
 
-
-
 interface LaunchDoc
 {
     location: string,
@@ -130,7 +128,7 @@ export class MTBAppInfo
 
     private buildTaskEnded() {
         if (this.checkCompileCommandsFiles()) {
-            vscode.window.showInformationMessage("Fixed intellisense database from ModusToolbox 3.0 or 3.1");            
+            vscode.window.showInformationMessage("Fixed intellisense database from ModusToolbox 3.0 or 3.1");
         }
     }
 
@@ -389,6 +387,7 @@ export class MTBAppInfo
                                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "error processing symbols for ModusToolbox Documentation command");
                                     MTBExtensionInfo.getMtbExtensionInfo().setDocStatus(DocStatusType.error) ;
                                 }) ;
+                            quickLinkTaskChecks() ;
                             resolve(true) ;
                         }
                     }
@@ -1048,6 +1047,118 @@ export class MTBAppInfo
             }) ;
         }) ;
         return ret ;
+    }
+}
+
+
+function getProjectDir() : string {
+    let ret : string = "" ;
+
+    let app = getModusToolboxApp() ;
+    if (app) {
+        if (app.projects.length > 0) {
+            ret = app.projects[0].name ;
+        }
+    }
+
+    return ret;
+}
+
+function addTasks(taskfile: string, tasks: any, erase: boolean, program: boolean) : void
+{
+    let msg = "The following tasks are missing (" ;
+    if (!erase) {
+        msg += "Erase, " ;
+    }
+    if (!program) {
+        msg += "Program" ;
+    }
+    msg += ").  Should they be added?" ;
+
+    vscode.window.showInformationMessage(msg, "Yes", "No")
+        .then((value) => {
+            if (value === "Yes") {
+                if (!erase) {
+                    let projdir = getProjectDir() ;
+                    if (projdir !== "") {
+                        let eraseTask =  {
+                            "label": "Erase",
+                            "type": "process",
+                            "command": "bash",
+                            "args": [
+                                "--norc",
+                                "-c",
+                                "cd " + projdir + " ; make erase"
+                            ],
+                
+                            "windows" : {
+                                "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",
+                                "args": [
+                                    "--norc",
+                                    "-c",
+                                    "export PATH=/bin:/usr/bin:$PATH ; cd " + projdir + " ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe erase"
+                                ]
+                            },
+                            "problemMatcher": []
+                        } ;
+                        tasks.tasks.push(eraseTask) ;
+                    }
+                }
+                if (!program) {
+                    let programTask =  {
+                        "label": "Program",
+                        "type": "process",
+                        "command": "bash",
+                        "args": [
+                            "--norc",
+                            "-c",
+                            "make qprogram"
+                        ],
+            
+                        "windows" : {
+                            "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",
+                            "args": [
+                                "--norc",
+                                "-c",
+                                "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe qprogram"
+                            ]
+                        },
+                        "problemMatcher": []
+                    } ;
+                    tasks.tasks.push(programTask) ;
+                }
+                fs.writeFileSync(taskfile, JSON.stringify(tasks, null, 4)) ;                
+            }
+        }) ;
+}
+
+export function quickLinkTaskChecks() {
+    if (vscode.workspace.workspaceFolders) {
+        let vscodedir = vscode.workspace.workspaceFolders[0].uri.fsPath ;
+        let taskfile = path.join(vscodedir, ".vscode", "tasks.json") ;
+        if (fs.existsSync(taskfile)) {
+            let taskdata = fs.readFileSync(taskfile, 'utf8') ;
+            taskdata = taskdata.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m);
+            let tasks = JSON.parse(taskdata) ;
+            let erase = false ;
+            let program = false ; 
+            let taskdefs = []  ;           
+            if (tasks.tasks) {
+                taskdefs = tasks.tasks ;
+                for (var task of taskdefs) {
+                    if (task.label === "Erase") {
+                        erase = true ;
+                    }
+                    if (task.label === "Program") {
+                        program = true ;
+                    }
+                }
+            }
+
+            if (!erase || !program) {
+                addTasks(taskfile, tasks, erase, program) ;
+            }
+        }
     }
 }
 

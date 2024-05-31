@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -64,7 +64,7 @@
       {
         "command": "mtbassist.mtbTurnOffCodeExampleReadme",
         "title": "ModusToolbox: Turn Off Code Example Readme"
-      },      
+      },
       {
         "command": "mtbassist.mtbRunLibraryManager",
         "title": "ModusToolbox Assistant: Library Manager"
@@ -104,6 +104,12 @@
           "name": "Application Info",
           "icon": "media/bot.png",
           "contextualTitle": "Application Info"
+        },
+        {
+          "id": "mtblinks",
+          "name": "Quick Links",
+          "icon": "media/bot.png",
+          "contextualTitle": "Quick Links"
         },
         {
           "id": "mtbglobal",
@@ -171,6 +177,7 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
+    "@types/json5": "^2.2.0",
     "@vscode/vsce": "^2.23.0",
     "is-wsl": "^2.2.0",
     "node-fetch": "^3.2.10",

@@ -24,6 +24,7 @@
 import * as vscode from 'vscode';
 import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
+import { getMTBQuickLinksTreeProvider } from './mtbquicklinkprovider';
 import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
 import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbRunEditor, 
 		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbRefreshDevKits, mtbTurnOnCodeExampleReadme, mtbTurnOffCodeExampleReadme } from './mtbcommands';
@@ -249,6 +250,14 @@ export async function activate(context: vscode.ExtensionContext) {
 	//
 	// Set the tree providers for the programs that can be invoked from ModusToolbox
 	//
+	vscode.window.createTreeView('mtblinks',
+		{
+			treeDataProvider: getMTBQuickLinksTreeProvider()
+		});		
+
+	//
+	// Set the tree providers for the programs that can be invoked from ModusToolbox
+	//
 	vscode.window.createTreeView('mtbglobal',
 		{
 			treeDataProvider: getMTBProgramsTreeProvider()
@@ -316,8 +325,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	if (MTBExtensionInfo.getMtbExtensionInfo().getPersistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
 		vscode.commands.executeCommand('mtbassist.mtbShowWelcomePage');
 	}
-
-
 }
 
 // this method is called when your extension is deactivated

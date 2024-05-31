@@ -102,10 +102,12 @@ export function mtbRunEditor(context: vscode.ExtensionContext, args?: any) {
 
         vscode.window.showInformationMessage("Starting program '" + cmdobj.shortName) ;
 
+        let app = getModusToolboxApp() ;
+
         exec.execFile(cmdobj.cmdline[0], 
             cmdargs, 
             { 
-                cwd: getModusToolboxApp()?.appDir
+                cwd: app!.appDir
             }, (error, stdout, stderr) => 
             {
                 if (error) {

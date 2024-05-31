@@ -191,8 +191,5 @@ export function getModusToolboxAssistantHTMLPage(webview: vscode.Webview, page: 
     html = replaceTokens("####NONCE####", computeNonce(), html) ;
     html = replaceTokens("####TAB####", computeTab(tab), html) ;
 
-    // let file: string = "D:/cygwin64/home/bwg/src/mtbassist/stuff.html" ;
-    // fs.writeFileSync(file, html) ;
-
     return html ;
 }
