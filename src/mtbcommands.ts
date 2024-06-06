@@ -104,10 +104,18 @@ export function mtbRunEditor(context: vscode.ExtensionContext, args?: any) {
 
         let app = getModusToolboxApp() ;
 
+        let envobj : any = {} ;
+        for(let key of Object.keys(process.env)) {
+            if (key.indexOf("ELECTRON") === -1) {
+                envobj[key] = process.env[key] ;
+            }
+        }
+
         exec.execFile(cmdobj.cmdline[0], 
             cmdargs, 
             { 
-                cwd: app!.appDir
+                cwd: app!.appDir,
+                env: envobj
             }, (error, stdout, stderr) => 
             {
                 if (error) {
@@ -388,6 +396,23 @@ export function mtbRunMakeGetLibsCmd(context: vscode.ExtensionContext) {
         }
 }
 
+function findWorkspaceFile(dir: string) : string  {
+    let results: string[] = [] ;
+    let files: string[] = fs.readdirSync(dir) ;
+    for(let file of files) {
+        let fullpath: string = path.join(dir, file) ;
+        if (fullpath.endsWith(".code-workspace")) {
+            results.push(fullpath) ;
+        }
+    }
+
+    if (results.length === 1) {
+        return results[0] ;
+    }
+
+    return dir ;
+}
+
 export function mtbCreateProject(context: vscode.ExtensionContext) {
     if (getModusToolboxApp() !== undefined && getModusToolboxApp()!.isLoading) {
         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;
@@ -448,7 +473,8 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
     }
     else if (projects.length === 1) {
         projpath = projects[0].location ;
-        let uri = vscode.Uri.file(projpath) ;
+        let wkspcfile : string = findWorkspaceFile(projpath) ;
+        let uri = vscode.Uri.file(wkspcfile) ;
         vscode.commands.executeCommand('vscode.openFolder', uri) ;
     }
     else {

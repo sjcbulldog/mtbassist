@@ -157,6 +157,20 @@ export class MTBDevKitMgr {
         }) ;
     }
 
+    private isNotConnected(output: [number, string[]]) : boolean {
+        let ret: boolean = false ;
+        if (output[0] === 1) {
+            for(let line of output[1]) {
+                if (line.indexOf('No connected devices') !== -1) {
+                    ret = true ;
+                    break ;
+                }
+            }
+        }
+
+        return ret ;
+    }
+
     public scanForDevKits() : Promise<boolean> {
         let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
             if (this.scanning) {
@@ -175,7 +189,7 @@ export class MTBDevKitMgr {
                     .then((result) => {
                             (async() => { 
                             let res: [number, string[]] = result as [number, string[]] ;
-                            if (res[0] !== 0) {
+                            if (res[0] !== 0 && !this.isNotConnected(res)) {
                                 this.scanning = false ;
                                 for(let line of res[1]) {
                                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, line) ;
@@ -184,7 +198,9 @@ export class MTBDevKitMgr {
                                 reject(new Error("fw-loader returned exit code " + res[0]));
                             }
                             else {
-                                await this.extractKits(res[1]);
+                                if (res[0] === 0) {
+                                    await this.extractKits(res[1]);
+                                }
                                 this.scanning = false ;
                                 resolve(true) ;
                             }

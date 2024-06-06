@@ -1,5 +1,21 @@
 # Change Log
 
+### 1.1.11
+Directly open the workspace file when creating a new project if it exists.
+
+### 1.1.10
+Updated the output when device kits are not connected to the machine so they are not reported
+as an error.
+
+### 1.1.9
+Fixed a bug when the VSCode extension was launching a ModusToolbox tool that was based on
+electron.  VSCode sets the ELECTRON_RUN_AS_NODE value which interferes with the tool being
+launched.  This value is filtered out of the environment prior to launching any ModusToolbox
+tools.
+
+### 1.1.8
+Added the quick link panel on the left to make some common tasks easier to launch.
+
 ### 1.1.7
 Fixed bug with some tightly managed environments where starting the ModusToolbox shell via the
 terminal command caused error "/tmp not found" and locked up other ModusToolbox commands.  Note
