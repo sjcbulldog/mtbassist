@@ -433,14 +433,17 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
         let minor: number = MTBExtensionInfo.getMtbExtensionInfo().minor ;
 
         if (major > 3 || minor > 0) {
+            vscode.window.showInformationMessage("One") ;
             outstr = exec.execFileSync(pcpath, ["--machine-interface", "--ide", "vscode", "--ide-readonly", "--close"]) ;
             post30 = true ;
         }
         else {
+            vscode.window.showInformationMessage("Two") ;            
             outstr = exec.execFileSync(pcpath, ["--eclipse", "--ideVersion", "3.0"]) ;
         }
     }
     catch(error) {
+        vscode.window.showInformationMessage("Error: " + error) ;  
         console.log("error: " + error) ;
         return ;
     }

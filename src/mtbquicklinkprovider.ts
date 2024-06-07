@@ -99,33 +99,35 @@ export class MTBQuickLinksProvider implements vscode.TreeDataProvider<MTBAssistI
         //
         // Now, lets process each project
         //
-        for(let projinfo of appinfo.projects) {
-            let app: MTBAssistItem = new MTBAssistItem(projinfo.name) ;
-            this.items_.push(app) ;
+        if (appinfo.projects.length > 1) {
+            for(let projinfo of appinfo.projects) {
+                let app: MTBAssistItem = new MTBAssistItem(projinfo.name) ;
+                this.items_.push(app) ;
 
-            if (appinfo.tasks.doesTaskExist("Build " + projinfo.name)) {
-                item = new MTBAssistItem("Build") ;
-                item.command = new MTBAssistCommand("Build", "workbench.action.tasks.runTask", "Build the application", [ "Build " + projinfo.name]) ;
-                app.addChild(item) ;
+                if (appinfo.tasks.doesTaskExist("Build " + projinfo.name)) {
+                    item = new MTBAssistItem("Build") ;
+                    item.command = new MTBAssistCommand("Build", "workbench.action.tasks.runTask", "Build the application", [ "Build " + projinfo.name]) ;
+                    app.addChild(item) ;
+                }
+
+                if (appinfo.tasks.doesTaskExist("Rebuild " + projinfo.name)) {
+                    item = new MTBAssistItem("Rebuild") ;
+                    item.command = new MTBAssistCommand("Rebuild", "workbench.action.tasks.runTask", "Rebuild all source for the project", [ "Rebuild "  + projinfo.name]) ;
+                    app.addChild(item) ;
+                }
+
+                if (appinfo.tasks.doesTaskExist("Clean" + projinfo.name)) {
+                    item = new MTBAssistItem("Clean") ;
+                    item.command = new MTBAssistCommand("Clean", "workbench.action.tasks.runTask", "Delete all build artifacts for the project", [ "Clean " + projinfo.name]) ;
+                    app.addChild(item) ;
+                }
+
+                if (appinfo.tasks.doesTaskExist("Program " + projinfo.name)) {
+                    item = new MTBAssistItem("Program") ;
+                    item.command = new MTBAssistCommand("Program", "workbench.action.tasks.runTask", "Program the program into device memory", [ "Program " + projinfo.name]) ;
+                    app.addChild(item) ;
+                }                
             }
-
-            if (appinfo.tasks.doesTaskExist("Rebuild " + projinfo.name)) {
-                item = new MTBAssistItem("Rebuild") ;
-                item.command = new MTBAssistCommand("Rebuild", "workbench.action.tasks.runTask", "Rebuild all source for the project", [ "Rebuild "  + projinfo.name]) ;
-                app.addChild(item) ;
-            }
-
-            if (appinfo.tasks.doesTaskExist("Clean" + projinfo.name)) {
-                item = new MTBAssistItem("Clean") ;
-                item.command = new MTBAssistCommand("Clean", "workbench.action.tasks.runTask", "Delete all build artifacts for the project", [ "Clean " + projinfo.name]) ;
-                app.addChild(item) ;
-            }
-
-            if (appinfo.tasks.doesTaskExist("Program " + projinfo.name)) {
-                item = new MTBAssistItem("Program") ;
-                item.command = new MTBAssistCommand("Program", "workbench.action.tasks.runTask", "Program the program into device memory", [ "Program " + projinfo.name]) ;
-                app.addChild(item) ;
-            }                
         }
 
         this.onDidChangeTreeData_.fire(undefined) ;        
