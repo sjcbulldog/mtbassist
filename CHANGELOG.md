@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.1.12
+Updated the quick launch window on the left to provide more options and allow the user
+to perform operations on a per project as well as a per application basis.
+
 ### 1.1.11
 Directly open the workspace file when creating a new project if it exists.
 

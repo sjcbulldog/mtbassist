@@ -40,6 +40,8 @@ import { runMakeGetAppInfo, runMakeVSCode, runMtbLaunch } from './mtbrunprogs';
 import { ModusToolboxEnvTypeNames, ModusToolboxEnvVarNames } from './mtbnames';
 import { mtbRunMakeGetLibs } from '../mtbcommands';
 import { MtbFunIndex } from '../mtbfunindex';
+import { MTBTasks } from './mtbtasks';
+import { getMTBQuickLinksTreeProvider } from '../mtbquicklinkprovider';
 
 interface LaunchDoc
 {
@@ -97,6 +99,8 @@ export class MTBAppInfo
     public needVSCode: boolean ;
 
     private loadingWksc: boolean ;
+
+    public tasks: MTBTasks | undefined = undefined ;
 
     //
     // Create the application object and load its contents in the asynchronously
@@ -295,6 +299,41 @@ export class MTBAppInfo
         }
     }
 
+    private findWorkspaceFile() : string {
+        let ret: string = "" ;
+        let files = fs.readdirSync(this.appDir) ;
+        for(let file of files) {
+            if (file.endsWith(".code-workspace")) {
+                ret = path.join(this.appDir, file) ;
+                break ;
+            }
+        }
+
+        return ret ;
+    }
+
+    private dirToTaskFile(dir: string) : string {
+        return path.join(dir, ".vscode", "tasks.json") ;
+    }
+
+    private projectNames() : string[] {
+        let ret: string[] = [] ;
+        for(let proj of this.projects) {
+            ret.push(proj.name) ;
+        }
+
+        return ret ;
+    }
+
+    private updateTasks(add: boolean) {
+        this.tasks = new MTBTasks(this.dirToTaskFile(this.appDir), this.projectNames()) ;
+        if (add && this.tasks) {
+            this.tasks.addAll() ;
+            this.tasks.writeTasks() ;
+        }
+        getMTBQuickLinksTreeProvider().refresh() ;        
+    }
+
     public async init() : Promise<boolean> {
         let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
 
@@ -374,6 +413,20 @@ export class MTBAppInfo
                             }
 
                             //
+                            // See if we need to add any tasks
+                            //
+                            this.updateTasks(false) ;
+                            if (this.tasks === undefined || this.tasks.areWeMissingTasks()) {
+                                vscode.window.showInformationMessage("The ModusToolbox Assistant works best with a specific set of tasks for the application and the projects.  Do you want to add these tasks?", "Yes", "No")
+                                    .then((answer) => {
+                                        if (answer === "Yes") {
+                                            this.updateTasks(true) ;
+                                        }
+                                    }) ;
+                            }
+
+
+                            //
                             // Scrub the assets looking for documentation that we might display to the
                             // user.  This happens in the background.
                             //
@@ -387,7 +440,6 @@ export class MTBAppInfo
                                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "error processing symbols for ModusToolbox Documentation command");
                                     MTBExtensionInfo.getMtbExtensionInfo().setDocStatus(DocStatusType.error) ;
                                 }) ;
-                            quickLinkTaskChecks() ;
                             resolve(true) ;
                         }
                     }
@@ -935,7 +987,7 @@ export class MTBAppInfo
 
         if (launch) {
             //
-            // If there is valid launch information, update the quick launch panel on
+            // If there is valid launch information, update the programs and documentation panels on
             // the left of the screen
             //
             getMTBProgramsTreeProvider().refresh(this.launch?.configs) ;
@@ -943,7 +995,7 @@ export class MTBAppInfo
         }
         else {
             //
-            // There is no valid application and therefore not valid quick launch
+            // There is no valid application and therefore no valid launch
             // information.  Reset the quick launch panels to their default values
             //
             getMTBProgramsTreeProvider().refresh(undefined) ;
@@ -1105,61 +1157,11 @@ function addTasks(taskfile: string, tasks: any, erase: boolean, program: boolean
                     }
                 }
                 if (!program) {
-                    let programTask =  {
-                        "label": "Program",
-                        "type": "process",
-                        "command": "bash",
-                        "args": [
-                            "--norc",
-                            "-c",
-                            "make qprogram"
-                        ],
-            
-                        "windows" : {
-                            "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",
-                            "args": [
-                                "--norc",
-                                "-c",
-                                "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe qprogram"
-                            ]
-                        },
-                        "problemMatcher": []
-                    } ;
-                    tasks.tasks.push(programTask) ;
+
                 }
                 fs.writeFileSync(taskfile, JSON.stringify(tasks, null, 4)) ;                
             }
         }) ;
-}
-
-export function quickLinkTaskChecks() {
-    if (vscode.workspace.workspaceFolders) {
-        let vscodedir = vscode.workspace.workspaceFolders[0].uri.fsPath ;
-        let taskfile = path.join(vscodedir, ".vscode", "tasks.json") ;
-        if (fs.existsSync(taskfile)) {
-            let taskdata = fs.readFileSync(taskfile, 'utf8') ;
-            taskdata = taskdata.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m);
-            let tasks = JSON.parse(taskdata) ;
-            let erase = false ;
-            let program = false ; 
-            let taskdefs = []  ;           
-            if (tasks.tasks) {
-                taskdefs = tasks.tasks ;
-                for (var task of taskdefs) {
-                    if (task.label === "Erase") {
-                        erase = true ;
-                    }
-                    if (task.label === "Program") {
-                        program = true ;
-                    }
-                }
-            }
-
-            if (!erase || !program) {
-                addTasks(taskfile, tasks, erase, program) ;
-            }
-        }
-    }
 }
 
 let theModusToolboxApp : MTBAppInfo | undefined = undefined ;

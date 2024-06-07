@@ -20,7 +20,7 @@ import * as path from 'path';
 import { MTBAssistItem } from './mtbitem' ;
 import { MTBLaunchConfig } from './mtblaunchdata';
 import { MTBAssistCommand } from './mtbassistcmd';
-import { getModusToolboxApp } from './mtbapp/mtbappinfo';
+import { MTBAppInfo, getModusToolboxApp } from './mtbapp/mtbappinfo';
 
 export class MTBQuickLinksProvider implements vscode.TreeDataProvider<MTBAssistItem> {
     private items_ : MTBAssistItem[] = [] ;
@@ -28,7 +28,6 @@ export class MTBQuickLinksProvider implements vscode.TreeDataProvider<MTBAssistI
     readonly onDidChangeTreeData: vscode.Event<MTBAssistItem | undefined | null | void> = this.onDidChangeTreeData_.event;
 
     constructor() {
-        this.refresh(undefined) ;
     }
 
     getTreeItem(element: MTBAssistItem): vscode.TreeItem {
@@ -48,28 +47,88 @@ export class MTBQuickLinksProvider implements vscode.TreeDataProvider<MTBAssistI
         return Promise.resolve(retval) ;
     }
 
-    refresh(configs?: MTBLaunchConfig[]): void {
+    refresh(): void {
         var item ;
 
-        item = new MTBAssistItem("Build Application") ;
-        item.command = new MTBAssistCommand("Build", "workbench.action.tasks.runTask", "Build the project", [ "Build"]) ;
-        this.items_.push(item) ;
+        this.items_ = [] ;
 
-        item = new MTBAssistItem("Rebuild Application") ;
-        item.command = new MTBAssistCommand("Rebuild", "workbench.action.tasks.runTask", "Rebuild all source for the project", [ "Rebuild"]) ;        
-        this.items_.push(item) ;
-        
-        item = new MTBAssistItem("Clean Application") ;
-        item.command = new MTBAssistCommand("Clean", "workbench.action.tasks.runTask", "Delete all build artifacts for the project", [ "Clean"]) ;        
-        this.items_.push(item) ;       
-        
-        item = new MTBAssistItem("Erase Application") ;
-        item.command = new MTBAssistCommand("Erase", "workbench.action.tasks.runTask", "Erase the device memory", [ "Erase"]) ;        
-        this.items_.push(item) ;       
-        
-        item = new MTBAssistItem("Program Application") ;
-        item.command = new MTBAssistCommand("Program", "workbench.action.tasks.runTask", "Program the program into device memory", [ "Program"]) ;        
-        this.items_.push(item) ;        
+        let appinfo: MTBAppInfo | undefined = getModusToolboxApp() ;
+        if (appinfo === undefined || appinfo.tasks === undefined) {
+            this.onDidChangeTreeData_.fire(undefined) ;
+            return ;
+        }
+
+        //
+        // First lets take care of the application level items
+        //
+        if (appinfo.tasks !== undefined) {
+            if (appinfo.tasks.doesTaskExist("Erase")) {
+                item = new MTBAssistItem("Erase Device") ;
+                item.command = new MTBAssistCommand("Erase", "workbench.action.tasks.runTask", "Erase the device memory", [ "Erase"]) ;        
+                this.items_.push(item) ;
+            }
+
+            let app: MTBAssistItem = new MTBAssistItem("Application") ;
+            this.items_.push(app) ;
+
+            if (appinfo.tasks.doesTaskExist("Build")) {
+                item = new MTBAssistItem("Build") ;
+                item.command = new MTBAssistCommand("Build", "workbench.action.tasks.runTask", "Build the application", [ "Build"]) ;
+                app.addChild(item) ;
+            }
+
+            if (appinfo.tasks.doesTaskExist("Rebuild")) {
+                item = new MTBAssistItem("Rebuild") ;
+                item.command = new MTBAssistCommand("Rebuild", "workbench.action.tasks.runTask", "Rebuild all source for the project", [ "Rebuild"]) ;        
+                app.addChild(item) ;
+            }
+
+            if (appinfo.tasks.doesTaskExist("Clean")) {
+                item = new MTBAssistItem("Clean") ;
+                item.command = new MTBAssistCommand("Clean", "workbench.action.tasks.runTask", "Delete all build artifacts for the project", [ "Clean"]) ;        
+                app.addChild(item) ;
+            }
+
+            if (appinfo.tasks.doesTaskExist("Program")) {
+                item = new MTBAssistItem("Program") ;
+                item.command = new MTBAssistCommand("Program", "workbench.action.tasks.runTask", "Program the program into device memory", [ "Program"]) ;        
+                app.addChild(item) ;
+            }
+        }
+
+        //
+        // Now, lets process each project
+        //
+        for(let projinfo of appinfo.projects) {
+            let app: MTBAssistItem = new MTBAssistItem(projinfo.name) ;
+            this.items_.push(app) ;
+
+            if (appinfo.tasks.doesTaskExist("Build " + projinfo.name)) {
+                item = new MTBAssistItem("Build") ;
+                item.command = new MTBAssistCommand("Build", "workbench.action.tasks.runTask", "Build the application", [ "Build " + projinfo.name]) ;
+                app.addChild(item) ;
+            }
+
+            if (appinfo.tasks.doesTaskExist("Rebuild " + projinfo.name)) {
+                item = new MTBAssistItem("Rebuild") ;
+                item.command = new MTBAssistCommand("Rebuild", "workbench.action.tasks.runTask", "Rebuild all source for the project", [ "Rebuild "  + projinfo.name]) ;
+                app.addChild(item) ;
+            }
+
+            if (appinfo.tasks.doesTaskExist("Clean" + projinfo.name)) {
+                item = new MTBAssistItem("Clean") ;
+                item.command = new MTBAssistCommand("Clean", "workbench.action.tasks.runTask", "Delete all build artifacts for the project", [ "Clean " + projinfo.name]) ;
+                app.addChild(item) ;
+            }
+
+            if (appinfo.tasks.doesTaskExist("Program " + projinfo.name)) {
+                item = new MTBAssistItem("Program") ;
+                item.command = new MTBAssistCommand("Program", "workbench.action.tasks.runTask", "Program the program into device memory", [ "Program " + projinfo.name]) ;
+                app.addChild(item) ;
+            }                
+        }
+
+        this.onDidChangeTreeData_.fire(undefined) ;        
     }
 }
 
