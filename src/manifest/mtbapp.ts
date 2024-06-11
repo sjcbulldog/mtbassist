@@ -27,8 +27,7 @@ export class MTBApp extends MTBItem {
     public readonly uri: vscode.Uri;
     public readonly description: string;
     public readonly requirements: string[];
-
-
+    
     constructor(src: vscode.Uri, name: string, id: string, uri: vscode.Uri, description: string,
         requirements: string[], versions: MTBItemVersion[]) 
     {

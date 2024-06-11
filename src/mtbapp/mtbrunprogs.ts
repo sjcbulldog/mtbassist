@@ -187,3 +187,27 @@ export function runMtbLaunch(cwd: string) : Promise<any> {
 
     return ret ;
 }
+
+export function runMtbQuery(args: string) : Promise<string> {
+    let ret = new Promise<any>( (resolve, reject) => {
+        let mtbquery = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "mtbquery", "mtbquery") ;
+        if (process.platform === "win32") {
+            mtbquery += ".exe" ;
+        }
+
+        mtbquery += " " + args ;
+
+        exec.exec(mtbquery, { windowsHide: true }, (error, stdout, stderr) => {
+            if (error) {
+                reject(error) ;
+            }
+    
+            if (stderr) {
+                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "mtblaunch: " + stderr) ;
+            }
+            resolve(stdout) ;
+        }) ;
+    }) ;
+
+    return ret ;
+}

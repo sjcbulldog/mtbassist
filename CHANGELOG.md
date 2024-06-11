@@ -1,8 +1,17 @@
 # Change Log
 
-### 1.1.12
+### 1.2.0
 Updated the quick launch window on the left to provide more options and allow the user
 to perform operations on a per project as well as a per application basis.
+
+Detected a MTB worksapce file earlier in the load process and reloaded based on the workspace
+file early in the process.
+
+Deferred the loading of the manifest data from github until after it has been determined that
+there was a valid ModusToolbox application loaded.
+
+Added the ability to query for any enabled early access pack and show any documentation found in
+the early access pack via the documentation tree viewer.
 
 ### 1.1.11
 Directly open the workspace file when creating a new project if it exists.

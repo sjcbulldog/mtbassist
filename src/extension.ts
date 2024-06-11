@@ -35,6 +35,7 @@ import { mtbAssistLoadApp, getModusToolboxApp } from './mtbapp/mtbappinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
 import { getModusToolboxAssistantHTMLPage } from './mtbgenhtml';
+import { MTBPacks } from './mtbpacks';
 
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
@@ -119,6 +120,21 @@ function noModusToolbox(context: vscode.ExtensionContext) {
     });	
 }
 
+function findWorkspaceFile() : string | null {
+	let ret: string | null = null ;
+	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
+		let files = fs.readdirSync(vscode.workspace.workspaceFolders![0].uri.fsPath) ;
+		for(let file of files) {
+			if (file.endsWith(".code-workspace")) {
+				ret = path.join(vscode.workspace.workspaceFolders![0].uri.fsPath, file) ;
+				break ;
+			}
+		}
+	}
+
+	return ret ;
+}
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
@@ -165,7 +181,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'notinstalled.html', undefined) ;
 		return;
 	}
-
 
 	//
 	// Register the various commands that are listed in the package.json file.
@@ -284,8 +299,22 @@ export async function activate(context: vscode.ExtensionContext) {
 	// relevant to this extension
 	//
 	let appdir = undefined;
-	if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-		appdir = vscode.workspace.workspaceFolders[0].uri.fsPath;
+	if (vscode.workspace.workspaceFolders) {
+		if (vscode.workspace.workspaceFolders.length === 1) {
+			let wspace = findWorkspaceFile() ;
+			if (wspace) {
+				//
+				// Force a reload of the workspace file and not the folder that contains the MTB project
+				//
+                vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(wspace)) ;				
+			}
+			else {
+				appdir = vscode.workspace.workspaceFolders[0].uri.fsPath
+			}
+		}
+		else {
+			appdir = vscode.workspace.workspaceFolders[0].uri.fsPath;
+		}
 	}
 
 	// Note: if the appdir is undefined, this means no actual folder is being loaded.  In this case

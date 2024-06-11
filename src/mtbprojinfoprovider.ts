@@ -103,7 +103,7 @@ export class MTBProjectInfoTreeProvider implements vscode.TreeDataProvider<MTBPr
                 if (projinfo.app.appType === AppType.mtb2x) {
                     value = "MTB 2.X Project" ;
                 }
-                else if (projinfo.app.appType === AppType.multicore) {
+                else if (projinfo.app.appType === AppType.multiproject) {
                     value = "MTB 3.X Multi Core Project" ;
                 }
                 else if (projinfo.app.appType === AppType.combined) {

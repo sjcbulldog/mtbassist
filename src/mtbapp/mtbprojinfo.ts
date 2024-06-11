@@ -173,7 +173,7 @@ export class MTBProjectInfo
 
     public getProjectDir() : string {
         let ret : string = this.app.appDir ;
-        if (this.app.appType === AppType.multicore) {
+        if (this.app.appType === AppType.multiproject) {
             ret = path.join(this.app.appDir, this.name) ;
         }
 

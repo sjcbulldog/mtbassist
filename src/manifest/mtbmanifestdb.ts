@@ -46,6 +46,9 @@ export class MtbManifestDb {
         this.isLoading = true;
         this.hadError = false;
         this.manifestLoader = new MtbManifestLoader(this);
+    }
+
+    public loadManifestData() {
         this.manifestLoader.loadManifestData()
             .then(() => {
                 this.isLoaded = true;

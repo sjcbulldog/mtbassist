@@ -36,6 +36,7 @@ export class ModusToolboxEnvVarNames
     static readonly MTB_PROJECTS: string = "MTB_PROJECTS" ;
     static readonly MTB_CORE_TYPE: string = "MTB_CORE_TYPE" ;
     static readonly MTB_CORE_NAME: string = "MTB_CORE_NAME" ;
+    static readonly MTB_ENABLE_EARLY_ACCESS: string = "MTB_ENABLE_EARLY_ACCESS" ;
 }
 
 export class ModusToolboxEnvTypeNames

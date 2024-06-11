@@ -86,8 +86,12 @@ export class MTBExtensionInfo
 
     constructor(context: vscode.ExtensionContext) {
         let ext = vscode.extensions.getExtension('c-and-t-software.mtbassist');
-        MTBExtensionInfo.version = ext!.packageJSON.version ;
-        
+        if (!ext)
+        {
+            throw new Error("interal error, could not get extension info for mtbassist extension") ;
+        }
+
+        MTBExtensionInfo.version = ext!.packageJSON.version ;       
         this.toolsDir = this.findDefaultToolsDir() ;
         this.docsDir = this.toolsDir.replace("tools_", "docs_") ;
         this.channel = vscode.window.createOutputChannel("ModusToolbox") ;
@@ -118,10 +122,6 @@ export class MTBExtensionInfo
         this.minor = -1 ;
         this.checkModusToolboxVersion() ;
 
-        if (this.isModusToolboxValid) {
-            this.manifestDb = new MtbManifestDb() ;
-        }
-
         if (this.getPersistedBoolean(MTBExtensionInfo.debugModeName, false)) {
             this.logMessage(MessageType.debug, "Debug mode is enabled, you should see debug messages") ;
             this.showMessageWindow() ;
@@ -132,6 +132,14 @@ export class MTBExtensionInfo
         this.docstat = DocStatusType.none  ;
 
         this.statusBarItem.command = 'mtbassist.mtbSetIntellisenseProject';
+
+        if (this.isModusToolboxValid) {
+            this.manifestDb = new MtbManifestDb() ;
+        }        
+    }
+
+    public loadManifestData() {
+        this.manifestDb!.loadManifestData() ;
     }
 
     public get isModusToolboxValid() : boolean {

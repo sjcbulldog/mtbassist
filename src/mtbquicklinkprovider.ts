@@ -20,7 +20,10 @@ import * as path from 'path';
 import { MTBAssistItem } from './mtbitem' ;
 import { MTBLaunchConfig } from './mtblaunchdata';
 import { MTBAssistCommand } from './mtbassistcmd';
-import { MTBAppInfo, getModusToolboxApp } from './mtbapp/mtbappinfo';
+import { AppType, MTBAppInfo, getModusToolboxApp } from './mtbapp/mtbappinfo';
+import { MTBTasks } from './mtbapp/mtbtasks';
+
+const runTaskCmd = "workbench.action.tasks.runTask" ;
 
 export class MTBQuickLinksProvider implements vscode.TreeDataProvider<MTBAssistItem> {
     private items_ : MTBAssistItem[] = [] ;
@@ -58,79 +61,136 @@ export class MTBQuickLinksProvider implements vscode.TreeDataProvider<MTBAssistI
             return ;
         }
 
-        //
-        // First lets take care of the application level items
-        //
-        if (appinfo.tasks !== undefined) {
-            if (appinfo.tasks.doesTaskExist("Erase")) {
-                item = new MTBAssistItem("Erase Device") ;
-                item.command = new MTBAssistCommand("Erase", "workbench.action.tasks.runTask", "Erase the device memory", [ "Erase"]) ;        
+        if (!appinfo.tasks.isValid()) {
+            item = new MTBAssistItem("The file 'tasks.json' is not a valid tasks file") ;
+            this.items_.push(item) ;
+            return ;
+        }
+
+        if (appinfo.appType === AppType.combined) {
+            if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameBuild)) {
+                item = new MTBAssistItem(MTBTasks.taskNameBuild) ;
+                item.command = new MTBAssistCommand(MTBTasks.taskNameBuild, runTaskCmd, "Build the application", [ MTBTasks.taskNameBuild ]) ;
                 this.items_.push(item) ;
             }
 
-            let app: MTBAssistItem = new MTBAssistItem("Application") ;
-            this.items_.push(app) ;
-
-            if (appinfo.tasks.doesTaskExist("Build")) {
-                item = new MTBAssistItem("Build") ;
-                item.command = new MTBAssistCommand("Build", "workbench.action.tasks.runTask", "Build the application", [ "Build"]) ;
-                app.addChild(item) ;
+            if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameRebuild)) {
+                item = new MTBAssistItem(MTBTasks.taskNameRebuild) ;
+                item.command = new MTBAssistCommand(MTBTasks.taskNameRebuild, runTaskCmd, "Rebuild all source for the application", [ MTBTasks.taskNameRebuild]) ;
+                this.items_.push(item) ;
             }
 
-            if (appinfo.tasks.doesTaskExist("Rebuild")) {
-                item = new MTBAssistItem("Rebuild") ;
-                item.command = new MTBAssistCommand("Rebuild", "workbench.action.tasks.runTask", "Rebuild all source for the project", [ "Rebuild"]) ;        
-                app.addChild(item) ;
+            if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameClean)) {
+                item = new MTBAssistItem(MTBTasks.taskNameClean) ;
+                item.command = new MTBAssistCommand(MTBTasks.taskNameClean, runTaskCmd, "Delete all build artifacts for the application", [ MTBTasks.taskNameClean]) ;
+                this.items_.push(item) ;
             }
 
-            if (appinfo.tasks.doesTaskExist("Clean")) {
-                item = new MTBAssistItem("Clean") ;
-                item.command = new MTBAssistCommand("Clean", "workbench.action.tasks.runTask", "Delete all build artifacts for the project", [ "Clean"]) ;        
-                app.addChild(item) ;
+            if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameBuildProgram)) {
+                item = new MTBAssistItem(MTBTasks.taskNameBuildProgram) ;
+                item.command = new MTBAssistCommand(MTBTasks.taskNameBuildProgram, runTaskCmd, "Build the application and program into device memory", [ MTBTasks.taskNameBuildProgram]) ;
+                this.items_.push(item) ;
             }
 
-            if (appinfo.tasks.doesTaskExist("Program")) {
-                item = new MTBAssistItem("Program") ;
-                item.command = new MTBAssistCommand("Program", "workbench.action.tasks.runTask", "Program the program into device memory", [ "Program"]) ;        
-                app.addChild(item) ;
+            if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameProgram)) {
+                item = new MTBAssistItem(MTBTasks.taskNameProgram) ;
+                item.command = new MTBAssistCommand(MTBTasks.taskNameProgram, runTaskCmd, "Program the application into device memory", [ MTBTasks.taskNameProgram]) ;
+                this.items_.push(item) ;
+            }            
+
+            if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameErase)) {
+                item = new MTBAssistItem(MTBTasks.taskNameErase) ;
+                item.command = new MTBAssistCommand(MTBTasks.taskNameErase, runTaskCmd, "Erase the device", [ MTBTasks.taskNameErase]) ;
+                this.items_.push(item) ;
             }
         }
+        else {
+            //
+            // First lets take care of the application level items
+            //
+            if (appinfo.tasks !== undefined) {
+                let app: MTBAssistItem = new MTBAssistItem("Application") ;
+                this.items_.push(app) ;             
 
-        //
-        // Now, lets process each project
-        //
-        if (appinfo.projects.length > 1) {
-            for(let projinfo of appinfo.projects) {
-                let app: MTBAssistItem = new MTBAssistItem(projinfo.name) ;
-                this.items_.push(app) ;
-
-                if (appinfo.tasks.doesTaskExist("Build " + projinfo.name)) {
+                if (appinfo.tasks.doesTaskExist("Build")) {
                     item = new MTBAssistItem("Build") ;
-                    item.command = new MTBAssistCommand("Build", "workbench.action.tasks.runTask", "Build the application", [ "Build " + projinfo.name]) ;
+                    item.command = new MTBAssistCommand("Build", runTaskCmd, "Build the application", [ "Build"]) ;
                     app.addChild(item) ;
                 }
 
-                if (appinfo.tasks.doesTaskExist("Rebuild " + projinfo.name)) {
-                    item = new MTBAssistItem("Rebuild") ;
-                    item.command = new MTBAssistCommand("Rebuild", "workbench.action.tasks.runTask", "Rebuild all source for the project", [ "Rebuild "  + projinfo.name]) ;
+                if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameRebuild)) {
+                    item = new MTBAssistItem(MTBTasks.taskNameRebuild) ;
+                    item.command = new MTBAssistCommand(MTBTasks.taskNameRebuild, runTaskCmd, "Clean and build the application", [ MTBTasks.taskNameRebuild]) ;
                     app.addChild(item) ;
                 }
 
-                if (appinfo.tasks.doesTaskExist("Clean" + projinfo.name)) {
-                    item = new MTBAssistItem("Clean") ;
-                    item.command = new MTBAssistCommand("Clean", "workbench.action.tasks.runTask", "Delete all build artifacts for the project", [ "Clean " + projinfo.name]) ;
+                if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameClean)) {
+                    item = new MTBAssistItem(MTBTasks.taskNameClean) ;
+                    item.command = new MTBAssistCommand(MTBTasks.taskNameClean, runTaskCmd, "Delete all build artifacts for the application", [ MTBTasks.taskNameClean]) ;
                     app.addChild(item) ;
                 }
 
-                if (appinfo.tasks.doesTaskExist("Program " + projinfo.name)) {
-                    item = new MTBAssistItem("Program") ;
-                    item.command = new MTBAssistCommand("Program", "workbench.action.tasks.runTask", "Program the program into device memory", [ "Program " + projinfo.name]) ;
+                if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameBuildProgram)) {
+                    item = new MTBAssistItem(MTBTasks.taskNameBuildProgram) ;
+                    item.command = new MTBAssistCommand(MTBTasks.taskNameBuildProgram, runTaskCmd, "Build the application and program into device memory", [ MTBTasks.taskNameBuildProgram]) ;
+                    app.addChild(item) ;
+                }
+
+                if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameProgram)) {
+                    item = new MTBAssistItem(MTBTasks.taskNameProgram) ;
+                    item.command = new MTBAssistCommand(MTBTasks.taskNameProgram, runTaskCmd, "Build the application and program into device memory", [ MTBTasks.taskNameProgram]) ;
                     app.addChild(item) ;
                 }                
+
+                if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameErase)) {
+                    item = new MTBAssistItem(MTBTasks.taskNameErase) ;
+                    item.command = new MTBAssistCommand(MTBTasks.taskNameErase, runTaskCmd, "Erase the device", [ MTBTasks.taskNameErase]) ;
+                    app.addChild(item) ;
+                }                 
+            }
+
+            //
+            // Now, lets process each project
+            //
+            if (appinfo.projects.length > 1) {
+                for(let projinfo of appinfo.projects) {
+                    let app: MTBAssistItem = new MTBAssistItem(projinfo.name) ;
+                    this.items_.push(app) ;
+
+                    if (appinfo.tasks.doesTaskExist("Build " + projinfo.name)) {
+                        item = new MTBAssistItem("Build") ;
+                        item.command = new MTBAssistCommand("Build", runTaskCmd, "Build the application", [ "Build " + projinfo.name]) ;
+                        app.addChild(item) ;
+                    }
+
+                    if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameRebuild + " " + projinfo.name)) {
+                        item = new MTBAssistItem(MTBTasks.taskNameRebuild) ;
+                        item.command = new MTBAssistCommand(MTBTasks.taskNameRebuild, runTaskCmd, "Rebuild all source for the project", [ MTBTasks.taskNameRebuild + " "  + projinfo.name]) ;
+                        app.addChild(item) ;
+                    }
+
+                    if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameClean + " " + projinfo.name)) {
+                        item = new MTBAssistItem(MTBTasks.taskNameClean) ;
+                        item.command = new MTBAssistCommand(MTBTasks.taskNameClean, runTaskCmd, "Delete all build artifacts for the project", [ MTBTasks.taskNameClean + " " + projinfo.name]) ;
+                        app.addChild(item) ;
+                    }
+
+                    if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameBuildProgram + " " + projinfo.name)) {
+                        item = new MTBAssistItem(MTBTasks.taskNameBuildProgram) ;
+                        item.command = new MTBAssistCommand(MTBTasks.taskNameBuildProgram, runTaskCmd, "Build the program and program into device memory", [ MTBTasks.taskNameBuildProgram + " " + projinfo.name]) ;
+                        app.addChild(item) ;
+                    }
+
+                    if (appinfo.tasks.doesTaskExist(MTBTasks.taskNameProgram + " " + projinfo.name)) {
+                        item = new MTBAssistItem(MTBTasks.taskNameProgram) ;
+                        item.command = new MTBAssistCommand(MTBTasks.taskNameProgram, runTaskCmd, "Program the program into device memory", [ MTBTasks.taskNameProgram + " " + projinfo.name]) ;
+                        app.addChild(item) ;
+                    }
+                }
             }
         }
 
-        this.onDidChangeTreeData_.fire(undefined) ;        
+        this.onDidChangeTreeData_.fire(undefined) ;
     }
 }
 
@@ -140,6 +200,6 @@ export function getMTBQuickLinksTreeProvider() : MTBQuickLinksProvider {
     if (links === undefined) {
         links = new MTBQuickLinksProvider() ;
     }
-    
+
     return links ;
 }

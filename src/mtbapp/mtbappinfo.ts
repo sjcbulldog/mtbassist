@@ -33,7 +33,7 @@ import * as fs from 'fs' ;
 import { getMTBDocumentationTreeProvider } from '../mtbdocprovider';
 import { getMTBProgramsTreeProvider } from '../mtbprogramsprovider';
 import { DocStatusType, MessageType, MTBExtensionInfo, StatusType } from '../mtbextinfo';
-import { MTBLaunchInfo } from '../mtblaunchdata';
+import { MTBLaunchDoc, MTBLaunchInfo } from '../mtblaunchdata';
 import { getMTBProjectInfoProvider } from '../mtbprojinfoprovider';
 import { MTBProjectInfo } from './mtbprojinfo';
 import { runMakeGetAppInfo, runMakeVSCode, runMtbLaunch } from './mtbrunprogs';
@@ -42,6 +42,8 @@ import { mtbRunMakeGetLibs } from '../mtbcommands';
 import { MtbFunIndex } from '../mtbfunindex';
 import { MTBTasks } from './mtbtasks';
 import { getMTBQuickLinksTreeProvider } from '../mtbquicklinkprovider';
+import { getMTBAssetProvider } from '../mtbassetprovider';
+import { MTBPacks } from '../mtbpacks';
 
 interface LaunchDoc
 {
@@ -63,7 +65,7 @@ export enum AppType
     none,
     mtb2x,
     combined,
-    multicore,
+    multiproject,
     malformed
 } ;
 
@@ -102,6 +104,10 @@ export class MTBAppInfo
 
     public tasks: MTBTasks | undefined = undefined ;
 
+    public linfo: MTBLaunchInfo | undefined = undefined ;
+
+    public packs: MTBPacks | undefined = undefined ;
+
     //
     // Create the application object and load its contents in the asynchronously
     //
@@ -121,6 +127,7 @@ export class MTBAppInfo
 
         MTBExtensionInfo.getMtbExtensionInfo().manifestDb!.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
         MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading) ;
+        getMTBAssetProvider().refresh() ;
 
         vscode.tasks.onDidEndTask((e: vscode.TaskEndEvent) => {
             let t = e.execution.task.name ;
@@ -299,19 +306,6 @@ export class MTBAppInfo
         }
     }
 
-    private findWorkspaceFile() : string {
-        let ret: string = "" ;
-        let files = fs.readdirSync(this.appDir) ;
-        for(let file of files) {
-            if (file.endsWith(".code-workspace")) {
-                ret = path.join(this.appDir, file) ;
-                break ;
-            }
-        }
-
-        return ret ;
-    }
-
     private dirToTaskFile(dir: string) : string {
         return path.join(dir, ".vscode", "tasks.json") ;
     }
@@ -325,13 +319,17 @@ export class MTBAppInfo
         return ret ;
     }
 
-    private updateTasks(add: boolean) {
-        this.tasks = new MTBTasks(this.dirToTaskFile(this.appDir), this.projectNames()) ;
-        if (add && this.tasks) {
-            this.tasks.addAll() ;
-            this.tasks.writeTasks() ;
+    private readTasks() {
+        this.tasks = new MTBTasks(this, this.dirToTaskFile(this.appDir)) ;
+        getMTBQuickLinksTreeProvider().refresh() ;         
+    }
+
+    private updateTasks() {
+        if (this.tasks) {
+            this.tasks!.addAll() ;
+            this.tasks!.writeTasks() ;
+            getMTBQuickLinksTreeProvider().refresh() ;        
         }
-        getMTBQuickLinksTreeProvider().refresh() ;        
     }
 
     public async init() : Promise<boolean> {
@@ -388,6 +386,7 @@ export class MTBAppInfo
                             //
                             // Update the assets display on the left
                             //
+                            MTBExtensionInfo.getMtbExtensionInfo().loadManifestData() ;
                             this.updateAssets() ;
 
                             //
@@ -415,16 +414,26 @@ export class MTBAppInfo
                             //
                             // See if we need to add any tasks
                             //
-                            this.updateTasks(false) ;
-                            if (this.tasks === undefined || this.tasks.areWeMissingTasks()) {
-                                vscode.window.showInformationMessage("The ModusToolbox Assistant works best with a specific set of tasks for the application and the projects.  Do you want to add these tasks?", "Yes", "No")
-                                    .then((answer) => {
-                                        if (answer === "Yes") {
-                                            this.updateTasks(true) ;
-                                        }
-                                    }) ;
-                            }
-
+                            this.readTasks() ;
+                            if (this.tasks) {
+                                if (!this.tasks.isValid()) {
+                                    vscode.window.showInformationMessage("The file 'tasks.json' is not a valid tasks file (or does not exist) and cannot be parsed as JSONC. Do you want to recreate this file with the default tasks?", "Yes", "No")
+                                        .then((answer) => {
+                                            if (answer === "Yes") {
+                                                this.tasks!.reset() ;
+                                                this.updateTasks() ;
+                                            }   
+                                        }) ;
+                                }
+                                else if (this.tasks.areWeMissingTasks()) {
+                                    vscode.window.showInformationMessage("The ModusToolbox Assistant works best with a specific set of tasks for the application and the projects.  Do you want to add these tasks?", "Yes", "No")
+                                        .then((answer) => {
+                                            if (answer === "Yes") {
+                                                this.updateTasks() ;
+                                            }
+                                        }) ;
+                                }
+                            }                                  
 
                             //
                             // Scrub the assets looking for documentation that we might display to the
@@ -440,6 +449,9 @@ export class MTBAppInfo
                                     MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "error processing symbols for ModusToolbox Documentation command");
                                     MTBExtensionInfo.getMtbExtensionInfo().setDocStatus(DocStatusType.error) ;
                                 }) ;
+
+                            this.initPacks() ;
+
                             resolve(true) ;
                         }
                     }
@@ -466,7 +478,7 @@ export class MTBAppInfo
             //
             let compilecmds: string ;
 
-            if (this.appType === AppType.multicore) {
+            if (this.appType === AppType.multiproject) {
                 compilecmds = "${workspaceFolder}/" + proj.name + "/build" ;
             }
             else {
@@ -573,7 +585,7 @@ export class MTBAppInfo
                     if (data.has(ModusToolboxEnvVarNames.MTB_TYPE)) {
                         let ptype: string = data.get(ModusToolboxEnvVarNames.MTB_TYPE)! ;
                         if (ptype === ModusToolboxEnvTypeNames.APPLICATION) {
-                            resolve([AppType.multicore, data]) ;
+                            resolve([AppType.multiproject, data]) ;
                         }
                         else if (ptype === ModusToolboxEnvTypeNames.COMBINED) {
                             resolve([AppType.combined, data]) ;
@@ -954,7 +966,7 @@ export class MTBAppInfo
                             reject(err) ;
                         }) ;
                     }   
-                    else if (info[0] === AppType.multicore) {
+                    else if (info[0] === AppType.multiproject) {
                         this.processMultiProject(info[1]).then(() => {
                             resolve() ;
                         })
@@ -968,6 +980,21 @@ export class MTBAppInfo
                 }) ;
         }) ;
         return ret ;
+    }
+
+    public initPacks() {
+        this.packs = new MTBPacks() ;
+        this.packs.init()
+        .then(() => {
+            if (this.packs?.inited && !this.packs.error && this.packs.active !== undefined) {
+                if (this.linfo && this.linfo.docs) {
+                    let docs : MTBLaunchDoc[] = this.packs.active.getDocs() ;
+                    this.linfo.docs = this.linfo.docs.concat(docs) ;
+                }
+
+                this.setLaunchInfo(this.linfo) ;
+            }
+        }) ;
     }
 
     static manifestLoadedCallback() {
@@ -1051,7 +1078,8 @@ export class MTBAppInfo
             runMtbLaunch(this.appDir)
                 .then ((jsonobj: any) => {
                     let obj = this.filterComponents(jsonobj);
-                    this.setLaunchInfo(new MTBLaunchInfo(obj as any));
+                    this.linfo = new MTBLaunchInfo(obj as any) ;
+                    this.setLaunchInfo(this.linfo) ;
                     resolve() ;
                 })
                 .catch ((error) => {
@@ -1100,68 +1128,6 @@ export class MTBAppInfo
         }) ;
         return ret ;
     }
-}
-
-
-function getProjectDir() : string {
-    let ret : string = "" ;
-
-    let app = getModusToolboxApp() ;
-    if (app) {
-        if (app.projects.length > 0) {
-            ret = app.projects[0].name ;
-        }
-    }
-
-    return ret;
-}
-
-function addTasks(taskfile: string, tasks: any, erase: boolean, program: boolean) : void
-{
-    let msg = "The following tasks are missing (" ;
-    if (!erase) {
-        msg += "Erase, " ;
-    }
-    if (!program) {
-        msg += "Program" ;
-    }
-    msg += ").  Should they be added?" ;
-
-    vscode.window.showInformationMessage(msg, "Yes", "No")
-        .then((value) => {
-            if (value === "Yes") {
-                if (!erase) {
-                    let projdir = getProjectDir() ;
-                    if (projdir !== "") {
-                        let eraseTask =  {
-                            "label": "Erase",
-                            "type": "process",
-                            "command": "bash",
-                            "args": [
-                                "--norc",
-                                "-c",
-                                "cd " + projdir + " ; make erase"
-                            ],
-                
-                            "windows" : {
-                                "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",
-                                "args": [
-                                    "--norc",
-                                    "-c",
-                                    "export PATH=/bin:/usr/bin:$PATH ; cd " + projdir + " ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe erase"
-                                ]
-                            },
-                            "problemMatcher": []
-                        } ;
-                        tasks.tasks.push(eraseTask) ;
-                    }
-                }
-                if (!program) {
-
-                }
-                fs.writeFileSync(taskfile, JSON.stringify(tasks, null, 4)) ;                
-            }
-        }) ;
 }
 
 let theModusToolboxApp : MTBAppInfo | undefined = undefined ;

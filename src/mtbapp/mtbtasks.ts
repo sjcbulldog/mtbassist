@@ -1,5 +1,6 @@
 import * as path from 'path' ;
 import * as fs from 'fs' ;
+import { AppType, MTBAppInfo } from './mtbappinfo';
 
 interface LooseObject {
     [key: string]: any
@@ -7,23 +8,56 @@ interface LooseObject {
 
 export class MTBTasks
 {
+    public static taskNameBuild = "Build" ;
+    public static taskNameRebuild = "Rebuild" ;
+    public static taskNameErase = "Erase" ;
+    public static taskNameProgram = "Program" ;
+    public static taskNameClean = "Clean" ;
+    public static taskNameBuildProgram = "Build & Program" ;
+
+    private appinfo_ : MTBAppInfo ;
     private filename_ : string ;
-    private projects_ : string[] ;
     private tasks_ : any [] = [] ;
     private valid_: boolean = false ;
 
-    constructor(filename: string, projects: string[]) {
-        this.projects_ = projects ;
+    private static validVersion = "2.0.0" ;
+
+    constructor(appinfo: MTBAppInfo, filename: string) {
+        this.appinfo_ = appinfo ;
 
         this.filename_ = filename ;
         if (fs.existsSync(filename)) {
             let taskdata = fs.readFileSync(filename, 'utf8') ;
             taskdata = taskdata.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m);
-            let file = JSON.parse(taskdata) ;
-            this.tasks_ = file.tasks ;
-        }
+            let file ;
+            
+            try {
+                taskdata = taskdata.trim() ;
+                if (taskdata.length > 0) {
+                    file = JSON.parse(taskdata) ;
 
+                    if (file.version === undefined || typeof file.version !== "string" || file.tasks === undefined || !Array.isArray(file.tasks)) {
+                        this.valid_ = false ;
+                    }
+                    else {
+                        this.tasks_ = file.tasks ;
+                        this.valid_ = true ;
+                    }
+                }
+            }
+            catch(err) {
+                this.valid_ = false ;
+            }
+        }
+    }
+
+    public reset() : void {
+        this.tasks_ = [] ;
         this.valid_ = true ;
+    }
+
+    public isValid() : boolean {
+        return this.valid_ ;
     }
 
     public writeTasks() {
@@ -41,17 +75,27 @@ export class MTBTasks
     }
 
     public addAll() {
-        if (this.projects_.length > 0) {
+        if (this.appinfo_.appType === AppType.combined) {
             this.addRebuild() ;
             this.addClean() ;
             this.addBuild() ;
-            this.addProgram() ;      
-            this.addErase(this.projects_[0]) ;  
-            for(let project of this.projects_) {
-                this.addRebuild(project) ;
-                this.addClean(project) ;
-                this.addBuild(project) ;
-                this.addProgram(project) ;
+            this.addBuildProgram() ;
+            this.addProgram() ;
+            this.addErase(this.appinfo_.projects[0].name);
+        }
+        else {
+            this.addRebuild() ;
+            this.addClean() ;
+            this.addBuild() ;
+            this.addBuildProgram() ;
+            this.addProgram() ;
+            this.addErase(this.appinfo_.projects[0].name) ;  
+            for(let project of this.appinfo_.projects) {
+                this.addRebuild(project.name) ;
+                this.addClean(project.name) ;
+                this.addBuild(project.name) ;
+                this.addProgram(project.name) ;
+                this.addBuildProgram(project.name) ;       
             }
         }
     }
@@ -60,10 +104,10 @@ export class MTBTasks
         let labelstr: string ;
 
         if (project) {
-            labelstr = "Rebuild " + project ;
+            labelstr = MTBTasks.taskNameRebuild + " " + project ;
         }
         else {
-            labelstr = "Rebuild" ;
+            labelstr = MTBTasks.taskNameRebuild ;
         }
 
         if (!this.doesTaskExist(labelstr)) {
@@ -71,8 +115,8 @@ export class MTBTasks
                 "label": labelstr,
                 "dependsOrder": "sequence",
                 "dependsOn": [
-                    (project ? "Clean " + project : "Clean"),
-                    (project ? "Build " + project : "Build"),
+                    (project ? MTBTasks.taskNameClean + " " + project : MTBTasks.taskNameClean),
+                    (project ? MTBTasks.taskNameBuild + " "  + project : MTBTasks.taskNameBuild),
                 ],
                 "group": {
                     "kind": "build",
@@ -88,19 +132,23 @@ export class MTBTasks
     }
     
     public addClean(project?: string) {
-        this.addMakeTask("Clean", "clean", [], project, false, false) ;
+        this.addMakeTask(MTBTasks.taskNameClean, "clean", [], project, false, false) ;
     }
 
     public addBuild(project?: string) {
-        this.addMakeTask("Build", "-j build", "$gcc", project, false, false) ;
+        this.addMakeTask(MTBTasks.taskNameBuild, "-j build", "$gcc", project, false, false) ;
     }
 
     public addProgram(project?: string) {
-        this.addMakeTask("Program", "qprogram", [], project, true, false) ;
+        this.addMakeTask(MTBTasks.taskNameProgram, "qprogram", [], project, true, false) ;
     }
 
-    public addErase(project: string) {
-        this.addMakeTask("Erase", "erase", [], project, true, true) ;
+    public addBuildProgram(project?: string) {
+        this.addMakeTask(MTBTasks.taskNameBuildProgram, "-j program", [], project, true, false) ;
+    }    
+
+    public addErase(project?: string) {
+        this.addMakeTask(MTBTasks.taskNameErase, "erase", [], project, true, true) ;
     }    
 
     //
@@ -108,7 +156,8 @@ export class MTBTasks
     // If erase is true, do not add the project to the label and the string _proj to the target
     //
     public addMakeTask(label: string, target: string, matcher: any, project?: string, hide: boolean = false, erase: boolean = false) {
-        let arg: string ;
+        let unixarg: string ;
+        let winarg: string ;
         let labelstr: string ;
         let targetstr: string ;
 
@@ -131,22 +180,21 @@ export class MTBTasks
             return ;
         }
 
-        if (process.platform === "win32") {
-            if (project) {
-                arg = "export PATH=/bin:/usr/bin:$PATH ; cd " + project + "; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe " + targetstr ;
-            }
-            else {
-                arg = "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe " + targetstr ;
-            }
+        if (project) {
+            winarg = "export PATH=/bin:/usr/bin:$PATH ; cd " + project + "; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe " + targetstr ;
         }
         else {
-            if (project) {
-                arg = "cd " + project + " ; make " + target ;
-            }
-            else {
-                arg = "make " + target ;
-            }
+            winarg = "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe " + targetstr ;
         }
+
+        if (project) {
+            unixarg = "cd " + project + " ; make " + target ;
+        }
+        else {
+            unixarg = "make " + target ;
+        }
+
+
         let task =  {
             "label": labelstr,
             "type": "process",
@@ -154,7 +202,7 @@ export class MTBTasks
             "args": [
                 "--norc",
                 "-c",
-                arg
+                unixarg
             ],
 
             "windows" : {
@@ -162,7 +210,7 @@ export class MTBTasks
                 "args": [
                     "--norc",
                     "-c",
-                    arg
+                    winarg
                 ]
             },
             "problemMatcher": matcher
@@ -186,13 +234,25 @@ export class MTBTasks
     }
 
     public areWeMissingTasks() : boolean {
-        if (!this.doesTaskExist("Rebuild") || !this.doesTaskExist("Clean") || !this.doesTaskExist("Build") && !this.doesTaskExist("Program") && !this.doesTaskExist("Erase")) {
-            return true ;
-        }
-
-        for(let project of this.projects_) {
-            if (!this.doesTaskExist("Rebuild " + project) || !this.doesTaskExist("Clean " + project) || !this.doesTaskExist("Build " + project) || !this.doesTaskExist("Program " + project)) {
+        if (this.appinfo_.appType === AppType.combined) {
+            if (!this.doesTaskExist(MTBTasks.taskNameRebuild) || !this.doesTaskExist(MTBTasks.taskNameClean) || !this.doesTaskExist(MTBTasks.taskNameBuild) && 
+                !this.doesTaskExist(MTBTasks.taskNameProgram) && !this.doesTaskExist(MTBTasks.taskNameErase) && !this.doesTaskExist(MTBTasks.taskNameBuildProgram)) {
                 return true ;
+            }
+        }
+        else {
+            if (!this.doesTaskExist(MTBTasks.taskNameRebuild) || !this.doesTaskExist(MTBTasks.taskNameClean) || !this.doesTaskExist(MTBTasks.taskNameBuild) && 
+                !this.doesTaskExist(MTBTasks.taskNameProgram) && !this.doesTaskExist(MTBTasks.taskNameErase) && !this.doesTaskExist(MTBTasks.taskNameBuildProgram)) {
+                return true ;
+            }
+
+            for(let projobj of this.appinfo_.projects) {
+                let project = projobj.name ;
+                if (!this.doesTaskExist(MTBTasks.taskNameRebuild + " " + project) || !this.doesTaskExist(MTBTasks.taskNameClean + " " + project) 
+                    || !this.doesTaskExist(MTBTasks.taskNameBuild + " " + project) || !this.doesTaskExist(MTBTasks.taskNameProgram + " " + project)
+                    || !this.doesTaskExist(MTBTasks.taskNameBuildProgram + " " + project)) {
+                    return true ;
+                }
             }
         }
 
