@@ -84,6 +84,10 @@
       {
         "command": "mtbassist.mtbAddTasks",
         "title": "ModusToolbox Assistant: Add Tasks Desired By ModusToolbox Assistant"
+      },
+      {
+        "command" : "mtbassist.mtbGenerateNinja",
+        "title" : "ModusToolbox Assistant: Generate Ninja Build File"
       }
     ],
     "keybindings": [

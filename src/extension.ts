@@ -37,6 +37,7 @@ import { getMTBAssetProvider } from './mtbassetprovider';
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
 import { getModusToolboxAssistantHTMLPage } from './mtbgenhtml';
 import { MTBPacks } from './mtbpacks';
+import { mtbCreateNinjaBuildFile } from './mtbninja';
 
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
@@ -121,6 +122,10 @@ function noModusToolbox(context: vscode.ExtensionContext) {
     });	
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbAddTasks', (args: any[]) => {
+		modusToolboxNotInstalled();
+    });	
+
+    disposable = vscode.commands.registerCommand('mtbassist.mtbGenerateNinja', (args: any[]) => {
 		modusToolboxNotInstalled();
     });	
 }
@@ -261,6 +266,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
     disposable = vscode.commands.registerCommand('mtbassist.mtbAddTasks', (args: any[]) => {
         mtbAddTasks(context) ;
+    });	
+
+    disposable = vscode.commands.registerCommand('mtbassist.mtbGenerateNinja', (args: any[]) => {
+        mtbCreateNinjaBuildFile(context) ;
     });	
 
 	//
