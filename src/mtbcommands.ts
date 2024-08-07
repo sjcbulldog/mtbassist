@@ -593,3 +593,13 @@ export function mtbRefreshDevKits(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage("Error scanning for development kits: " + err.message) ;
         }) ;
 }
+
+export function mtbAddTasks(context: vscode.ExtensionContext) {
+    let app: MTBAppInfo | undefined = getModusToolboxApp() ;
+    if (app === undefined) {
+        vscode.window.showInformationMessage("No ModusToolbox Application Loaded") ;
+    }
+    else {
+        app.updateTasks() ;
+    }
+}

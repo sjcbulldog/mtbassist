@@ -324,11 +324,11 @@ export class MTBAppInfo
         getMTBQuickLinksTreeProvider().refresh() ;         
     }
 
-    private updateTasks() {
+    public updateTasks() {
         if (this.tasks) {
             this.tasks!.addAll() ;
             this.tasks!.writeTasks() ;
-            getMTBQuickLinksTreeProvider().refresh() ;        
+            getMTBQuickLinksTreeProvider().refresh() ;
         }
     }
 

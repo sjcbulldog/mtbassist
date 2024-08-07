@@ -1,5 +1,10 @@
 # Change Log
 
+### 1.2.1
+ModusToolbox Assistant: Add Tasks Desired By ModusToolbox Assistant
+  Added comamnd (mtbassist.mtbAddTasks) to explicitly add any tasks to the tasksk file that
+  this extension would like to have in place.
+
 ### 1.2.0
 Updated the quick launch window on the left to provide more options and allow the user
 to perform operations on a per project as well as a per application basis.

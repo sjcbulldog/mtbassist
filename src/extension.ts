@@ -26,8 +26,9 @@ import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
 import { getMTBQuickLinksTreeProvider } from './mtbquicklinkprovider';
 import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
-import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbRunEditor, 
-		mtbShowDoc, mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbRefreshDevKits, mtbTurnOnCodeExampleReadme, mtbTurnOffCodeExampleReadme } from './mtbcommands';
+import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbRunEditor, mtbAddTasks, mtbShowDoc, 
+		 mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbRefreshDevKits, 
+		 mtbTurnOnCodeExampleReadme, mtbTurnOffCodeExampleReadme } from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
@@ -116,6 +117,10 @@ function noModusToolbox(context: vscode.ExtensionContext) {
     });
 
     disposable = vscode.commands.registerCommand('mtbassist.mtbRefreshDevKits', (args: any[]) => {
+		modusToolboxNotInstalled();
+    });	
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbAddTasks', (args: any[]) => {
 		modusToolboxNotInstalled();
     });	
 }
@@ -253,6 +258,10 @@ export async function activate(context: vscode.ExtensionContext) {
     disposable = vscode.commands.registerCommand('mtbassist.mtbRefreshDevKits', (args: any[]) => {
         mtbRefreshDevKits(context) ;
     });
+
+    disposable = vscode.commands.registerCommand('mtbassist.mtbAddTasks', (args: any[]) => {
+        mtbAddTasks(context) ;
+    });	
 
 	//
 	// Set the tree providers for general information about the ModusToolbox project
