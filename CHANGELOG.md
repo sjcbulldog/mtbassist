@@ -1,7 +1,9 @@
 # Change Log
 
+### 1.2.2
+  Added in experimental ninja build support
+
 ### 1.2.1
-ModusToolbox Assistant: Add Tasks Desired By ModusToolbox Assistant
   Added comamnd (mtbassist.mtbAddTasks) to explicitly add any tasks to the tasksk file that
   this extension would like to have in place.
 

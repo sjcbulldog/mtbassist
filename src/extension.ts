@@ -32,12 +32,11 @@ import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateP
 import path = require('path');
 import fs = require('fs');
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { mtbAssistLoadApp, getModusToolboxApp } from './mtbapp/mtbappinfo';
+import { mtbAssistLoadApp, getModusToolboxApp, MTBAppInfo } from './mtbapp/mtbappinfo';
 import { getMTBAssetProvider } from './mtbassetprovider';
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
 import { getModusToolboxAssistantHTMLPage } from './mtbgenhtml';
-import { MTBPacks } from './mtbpacks';
-import { mtbCreateNinjaBuildFile } from './mtbninja';
+import { MTB1NinjaGenerator } from './mtbninjagenerator';
 
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
@@ -269,7 +268,11 @@ export async function activate(context: vscode.ExtensionContext) {
     });	
 
     disposable = vscode.commands.registerCommand('mtbassist.mtbGenerateNinja', (args: any[]) => {
-        mtbCreateNinjaBuildFile(context) ;
+		let app: MTBAppInfo | undefined = getModusToolboxApp() ;
+		if (app) {
+			let gen: MTB1NinjaGenerator = new MTB1NinjaGenerator(app);
+			gen.mtbCreateNinjaBuildFile(context) ;
+		}
     });	
 
 	//
