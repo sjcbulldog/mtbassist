@@ -36,7 +36,7 @@ import { mtbAssistLoadApp, getModusToolboxApp, MTBAppInfo } from './mtbapp/mtbap
 import { getMTBAssetProvider } from './mtbassetprovider';
 import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
 import { getModusToolboxAssistantHTMLPage } from './mtbgenhtml';
-import { MTB1NinjaGenerator } from './mtbninjagenerator';
+import { MTBNinjaGenerator } from './mtbninjagenerator';
 
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
@@ -270,8 +270,8 @@ export async function activate(context: vscode.ExtensionContext) {
     disposable = vscode.commands.registerCommand('mtbassist.mtbGenerateNinja', (args: any[]) => {
 		let app: MTBAppInfo | undefined = getModusToolboxApp() ;
 		if (app) {
-			let gen: MTB1NinjaGenerator = new MTB1NinjaGenerator(app);
-			gen.mtbCreateNinjaBuildFile(context) ;
+			let gen: MTBNinjaGenerator = new MTBNinjaGenerator(app);
+			gen.mtbCreateNinjaBuildFile(context, 1) ;
 		}
     });	
 
@@ -330,7 +330,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(wspace)) ;				
 			}
 			else {
-				appdir = vscode.workspace.workspaceFolders[0].uri.fsPath
+				appdir = vscode.workspace.workspaceFolders[0].uri.fsPath ;
 			}
 		}
 		else {
