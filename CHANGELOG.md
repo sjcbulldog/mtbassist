@@ -1,7 +1,8 @@
 # Change Log
 
 ### 1.2.2
-  Added in experimental ninja build support
+  Update create project so that if you are not currently in a ModusToolbox directory, the new
+  project will be created in the current location.
 
 ### 1.2.1
   Added comamnd (mtbassist.mtbAddTasks) to explicitly add any tasks to the tasksk file that

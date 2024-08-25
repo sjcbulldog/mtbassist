@@ -124,9 +124,9 @@ function noModusToolbox(context: vscode.ExtensionContext) {
 		modusToolboxNotInstalled();
     });	
 
-    disposable = vscode.commands.registerCommand('mtbassist.mtbGenerateNinja', (args: any[]) => {
-		modusToolboxNotInstalled();
-    });	
+    //disposable = vscode.commands.registerCommand('mtbassist.mtbGenerateNinja', (args: any[]) => {
+	//	modusToolboxNotInstalled();
+    //});	
 }
 
 function findWorkspaceFile() : string | null {
