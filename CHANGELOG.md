@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.2.4
+  Fixed a bug where the build tasks would overbuild on both linux and mac os.
+
+### 1.2.3
+  Added support for the experimental NINJA build mode.
+
 ### 1.2.2
   Update create project so that if you are not currently in a ModusToolbox directory, the new
   project will be created in the current location.

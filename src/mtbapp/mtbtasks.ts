@@ -256,10 +256,10 @@ export class MTBTasks
         }
 
         if (project) {
-            unixarg = "cd " + project + " ; make " + cmd ;
+            unixarg = "cd " + project + " ; make " + targetstr ;
         }
         else {
-            unixarg = "make " + cmd ;
+            unixarg = "make " + targetstr ;
         }
 
         let task =  {
