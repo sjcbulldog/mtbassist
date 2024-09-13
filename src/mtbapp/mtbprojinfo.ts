@@ -21,7 +21,7 @@ import * as fs from 'fs' ;
 import { ModusToolboxEnvVarNames } from "./mtbnames";
 import { AppType, MTBAppInfo } from "./mtbappinfo";
 import { MTBAssetInstance } from "./mtbassets";
-import { getMTBAssetProvider } from "../mtbassetprovider";
+import { getMTBAssetProvider } from "../providers/mtbassetprovider";
 import { runMakeGetAppInfo } from './mtbrunprogs';
 import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
 

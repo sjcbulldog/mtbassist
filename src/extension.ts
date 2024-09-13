@@ -23,20 +23,21 @@
 
 import * as vscode from 'vscode';
 import * as os from 'os' ;
-import { getMTBProgramsTreeProvider } from './mtbprogramsprovider';
-import { getMTBQuickLinksTreeProvider } from './mtbquicklinkprovider';
-import { getMTBDocumentationTreeProvider } from './mtbdocprovider';
+import { getMTBProgramsTreeProvider } from './providers/mtbprogramsprovider';
+import { getMTBQuickLinksTreeProvider } from './providers/mtbquicklinkprovider';
+import { getMTBDocumentationTreeProvider, getNoMTBDocumentationTreeProvider } from './providers/mtbdocprovider';
 import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbRunEditor, mtbAddTasks, mtbShowDoc, 
 		 mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbRefreshDevKits, 
-		 mtbTurnOnCodeExampleReadme, mtbTurnOffCodeExampleReadme } from './mtbcommands';
+		 mtbTurnOnCodeExampleReadme, mtbTurnOffCodeExampleReadme, 
+		 mtbTurnOnExperimentalNinaSUpport,
+		 mtbTurnOffExperimentalNinaSUpport} from './mtbcommands';
 import path = require('path');
 import fs = require('fs');
 import { MessageType, MTBExtensionInfo } from './mtbextinfo';
 import { mtbAssistLoadApp, getModusToolboxApp, MTBAppInfo } from './mtbapp/mtbappinfo';
-import { getMTBAssetProvider } from './mtbassetprovider';
-import { getMTBProjectInfoProvider } from './mtbprojinfoprovider';
+import { getMTBAssetProvider } from './providers/mtbassetprovider';
+import { getMTBProjectInfoProvider } from './providers/mtbprojinfoprovider';
 import { getModusToolboxAssistantHTMLPage } from './mtbgenhtml';
-import { MTBNinjaGenerator } from './mtbninjagenerator';
 
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
@@ -77,7 +78,7 @@ function noModusToolbox(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable);
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbShowDoc', (args: any[]) => {
-		modusToolboxNotInstalled();
+		mtbShowDoc(context, args);
 	});
 	context.subscriptions.push(disposable);
 
@@ -85,6 +86,16 @@ function noModusToolbox(context: vscode.ExtensionContext) {
 		modusToolboxNotInstalled();
 	});
 	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOnExperimentalNina', (args: any[]) => {
+		modusToolboxNotInstalled();
+	});
+	context.subscriptions.push(disposable);	
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOffExperimentalNina', (args: any[]) => {
+		modusToolboxNotInstalled();
+	});
+	context.subscriptions.push(disposable);		
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOnDebugMode', (args: any[]) => {
 		mtbTurnOnDebugMode(context);
@@ -124,9 +135,10 @@ function noModusToolbox(context: vscode.ExtensionContext) {
 		modusToolboxNotInstalled();
     });	
 
-    //disposable = vscode.commands.registerCommand('mtbassist.mtbGenerateNinja', (args: any[]) => {
-	//	modusToolboxNotInstalled();
-    //});	
+	vscode.window.createTreeView('mtbdocs',
+		{
+			treeDataProvider: getNoMTBDocumentationTreeProvider()
+		});	
 }
 
 function findWorkspaceFile() : string | null {
@@ -175,7 +187,13 @@ export async function activate(context: vscode.ExtensionContext) {
 		MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.");
 
 		// Also tell the user via VS code messages
-		vscode.window.showInformationMessage("This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.");
+		const minfo = "More Information" ;
+		vscode.window.showInformationMessage("This extension is designed for ModusToolbox 3.0 or later.  ModusToolbox 3.0 or later is not installed.", minfo)
+			.then(selection => {
+				if (selection === minfo) {
+					vscode.env.openExternal(vscode.Uri.parse("https://softwaretools.infineon.com/tools/com.ifx.tb.tool.modustoolboxsetup")) ;
+				}
+			}) ;
 
 		// Display a web page about ModusToolbox
 		let panel : vscode.WebviewPanel = vscode.window.createWebviewPanel(
@@ -198,6 +216,16 @@ export async function activate(context: vscode.ExtensionContext) {
 		mtbCreateProject(context);
 	});
 	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOnExperimentalNina', (args: any[]) => {
+		mtbTurnOnExperimentalNinaSUpport(context);
+	});
+	context.subscriptions.push(disposable);
+
+	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOffExperimentalNina', (args: any[]) => {
+		mtbTurnOffExperimentalNinaSUpport(context);
+	});
+	context.subscriptions.push(disposable);	
 
 	disposable = vscode.commands.registerCommand('mtbassist.mtbTurnOnDebugMode', (args: any[]) => {
 		mtbTurnOnDebugMode(context);
@@ -265,14 +293,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     disposable = vscode.commands.registerCommand('mtbassist.mtbAddTasks', (args: any[]) => {
         mtbAddTasks(context) ;
-    });	
-
-    disposable = vscode.commands.registerCommand('mtbassist.mtbGenerateNinja', (args: any[]) => {
-		let app: MTBAppInfo | undefined = getModusToolboxApp() ;
-		if (app) {
-			let gen: MTBNinjaGenerator = new MTBNinjaGenerator(app);
-			gen.mtbCreateNinjaBuildFile(context, 1) ;
-		}
     });	
 
 	//

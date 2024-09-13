@@ -2,6 +2,7 @@ import { MTBExtensionInfo, MessageType } from "./mtbextinfo";
 import open, { apps, openApp } from 'open' ;
 import * as fs from 'fs' ;
 import { pathToFileURL } from 'url' ;
+import * as vscode from 'vscode';
 const is_wsl = require('is-wsl');
 
 let wslinst: string | undefined = undefined ;
@@ -48,18 +49,29 @@ function createJumpFile(url: string) : string {
 }
 
 export async function browseropen(url: string) {
-    if (is_wsl) {
-        if (wslinst === undefined) {
-            wslinst = await findWSLInstance() ;
-        }
+    let purl = vscode.Uri.parse(url) ;
 
-        url = "file://wsl.localhost/" + wslinst + url ;
-        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "request to open document '" + url + "' is WSL");
-        open(url) ;
+    if (purl.scheme === 'http' || purl.scheme === 'https') {
+        vscode.env.openExternal(purl) ;
     }
     else {
-        MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "request to open document '" + url + "'");   
-        let newurl: string = createJumpFile(url) ;
-        openApp(apps.browser, { arguments: [newurl]}) ;
+        vscode.env.openExternal(vscode.Uri.parse(
+            'https://www.merriam-webster.com/dictionary/hep'));
+
+        if (is_wsl) {
+            if (wslinst === undefined) {
+                wslinst = await findWSLInstance() ;
+            }
+
+            url = "file://wsl.localhost/" + wslinst + url ;
+            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "request to open document '" + url + "' is WSL");
+            open(url) ;
+        }
+        else {
+            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "request to open document '" + url + "'");   
+            let newurl: string = createJumpFile(url) ;
+            
+            openApp(apps.browser, { arguments: [newurl]}) ;
+        }
     }
 }

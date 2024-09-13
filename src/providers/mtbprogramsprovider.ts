@@ -15,10 +15,10 @@
 //
 
 import * as vscode from 'vscode';
-import { MTBAssistCommand } from './mtbassistcmd';
-import { MessageType, MTBExtensionInfo } from './mtbextinfo';
-import { MTBAssistItem } from './mtbitem' ;
-import { MTBLaunchConfig } from './mtblaunchdata';
+import { MTBAssistCommand } from '../mtbassistcmd';
+import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
+import { MTBAssistItem } from '../mtbitem' ;
+import { MTBLaunchConfig } from '../mtblaunchdata';
 
 export class MTBProgramProvider implements vscode.TreeDataProvider<MTBAssistItem> {
     private items_ : MTBAssistItem[] = [] ;

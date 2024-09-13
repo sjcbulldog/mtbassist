@@ -31,7 +31,7 @@ import * as vscode from 'vscode';
 
 import { MTBAppInfo, getModusToolboxApp } from "./mtbappinfo";
 import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
-import { getMTBAssetProvider } from '../mtbassetprovider';
+import { getMTBAssetProvider } from '../providers/mtbassetprovider';
 import { MTBProjectInfo } from './mtbprojinfo';
 import { browseropen } from '../browseropen';
 

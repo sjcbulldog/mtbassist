@@ -30,19 +30,19 @@ import * as vscode from 'vscode';
 import * as path from 'path' ;
 import * as fs from 'fs' ;
 
-import { getMTBDocumentationTreeProvider } from '../mtbdocprovider';
-import { getMTBProgramsTreeProvider } from '../mtbprogramsprovider';
+import { getMTBDocumentationTreeProvider } from '../providers/mtbdocprovider';
+import { getMTBProgramsTreeProvider } from '../providers/mtbprogramsprovider';
 import { DocStatusType, MessageType, MTBExtensionInfo, StatusType } from '../mtbextinfo';
 import { MTBLaunchDoc, MTBLaunchInfo } from '../mtblaunchdata';
-import { getMTBProjectInfoProvider } from '../mtbprojinfoprovider';
+import { getMTBProjectInfoProvider } from '../providers/mtbprojinfoprovider';
 import { MTBProjectInfo } from './mtbprojinfo';
 import { runMakeGetAppInfo, runMakeVSCode, runMtbLaunch } from './mtbrunprogs';
 import { ModusToolboxEnvTypeNames, ModusToolboxEnvVarNames } from './mtbnames';
 import { mtbRunMakeGetLibs } from '../mtbcommands';
 import { MtbFunIndex } from '../mtbfunindex';
 import { MTBTasks } from './mtbtasks';
-import { getMTBQuickLinksTreeProvider } from '../mtbquicklinkprovider';
-import { getMTBAssetProvider } from '../mtbassetprovider';
+import { getMTBQuickLinksTreeProvider } from '../providers/mtbquicklinkprovider';
+import { getMTBAssetProvider } from '../providers/mtbassetprovider';
 import { MTBPacks } from '../mtbpacks';
 
 interface LaunchDoc
@@ -414,26 +414,7 @@ export class MTBAppInfo
                             //
                             // See if we need to add any tasks
                             //
-                            this.readTasks() ;
-                            if (this.tasks) {
-                                if (!this.tasks.isValid()) {
-                                    vscode.window.showInformationMessage("The file 'tasks.json' is not a valid tasks file (or does not exist) and cannot be parsed as JSONC. Do you want to recreate this file with the default tasks?", "Yes", "No")
-                                        .then((answer) => {
-                                            if (answer === "Yes") {
-                                                this.tasks!.reset() ;
-                                                this.updateTasks() ;
-                                            }   
-                                        }) ;
-                                }
-                                else if (this.tasks.areWeMissingTasks()) {
-                                    vscode.window.showInformationMessage("The ModusToolbox Assistant works best with a specific set of tasks for the application and the projects.  Do you want to add these tasks?", "Yes", "No")
-                                        .then((answer) => {
-                                            if (answer === "Yes") {
-                                                this.updateTasks() ;
-                                            }
-                                        }) ;
-                                }
-                            }                                  
+                            this.updateAllTasks() ;                              
 
                             //
                             // Scrub the assets looking for documentation that we might display to the
@@ -465,6 +446,29 @@ export class MTBAppInfo
                 }) ;
             }) ;
         return ret ;
+    }
+
+    public updateAllTasks() {
+        this.readTasks() ;
+        if (this.tasks) {
+            if (!this.tasks.isValid()) {
+                vscode.window.showInformationMessage("The file 'tasks.json' is not a valid tasks file (or does not exist) and cannot be parsed as JSONC. Do you want to recreate this file with the default tasks?", "Yes", "No")
+                    .then((answer) => {
+                        if (answer === "Yes") {
+                            this.tasks!.reset() ;
+                            this.updateTasks() ;
+                        }   
+                    }) ;
+            }
+            else if (this.tasks.areWeMissingTasks()) {
+                vscode.window.showInformationMessage("The ModusToolbox Assistant works best with a specific set of tasks for the application and the projects.  Do you want to add these tasks?", "Yes", "No")
+                    .then((answer) => {
+                        if (answer === "Yes") {
+                            this.updateTasks() ;
+                        }
+                    }) ;
+            }
+        }         
     }
 
     public async setIntellisenseProject(projname: string) {

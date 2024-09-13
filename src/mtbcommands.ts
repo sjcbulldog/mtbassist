@@ -313,6 +313,9 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext, tab: number
             let docpath: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().docsDir, "mt_release_notes.pdf") ;
             browseropen(decodeURIComponent(docpath)) ;
         }
+        else if (message.command === "showTrainingMaterials") {
+            browseropen("https://github.com/Infineon/training-modustoolbox") ;
+        }
         else if (message.command === "refreshKits") {
             vscode.commands.executeCommand('mtbassist.mtbRefreshDevKits');
         }
@@ -432,7 +435,7 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
         let major: number = MTBExtensionInfo.getMtbExtensionInfo().major ;
         let minor: number = MTBExtensionInfo.getMtbExtensionInfo().minor ;
 
-        if (major > 3 || minor > 0) {
+        if (MTBExtensionInfo.getMtbExtensionInfo().checkMTBVersion(3,1)) {
             let args: string[] = ["--machine-interface", "--ide", "vscode", "--ide-readonly", "--close"] ;
 
             let loc: string = "" ;
@@ -505,8 +508,30 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
     }
 }
 
+export function mtbTurnOnExperimentalNinaSUpport(context: vscode.ExtensionContext) {
+
+    let opts = {
+		modal: true
+	} ;
+    vscode.window.showInformationMessage("Ninja support for ModusToolbox is experimental and may not work in all cases.", opts) ;
+
+    MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.ninjaModeName, true) ;
+    MTBExtensionInfo.getMtbExtensionInfo().setNinajSupport(true) ;
+
+    let app = getModusToolboxApp() ;
+    if (app) {
+        app.updateAllTasks() ;
+    }
+}
+
+export function mtbTurnOffExperimentalNinaSUpport(context: vscode.ExtensionContext) {
+    MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.ninjaModeName, false) ;
+    MTBExtensionInfo.getMtbExtensionInfo().setNinajSupport(false) ;
+}
+
 export function mtbTurnOnDebugMode(context: vscode.ExtensionContext) {
     MTBExtensionInfo.getMtbExtensionInfo().setPersistedBoolean(MTBExtensionInfo.debugModeName, true) ;
+
 }
 
 export function mtbTurnOffDebugMode(context: vscode.ExtensionContext) {

@@ -61,6 +61,7 @@ export class MTBExtensionInfo
 {
     static mtbAssistExtensionInfo : MTBExtensionInfo | undefined = undefined ;
 
+    public static readonly ninjaModeName : string = "ninjaMode" ;
     public static readonly debugModeName : string = "debugMode" ;
     public static readonly readmeName : string = "readmeOnOff" ;
     public static readonly showWelcomePageName : string = "showWelcomePage" ;
@@ -81,6 +82,7 @@ export class MTBExtensionInfo
     public channel: vscode.OutputChannel ;
     public manifestDb: MtbManifestDb | undefined ;
     public hasClangD: boolean ;
+    public isNinjaValid: boolean ;
    
     context: vscode.ExtensionContext;
 
@@ -127,6 +129,14 @@ export class MTBExtensionInfo
             this.showMessageWindow() ;
         }
 
+        if (this.getPersistedBoolean(MTBExtensionInfo.ninjaModeName, false)) {
+            this.logMessage(MessageType.debug, "Experimental NINJA build mode is enabled.") ;
+            this.isNinjaValid = true ;
+        }
+        else {
+            this.isNinjaValid = false ;
+        }
+
         this.intellisenseProject = undefined ;
         this.status = StatusType.NotValid ;
         this.docstat = DocStatusType.none  ;
@@ -135,7 +145,24 @@ export class MTBExtensionInfo
 
         if (this.isModusToolboxValid) {
             this.manifestDb = new MtbManifestDb() ;
-        }        
+        }
+    }
+
+    public checkMTBVersion(major: number, minor: number) {
+        if (this.major > major || (this.major === major && this.minor >= minor)) {
+            return true ;
+        }
+
+        return false ;
+    }
+
+    public setNinajSupport(valid: boolean) {
+        if(valid && this.checkMTBVersion(3,3)) {
+            this.isNinjaValid = true ;
+        }
+        else {
+            this.isNinjaValid = false ;
+        }
     }
 
     public loadManifestData() {

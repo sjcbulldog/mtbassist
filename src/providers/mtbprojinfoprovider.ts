@@ -15,9 +15,9 @@
 //
 
 import * as vscode from 'vscode';
-import { AppType } from './mtbapp/mtbappinfo';
-import { ModusToolboxEnvVarNames } from './mtbapp/mtbnames';
-import { MTBProjectInfo } from './mtbapp/mtbprojinfo';
+import { AppType } from '../mtbapp/mtbappinfo';
+import { ModusToolboxEnvVarNames } from '../mtbapp/mtbnames';
+import { MTBProjectInfo } from '../mtbapp/mtbprojinfo';
 
 export class MTBProjectItem extends vscode.TreeItem {
 

@@ -15,11 +15,11 @@
 //
 
 import * as vscode from 'vscode';
-import { MTBItem } from './manifest/mtbitem';
-import { MtbManifestDb } from './manifest/mtbmanifestdb';
-import { MTBAssetInstance } from './mtbapp/mtbassets';
-import { MTBExtensionInfo } from './mtbextinfo';
-import { MTBAssistCommand } from './mtbassistcmd';
+import { MTBItem } from '../manifest/mtbitem';
+import { MtbManifestDb } from '../manifest/mtbmanifestdb';
+import { MTBAssetInstance } from '../mtbapp/mtbassets';
+import { MTBExtensionInfo } from '../mtbextinfo';
+import { MTBAssistCommand } from '../mtbassistcmd';
 
 export class MTBAssetItem extends vscode.TreeItem {
     private children_ : MTBAssetItem[] ;

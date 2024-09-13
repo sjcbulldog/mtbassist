@@ -50,6 +50,14 @@
         "title": "ModusToolbox Assistant: Show Welcome Page"
       },
       {
+        "command": "mtbassist.mtbTurnOnExperimentalNina",
+        "title": "ModusToolbox Assistant: Turn On Experimental Ninja Support"
+      },    
+      {
+        "command": "mtbassist.mtbTurnOffExperimentalNina",
+        "title": "ModusToolbox Assistant: Turn Off Experimental Ninja Support"
+      },         
+      {
         "command": "mtbassist.mtbTurnOnDebugMode",
         "title": "ModusToolbox Assistant: Turn On Debug Mode"
       },
@@ -84,10 +92,6 @@
       {
         "command": "mtbassist.mtbAddTasks",
         "title": "ModusToolbox Assistant: Add Tasks Desired By ModusToolbox Assistant"
-      },
-      {
-        "command" : "mtbassist.mtbGenerateNinja",
-        "title" : "ModusToolbox Assistant: Generate Ninja Build File"
       }
     ],
     "keybindings": [
