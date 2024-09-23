@@ -1,5 +1,10 @@
 # Change Log
 
+### 1.2.5
+  Fixed naming convention for the commands that turn on/off the display of a ModusToolbox
+  code example read me.  These are now 'ModusToolbox Assistant: Turn On Code Example Readme'
+  and 'ModusToolbox Assistant: Turn Off Code Example Readme'.
+
 ### 1.2.4
   Fixed a bug where the build tasks would overbuild on both linux and mac os.
 

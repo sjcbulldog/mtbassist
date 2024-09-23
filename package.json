@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -67,11 +67,11 @@
       },
       {
         "command": "mtbassist.mtbTurnOnCodeExampleReadme",
-        "title": "ModusToolbox: Turn On Code Example Readme"
+        "title": "ModusToolbox Assistant: Turn On Code Example Readme"
       },
       {
         "command": "mtbassist.mtbTurnOffCodeExampleReadme",
-        "title": "ModusToolbox: Turn Off Code Example Readme"
+        "title": "ModusToolbox Assistant: Turn Off Code Example Readme"
       },
       {
         "command": "mtbassist.mtbRunLibraryManager",

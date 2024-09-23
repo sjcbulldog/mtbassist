@@ -174,7 +174,7 @@ export class MTBDevKitMgr {
     public scanForDevKits() : Promise<boolean> {
         let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
             if (this.scanning) {
-                reject(new Error("nested device scans not allowed"));
+                reject(new Error("You have asked to scan for development kits while a previous scan is still in progress.  Only one scan is allowed at a time.")) ;
             }
             (async() => {
                 this.scanning = true ;
