@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.2.7
+  Fixed bug with problems in the problems window not taking you to the source code with the
+  problem.
+
 ### 1.2.5
   Fixed naming convention for the commands that turn on/off the display of a ModusToolbox
   code example read me.  These are now 'ModusToolbox Assistant: Turn On Code Example Readme'
