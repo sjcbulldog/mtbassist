@@ -460,8 +460,8 @@ export class MTBAppInfo
                         }   
                     }) ;
             }
-            else if (this.tasks.areWeMissingTasks()) {
-                vscode.window.showInformationMessage("The ModusToolbox Assistant works best with a specific set of tasks for the application and the projects.  Do you want to add these tasks?", "Yes", "No")
+            else if (this.tasks.doWeNeedTaskUpdates()) {
+                vscode.window.showInformationMessage("The ModusToolbox Assistant works best with a specific set of tasks for the application and the projects.  This may add or change existing tasks.  Do you want to make these changes?", "Yes", "No")
                     .then((answer) => {
                         if (answer === "Yes") {
                             this.updateTasks() ;
