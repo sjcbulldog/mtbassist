@@ -421,7 +421,7 @@ export class MTBTasks
             task = this.generateMakeTask(false, MTBTasks.taskNameBuildProgram, "-j program", "", true, project, true, false) ;
         }
         else if (taskname === MTBTasks.taskNameQuickProgram) {
-            task =  this.generateMakeTask(false, MTBTasks.taskNameErase, "qprogram", "", false, project, true, true) ;            
+            task =  this.generateMakeTask(false, MTBTasks.taskNameQuickProgram, "qprogram", "", false, project, true, true) ;            
         }
         else if (taskname === MTBTasks.taskNameRebuildNinja) {
             task = this.generateRebuildNinja(project) ;

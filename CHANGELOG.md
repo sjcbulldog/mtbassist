@@ -1,5 +1,8 @@
 # Change Log
 
+### 1.2.8
+  Fixed a bug with the quick program task/quick link not being available
+
 ### 1.2.7
   Fixed bug with problems in the problems window not taking you to the source code with the
   problem.
