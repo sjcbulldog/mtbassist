@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.2.9
+  Fixed a bug where opening a document, also opened an external dictionary page.
+  Checked to be sure a new project was not being created in an existing project directory.
+  Now, if the current directory in VS Code does not contain a Makefile, the project will default to the current directory.
+  If the current directory does contain a Makefile, then the directory choice is left to the project creator.
+
 ### 1.2.8
   Fixed a bug with the quick program task/quick link not being available
 

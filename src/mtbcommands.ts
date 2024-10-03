@@ -441,10 +441,13 @@ export function mtbCreateProject(context: vscode.ExtensionContext) {
             let loc: string = "" ;
             if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0])
             {
-                args.push("--location") ;
-                args.push(vscode.workspace.workspaceFolders[0].uri.fsPath) ;
+                let makefile = path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, "Makefile") ;
+                if (!fs.existsSync(makefile)) {
+                    args.push("--location") ;
+                    args.push(vscode.workspace.workspaceFolders[0].uri.fsPath) ;
+                }
             }
-            outstr = exec.execFileSync(pcpath, args ) ;
+            outstr = exec.execFileSync(pcpath, args) ;
             post30 = true ;
         }
         else {

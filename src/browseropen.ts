@@ -55,9 +55,6 @@ export async function browseropen(url: string) {
         vscode.env.openExternal(purl) ;
     }
     else {
-        vscode.env.openExternal(vscode.Uri.parse(
-            'https://www.merriam-webster.com/dictionary/hep'));
-
         if (is_wsl) {
             if (wslinst === undefined) {
                 wslinst = await findWSLInstance() ;

@@ -150,8 +150,6 @@ export class MTBPacks {
                 }
 
                 resolve() ;
-
-
             })
             .catch((err) => {
                 this.error = true ;
