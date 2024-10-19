@@ -95,7 +95,7 @@ export class MTBProjectInfo
 
     public initProject() : Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            runMakeGetAppInfo(this.getProjectDir())
+            runMakeGetAppInfo(this.getProjectDir(), this.app.context.workspaceState)
                 .then((data: Map<string, string>) => {
                     this.initProjectFromData(data)
                         .then(() => {

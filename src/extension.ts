@@ -26,7 +26,7 @@ import * as os from 'os' ;
 import { getMTBProgramsTreeProvider } from './providers/mtbprogramsprovider';
 import { getMTBQuickLinksTreeProvider } from './providers/mtbquicklinkprovider';
 import { getMTBDocumentationTreeProvider, getNoMTBDocumentationTreeProvider } from './providers/mtbdocprovider';
-import { mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbRunEditor, mtbAddTasks, mtbShowDoc, 
+import { mtbRefreshExtension, mtbTurnOffDebugMode, mtbTurnOnDebugMode, mtbShowWelcomePage, mtbCreateProject, mtbRunEditor, mtbAddTasks, mtbShowDoc, 
 		 mtbResultDecode, mtbSymbolDoc, mtbRunLibraryManager, mtbRunMakeGetLibsCmd, mtbSetIntellisenseProject, mtbRefreshDevKits, 
 		 mtbTurnOnCodeExampleReadme, mtbTurnOffCodeExampleReadme, 
 		 mtbTurnOnExperimentalNinaSUpport,
@@ -161,6 +161,9 @@ function findWorkspaceFile() : string | null {
 export async function activate(context: vscode.ExtensionContext) {
 	let disposable;
 
+	//debug
+	let st = performance.now();
+
 	//
 	// Initialize the extension context.  This has all of the information needed for the
 	// extension in one place and is a singleton.
@@ -208,10 +211,15 @@ export async function activate(context: vscode.ExtensionContext) {
 		panel.webview.html = getModusToolboxAssistantHTMLPage(panel.webview, 'notinstalled.html', undefined) ;
 		return;
 	}
-
+	
 	//
 	// Register the various commands that are listed in the package.json file.
 	//
+	disposable = vscode.commands.registerCommand('mtbassist.mtbRefreshExtension', () => {
+		mtbRefreshExtension(context);
+	});
+	context.subscriptions.push(disposable);
+
 	disposable = vscode.commands.registerCommand('mtbassist.mtbCreateProject', () => {
 		mtbCreateProject(context);
 	});
@@ -360,7 +368,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// Note: if the appdir is undefined, this means no actual folder is being loaded.  In this case
 	// loading the application sets up the tree providers to show the state of no application loaded
-	mtbAssistLoadApp(context, appdir)
+	//debug added "await" here so the left nav shows that it's loading.
+	await mtbAssistLoadApp(context, appdir)
 		.then((status) => {
 			let shpath = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "modus-shell/bin/bash") ;
 			if (process.platform === "win32") {
@@ -395,6 +404,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	if (MTBExtensionInfo.getMtbExtensionInfo().getPersistedBoolean(MTBExtensionInfo.showWelcomePageName, true)) {
 		vscode.commands.executeCommand('mtbassist.mtbShowWelcomePage');
 	}
+
+	let et = performance.now();
+	console.log((et-st) + " ms " + "Activate complete!");
+
 }
 
 // this method is called when your extension is deactivated

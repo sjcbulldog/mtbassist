@@ -416,6 +416,14 @@ function findWorkspaceFile(dir: string) : string  {
     return dir ;
 }
 
+export async function mtbRefreshExtension(context: vscode.ExtensionContext) {
+	for (const key of context.workspaceState.keys()) {
+		console.log("clear: " + key) ; //debug
+		await context.workspaceState.update(key, undefined) ;
+	}
+	vscode.commands.executeCommand("workbench.action.restartExtensionHost", context.extension.id) ;
+}
+
 export function mtbCreateProject(context: vscode.ExtensionContext) {
     if (getModusToolboxApp() !== undefined && getModusToolboxApp()!.isLoading) {
         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "you must wait for the current ModusToolbox application to finish loading") ;

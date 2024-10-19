@@ -22,6 +22,8 @@ import { ModusToolboxEnvVarNames } from './mtbnames';
 import exp = require('constants');
 import { mtbStringToJSON } from '../mtbjson';
 
+import * as vscode from 'vscode';
+
 //
 // This runs a command using the modus shell.  If any output appears on standard error, it is output
 // to the log window
@@ -48,6 +50,8 @@ export function runModusCommandThroughShell(cmd: string, cwd: string) : Promise<
             cmdstr = cmd ;
         }
         
+        //debug
+        let st = performance.now();
         exec.execFile(makepath, ["-c", cmdstr], { cwd: cwd }, (error, stdout, stderr) => {
             if (error) {
                 let errmsg : Error = error as Error ;
@@ -66,6 +70,10 @@ export function runModusCommandThroughShell(cmd: string, cwd: string) : Promise<
                 }
             }
 
+            //debug
+            let et = performance.now();
+            console.log((et-st) + " ms " + makepath + " | " + cmd);
+            //console.log(stdout);
             resolve(stdout) ;
         }) ;
     }) ;
@@ -141,11 +149,18 @@ function makeOutputToMap(output: string) : Map<string, string> {
     }
     return mapOldToNew(ret) ;
 }
-
-export function runMakeGetAppInfo(cwd: string) : Promise<Map<string, string>> {
+export function runMakeGetAppInfo(cwd: string, state: vscode.Memento) : Promise<Map<string, string>> {
     let ret = new Promise<Map<string, string>>((resolve, reject) => {
-        runModusCommandThroughShell("make CY_PROTOCOL=2 MTB_QUERY=1 get_app_info", cwd)
+        
+        let output = state.get(cwd, undefined) ;
+
+        if (output != undefined) {
+            let outmap : Map<string, string> = makeOutputToMap(output as string) ;            
+            resolve(outmap) ;
+        } else {
+            runModusCommandThroughShell("make CY_PROTOCOL=2 MTB_QUERY=1 get_app_info", cwd)
             .then ((output: string) => {
+                state.update(cwd, output) ;
                 let outmap : Map<string, string> = makeOutputToMap(output) ;
                 resolve(outmap) ;
             })
@@ -154,7 +169,8 @@ export function runMakeGetAppInfo(cwd: string) : Promise<Map<string, string>> {
                 let stdout = info[1] ;
                 let stderr = info[2] ;
                 reject(error) ;
-            }) ;
+            }) ;    
+        }
     }) ;
     return ret ;
 }
@@ -163,26 +179,40 @@ export function runMakeGetAppInfo(cwd: string) : Promise<Map<string, string>> {
 // Run the mtb launch application and return the output when it is done.  The output is
 // json text.
 //
-export function runMtbLaunch(cwd: string) : Promise<any> {
+export function runMtbLaunch(cwd: string, state: vscode.Memento) : Promise<any> {
     let ret = new Promise<any>( (resolve, reject) => {
         let mtblaunch = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "mtblaunch", "mtblaunch") ;
         if (process.platform === "win32") {
             mtblaunch += ".exe" ;
         }
         mtblaunch += " --quick --docs --app "  + cwd ;
-
-        exec.exec(mtblaunch, { cwd: cwd, windowsHide: true }, (error, stdout, stderr) => {
-            if (error) {
-                reject(error) ;
-            }
-    
-            if (stderr) {
-                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "mtblaunch: " + stderr) ;
-            }
-            
-            let obj = mtbStringToJSON(stdout) ;
+        
+        //debug
+        let st = performance.now();
+        let cachedData = state.get(mtblaunch, undefined) ;
+        if (cachedData != undefined) {
+            let obj = mtbStringToJSON(cachedData) ;
             resolve(obj) ;
-        }) ;
+        } else {
+            exec.exec(mtblaunch, { cwd: cwd, windowsHide: true }, (error, stdout, stderr) => {
+                if (error) {
+                    reject(error) ;
+                }
+        
+                if (stderr) {
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "mtblaunch: " + stderr) ;
+                }
+                
+                state.update(mtblaunch, stdout) ;
+
+                let obj = mtbStringToJSON(stdout) ;
+                //debug
+                let et = performance.now();
+                console.log(et-st + " ms, " + mtblaunch + " | " + cwd);
+                //console.log(obj);
+                resolve(obj) ;
+            }) ;    
+        }
     }) ;
 
     return ret ;
