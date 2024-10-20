@@ -420,7 +420,7 @@ function findWorkspaceFile(dir: string) : string  {
 export async function mtbRefreshExtension(context: vscode.ExtensionContext) {
     let cache : MTBCacheProvider | undefined = MTBCacheProvider.getMTBCacheProvider();
     if (cache != undefined) {
-        cache.clearCache(MTBCacheLoc.WORKSPACE);
+        await cache.setFlagToClearCache(MTBCacheLoc.WORKSPACE);
         vscode.commands.executeCommand("workbench.action.restartExtensionHost", context.extension.id) ;    
     } else {
         vscode.window.showErrorMessage("Failed to refresh MTBAssist Extension, MTBAssist Workspace Cache not initialized!")

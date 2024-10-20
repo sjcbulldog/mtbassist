@@ -24,6 +24,8 @@ export enum MTBCacheLoc {
 export class MTBCacheProvider {
     
     private static CACHE_ITEM_PREFIX = "mtbassist-cache-item-" ;
+    private static CACHE_CLEAR_KEY = this.CACHE_ITEM_PREFIX + "clear-cache" ;
+
     private wState : vscode.Memento ;
     private gState : vscode.Memento ;
 
@@ -52,20 +54,36 @@ export class MTBCacheProvider {
     public async updateCacheItem(key:string, item:any, cLoc:MTBCacheLoc) {
         await this.getState(cLoc).update(MTBCacheProvider.CACHE_ITEM_PREFIX+key, item) ;
     }
-    public async clearCache(cLoc:MTBCacheLoc) {
+    public async setFlagToClearCache(cLoc:MTBCacheLoc) {
+        await this.getState(cLoc).update(MTBCacheProvider.CACHE_CLEAR_KEY, "true") ;
+    }
+
+    // When we clear the cache, we clear everything including the clear key itself
+    private async clearCache(cLoc:MTBCacheLoc) {
         let state = this.getState(cLoc) ;
         for (const key of state.keys()) {
             if (key.startsWith(MTBCacheProvider.CACHE_ITEM_PREFIX)) {
                 await state.update(key, undefined) ;
             }
-        }
+        }    
     }
 
-    public static initMTBCacheProvider(context: vscode.ExtensionContext) {
+    public static async initMTBCacheProvider(context: vscode.ExtensionContext) {
         if (context === undefined) {
             throw new Error("Failed to initialize MTBCacheProvider, context is undefined!") ;
         }
-        this.cacheProvider = new MTBCacheProvider(context) ;
+        if (this.cacheProvider === undefined) {
+            this.cacheProvider = new MTBCacheProvider(context) ;
+        }
+        // Check to see if a flag was set in the cache to clear it, if it was, we do this on init
+        let clearWCache : string | undefined = this.cacheProvider.getState(MTBCacheLoc.WORKSPACE).get(MTBCacheProvider.CACHE_CLEAR_KEY)
+        if (clearWCache != undefined && clearWCache == "true") {
+            await this.cacheProvider.clearCache(MTBCacheLoc.WORKSPACE) ;
+        }
+        let clearGCache : string | undefined = this.cacheProvider.getState(MTBCacheLoc.GLOBAL).get(MTBCacheProvider.CACHE_CLEAR_KEY)
+        if (clearGCache != undefined && clearGCache == "true") {
+            await this.cacheProvider.clearCache(MTBCacheLoc.GLOBAL) ;
+        }
     }
 
     public static getMTBCacheProvider() : MTBCacheProvider | undefined {
