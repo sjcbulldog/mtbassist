@@ -565,7 +565,7 @@ export class MTBAppInfo
     //
     private checkAppType() : Promise<[AppType, Map<string, string>]> {
         let ret : Promise<[AppType, Map<string, string>]> = new Promise<[AppType, Map<string, string>]>((resolve, reject) => {
-            runMakeGetAppInfo(this.appDir, this.context.workspaceState)
+            runMakeGetAppInfo(this.appDir)
                 .then((data : Map<string, string>) => {
                     let dir: string | undefined = data.get(ModusToolboxEnvVarNames.MTB_TOOLS_DIR) ;
                     if (dir) {
@@ -678,7 +678,7 @@ export class MTBAppInfo
                 .then((code: Number) => {
                     if (code === 0) {
                         MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading) ;
-                        runMakeGetAppInfo(cwd, this.context.workspaceState)
+                        runMakeGetAppInfo(cwd)
                             .then((makevars: Map<string, string>) => {
                                 if (!makevars.has(ModusToolboxEnvVarNames.MTB_DEVICE) || makevars.get(ModusToolboxEnvVarNames.MTB_DEVICE)!.length === 0) {
                                     reject(new Error("The ModusToolbox application is not valid, MTB_DEVICE was not supplied")) ;
@@ -784,7 +784,7 @@ export class MTBAppInfo
     private createOneProject(projdir: string) : Promise<void> {
         let ret : Promise<void> = new Promise<void>((resolve, reject) => {
             MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading);
-            runMakeGetAppInfo(projdir, this.context.workspaceState)
+            runMakeGetAppInfo(projdir)
                 .then((makedata: Map<string, string>) => {
                     let projobj = new MTBProjectInfo(this, path.basename(projdir)) ;
                     this.projects.push(projobj) ;
@@ -833,7 +833,7 @@ export class MTBAppInfo
 
     private checkOneProject(projdir: string) : Promise<boolean> {
         let ret : Promise<boolean> = new Promise<boolean>((resolve, reject) => {
-            runMakeGetAppInfo(projdir, this.context.workspaceState)
+            runMakeGetAppInfo(projdir)
             .then((makevars: Map<string, string>) => {
                 if (!makevars.has(ModusToolboxEnvVarNames.MTB_CORE_TYPE) || makevars.get(ModusToolboxEnvVarNames.MTB_CORE_TYPE)!.length === 0) {
                     resolve(true) ;
@@ -1079,7 +1079,7 @@ export class MTBAppInfo
 
     private mtbUpdateProgs() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            runMtbLaunch(this.appDir, this.context.workspaceState)
+            runMtbLaunch(this.appDir)
                 .then ((jsonobj: any) => {
                     let obj = this.filterComponents(jsonobj);
                     this.linfo = new MTBLaunchInfo(obj as any) ;

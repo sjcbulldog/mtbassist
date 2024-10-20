@@ -33,6 +33,7 @@ import { MTBAssetInstance } from './mtbapp/mtbassets';
 import { browseropen } from './browseropen';
 import { MTBDevKitMgr } from './mtbdevicekits';
 import { RecentAppManager } from './mtbrecent';
+import { MTBCacheLoc, MTBCacheProvider } from './providers/mtbcacheprovider';
 
 function outputLines(context: vscode.ExtensionContext, data: string) {
     let str: string = data.toString().replace(/\r\n/g, "\n") ;
@@ -417,11 +418,13 @@ function findWorkspaceFile(dir: string) : string  {
 }
 
 export async function mtbRefreshExtension(context: vscode.ExtensionContext) {
-	for (const key of context.workspaceState.keys()) {
-		console.log("clear: " + key) ; //debug
-		await context.workspaceState.update(key, undefined) ;
-	}
-	vscode.commands.executeCommand("workbench.action.restartExtensionHost", context.extension.id) ;
+    let cache : MTBCacheProvider | undefined = MTBCacheProvider.getMTBCacheProvider();
+    if (cache != undefined) {
+        cache.clearCache(MTBCacheLoc.WORKSPACE);
+        vscode.commands.executeCommand("workbench.action.restartExtensionHost", context.extension.id) ;    
+    } else {
+        vscode.window.showErrorMessage("Failed to refresh MTBAssist Extension, MTBAssist Workspace Cache not initialized!")
+    }
 }
 
 export function mtbCreateProject(context: vscode.ExtensionContext) {

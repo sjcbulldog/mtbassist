@@ -38,6 +38,7 @@ import { mtbAssistLoadApp, getModusToolboxApp, MTBAppInfo } from './mtbapp/mtbap
 import { getMTBAssetProvider } from './providers/mtbassetprovider';
 import { getMTBProjectInfoProvider } from './providers/mtbprojinfoprovider';
 import { getModusToolboxAssistantHTMLPage } from './mtbgenhtml';
+import { MTBCacheProvider } from './providers/mtbcacheprovider';
 
 function getTerminalWorkingDirectory() : string {
 	let ret: string = os.homedir() ;
@@ -162,7 +163,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	let disposable;
 
 	//debug
-	let st = performance.now();
+	let st = Date.now();
 
 	//
 	// Initialize the extension context.  This has all of the information needed for the
@@ -170,6 +171,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	//
 	MTBExtensionInfo.initExtension(context) ;
 	MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "Starting ModusToolbox assistant");
+
+	// Initialize the MTB Cache Provider, this will speed things up
+	MTBCacheProvider.initMTBCacheProvider(context) ;
+	MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "Initialized MTB assistatant cache");
 
 	try {
 		//
@@ -405,7 +410,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('mtbassist.mtbShowWelcomePage');
 	}
 
-	let et = performance.now();
+	let et = Date.now();
 	console.log((et-st) + " ms " + "Activate complete!");
 
 }
