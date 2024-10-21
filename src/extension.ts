@@ -172,10 +172,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	MTBExtensionInfo.initExtension(context) ;
 	MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "Starting ModusToolbox assistant");
 
-	// Initialize the MTB Cache Provider, this will speed things up
-	MTBCacheProvider.initMTBCacheProvider(context) ;
-	MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "Initialized MTB assistatant cache");
-
 	try {
 		//
 		// This eliminates issues with the life cycle of the clangd extension.

@@ -44,6 +44,7 @@ import { MTBTasks } from './mtbtasks';
 import { getMTBQuickLinksTreeProvider } from '../providers/mtbquicklinkprovider';
 import { getMTBAssetProvider } from '../providers/mtbassetprovider';
 import { MTBPacks } from '../mtbpacks';
+import { MTBCacheProvider } from '../providers/mtbcacheprovider';
 
 interface LaunchDoc
 {
@@ -102,6 +103,8 @@ export class MTBAppInfo
 
     private loadingWksc: boolean ;
 
+    private isReload: boolean ;
+
     public tasks: MTBTasks | undefined = undefined ;
 
     public linfo: MTBLaunchInfo | undefined = undefined ;
@@ -111,7 +114,7 @@ export class MTBAppInfo
     //
     // Create the application object and load its contents in the asynchronously
     //
-    constructor(context: vscode.ExtensionContext, appdir : string) {
+    constructor(context: vscode.ExtensionContext, appdir : string, isReload : boolean) {
 
         this.appDir = appdir ;
         this.projects = [] ;
@@ -124,10 +127,15 @@ export class MTBAppInfo
         this.isLoading = true ;
         this.loadingWksc = false ;
         this.funindex = new MtbFunIndex() ;
+        this.isReload = isReload ;
 
         MTBExtensionInfo.getMtbExtensionInfo().manifestDb!.addLoadedCallback(MTBAppInfo.manifestLoadedCallback) ;
         MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.Loading) ;
         getMTBAssetProvider().refresh() ;
+
+        // Initialize the MTB Cache Provider, this will speed things up
+        MTBCacheProvider.initMTBCacheProvider(context) ;
+	    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, "Initialized MTB assistatant cache");
 
         vscode.tasks.onDidEndTask((e: vscode.TaskEndEvent) => {
             let t = e.execution.task.name ;
@@ -625,13 +633,16 @@ export class MTBAppInfo
                 .then(() => {
                     this.createVSCodeDirectory()
                         .then(()=> {
-                            let readme : string = path.join(this.appDir, "README.md") ;
-                            if (fs.existsSync(readme)) {
-                                let info = MTBExtensionInfo.getMtbExtensionInfo() ;
-                                if (info.getPersistedBoolean(MTBExtensionInfo.readmeName, true)) {
-                                    let uri: vscode.Uri = vscode.Uri.file(readme) ;
-                                    vscode.commands.executeCommand("markdown.showPreview", uri) ;
-                                }
+                            // If it is a reload we don't want to pop up the README per (https://github.com/sjcbulldog/mtbassist/issues/11)
+                            if (!this.isReload) {
+                                let readme : string = path.join(this.appDir, "README.md") ;
+                                if (fs.existsSync(readme)) {
+                                    let info = MTBExtensionInfo.getMtbExtensionInfo() ;
+                                    if (info.getPersistedBoolean(MTBExtensionInfo.readmeName, true)) {
+                                        let uri: vscode.Uri = vscode.Uri.file(readme) ;
+                                        vscode.commands.executeCommand("markdown.showPreview", uri) ;
+                                    }
+                                }    
                             }
                             resolve() ;
                         })
@@ -1143,14 +1154,17 @@ export function getModusToolboxApp() : MTBAppInfo | undefined {
 //
 // Load a new application in as the ModusToolbox application being processed
 //
-export async function mtbAssistLoadApp(context: vscode.ExtensionContext, appdir?: string) : Promise<boolean> {
+export async function mtbAssistLoadApp(context: vscode.ExtensionContext, appdir?: string, isReload? : boolean) : Promise<boolean> {
     let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
         if (appdir && theModusToolboxApp !== undefined && theModusToolboxApp.appDir === appdir && theModusToolboxApp.isLoading) {
             reject(new Error("trying to load ModusToolbox application recursively")) ;
         }
 
         if (appdir) {
-            theModusToolboxApp = new MTBAppInfo(context, appdir) ;
+            if (isReload === undefined) {
+                isReload = false ;
+            }
+            theModusToolboxApp = new MTBAppInfo(context, appdir, isReload) ;
             theModusToolboxApp.init()
                 .then((status) => {
                     resolve(status) ;
