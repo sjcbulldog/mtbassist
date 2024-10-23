@@ -44,7 +44,7 @@ import { MTBTasks } from './mtbtasks';
 import { getMTBQuickLinksTreeProvider } from '../providers/mtbquicklinkprovider';
 import { getMTBAssetProvider } from '../providers/mtbassetprovider';
 import { MTBPacks } from '../mtbpacks';
-import { MTBCacheProvider } from '../providers/mtbcacheprovider';
+import { MTBCacheLoc, MTBCacheProvider } from '../providers/mtbcacheprovider';
 
 interface LaunchDoc
 {
@@ -1163,6 +1163,10 @@ export async function mtbAssistLoadApp(context: vscode.ExtensionContext, appdir?
         if (appdir) {
             if (isReload === undefined) {
                 isReload = false ;
+            }
+            if (isReload) {
+                // If this is a reload we want to clear the cache, otherwise it is initial startup and we want USE the cache
+                MTBCacheProvider.getMTBCacheProvider()?.setFlagToClearCache(MTBCacheLoc.WORKSPACE);
             }
             theModusToolboxApp = new MTBAppInfo(context, appdir, isReload) ;
             theModusToolboxApp.init()
