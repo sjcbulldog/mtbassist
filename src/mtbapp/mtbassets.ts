@@ -109,7 +109,11 @@ export class MTBAssetInstance
             ret.version = parts[1] ;
             let loc: string = parts[2].trim() ;
 
+            // Some mtb urls come in the form mtb:... and some in the form mtb://... Need to account for both
             let index: number = parts[0].lastIndexOf('/') ;
+            if (index == -1) {
+                index = parts[0].lastIndexOf(':');
+            }
             if (index !== -1) {
 
                 ret.id = parts[0].substring(index + 1) ;
