@@ -252,9 +252,13 @@ export class MTBQuickLinksProvider implements vscode.TreeDataProvider<MTBAssistI
                     item.command = new MTBAssistCommand(MTBTasks.taskNameQuickProgram, runTaskCmd, name, [ name]) ;
                     app.addChild(item) ;
                 }
+
+                // remove the header if there are no children
+                if (app.getChildren().length == 0) {
+                    this.items_.pop();
+                }
             }
         }
-
         this.onDidChangeTreeData_.fire(undefined) ;
     }
 }

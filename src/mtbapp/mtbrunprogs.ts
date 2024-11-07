@@ -22,6 +22,9 @@ import { ModusToolboxEnvVarNames } from './mtbnames';
 import exp = require('constants');
 import { mtbStringToJSON } from '../mtbjson';
 
+import * as vscode from 'vscode';
+import { MTBCacheLoc, MTBCacheProvider } from '../providers/mtbcacheprovider';
+
 //
 // This runs a command using the modus shell.  If any output appears on standard error, it is output
 // to the log window
@@ -48,6 +51,8 @@ export function runModusCommandThroughShell(cmd: string, cwd: string) : Promise<
             cmdstr = cmd ;
         }
         
+        //debug
+        let st = Date.now();
         exec.execFile(makepath, ["-c", cmdstr], { cwd: cwd }, (error, stdout, stderr) => {
             if (error) {
                 let errmsg : Error = error as Error ;
@@ -66,6 +71,10 @@ export function runModusCommandThroughShell(cmd: string, cwd: string) : Promise<
                 }
             }
 
+            //debug
+            let et = Date.now();
+            console.log((et-st) + " ms " + makepath + " | " + cmd);
+            //console.log(stdout);
             resolve(stdout) ;
         }) ;
     }) ;
@@ -141,11 +150,18 @@ function makeOutputToMap(output: string) : Map<string, string> {
     }
     return mapOldToNew(ret) ;
 }
-
 export function runMakeGetAppInfo(cwd: string) : Promise<Map<string, string>> {
     let ret = new Promise<Map<string, string>>((resolve, reject) => {
-        runModusCommandThroughShell("make CY_PROTOCOL=2 MTB_QUERY=1 get_app_info", cwd)
+        
+        let output : string | undefined = MTBCacheProvider.getMTBCacheProvider()?.getCacheItem(cwd, MTBCacheLoc.WORKSPACE);
+
+        if (output != undefined) {
+            let outmap : Map<string, string> = makeOutputToMap(output as string) ;            
+            resolve(outmap) ;
+        } else {
+            runModusCommandThroughShell("make CY_PROTOCOL=2 MTB_QUERY=1 get_app_info", cwd)
             .then ((output: string) => {
+                MTBCacheProvider.getMTBCacheProvider()?.updateCacheItem(cwd, output, MTBCacheLoc.WORKSPACE);
                 let outmap : Map<string, string> = makeOutputToMap(output) ;
                 resolve(outmap) ;
             })
@@ -154,7 +170,8 @@ export function runMakeGetAppInfo(cwd: string) : Promise<Map<string, string>> {
                 let stdout = info[1] ;
                 let stderr = info[2] ;
                 reject(error) ;
-            }) ;
+            }) ;    
+        }
     }) ;
     return ret ;
 }
@@ -170,19 +187,34 @@ export function runMtbLaunch(cwd: string) : Promise<any> {
             mtblaunch += ".exe" ;
         }
         mtblaunch += " --quick --docs --app "  + cwd ;
-
-        exec.exec(mtblaunch, { cwd: cwd, windowsHide: true }, (error, stdout, stderr) => {
-            if (error) {
-                reject(error) ;
-            }
-    
-            if (stderr) {
-                MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "mtblaunch: " + stderr) ;
-            }
-            
-            let obj = mtbStringToJSON(stdout) ;
+        
+        //debug
+        let st = Date.now();
+        let cachedData : string | undefined = MTBCacheProvider.getMTBCacheProvider()?.getCacheItem(mtblaunch, MTBCacheLoc.WORKSPACE) ;
+        if (cachedData != undefined) {
+            let obj = mtbStringToJSON(cachedData) ;
             resolve(obj) ;
-        }) ;
+        } else {
+            exec.exec(mtblaunch, { cwd: cwd, windowsHide: true }, (error, stdout, stderr) => {
+                if (error) {
+                    reject(error) ;
+                }
+        
+                if (stderr) {
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.error, "mtblaunch: " + stderr) ;
+                }
+                
+                // If we got something, update the cache before processing and returning it
+                MTBCacheProvider.getMTBCacheProvider()?.updateCacheItem(mtblaunch, stdout, MTBCacheLoc.WORKSPACE);
+
+                let obj = mtbStringToJSON(stdout) ;
+                //debug
+                let et = Date.now();
+                console.log(et-st + " ms, " + mtblaunch + " | " + cwd);
+                //console.log(obj);
+                resolve(obj) ;
+            }) ;    
+        }
     }) ;
 
     return ret ;

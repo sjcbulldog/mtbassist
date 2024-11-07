@@ -33,6 +33,7 @@ import { MTBAssetInstance } from './mtbapp/mtbassets';
 import { browseropen } from './browseropen';
 import { MTBDevKitMgr } from './mtbdevicekits';
 import { RecentAppManager } from './mtbrecent';
+import { MTBCacheLoc, MTBCacheProvider } from './providers/mtbcacheprovider';
 
 function outputLines(context: vscode.ExtensionContext, data: string) {
     let str: string = data.toString().replace(/\r\n/g, "\n") ;
@@ -123,7 +124,7 @@ export function mtbRunEditor(context: vscode.ExtensionContext, args?: any) {
                 }
                 if (vscode.workspace.workspaceFolders) {
                     let appdir : string = vscode.workspace.workspaceFolders[0].uri.fsPath;
-                    mtbAssistLoadApp(context, appdir) ;
+                    mtbAssistLoadApp(context, appdir, true) ;
                 }
             }
         );
@@ -387,7 +388,7 @@ export function mtbRunMakeGetLibsCmd(context: vscode.ExtensionContext) {
                     vscode.window.showInformationMessage("'make getlibs' completed sucessfully, reloading application") ;
                     if (vscode.workspace.workspaceFolders) {
                         let appdir : string = vscode.workspace.workspaceFolders[0].uri.fsPath;
-                        mtbAssistLoadApp(context, appdir) ;
+                        mtbAssistLoadApp(context, appdir, true) ;
                     }
                 }
             })
@@ -414,6 +415,16 @@ function findWorkspaceFile(dir: string) : string  {
     }
 
     return dir ;
+}
+
+export function mtbRefreshExtension(context: vscode.ExtensionContext) {
+    let cache : MTBCacheProvider | undefined = MTBCacheProvider.getMTBCacheProvider();
+    if (cache != undefined && vscode.workspace.workspaceFolders) {
+        let appdir : string = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        mtbAssistLoadApp(context, appdir, true) ;
+    } else {
+        vscode.window.showErrorMessage("Failed to refresh MTBAssist Extension, MTBAssist Workspace Cache not initialized!")
+    }
 }
 
 export function mtbCreateProject(context: vscode.ExtensionContext) {

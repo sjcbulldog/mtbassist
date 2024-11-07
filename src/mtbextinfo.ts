@@ -86,6 +86,8 @@ export class MTBExtensionInfo
    
     context: vscode.ExtensionContext;
 
+    private progressCancelToken : vscode.CancellationTokenSource | undefined ;
+
     constructor(context: vscode.ExtensionContext) {
         let ext = vscode.extensions.getExtension('c-and-t-software.mtbassist');
         if (!ext)
@@ -253,6 +255,32 @@ export class MTBExtensionInfo
         this.updateStatusBar() ;
     }
 
+    private startProgress() {
+        if (this.progressCancelToken)
+            return;
+        vscode.window.withProgress({
+			location: vscode.ProgressLocation.Window,
+			title: "MTB Loading...",
+			cancellable: true
+		}, (progress, token) => {
+            this.progressCancelToken = new vscode.CancellationTokenSource();
+			const p = new Promise<void>(resolve => {
+                this.progressCancelToken?.token.onCancellationRequested(() => {
+                    this.progressCancelToken?.dispose();
+                    this.progressCancelToken = undefined;
+                    resolve();
+                });
+			});
+			return p;
+		});
+    }
+
+    private stopProgress() {
+        if (this.progressCancelToken !== undefined) {
+            this.progressCancelToken.cancel() ;
+        }
+    }
+
     private updateStatusBar() {
         let st: string = "MTB:" ;
         let tip: string = "" ;
@@ -260,18 +288,23 @@ export class MTBExtensionInfo
         switch(this.status) {
             case StatusType.GetLibs:
                 st += " GetLibs" ;
+                this.startProgress();
                 break ;
             case StatusType.Loading:
                 st += " Loading" ;
+                this.startProgress();
                 break ;
             case StatusType.NotValid:
                 st += " NotValid" ;
+                this.stopProgress();
                 break ;
             case StatusType.Ready:
                 st += " Ready" ;
+                this.stopProgress();
                 break ;
             case StatusType.VSCode:
                 st += " Initializing" ;
+                this.startProgress();
                 break ;
         }
 

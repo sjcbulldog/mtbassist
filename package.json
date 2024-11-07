@@ -30,6 +30,10 @@
   "contributes": {
     "commands": [
       {
+        "command": "mtbassist.mtbRefreshExtension",
+        "title": "ModusToolbox Assistant: Refresh Extension"
+      },
+      {
         "command": "mtbassist.mtbCreateProject",
         "title": "ModusToolbox Assistant: Create Project"
       },
@@ -52,11 +56,11 @@
       {
         "command": "mtbassist.mtbTurnOnExperimentalNina",
         "title": "ModusToolbox Assistant: Turn On Experimental Ninja Support"
-      },    
+      },
       {
         "command": "mtbassist.mtbTurnOffExperimentalNina",
         "title": "ModusToolbox Assistant: Turn Off Experimental Ninja Support"
-      },         
+      },
       {
         "command": "mtbassist.mtbTurnOnDebugMode",
         "title": "ModusToolbox Assistant: Turn On Debug Mode"
