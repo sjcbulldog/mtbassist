@@ -1,6 +1,6 @@
 import * as fs from 'fs' ;
 import { AppType, MTBAppInfo } from './mtbappinfo';
-import { MTBExtensionInfo } from '../mtbextinfo';
+import { MessageType, MTBExtensionInfo } from '../mtbextinfo';
 
 // {
 //     ...
@@ -163,10 +163,20 @@ export class MTBTasks
                 continue ;
             }
             
-            let task = this.needToAddChangeTask(taskname) ;
+            let task = this.needToAddChangeTask(taskname, undefined, true) ;
             if (task) {
+                if (task.missing) {
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, 'task \'' + task.label + '\' is missing') ;
+                }
+                else {
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, 'task \'' + task.label + '\' is different than expected') ;
+                    let curstr: string = task.other ;
+                    task.missing = undefined ;
+                    task.other = undefined ;
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, '    expected \'' + JSON.stringify(task) + '\'') ;
+                    MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, '    existing \'' + curstr + '\'') ;
+                }
                 ret = true ;
-                break ;
             }
         }
 
@@ -181,10 +191,20 @@ export class MTBTasks
                         continue ;
                     }
 
-                    let task = this.needToAddChangeTask(taskname, project.name) ;
+                    let task = this.needToAddChangeTask(taskname, project.name, true) ;
                     if (task) {
+                        if (task.missing) {
+                            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, 'task \'' + task.label + '\' is missing') ;
+                        }
+                        else {
+                            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, 'task \'' + task.label + '\' is different than expected') ;
+                            let curstr: string = task.other ;
+                            task.missing = undefined ;
+                            task.other = undefined ;
+                            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, '    expected \'' + JSON.stringify(task) + '\'') ;
+                            MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.info, '    existing \'' + curstr + '\'') ;
+                        }
                         ret = true ;
-                        break ;
                     }
                 }
             }
@@ -224,6 +244,12 @@ export class MTBTasks
             let taskname = this.createTaskName(MTBTasks.taskNameBuildNinja, project.name) ;
             depends.push(taskname) ;
         }
+
+        //
+        // The dependcies so far are just project, so order does not matter.  Sort
+        // so the order is consistent.
+        //
+        depends.sort() ;
         depends.push(MTBTasks.taskNameGenerateHexNinja) ;
 
         let task =  {
@@ -408,7 +434,8 @@ export class MTBTasks
         }
         else if (taskname === MTBTasks.taskNameBuild) {
             if (project === undefined && this.appinfo_.appType === AppType.multiproject) {
-                task = this.generateBuild() ;
+                task = this.generateMakeTask(true, MTBTasks.taskNameBuild, "-j build", "", true, project, false, false) ;
+                // task = this.generateBuild() ;
             }
             else {
                 task = this.generateMakeTask(true, MTBTasks.taskNameBuild, "-j build", "", true, project, false, false) ;
@@ -428,7 +455,8 @@ export class MTBTasks
         }
         else if (taskname === MTBTasks.taskNameBuildNinja) {
             if (project === undefined && this.appinfo_.appType === AppType.multiproject) {
-                task = this.generateBuildNinja() ;
+                task = this.generateMakeTask(true, MTBTasks.taskNameBuildNinja, "build", "NINJA=1", true, project, false, false) ;
+                // task = this.generateBuildNinja() ;
             }
             else {
                 task = this.generateMakeTask(true, MTBTasks.taskNameBuildNinja, "build", "NINJA=1", true, project, false, false) ;
@@ -452,23 +480,32 @@ export class MTBTasks
     }
 
     private addTask(taskname: string, project?: string) {
-        let task = this.needToAddChangeTask(taskname, project) ;
+        let task = this.needToAddChangeTask(taskname, project, false) ;
         if (task) {
             this.addOrReplaceTask(task) ;
         }
     }
 
-    private needToAddChangeTask(taskname: string, project?: string) : any | undefined {
+    private needToAddChangeTask(taskname: string, project?: string, addreason?:boolean) : any | undefined {
         let ret = undefined ;
 
         let task = this.generateTask(taskname, project) ;
-        let existing = this.getTaskByName(this.createTaskName(taskname, project)) ;
-        if (!existing) {
-            ret = task ;
-        }
-        else {
-            if (!this.compareTasks(task, existing)) {
+        if (task) {
+            let existing = this.getTaskByName(this.createTaskName(taskname, project)) ;
+            if (!existing) {
                 ret = task ;
+                if (addreason) {
+                    ret.missing = true ;
+                }
+            }
+            else {
+                if (!this.compareTasks(task, existing)) {
+                    ret = task ;
+                    if (addreason) {
+                        ret.missing = false ;
+                        ret.other = JSON.stringify(existing) ;
+                    }
+                }
             }
         }
 

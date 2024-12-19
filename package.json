@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.2.9",
+  "version": "1.2.11",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -52,11 +52,11 @@
       {
         "command": "mtbassist.mtbTurnOnExperimentalNina",
         "title": "ModusToolbox Assistant: Turn On Experimental Ninja Support"
-      },    
+      },
       {
         "command": "mtbassist.mtbTurnOffExperimentalNina",
         "title": "ModusToolbox Assistant: Turn Off Experimental Ninja Support"
-      },         
+      },
       {
         "command": "mtbassist.mtbTurnOnDebugMode",
         "title": "ModusToolbox Assistant: Turn On Debug Mode"
@@ -190,7 +190,7 @@
   },
   "dependencies": {
     "@types/json5": "^2.2.0",
-    "@vscode/vsce": "^2.23.0",
+    "@vscode/vsce": "^2.32.0",
     "is-wsl": "^2.2.0",
     "node-fetch": "^3.2.10",
     "open": "^9.1.0",
