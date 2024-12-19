@@ -54,7 +54,7 @@ export async function mtbResultDecode(context: vscode.ExtensionContext) {
     vscode.window.showInformationMessage("Text '" + value + "'") ;
 }
 
-export function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string) : Promise<number> {
+export function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string, progress?: any) : Promise<number> {
     MTBExtensionInfo.getMtbExtensionInfo().setStatus(StatusType.GetLibs) ;
     let ret: Promise<number> = new Promise<number>((resolve, reject) => {
         let makepath : string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "modus-shell", "bin", "bash") ;
@@ -63,7 +63,18 @@ export function mtbRunMakeGetLibs(context: vscode.ExtensionContext, cwd: string)
         let job = exec.spawn(makepath, ["-c", 'PATH=/bin:/usr/bin ; ' + cmd], { cwd: cwd }) ;
 
         job.stdout.on(('data'), (data: Buffer) => {
-            outputLines(context, data.toString()) ;
+            let text = data.toString() ;
+            if (progress) {
+                let regex = /loaded asset '(.*)'/ ;
+                let lines = text.split("\n") ;
+                for(let line of lines) {
+                    let m = regex.exec(line) ;
+                    if (m) {
+                        progress.report({ message: "downloaded asset '" + m[1] + "'"}) ;
+                    }
+                }
+            }
+            outputLines(context, text) ;
         }) ;
 
         job.stderr.on(('data'), (data: string) => {

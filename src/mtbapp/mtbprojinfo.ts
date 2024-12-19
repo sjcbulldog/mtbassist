@@ -93,11 +93,12 @@ export class MTBProjectInfo
         getMTBAssetProvider().refresh(this.name, this.assets) ;
     }
 
-    public initProject() : Promise<void> {
+    public initProject(progress: any) : Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            progress.report({ message: "getting project information via make" }) ;
             runMakeGetAppInfo(this.getProjectDir())
                 .then((data: Map<string, string>) => {
-                    this.initProjectFromData(data)
+                    this.initProjectFromData(progress, data)
                         .then(() => {
                             resolve() ;
                         })
@@ -111,7 +112,7 @@ export class MTBProjectInfo
         }) ;
     }
 
-    public initProjectFromData(data: Map<string, string>) : Promise<void> {
+    public initProjectFromData(progress: any, data: Map<string, string>) : Promise<void> {
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
 
             if (data.has(ModusToolboxEnvVarNames.MTB_CORE_TYPE) && data.get(ModusToolboxEnvVarNames.MTB_CORE_TYPE)!.length > 0) {
@@ -159,6 +160,7 @@ export class MTBProjectInfo
             }
             this.mtbvars = data ;
 
+            progress.report({ message: "discovering firmware assets ..." }) ;
             MTBAssetInstance.mtbLoadAssetInstance(this)
                 .then(() => {
                     resolve() ;

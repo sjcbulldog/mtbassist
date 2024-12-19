@@ -1,5 +1,12 @@
 # Change Log
 
+### 1.2.11
+  Updated to provide more progress information while loading an application.
+  Eliminated duplicate calls to 'make get_app_info'
+  Updated the build target at the top level for multi-core projects to run make at the top level.
+
+### 1.2.10
+
 ### 1.2.9
   Fixed a bug where opening a document, also opened an external dictionary page.
   Checked to be sure a new project was not being created in an existing project directory.
