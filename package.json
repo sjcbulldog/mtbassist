@@ -189,7 +189,6 @@
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {
-    "@types/json5": "^2.2.0",
     "@vscode/vsce": "^2.32.0",
     "is-wsl": "^2.2.0",
     "node-fetch": "^3.2.10",
@@ -197,7 +196,6 @@
     "openurl": "^1.1.1",
     "os": "^0.1.2",
     "tmp": "^0.2.1",
-    "vsce": "^2.15.0",
     "xml2js": "^0.4.23"
   }
 }
