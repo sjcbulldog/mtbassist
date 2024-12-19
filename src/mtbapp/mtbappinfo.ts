@@ -108,6 +108,8 @@ export class MTBAppInfo
 
     public packs: MTBPacks | undefined = undefined ;
 
+    public firstload: boolean = true ;
+
     private getAppInfoData_: Map<string, Map<string, string>> = new Map<string, Map<string, string>>() ;
 
 
@@ -650,10 +652,11 @@ export class MTBAppInfo
                             let readme : string = path.join(this.appDir, "README.md") ;
                             if (fs.existsSync(readme)) {
                                 let info = MTBExtensionInfo.getMtbExtensionInfo() ;
-                                if (info.getPersistedBoolean(MTBExtensionInfo.readmeName, true)) {
+                                if (info.getPersistedBoolean(MTBExtensionInfo.readmeName, true) && this.firstload) {
                                     let uri: vscode.Uri = vscode.Uri.file(readme) ;
                                     vscode.commands.executeCommand("markdown.showPreview", uri) ;
                                 }
+                                this.firstload = false ;
                             }
                             resolve() ;
                         })
@@ -1169,7 +1172,7 @@ export function getModusToolboxApp() : MTBAppInfo | undefined {
 //
 // Load a new application in as the ModusToolbox application being processed
 //
-export async function mtbAssistLoadApp(context: vscode.ExtensionContext, progress: any, appdir?: string) : Promise<boolean> {
+export async function mtbAssistLoadApp(context: vscode.ExtensionContext, progress: any, appdir: string | undefined, firstload?: boolean) : Promise<boolean> {
     let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
         progress.report({message: "loading application"}) ;
         if (appdir && theModusToolboxApp !== undefined && theModusToolboxApp.appDir === appdir && theModusToolboxApp.isLoading) {
@@ -1178,6 +1181,7 @@ export async function mtbAssistLoadApp(context: vscode.ExtensionContext, progres
 
         if (appdir) {
             theModusToolboxApp = new MTBAppInfo(context, appdir) ;
+            theModusToolboxApp.firstload = (firstload ? true : false) ;
             theModusToolboxApp.init(progress)
                 .then((status) => {
                     resolve(status) ;

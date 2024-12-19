@@ -33,6 +33,7 @@ import { MTBAssetInstance } from './mtbapp/mtbassets';
 import { browseropen } from './browseropen';
 import { MTBDevKitMgr } from './mtbdevicekits';
 import { RecentAppManager } from './mtbrecent';
+import { mtbLoadApplication } from './extension';
 
 function outputLines(context: vscode.ExtensionContext, data: string) {
     let str: string = data.toString().replace(/\r\n/g, "\n") ;
@@ -134,7 +135,7 @@ export function mtbRunEditor(context: vscode.ExtensionContext, args?: any) {
                 }
                 if (vscode.workspace.workspaceFolders) {
                     let appdir : string = vscode.workspace.workspaceFolders[0].uri.fsPath;
-                    mtbAssistLoadApp(context, appdir) ;
+                    mtbLoadApplication(context, appdir) ;
                 }
             }
         );
@@ -289,7 +290,7 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext, tab: number
         panel = undefined ;
     }) ;
 
-    panel.webview.onDidReceiveMessage( (message)=> {
+    panel.webview.onDidReceiveMessage( async (message)=> {
         MTBExtensionInfo.getMtbExtensionInfo().logMessage(MessageType.debug, "recevied startup page command '" + message.command + "'") ;
         if (message.command === "logMessage") {
             let msg: string = message.message as string ;
@@ -331,7 +332,7 @@ export function mtbShowWelcomePage(context: vscode.ExtensionContext, tab: number
             vscode.commands.executeCommand('mtbassist.mtbRefreshDevKits');
         }
         else if (message.command === "updatefirmware") {
-            MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().updateFirmware(message.serial) ;
+            await MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().updateFirmware(message.serial) ;
         }
         else if (message.command === "updateallfirmware") {
             MTBExtensionInfo.getMtbExtensionInfo().getDevKitMgr().updateAllFirmware() ;
@@ -398,7 +399,7 @@ export function mtbRunMakeGetLibsCmd(context: vscode.ExtensionContext) {
                     vscode.window.showInformationMessage("'make getlibs' completed sucessfully, reloading application") ;
                     if (vscode.workspace.workspaceFolders) {
                         let appdir : string = vscode.workspace.workspaceFolders[0].uri.fsPath;
-                        mtbAssistLoadApp(context, appdir) ;
+                        mtbLoadApplication(context, appdir) ;
                     }
                 }
             })

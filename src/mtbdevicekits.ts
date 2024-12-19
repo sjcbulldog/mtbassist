@@ -84,76 +84,98 @@ export class MTBDevKitMgr {
     }
 
     public updateFirmware(serial: string) {
-        let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
-        if (process.platform === "win32") {
-            fwload += ".exe" ;
-        }
+        let options: vscode.ProgressOptions = {
+            location: vscode.ProgressLocation.Notification,
+            title: "ModusToolbox: ",
+            cancellable: false
+        };
+    
+        vscode.window.withProgress(options, (progress) => {
+            let p = new Promise<void>((resolve, reject) => {
+                progress.report({ message: 'Updating development kit - please wait'});
+                let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
+                if (process.platform === "win32") {
+                    fwload += ".exe" ;
+                }
 
-        let kit: MTBDevKit | undefined = this.getKitBySerial(serial) ;
+                let kit: MTBDevKit | undefined = this.getKitBySerial(serial) ;
 
-        if (kit) {
-            let args: string[] = [] ;
-            
-            if (kit.kptype === 'kp3') {
+                if (kit) {
+                    let args: string[] = [] ;
+                    
+                    if (kit.kptype === 'kp3') {
+                        args.push('--update-kp3');
+                    }
+                    else if (kit.kptype === 'kp2') {
+                        args.push('--update-kp2');
+                    }
+                    else {
+                        vscode.window.showErrorMessage('Unknown kitprog type/version - update failed') ;
+                        return ;
+                    }
+
+                    args.push(serial) ;
+                    this.runCmdLogOutput(os.homedir(), fwload, args)
+                        .then((result) => {
+                            this.scanForDevKits()
+                            .then((st: boolean) => {
+                                resolve() ;
+                            })
+                            .catch((err) => {
+                                vscode.window.showErrorMessage('Kit Prog 3 [' + serial + '] update failed - ' + err.message) ;
+                                reject(err);
+                            }) ;
+                        })
+                        .catch((err) => { 
+                        }) ;
+                }
+                else {
+                    vscode.window.showInformationMessage("The device with serial number '" + serial + "' has been removed") ;
+                }
+            }) ;
+
+            return p ;
+        }) ;
+    }
+
+    public updateAllFirmware() {
+        let options: vscode.ProgressOptions = {
+            location: vscode.ProgressLocation.Notification,
+            title: "ModusToolbox: ",
+            cancellable: false
+        };
+    
+        vscode.window.withProgress(options, (progress) => {
+            let p = new Promise<void>((resolve, reject) => {
+                progress.report({ message: 'Updating development kits - please wait'});
+                MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow();
+                let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
+                if (process.platform === "win32") {
+                    fwload += ".exe" ;
+                }
+
+                let args: string[] = [] ;
                 args.push('--update-kp3');
-            }
-            else if (kit.kptype === 'kp2') {
-                args.push('--update-kp2');
-            }
-            else {
-                vscode.window.showErrorMessage('Unknown kitprog type/version - update failed') ;
-                return ;
-            }
-
-            args.push(serial) ;
-            vscode.window.showInformationMessage('Updating kitprog device - please wait', 'OK');
-            this.runCmdLogOutput(os.homedir(), fwload, args)
+                args.push('all') ;
+                let opts = {
+                    modal: true
+                } ;
+                this.runCmdLogOutput(os.homedir(), fwload, args)
                 .then((result) => {
                     this.scanForDevKits()
                     .then((st: boolean) => {
-                        vscode.window.showInformationMessage("Kit Prog 3 [" + serial + "] has been updated") ;
+                        resolve() ;
                     })
                     .catch((err) => {
-                        vscode.window.showErrorMessage('Kit Prog 3 [' + serial + '] update failed - ' + err.message) ;
+                        reject(err);
                     }) ;
                 })
                 .catch((err) => { 
-                }) ;
-        }
-        else {
-            vscode.window.showInformationMessage("The device with serial number '" + serial + "' has been removed") ;
-        }
-    }
-
-    public async updateAllFirmware() : Promise<void> {
-        let ret: Promise<void> = new Promise<void>((resolve, reject) => {
-            MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow();
-            let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
-            if (process.platform === "win32") {
-                fwload += ".exe" ;
-            }
-
-            let args: string[] = [] ;
-            args.push('--update-kp3');
-            args.push('all') ;
-            let opts = {
-                modal: true
-            } ;
-            vscode.window.showInformationMessage('Updating kitprog device - please wait');
-            this.runCmdLogOutput(os.homedir(), fwload, args)
-            .then((result) => {
-                this.scanForDevKits()
-                .then((st: boolean) => {
-                    vscode.window.showInformationMessage("All KitProg3 devices have been updated")
-                        .then(() => resolve()) ;
-                })
-                .catch((err) => {
                     reject(err);
                 }) ;
-            })
-            .catch((err) => { 
-                reject(err);
             }) ;
+
+            return p;
         }) ;
     }
 

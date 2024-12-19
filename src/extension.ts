@@ -360,6 +360,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
+	mtbLoadApplication(context, appdir, true) ;
+}
+
+export function mtbLoadApplication(context: vscode.ExtensionContext, appdir: string | undefined, firstload?: boolean) {
 	// Note: if the appdir is undefined, this means no actual folder is being loaded.  In this case
 	// loading the application sets up the tree providers to show the state of no application loaded
 	let options: vscode.ProgressOptions = {
@@ -370,7 +374,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	vscode.window.withProgress(options, (progress) => {
 		let p = new Promise<void>((resolve, reject) => {
-			mtbAssistLoadApp(context, progress, appdir)
+			progress.report({ message: "Updating development kit firmware" });
+			mtbAssistLoadApp(context, progress, appdir, firstload)
 				.then((status) => {
 					let shpath = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "modus-shell/bin/bash");
 					if (process.platform === "win32") {
