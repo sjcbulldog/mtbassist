@@ -52,10 +52,6 @@ export class MTBAssistDocumentProvider implements vscode.TreeDataProvider<MTBAss
         return Promise.resolve(retval) ;
     }
 
-    private findItem(items: MTBAssistItem[], text: string) : number {
-        return -1 ;
-    }
-
     private convertTradeMark(title: string) : string {
         return title.replace("&trade;", "\u2122") ;
     }

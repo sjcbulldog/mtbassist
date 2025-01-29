@@ -158,7 +158,7 @@ export class MTBAppInfo
                 }) ;
             }
         }) ;
-        return p
+        return p ;
     }
 
     private buildTaskEnded() {

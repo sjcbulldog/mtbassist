@@ -89,17 +89,33 @@ export class MTBLaunchInfo {
         return ret ;
     }
 
+    normalizeTitle(title: string) : string {
+        if (title.startsWith('(') && title.endsWith(')')) {
+            title = title.substring(1, title.length - 1) ;
+        }
+        return title ;
+    }
+
+    isValidDocEntry(doc: any) : boolean {
+        return doc["title"] && doc["location"] && doc["path"] && doc["title"] && doc["type"] ;
+    }
+
     parseDocs(docs: any) : MTBLaunchDoc[] {
         let ret : MTBLaunchDoc[] = [] ;
-        docs.forEach(function (doc: any) {
-            let one : MTBLaunchDoc = new MTBLaunchDoc() ;
-            one.location = path.normalize(doc["location"]) ;
-            one.path = doc["path"] ;
-            one.project = doc["project"] ;
-            one.title = doc["title"] ;
-            one.type = doc["type"] ;
-            ret.push(one) ;
-        }) ;
+        for(let doc of docs) {
+            if (doc && this.isValidDocEntry(doc)) {
+                let title = this.normalizeTitle(doc["title"] as string) ;
+                if (title && title.length > 0) {
+                    let one : MTBLaunchDoc = new MTBLaunchDoc() ;
+                    one.location = path.normalize(doc["location"]) ;
+                    one.path = doc["path"] ;
+                    one.project = doc["project"] ;
+                    one.title = title ;
+                    one.type = doc["type"] ;
+                    ret.push(one) ;
+                }
+            }
+        }
 
         return ret ;
     }
