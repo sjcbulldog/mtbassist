@@ -334,15 +334,6 @@ export class MTBAppInfo
         return path.join(dir, ".vscode", "tasks.json") ;
     }
 
-    private projectNames() : string[] {
-        let ret: string[] = [] ;
-        for(let proj of this.projects) {
-            ret.push(proj.name) ;
-        }
-
-        return ret ;
-    }
-
     private readTasks() {
         this.tasks = new MTBTasks(this, this.dirToTaskFile(this.appDir)) ;
         getMTBQuickLinksTreeProvider().refresh() ;         

@@ -1,5 +1,12 @@
 # Change Log
 
+### 1.2.14
+  Updated to find the firmware loader with the programming tools since they are decoupled
+  from ModusToolbox with the stand alone programming tools.
+
+### 1.2.13
+  Cleaned up some small bugs in finding documentation
+
 ### 1.2.12
   Improved the firmware upgrade process for development kits
 

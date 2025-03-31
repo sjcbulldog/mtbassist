@@ -1,9 +1,11 @@
 import * as path from 'path' ;
+import * as fs from 'fs' ;
 import * as exec from 'child_process' ;
 import * as os from 'os' ;
 import * as vscode from 'vscode' ;
 import { MTBExtensionInfo, MessageType } from './mtbextinfo';
 import { mtbRunMakeGetLibs } from './mtbcommands';
+import { getModusToolboxApp } from './mtbapp/mtbappinfo';
 
 export class MTBDevKit {
     public readonly kptype: string ;
@@ -93,10 +95,7 @@ export class MTBDevKitMgr {
         vscode.window.withProgress(options, (progress) => {
             let p = new Promise<void>((resolve, reject) => {
                 progress.report({ message: 'Updating development kit - please wait'});
-                let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
-                if (process.platform === "win32") {
-                    fwload += ".exe" ;
-                }
+                let fwload = this.findFWLoader() ;
 
                 let kit: MTBDevKit | undefined = this.getKitBySerial(serial) ;
 
@@ -149,10 +148,7 @@ export class MTBDevKitMgr {
             let p = new Promise<void>((resolve, reject) => {
                 progress.report({ message: 'Updating development kits - please wait'});
                 MTBExtensionInfo.getMtbExtensionInfo().showMessageWindow();
-                let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
-                if (process.platform === "win32") {
-                    fwload += ".exe" ;
-                }
+                let fwload = this.findFWLoader() ;
 
                 let args: string[] = [] ;
                 args.push('--update-kp3');
@@ -200,10 +196,7 @@ export class MTBDevKitMgr {
             }
             (async() => {
                 this.scanning = true ;
-                let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
-                if (process.platform === "win32") {
-                    fwload += ".exe" ;
-                }
+                let fwload = this.findFWLoader() ;
 
                 let args: string[] = ["--device-list"] ;
 
@@ -366,10 +359,7 @@ export class MTBDevKitMgr {
 
     private async getKitDetails(kit: MTBDevKit) : Promise<void> {
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
-            let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
-            if (process.platform === "win32") {
-                fwload += ".exe" ;
-            }
+            let fwload = this.findFWLoader() ;
             let args: string[] = [ "--info", kit.serial] ;
 
             this.runCmdCaptureOutput(os.homedir(), fwload, args)
@@ -516,4 +506,59 @@ export class MTBDevKitMgr {
 
         return ret;
     }    
+
+    private findFWLoader() : string {
+        let uuid = '9880c679-1764-4d77-bbb3-5f6861a5e049' ;
+        let programmerPrefix = 'ModusToolboxProgtools-' ;
+        let installedToolsPath = "C:/Infineon/Tools" ;
+
+        let app = getModusToolboxApp() ;
+        if (app && app.launch && app.launch.configs) {
+            for(let one of app.launch.configs) {
+                if (one.id === uuid) {
+                    //
+                    // We found the programmmer, see if it has the fw-loader
+                    //
+                    let p = path.join(one.basedir, "fw-loader", "bin", "fw-loader");
+                    if (process.platform === "win32") {
+                        p += ".exe" ;
+                    }
+                    if (fs.existsSync(p)) {
+                        return p ;
+                    }
+                }
+            }
+        }
+        
+        let fwload: string = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
+        if (process.platform === "win32") {
+            fwload += ".exe" ;
+        }
+
+        if (fs.existsSync(fwload)) {
+            return fwload ;
+        }
+
+        //
+        // Now fw-loader was found, try to see if we can find one on the Infineon directory
+        //
+        for (let one of fs.readdirSync(installedToolsPath)) {
+            if (one.startsWith(programmerPrefix)) {
+                let fwload = path.join(installedToolsPath, one, "fw-loader", "bin", "fw-loader") ;
+                if (process.platform === "win32") {
+                    fwload += ".exe" ;
+                }
+                if (fs.existsSync(fwload)) {
+                    return fwload ;
+                }
+            }
+        }
+
+        fwload = path.join(MTBExtensionInfo.getMtbExtensionInfo().toolsDir, "fw-loader", "bin", "fw-loader");
+        if (process.platform === "win32") {
+            fwload += ".exe" ;
+        }
+
+        return fwload ;
+    }
 }
