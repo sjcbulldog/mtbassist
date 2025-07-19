@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "extension"
+		},
+		{
+			"path": "mtbenv"
+		},
+		{
+			"path": "mtbsearch"
+		}
+	],
+	"settings": {}
+}
