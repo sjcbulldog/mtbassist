@@ -1,0 +1,1 @@
+{"version":3,"file":"mtbassetinststore.d.ts","sourceRoot":"./","sources":["../../src/appdata/mtbassetinststore.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,gBAAgB,EAAE,MAAM,gBAAgB,CAAC;AAElD,qBAAa,iBAAiB;IAC1B,OAAO,CAAC,eAAe,CAA6C;IAE7D,gBAAgB,CAAC,IAAI,EAAE,gBAAgB;IAQvC,gBAAgB,CAAC,KAAK,EAAE,MAAM,GAAI,gBAAgB,GAAG,SAAS;IAI9D,mBAAmB,CAAC,EAAE,EAAE,MAAM;IAI9B,KAAK,IAAK,IAAI;CAGxB"}

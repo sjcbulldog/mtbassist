@@ -1,0 +1,60 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const vitest_1 = require("vitest");
+const mtbversion_1 = require("../../src/misc/mtbversion");
+(0, vitest_1.test)('Version Create', async () => {
+    (0, vitest_1.expect)(new mtbversion_1.MTBVersion()).toEqual(new mtbversion_1.MTBVersion(-1, -1, -1, -1));
+    (0, vitest_1.expect)(new mtbversion_1.MTBVersion(1)).toEqual(new mtbversion_1.MTBVersion(1, -1, -1, -1));
+    (0, vitest_1.expect)(new mtbversion_1.MTBVersion(1, 2)).toEqual(new mtbversion_1.MTBVersion(1, 2, -1, -1));
+    (0, vitest_1.expect)(new mtbversion_1.MTBVersion(1, 2, 3)).toEqual(new mtbversion_1.MTBVersion(1, 2, 3, -1));
+    (0, vitest_1.expect)(new mtbversion_1.MTBVersion(1, 2, 3, 4)).toEqual(new mtbversion_1.MTBVersion(1, 2, 3, 4));
+});
+(0, vitest_1.test)('Version Parsing', async () => {
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.fromVersionString('1.2.3')).toEqual(new mtbversion_1.MTBVersion(1, 2, 3));
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.fromVersionString('1.2.3.99')).toEqual(new mtbversion_1.MTBVersion(1, 2, 3, 99));
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.fromVersionString('v1.2.3')).toEqual(new mtbversion_1.MTBVersion());
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.fromVVersionString('1.2.3')).toEqual(new mtbversion_1.MTBVersion());
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.fromVVersionString('1.2.3.99')).toEqual(new mtbversion_1.MTBVersion());
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.fromVVersionString('v1.2.3')).toEqual(new mtbversion_1.MTBVersion(1, 2, 3));
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.fromToolsVersionString('tools_1.2')).toEqual(new mtbversion_1.MTBVersion(1, 2, 0));
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.fromToolsVersionString('tools_1.2.3')).toEqual(new mtbversion_1.MTBVersion(1, 2, 3));
+});
+(0, vitest_1.test)('Version Comparison', async () => {
+    const v1 = new mtbversion_1.MTBVersion(1, 2, 3);
+    const v2 = new mtbversion_1.MTBVersion(1, 2, 4);
+    const v3 = new mtbversion_1.MTBVersion(1, 3, 0);
+    const v4 = new mtbversion_1.MTBVersion(2, 0, 0);
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.compare(v1, v2)).toBe(-1);
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.compare(v2, v1)).toBe(1);
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.compare(v1, v3)).toBe(-1);
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.compare(v3, v1)).toBe(1);
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.compare(v1, v4)).toBe(-1);
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.compare(v4, v1)).toBe(1);
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.compare(v2, v3)).toBe(-1);
+    (0, vitest_1.expect)(mtbversion_1.MTBVersion.compare(v3, v2)).toBe(1);
+});
+(0, vitest_1.test)('Version Comparison 2', async () => {
+    const v1 = new mtbversion_1.MTBVersion(1, 2, 3);
+    const v2 = new mtbversion_1.MTBVersion(1, 2, 4);
+    const v3 = new mtbversion_1.MTBVersion(1, 3, 0);
+    const v4 = new mtbversion_1.MTBVersion(2, 0, 0);
+    (0, vitest_1.expect)(v1.isLessThen(v2)).toBe(true);
+    (0, vitest_1.expect)(v2.isGreaterThen(v1)).toBe(true);
+    (0, vitest_1.expect)(v1.isLessThen(v3)).toBe(true);
+    (0, vitest_1.expect)(v3.isGreaterThen(v1)).toBe(true);
+    (0, vitest_1.expect)(v1.isLessThen(v4)).toBe(true);
+    (0, vitest_1.expect)(v4.isGreaterThen(v1)).toBe(true);
+    (0, vitest_1.expect)(v2.isLessThen(v3)).toBe(true);
+    (0, vitest_1.expect)(v3.isGreaterThen(v2)).toBe(true);
+    (0, vitest_1.expect)(v1.isEqual(v1)).toBe(true);
+    (0, vitest_1.expect)(v1.isEqual(v2)).toBe(false);
+    (0, vitest_1.expect)(v1.isEqual(new mtbversion_1.MTBVersion(1, 2, 3))).toBe(true);
+    (0, vitest_1.expect)(v2.isEqual(new mtbversion_1.MTBVersion(1, 2, 4))).toBe(true);
+    (0, vitest_1.expect)(v3.isEqual(new mtbversion_1.MTBVersion(1, 3, 0))).toBe(true);
+    (0, vitest_1.expect)(v4.isEqual(new mtbversion_1.MTBVersion(2, 0, 0))).toBe(true);
+    (0, vitest_1.expect)(v1.isEqual(new mtbversion_1.MTBVersion(1, 2, 3, 4))).toBe(false);
+    (0, vitest_1.expect)(v2.isEqual(new mtbversion_1.MTBVersion(1, 2, 4, 5))).toBe(false);
+    (0, vitest_1.expect)(v3.isEqual(new mtbversion_1.MTBVersion(1, 3, 0, 1))).toBe(false);
+    (0, vitest_1.expect)(v4.isEqual(new mtbversion_1.MTBVersion(2, 0, 0, 1))).toBe(false);
+});
+//# sourceMappingURL=version.test.js.map

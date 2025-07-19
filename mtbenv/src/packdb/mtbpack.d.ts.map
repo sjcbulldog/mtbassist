@@ -1,0 +1,1 @@
+{"version":3,"file":"mtbpack.d.ts","sourceRoot":"./","sources":["../../src/packdb/mtbpack.ts"],"names":[],"mappings":"AACA,qBAAa,OAAO;IAChB,OAAO,CAAC,GAAG,CAAU;IACrB,OAAO,CAAC,KAAK,CAAQ;gBAET,EAAE,EAAE,MAAM,EAAE,GAAG,EAAE,GAAG;IAKzB,QAAQ,IAAK,MAAM;IAInB,IAAI,IAAK,MAAM;IAIf,SAAS,IAAK,MAAM;CAG9B"}
