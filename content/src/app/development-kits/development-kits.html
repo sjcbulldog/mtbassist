@@ -1,0 +1,264 @@
+<div class="development-kits-container">
+  <!-- Header Section -->
+  <div class="header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1>
+          <mat-icon>developer_board</mat-icon>
+          Development Kits
+        </h1>
+        <p class="subtitle">Manage your connected ModusToolbox development kits</p>
+      </div>
+      
+      <div class="header-actions">
+        <button mat-raised-button 
+                color="primary" 
+                (click)="scanForDevKits()" 
+                [disabled]="isScanning">
+          <mat-spinner *ngIf="isScanning" diameter="20" class="button-spinner"></mat-spinner>
+          <mat-icon *ngIf="!isScanning">refresh</mat-icon>
+          {{ isScanning ? 'Scanning...' : 'Scan for Kits' }}
+        </button>
+      </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-section">
+      <mat-card class="stat-card connected">
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon>check_circle</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ getConnectedCount() }}</span>
+              <span class="stat-label">Connected</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="stat-card updating" *ngIf="getUpdatingCount() > 0">
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon>update</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ getUpdatingCount() }}</span>
+              <span class="stat-label">Updating</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="stat-card needs-update" *ngIf="getNeedsUpdateCount() > 0">
+        <mat-card-content>
+          <div class="stat-content">
+            <mat-icon>warning</mat-icon>
+            <div class="stat-info">
+              <span class="stat-number">{{ getNeedsUpdateCount() }}</span>
+              <span class="stat-label">Need Updates</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+    
+    <div class="last-scan" *ngIf="lastScanTime">
+      <mat-icon>schedule</mat-icon>
+      Last scan: {{ lastScanTime | date:'medium' }}
+    </div>
+  </div>
+
+  <!-- No Kits Found -->
+  <div class="no-kits" *ngIf="!isScanning && devKits.length === 0">
+    <mat-card class="empty-state">
+      <mat-card-content>
+        <mat-icon class="empty-icon">developer_board_off</mat-icon>
+        <h2>No Development Kits Found</h2>
+        <p>Connect your ModusToolbox development kits via USB and click "Scan for Kits" to detect them.</p>
+        <button mat-raised-button color="primary" (click)="scanForDevKits()">
+          <mat-icon>search</mat-icon>
+          Scan for Kits
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Development Kits Grid -->
+  <div class="devkits-grid" *ngIf="devKits.length > 0">
+    <mat-card class="devkit-card" *ngFor="let kit of devKits" [class]="kit.status">
+      <mat-card-header>
+        <div class="kit-header">
+          <div class="kit-title">
+            <h3>{{ kit.name }}</h3>
+            <span class="model">{{ kit.model }}</span>
+          </div>
+          <div class="kit-status">
+            <mat-icon 
+              [style.color]="getStatusColor(kit.status)"
+              [matTooltip]="kit.status | titlecase">
+              {{ getStatusIcon(kit.status) }}
+            </mat-icon>
+          </div>
+        </div>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <!-- Connection Info -->
+        <div class="connection-info">
+          <div class="info-item">
+            <mat-icon class="info-icon">{{ getConnectionIcon(kit.connectionType) }}</mat-icon>
+            <span>{{ kit.connectionType }}</span>
+            <span class="port" *ngIf="kit.port">({{ kit.port }})</span>
+          </div>
+          <div class="info-item">
+            <mat-icon class="info-icon">fingerprint</mat-icon>
+            <span>{{ kit.serialNumber }}</span>
+          </div>
+          <div class="info-item">
+            <mat-icon class="info-icon">schedule</mat-icon>
+            <span>{{ formatLastSeen(kit.lastSeen) }}</span>
+          </div>
+        </div>
+
+        <!-- Firmware Info -->
+        <div class="firmware-section">
+          <div class="firmware-info">
+            <div class="firmware-item">
+              <span class="label">Current:</span>
+              <span class="version">{{ kit.firmwareVersion }}</span>
+            </div>
+            <div class="firmware-item">
+              <span class="label">Latest:</span>
+              <span class="version">{{ kit.latestFirmwareVersion }}</span>
+              <mat-icon 
+                *ngIf="kit.needsUpdate" 
+                class="update-indicator"
+                matTooltip="Update available">
+                new_releases
+              </mat-icon>
+            </div>
+          </div>
+
+          <!-- Update Progress -->
+          <div class="update-progress" *ngIf="kit.status === 'updating' && kit.updateProgress !== undefined">
+            <div class="progress-header">
+              <span>Updating firmware...</span>
+              <span>{{ kit.updateProgress.toFixed(0) }}%</span>
+            </div>
+            <mat-progress-bar 
+              mode="determinate" 
+              [value]="kit.updateProgress">
+            </mat-progress-bar>
+          </div>
+        </div>
+
+        <!-- Hardware Status -->
+        <div class="hardware-status" *ngIf="kit.batteryLevel || kit.temperature">
+          <div class="status-item" *ngIf="kit.batteryLevel">
+            <mat-icon 
+              [style.color]="getBatteryColor(kit.batteryLevel)"
+              [matTooltip]="'Battery: ' + kit.batteryLevel.toFixed(0) + '%'">
+              {{ getBatteryIcon(kit.batteryLevel) }}
+            </mat-icon>
+            <span>{{ kit.batteryLevel.toFixed(0) }}%</span>
+          </div>
+          <div class="status-item" *ngIf="kit.temperature">
+            <mat-icon 
+              [style.color]="getTemperatureColor(kit.temperature)"
+              [matTooltip]="'Temperature: ' + kit.temperature.toFixed(1) + '°C'">
+              thermostat
+            </mat-icon>
+            <span>{{ kit.temperature.toFixed(0) }}°C</span>
+          </div>
+        </div>
+
+        <!-- Capabilities -->
+        <div class="capabilities-section">
+          <div class="capabilities-label">Capabilities:</div>
+          <div class="capabilities-chips">
+            <mat-chip-set>
+              <mat-chip *ngFor="let capability of kit.capabilities" class="capability-chip">
+                {{ capability }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions class="kit-actions">
+        <!-- Connection Actions -->
+        <button mat-button 
+                *ngIf="kit.status === 'disconnected'" 
+                (click)="connectToDevKit(kit)">
+          <mat-icon>link</mat-icon>
+          Connect
+        </button>
+        
+        <button mat-button 
+                *ngIf="kit.status === 'connected'" 
+                (click)="disconnectFromDevKit(kit)">
+          <mat-icon>link_off</mat-icon>
+          Disconnect
+        </button>
+
+        <!-- Firmware Update Actions -->
+        <button mat-button 
+                color="primary"
+                *ngIf="kit.needsUpdate && kit.status === 'connected'" 
+                (click)="startFirmwareUpdate(kit)">
+          <mat-icon>system_update</mat-icon>
+          Update Firmware
+        </button>
+        
+        <button mat-button 
+                color="warn"
+                *ngIf="kit.status === 'updating'" 
+                (click)="cancelFirmwareUpdate(kit)">
+          <mat-icon>cancel</mat-icon>
+          Cancel Update
+        </button>
+
+        <!-- Details Action -->
+        <button mat-icon-button 
+                (click)="viewDevKitDetails(kit)"
+                matTooltip="View Details">
+          <mat-icon>info</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Firmware Update Help -->
+  <div class="help-section" *ngIf="devKits.length > 0">
+    <mat-card class="help-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>help_outline</mat-icon>
+          Firmware Update Information
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-list>
+          <mat-list-item>
+            <mat-icon matListItemIcon>check_circle</mat-icon>
+            <div matListItemTitle>Ensure your development kit is connected via USB</div>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+          <mat-list-item>
+            <mat-icon matListItemIcon>warning</mat-icon>
+            <div matListItemTitle>Do not disconnect the kit during firmware update</div>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+          <mat-list-item>
+            <mat-icon matListItemIcon>schedule</mat-icon>
+            <div matListItemTitle>Firmware updates typically take 2-5 minutes</div>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+          <mat-list-item>
+            <mat-icon matListItemIcon>backup</mat-icon>
+            <div matListItemTitle>Your application will be preserved during the update</div>
+          </mat-list-item>
+        </mat-list>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

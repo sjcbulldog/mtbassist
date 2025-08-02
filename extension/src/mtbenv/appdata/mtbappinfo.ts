@@ -3,7 +3,7 @@ import { MTBNames } from "../misc/mtbnames";
 import { ModusToolboxEnvironment } from "../mtbenv/mtbenv";
 import { MTBAppLoader } from "./mtbapploader";
 import { MTBProjectInfo } from "./mtbprojinfo";
-import winston from 'winston';
+import * as winston from 'winston';
 
 export enum ApplicationType {
     Unknown,

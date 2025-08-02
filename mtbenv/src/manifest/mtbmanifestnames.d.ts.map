@@ -1,1 +1,0 @@
-{"version":3,"file":"mtbmanifestnames.d.ts","sourceRoot":"./","sources":["../../src/manifest/mtbmanifestnames.ts"],"names":[],"mappings":"AAgBA,qBAAa,gBAAgB;IACzB,MAAM,CAAC,QAAQ,CAAC,iBAAiB,EAAE,MAAM,CAAyB;IAClE,MAAM,CAAC,QAAQ,CAAC,eAAe,EAAE,MAAM,CAAuB;IAC9D,MAAM,CAAC,QAAQ,CAAC,uBAAuB,EAAE,MAAM,CAA8B;CAChF"}

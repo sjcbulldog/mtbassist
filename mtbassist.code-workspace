@@ -4,10 +4,7 @@
 			"path": "extension"
 		},
 		{
-			"path": "mtbenv"
-		},
-		{
-			"path": "mtbsearch"
+			"path": "content"
 		}
 	],
 	"settings": {}

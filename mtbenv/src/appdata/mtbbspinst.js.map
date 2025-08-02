@@ -1,1 +1,0 @@
-{"version":3,"file":"mtbbspinst.js","sourceRoot":"./","sources":["../../src/appdata/mtbbspinst.ts"],"names":[],"mappings":";;;AAEA,iDAAkD;AAElD,MAAa,cAAe,SAAQ,+BAAgB;IAEhD,YAAY,QAAgB;QACxB,KAAK,CAAC,QAAQ,CAAC,CAAE;IACrB,CAAC;IAEM,MAAM,CAAC,cAAc,CAAC,OAAe;QACxC,IAAI,GAAG,GAAoB,IAAI,cAAc,CAAC,OAAO,CAAC,CAAE;QACxD,OAAO,GAAG,CAAC;IACf,CAAC;CACJ;AAVD,wCAUC"}

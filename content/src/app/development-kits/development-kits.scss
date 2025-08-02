@@ -1,0 +1,510 @@
+.development-kits-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 80vh;
+}
+
+/* Header Section */
+.header {
+  margin-bottom: 32px;
+  
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    
+    .title-section {
+      h1 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 2.5rem;
+        font-weight: 300;
+        color: #1976d2;
+        margin-bottom: 8px;
+        
+        mat-icon {
+          font-size: 2.5rem;
+          width: 2.5rem;
+          height: 2.5rem;
+        }
+      }
+      
+      .subtitle {
+        font-size: 1.1rem;
+        color: #666;
+        margin: 0;
+      }
+    }
+    
+    .header-actions {
+      .button-spinner {
+        margin-right: 8px;
+      }
+    }
+  }
+  
+  .stats-section {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    
+    .stat-card {
+      border-radius: 12px;
+      min-width: 120px;
+      
+      &.connected {
+        border-left: 4px solid #4CAF50;
+      }
+      
+      &.updating {
+        border-left: 4px solid #FF9800;
+      }
+      
+      &.needs-update {
+        border-left: 4px solid #F44336;
+      }
+      
+      .stat-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        
+        mat-icon {
+          font-size: 2rem;
+          width: 2rem;
+          height: 2rem;
+          
+          .connected & { color: #4CAF50; }
+          .updating & { color: #FF9800; }
+          .needs-update & { color: #F44336; }
+        }
+        
+        .stat-info {
+          display: flex;
+          flex-direction: column;
+          
+          .stat-number {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #333;
+          }
+          
+          .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+        }
+      }
+    }
+  }
+  
+  .last-scan {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 0.9rem;
+    
+    mat-icon {
+      font-size: 1rem;
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+}
+
+/* Empty State */
+.no-kits {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  
+  .empty-state {
+    max-width: 400px;
+    text-align: center;
+    border-radius: 12px;
+    
+    .empty-icon {
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      color: #ccc;
+      margin-bottom: 16px;
+    }
+    
+    h2 {
+      color: #666;
+      margin-bottom: 16px;
+    }
+    
+    p {
+      color: #999;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+  }
+}
+
+/* Development Kits Grid */
+.devkits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.devkit-card {
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  &.connected {
+    border-left: 4px solid #4CAF50;
+  }
+  
+  &.disconnected {
+    border-left: 4px solid #9E9E9E;
+    opacity: 0.8;
+  }
+  
+  &.updating {
+    border-left: 4px solid #FF9800;
+  }
+  
+  &.error {
+    border-left: 4px solid #F44336;
+  }
+  
+  .kit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    
+    .kit-title {
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 1.3rem;
+        font-weight: 500;
+        color: #333;
+      }
+      
+      .model {
+        font-size: 0.9rem;
+        color: #666;
+        font-family: 'Courier New', monospace;
+        background-color: #f5f5f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+    }
+    
+    .kit-status {
+      mat-icon {
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+  }
+  
+  .connection-info {
+    margin-bottom: 16px;
+    
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: #666;
+      
+      .info-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+        color: #999;
+      }
+      
+      .port {
+        color: #999;
+        font-size: 0.8rem;
+      }
+    }
+  }
+  
+  .firmware-section {
+    margin-bottom: 16px;
+    
+    .firmware-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+      
+      .firmware-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        
+        .label {
+          min-width: 60px;
+          color: #666;
+          font-weight: 500;
+        }
+        
+        .version {
+          font-family: 'Courier New', monospace;
+          background-color: #f8f9fa;
+          padding: 2px 6px;
+          border-radius: 4px;
+          border: 1px solid #e9ecef;
+        }
+        
+        .update-indicator {
+          color: #FF9800;
+          font-size: 1rem;
+          width: 1rem;
+          height: 1rem;
+        }
+      }
+    }
+    
+    .update-progress {
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 500;
+      }
+      
+      mat-progress-bar {
+        height: 8px;
+        border-radius: 4px;
+      }
+    }
+  }
+  
+  .hardware-status {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.9rem;
+      color: #666;
+      
+      mat-icon {
+        font-size: 1.2rem;
+        width: 1.2rem;
+        height: 1.2rem;
+      }
+    }
+  }
+  
+  .capabilities-section {
+    margin-bottom: 16px;
+    
+    .capabilities-label {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .capabilities-chips {
+      .capability-chip {
+        margin-right: 4px;
+        margin-bottom: 4px;
+        font-size: 0.75rem;
+        background-color: #e3f2fd;
+        color: #1976d2;
+        height: 24px;
+      }
+    }
+  }
+  
+  .kit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 16px;
+    background-color: #fafafa;
+    border-top: 1px solid #e0e0e0;
+    
+    button {
+      font-size: 0.9rem;
+      
+      mat-icon {
+        margin-right: 4px;
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+      }
+    }
+  }
+}
+
+/* Help Section */
+.help-section {
+  .help-card {
+    border-radius: 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #1976d2;
+      
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+    
+    mat-list-item {
+      margin-bottom: 4px;
+      
+      mat-icon {
+        color: #4CAF50;
+        
+        &[matListItemIcon] {
+          &:nth-child(2) { color: #FF9800; }
+        }
+      }
+    }
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .development-kits-container {
+    padding: 16px;
+  }
+  
+  .header {
+    .header-content {
+      flex-direction: column;
+      gap: 16px;
+      align-items: stretch;
+      
+      .title-section h1 {
+        font-size: 2rem;
+      }
+    }
+    
+    .stats-section {
+      flex-wrap: wrap;
+      gap: 12px;
+      
+      .stat-card {
+        flex: 1;
+        min-width: 100px;
+      }
+    }
+  }
+  
+  .devkits-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .devkit-card {
+    .kit-actions {
+      flex-direction: column;
+      align-items: stretch;
+      
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    .stats-section {
+      flex-direction: column;
+      
+      .stat-card {
+        width: 100%;
+      }
+    }
+  }
+  
+  .hardware-status {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Angular Material Overrides */
+.mat-mdc-card {
+  border-radius: 12px;
+}
+
+.mat-mdc-button,
+.mat-mdc-raised-button {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.mat-mdc-chip {
+  border-radius: 12px;
+}
+
+.mat-mdc-progress-bar {
+  border-radius: 4px;
+}
+
+/* Animation for updating state */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.devkit-card.updating {
+  animation: pulse 2s infinite;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

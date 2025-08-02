@@ -1,0 +1,134 @@
+<div class="getting-started-container">
+  <!-- Hero Section -->
+  <mat-card class="hero-card">
+    <mat-card-content>
+      <div class="hero-content">
+        <h1 class="hero-title">
+          <mat-icon class="hero-icon">rocket_launch</mat-icon>
+          Welcome to ModusToolbox Assistant
+        </h1>
+        <p class="hero-subtitle">
+          Your comprehensive development environment for Infineon's ModusToolbox ecosystem. 
+          Build embedded applications with ease using our integrated tools and libraries.
+        </p>
+        <div class="hero-actions">
+          <button mat-raised-button color="primary" class="primary-button" (click)="onGetStarted()">
+            <mat-icon>play_arrow</mat-icon>
+            Get Started
+          </button>
+          <button mat-button class="secondary-button" (click)="onViewDocumentation()">
+            <mat-icon>description</mat-icon>
+            Documentation
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Features Section -->
+  <div class="features-section">
+    <h2 class="section-title">Key Features</h2>
+    <div class="features-grid">
+      <mat-card class="feature-card" *ngFor="let feature of features">
+        <mat-card-content>
+          <div class="feature-header">
+            <mat-icon class="feature-icon" [style.color]="'#00acc1'">{{ feature.icon }}</mat-icon>
+            <h3 class="feature-title">{{ feature.title }}</h3>
+          </div>
+          <p class="feature-description">{{ feature.description }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Quick Start Guide -->
+  <div class="quickstart-section">
+    <h2 class="section-title">Quick Start Guide</h2>
+    <mat-card class="quickstart-card">
+      <mat-card-content>
+        <mat-accordion>
+          <mat-expansion-panel *ngFor="let step of quickStartSteps; let i = index" [expanded]="i === 0">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <span class="step-number">{{ step.step }}</span>
+                {{ step.title }}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <div class="step-content">
+              <p>{{ step.description }}</p>
+              <button mat-button color="primary" (click)="onStepAction(step)">
+                <mat-icon>arrow_forward</mat-icon>
+                {{ step.action }}
+              </button>
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Resources Section -->
+  <div class="resources-section">
+    <h2 class="section-title">Resources</h2>
+    <div class="resources-grid">
+      <mat-card class="resource-card" (click)="onBrowseExamples()">
+        <mat-card-content>
+          <mat-icon class="resource-icon">code</mat-icon>
+          <h3>Code Examples</h3>
+          <p>Browse our extensive library of ready-to-use code examples</p>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="resource-card" (click)="onViewDocumentation()">
+        <mat-card-content>
+          <mat-icon class="resource-icon">menu_book</mat-icon>
+          <h3>Documentation</h3>
+          <p>Comprehensive guides and API documentation</p>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="resource-card" (click)="onCommunity()">
+        <mat-card-content>
+          <mat-icon class="resource-icon">forum</mat-icon>
+          <h3>Community</h3>
+          <p>Connect with other developers and get support</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Getting Started Tips -->
+  <div class="tips-section">
+    <mat-card class="tips-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>lightbulb</mat-icon>
+          Pro Tips
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-list>
+          <mat-list-item>
+            <mat-icon matListItemIcon>check_circle</mat-icon>
+            <div matListItemTitle>Start with the "Create New Project" tab to set up your first project</div>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+          <mat-list-item>
+            <mat-icon matListItemIcon>check_circle</mat-icon>
+            <div matListItemTitle>Ensure your development kit is properly connected before debuggin</div>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+          <mat-list-item>
+            <mat-icon matListItemIcon>check_circle</mat-icon>
+            <div matListItemTitle>Use the integrated debugger for efficient development workflow</div>
+          </mat-list-item>
+          <mat-divider></mat-divider>
+          <mat-list-item>
+            <mat-icon matListItemIcon>check_circle</mat-icon>
+            <div matListItemTitle>Explore middleware libraries to accelerate your development</div>
+          </mat-list-item>
+        </mat-list>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

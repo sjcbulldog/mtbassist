@@ -13,53 +13,18 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
-        },
-        {
-            "type": "npm",
-            "script": "watch-tests",
-            "problemMatcher": "$tsc-watch",
-            "isBackground": true,
-            "presentation": {
-                "reveal": "never",
-                "group": "watchers"
             },
-            "group": "build"
-        },
-        {
-            "label": "tasks: watch-tests",
             "dependsOn": [
-                "npm: watch",
-                "npm: watch-tests"
-            ],
-            "problemMatcher": []
+                "build"
+            ]
         },
-        {
-            "type": "npm",
-            "script": "compile",
-            "group": "build",
-            "problemMatcher": [],
-            "label": "npm: compile",
-            "detail": "webpack"
-        },
-        {
-            "label": "Program",
-            "type": "process",
-            "command": "bash",
-            "args": [
-                "--norc",
-                "-c",
-                "make qprogram"
-            ],
-            "windows": {
-                "command": "${config:modustoolbox.toolsPath}/modus-shell/bin/bash.exe",
-                "args": [
-                    "--norc",
-                    "-c",
-                    "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe qprogram"
-                ]
-            },
-            "problemMatcher": []
-        }
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "npm run build",
+			"problemMatcher": [
+				"$tsc"
+			],
+		}        
     ]
 }

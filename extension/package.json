@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "1.2.14",
+  "version": "2.0.0",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -23,154 +23,33 @@
     "ARM cortex"
   ],
   "activationEvents": [
-    "workspaceContains:Makefile",
     "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "mtbassist.mtbCreateProject",
-        "title": "ModusToolbox Assistant: Create Project"
-      },
-      {
-        "command": "mtbassist.mtbRunMakeGetlibs",
-        "title": "ModusToolbox Assistant: Make Getlibs"
-      },
-      {
-        "command": "mtbassist.mtbRunEditor",
-        "title": "ModusToolbox Assistant: Run Editor"
-      },
-      {
-        "command": "mtbassist.mtbShowDoc",
-        "title": "ModusToolbox Assistant: Show Document"
-      },
-      {
-        "command": "mtbassist.mtbShowWelcomePage",
-        "title": "ModusToolbox Assistant: Show Welcome Page"
-      },
-      {
-        "command": "mtbassist.mtbTurnOnExperimentalNina",
-        "title": "ModusToolbox Assistant: Turn On Experimental Ninja Support"
-      },
-      {
-        "command": "mtbassist.mtbTurnOffExperimentalNina",
-        "title": "ModusToolbox Assistant: Turn Off Experimental Ninja Support"
-      },
-      {
-        "command": "mtbassist.mtbTurnOnDebugMode",
-        "title": "ModusToolbox Assistant: Turn On Debug Mode"
-      },
-      {
-        "command": "mtbassist.mtbTurnOffDebugMode",
-        "title": "ModusToolbox Assistant: Turn Off Debug Mode"
-      },
-      {
-        "command": "mtbassist.mtbTurnOnCodeExampleReadme",
-        "title": "ModusToolbox Assistant: Turn On Code Example Readme"
-      },
-      {
-        "command": "mtbassist.mtbTurnOffCodeExampleReadme",
-        "title": "ModusToolbox Assistant: Turn Off Code Example Readme"
-      },
-      {
-        "command": "mtbassist.mtbRunLibraryManager",
-        "title": "ModusToolbox Assistant: Library Manager"
-      },
-      {
-        "command": "mtbassist.mtbSymbolDoc",
-        "title": "ModusToolbox Assistant: Documentation"
-      },
-      {
-        "command": "mtbassist.mtbSetIntellisenseProject",
-        "title": "ModusToolbox Assistant: Set Intellisense Project"
-      },
-      {
-        "command": "mtbassist.mtbRefreshDevKits",
-        "title": "ModusToolbox Assistant: Refresh Development Kit List"
-      },
-      {
-        "command": "mtbassist.mtbAddTasks",
-        "title": "ModusToolbox Assistant: Add Tasks Desired By ModusToolbox Assistant"
+        "command": "mtbassist.mtbMainPage",
+        "title": "ModusToolbox Assistant: Show Main Page"
       }
-    ],
-    "keybindings": [
-      {
-        "command": "mtbassist.mtbSymbolDoc",
-        "key": "ctrl+shift+f1"
-      }
-    ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "mtbcontainer",
-          "title": "ModusToolbox Assistant",
-          "icon": "media/bot.png"
-        }
-      ]
-    },
-    "views": {
-      "mtbcontainer": [
-        {
-          "id": "mtbprojinfo",
-          "name": "Application Info",
-          "icon": "media/bot.png",
-          "contextualTitle": "Application Info"
-        },
-        {
-          "id": "mtblinks",
-          "name": "Quick Links",
-          "icon": "media/bot.png",
-          "contextualTitle": "Quick Links"
-        },
-        {
-          "id": "mtbglobal",
-          "name": "ModusToolbox Tools",
-          "icon": "media/bot.png",
-          "contextualTitle": "Global Programs"
-        },
-        {
-          "id": "mtbdocs",
-          "name": "ModusToolbox Documentation",
-          "icon": "media/bot.png",
-          "contextualTitle": "Global Docs"
-        },
-        {
-          "id": "mtbassets",
-          "name": "ModusToolbox Assets",
-          "icon": "media/bot.png",
-          "contextualTitle": "ModusToolbox Assets"
-        }
-      ]
-    },
-    "menus": {
-      "editor/context": [
-        {
-          "when": "resourceLangId == c",
-          "command": "mtbassist.mtbSymbolDoc",
-          "group": "navigation"
-        }
-      ]
-    },
-    "terminal": {
-      "profiles": [
-        {
-          "id": "mtbassist.mtbShell",
-          "title": "ModusToolbox Shell"
-        }
-      ]
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
     "compile": "webpack",
     "watch": "webpack --watch",
+    "debug" : "npm run build && npm run watch",
     "package": "webpack --mode production --devtool hidden-source-map",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "copydist": "copyfiles ../content/single-dist/index.html content",
+    "copyshared": "cp ../content/src/comms.ts src",
+    "copy": "npm run copydist && npm run copyshared",
+    "content": "cd ../content && npm run build",
+    "build": "npm run content && npm run copy && npm run compile && npm run package"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
@@ -190,12 +69,16 @@
   },
   "dependencies": {
     "@vscode/vsce": "^2.32.0",
+    "copyfile": "^0.1.2",
     "is-wsl": "^2.2.0",
-    "node-fetch": "^3.2.10",
+    "node-fetch": "^3.3.2",
     "open": "^9.1.0",
     "openurl": "^1.1.1",
     "os": "^0.1.2",
     "tmp": "^0.2.1",
+    "vscode": "^1.1.34",
+    "vscode-uri": "^3.1.0",
+    "winston": "^3.17.0",
     "xml2js": "^0.6.2"
   }
 }

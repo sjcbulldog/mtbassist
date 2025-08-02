@@ -1,0 +1,1034 @@
+{
+  "datatype": "cached",
+  "kits": [
+    {
+      "name": "CYW943907AEVAL1F",
+      "id": "CYW943907AEVAL1F",
+      "category": "AIROC™ Connectivity BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW954907AEVAL1F",
+      "id": "CYW954907AEVAL1F",
+      "category": "AIROC™ Connectivity BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-040T",
+      "id": "CY8CKIT-040T",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CPROTO-040T-MS",
+      "id": "CY8CPROTO-040T-MS",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CPROTO-041TP",
+      "id": "CY8CPROTO-041TP",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-041-41XX",
+      "id": "CY8CKIT-041-41XX",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-041S-MAX",
+      "id": "CY8CKIT-041S-MAX",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-045S",
+      "id": "CY8CKIT-045S",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-145-40XX",
+      "id": "CY8CKIT-145-40XX",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-149",
+      "id": "CY8CKIT-149",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CPROTO-040T",
+      "id": "CY8CPROTO-040T",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "EVAL_PMG1_B1_DRP",
+      "id": "EVAL_PMG1_B1_DRP",
+      "category": "PMG BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "EVAL_PMG1_S1_DRP",
+      "id": "EVAL_PMG1_S1_DRP",
+      "category": "PMG BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "EVAL_PMG1_S3_DUALDRP",
+      "id": "EVAL_PMG1_S3_DUALDRP",
+      "category": "PMG BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "PMG1-CY7110",
+      "id": "PMG1-CY7110",
+      "category": "PMG BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "PMG1-CY7111",
+      "id": "PMG1-CY7111",
+      "category": "PMG BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "PMG1-CY7112",
+      "id": "PMG1-CY7112",
+      "category": "PMG BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "PMG1-CY7113",
+      "id": "PMG1-CY7113",
+      "category": "PMG BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "PMG1S3DUAL",
+      "id": "PMG1S3DUAL",
+      "category": "PMG BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "PSOC4-GENERIC",
+      "id": "PSOC4-GENERIC",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CEVAL-062S2",
+      "id": "CY8CEVAL-062S2",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CEVAL-062S2-LAI-4373M2",
+      "id": "CY8CEVAL-062S2-LAI-4373M2",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_FX20_FMC_001",
+      "id": "KIT_FX20_FMC_001",
+      "category": "USB BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_FX2G3_104LGA",
+      "id": "KIT_FX2G3_104LGA",
+      "category": "USB BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CEVAL-062S2-MUR-4373M2",
+      "id": "CY8CEVAL-062S2-MUR-4373M2",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CEVAL-062S2-MUR-4373EM2",
+      "id": "CY8CEVAL-062S2-MUR-4373EM2",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CEVAL-062S2-CYW43022CUB",
+      "id": "CY8CEVAL-062S2-CYW43022CUB",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CEVAL-062S2-LAI-43439M2",
+      "id": "CY8CEVAL-062S2-LAI-43439M2",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CEVAL-062S2-MUR-43439M2",
+      "id": "CY8CEVAL-062S2-MUR-43439M2",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-062-BLE",
+      "id": "CY8CKIT-062-BLE",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-062S2-43012",
+      "id": "CY8CKIT-062S2-43012",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-062S4",
+      "id": "CY8CKIT-062S4",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_T2G-B-E_LITE",
+      "id": "KIT_T2G-B-E_LITE",
+      "category": "TRAVEO™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_T2G_C-2D-6M_LITE",
+      "id": "KIT_T2G_C-2D-6M_LITE",
+      "category": "TRAVEO™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_T2G-B-H_EVK",
+      "id": "KIT_T2G-B-H_EVK",
+      "category": "TRAVEO™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_T2G-B-H_LITE",
+      "id": "KIT_T2G-B-H_LITE",
+      "category": "TRAVEO™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC72_EVK",
+      "id": "KIT_XMC72_EVK",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC72_EVK_MUR_43439M2",
+      "id": "KIT_XMC72_EVK_MUR_43439M2",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-062-WIFI-BT",
+      "id": "CY8CKIT-062-WIFI-BT",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-062S2-AI",
+      "id": "CY8CKIT-062S2-AI",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-064B0S2-4343W",
+      "id": "CY8CKIT-064B0S2-4343W",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CKIT-064S0S2-4343W",
+      "id": "CY8CKIT-064S0S2-4343W",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CPROTO-062-4343W",
+      "id": "CY8CPROTO-062-4343W",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CPROTO-062S2-43439",
+      "id": "CY8CPROTO-062S2-43439",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CPROTO-062S3-4343W",
+      "id": "CY8CPROTO-062S3-4343W",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CPROTO-063-BLE",
+      "id": "CY8CPROTO-063-BLE",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CPROTO-064B0S3",
+      "id": "CY8CPROTO-064B0S3",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CPROTO-064S1-SB",
+      "id": "CY8CPROTO-064S1-SB",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBLE-416045-EVAL",
+      "id": "CYBLE-416045-EVAL",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYSBSYSKIT-01",
+      "id": "CYSBSYSKIT-01",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYSBSYSKIT-DEV-01",
+      "id": "CYSBSYSKIT-DEV-01",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT-BGT60TR13C-EMBEDD",
+      "id": "KIT-BGT60TR13C-EMBEDD",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW9P62S1-43012EVB-01",
+      "id": "CYW9P62S1-43012EVB-01",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW9P62S1-43438EVB-01",
+      "id": "CYW9P62S1-43438EVB-01",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "PSOC6-GENERIC",
+      "id": "PSOC6-GENERIC",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920829-KEYBOARD",
+      "id": "CYW920829-KEYBOARD",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920829-MOUSE",
+      "id": "CYW920829-MOUSE",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920829-VR",
+      "id": "CYW920829-VR",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920829M2EVK-02",
+      "id": "CYW920829M2EVK-02",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW989829M2EVB-01",
+      "id": "CYW989829M2EVB-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW989829M2EVB-03",
+      "id": "CYW989829M2EVB-03",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW955913EVK-01",
+      "id": "CYW955913EVK-01",
+      "category": "AIROC™ Connectivity BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW955513EVK-01",
+      "id": "CYW955513EVK-01",
+      "category": "AIROC™ Connectivity BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC11_BOOT_001",
+      "id": "KIT_XMC11_BOOT_001",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC12_BOOT_001",
+      "id": "KIT_XMC12_BOOT_001",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC13_BOOT_001",
+      "id": "KIT_XMC13_BOOT_001",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC14_BOOT_001",
+      "id": "KIT_XMC14_BOOT_001",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC_PLT2GO_XMC4200",
+      "id": "KIT_XMC_PLT2GO_XMC4200",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC43_RELAX_ECAT_V1",
+      "id": "KIT_XMC43_RELAX_ECAT_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC_PLT2GO_XMC4400",
+      "id": "KIT_XMC_PLT2GO_XMC4400",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC45_RELAX_V1",
+      "id": "KIT_XMC45_RELAX_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC47_RELAX_V1",
+      "id": "KIT_XMC47_RELAX_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC48_RELAX_ECAT_V1",
+      "id": "KIT_XMC48_RELAX_ECAT_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "WLC1115-68LQXQ",
+      "id": "WLC1115-68LQXQ",
+      "category": "Wireless Charging BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "XMC-GENERIC",
+      "id": "XMC-GENERIC",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "WLC1150-68LQXQ",
+      "id": "WLC1150-68LQXQ",
+      "category": "Wireless Charging BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "EVAL_6EDL7141_TRAP_1SH",
+      "id": "EVAL_6EDL7141_TRAP_1SH",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "EVAL_6EDL7141_FOC_3SH",
+      "id": "EVAL_6EDL7141_FOC_3SH",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "EVAL_IMD700A_FOC_3SH",
+      "id": "EVAL_IMD700A_FOC_3SH",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "EVAL_6EDL7151_36V_1KW",
+      "id": "EVAL_6EDL7151_36V_1KW",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC71_EVK_LITE_V1",
+      "id": "KIT_XMC71_EVK_LITE_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC71_EVK_LITE_V2",
+      "id": "KIT_XMC71_EVK_LITE_V2",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC1300_DC_V1",
+      "id": "KIT_XMC1300_DC_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC1400_DC_V1",
+      "id": "KIT_XMC1400_DC_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "EVAL-XMC4800PSOC6M5-PSOC6",
+      "id": "EVAL-XMC4800PSOC6M5-PSOC6",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "EVAL-XMC4800PSOC6M5-XMC",
+      "id": "EVAL-XMC4800PSOC6M5-XMC",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC4400_DC_V1",
+      "id": "KIT_XMC4400_DC_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC42_DPCC_V1",
+      "id": "KIT_XMC42_DPCC_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC13_DPCC_V1",
+      "id": "KIT_XMC13_DPCC_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CY8CEVAL-062S2-CYW955513SDM2WLIPA",
+      "id": "CY8CEVAL-062S2-CYW955513SDM2WLIPA",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "INDUCTION-COOKTOP-INVERTER",
+      "id": "INDUCTION-COOKTOP-INVERTER",
+      "category": "Reference Design BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "INDUCTION-COOKTOP-HMI",
+      "id": "INDUCTION-COOKTOP-HMI",
+      "category": "Reference Design BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_PSOC4-HVMS-128K_LITE",
+      "id": "KIT_PSOC4-HVMS-128K_LITE",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_PSOC4-HVMS-64K_LITE",
+      "id": "KIT_PSOC4-HVMS-64K_LITE",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_PSOC4-HVMS-128K_LITE-02",
+      "id": "KIT_PSOC4-HVMS-128K_LITE-02",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_PSOC4-HVMS-64K_LITE-02",
+      "id": "KIT_PSOC4-HVMS-64K_LITE-02",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "INDUCTION-COOKTOP-CONNECTIVITY",
+      "id": "INDUCTION-COOKTOP-CONNECTIVITY",
+      "category": "Reference Design BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC7200_DC_V1",
+      "id": "KIT_XMC7200_DC_V1",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_PSC3M5_EVK",
+      "id": "KIT_PSC3M5_EVK",
+      "category": "PSOC™ Control BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_PSC3M5_CC1",
+      "id": "KIT_PSC3M5_CC1",
+      "category": "PSOC™ Control BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_PSC3M5_CC2",
+      "id": "KIT_PSC3M5_CC2",
+      "category": "PSOC™ Control BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_XMC14_2GO",
+      "id": "KIT_XMC14_2GO",
+      "category": "XMC™ BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "KIT_PSC3M5_2GO",
+      "id": "KIT_PSC3M5_2GO",
+      "category": "PSOC™ Control BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-213043-MESH",
+      "id": "CYBT-213043-MESH",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920706WCDEVAL",
+      "id": "CYW920706WCDEVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-353027-EVAL",
+      "id": "CYBT-353027-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-343026-EVAL",
+      "id": "CYBT-343026-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-333047-EVAL",
+      "id": "CYBT-333047-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920819EVB-02",
+      "id": "CYW920819EVB-02",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920819M2EVB-01",
+      "id": "CYW920819M2EVB-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-213043-EVAL",
+      "id": "CYBT-213043-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-223058-EVAL",
+      "id": "CYBT-223058-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-273063-EVAL",
+      "id": "CYBT-273063-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-263065-EVAL",
+      "id": "CYBT-263065-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-243053-EVAL",
+      "id": "CYBT-243053-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "Vela-IF820-INT-ANT-DVK",
+      "id": "Vela-IF820-INT-ANT-DVK",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "Vela-IF820-EXT-ANT-DVK",
+      "id": "Vela-IF820-EXT-ANT-DVK",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-253059-EVAL",
+      "id": "CYBT-253059-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920820EVB-02",
+      "id": "CYW920820EVB-02",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920820M2EVB-01",
+      "id": "CYW920820M2EVB-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW989820EVB-01",
+      "id": "CYW989820EVB-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW989820M2EVB-01",
+      "id": "CYW989820M2EVB-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW9M2BASE-43012BT",
+      "id": "CYW9M2BASE-43012BT",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW943012BTEVK-01",
+      "id": "CYW943012BTEVK-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW943022BTEVK-01",
+      "id": "CYW943022BTEVK-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920719B2Q40EVB-01",
+      "id": "CYW920719B2Q40EVB-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-423054-EVAL",
+      "id": "CYBT-423054-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-413055-EVAL",
+      "id": "CYBT-413055-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-483056-EVAL",
+      "id": "CYBT-483056-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920721M2EVK-01",
+      "id": "CYW920721M2EVK-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920721M2EVK-02",
+      "id": "CYW920721M2EVK-02",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920721M2EVB-03",
+      "id": "CYW920721M2EVB-03",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW930739M2EVB-01",
+      "id": "CYW930739M2EVB-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-413061-EVAL",
+      "id": "CYBT-413061-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-423060-EVAL",
+      "id": "CYBT-423060-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBT-483062-EVAL",
+      "id": "CYBT-483062-EVAL",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920736M2EVB-01",
+      "id": "CYW920736M2EVB-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920835REF-RCU-01",
+      "id": "CYW920835REF-RCU-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW920835M2EVB-01",
+      "id": "CYW920835M2EVB-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYW955572BTEVK-01",
+      "id": "CYW955572BTEVK-01",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBLE-343072-EVAL-M2B",
+      "id": "CYBLE-343072-EVAL-M2B",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBLE-333074-EVAL-M2B",
+      "id": "CYBLE-333074-EVAL-M2B",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "CYBLE-343072-MESH",
+      "id": "CYBLE-343072-MESH",
+      "category": "AIROC™ Bluetooth® BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "ISM43439-WBP-L151-EVB",
+      "id": "ISM43439-WBP-L151-EVB",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "RDK2",
+      "id": "RDK2",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "RDK3",
+      "id": "RDK3",
+      "category": "PSOC™ 6 BSPs",
+      "device": "",
+      "connectivity": ""
+    },
+    {
+      "name": "RDK4",
+      "id": "RDK4",
+      "category": "PSOC™ 4 BSPs",
+      "device": "",
+      "connectivity": ""
+    }
+  ]
+}

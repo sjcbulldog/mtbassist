@@ -10,28 +10,29 @@ import { MTBVersion } from '../misc/mtbversion';
 import { MTBAppInfo } from '../appdata/mtbappinfo';
 import { MTBOptProgramCodeGen, MTBTool } from '../toolsdb/mtbtool';
 import { MTBCommand } from './mtbcmd';
-import winston from 'winston';
+import * as winston from 'winston';
+import * as EventEmitter from 'events';
 
-export class ModusToolboxEnvironment {
+export class ModusToolboxEnvironment extends EventEmitter {
     // Static variables
     private static env_? : ModusToolboxEnvironment ;
     static mtbDefaultManifest: string = "https://modustoolbox.infineon.com/manifests/mtb-super-manifest/v2.X/mtb-super-manifest-fv2.xml";
 
     // Instance variables
-    private isLoading: boolean = false ;
+    private isLoading_: boolean = false ;
     private appdir_? : string ;
     private wants_ : MTBLoadFlags = MTBLoadFlags.None ;
     private has_ : MTBLoadFlags = MTBLoadFlags.None ;
     private loading_ : MTBLoadFlags = MTBLoadFlags.None ;
 
-    private manifest_db_ : MTBManifestDB ;
-    private tools_db_ : ToolsDB ;
-    private pack_db_ : PackDB ;
-    private app_info_? : MTBAppInfo ;
+    private manifestDb_ : MTBManifestDB ;
+    private toolsDb_ : ToolsDB ;
+    private packDb_ : PackDB ;
+    private appInfo_? : MTBAppInfo ;
 
-    private requested_tools_dir_? : string ;
-    private exe_dir_? : string ;
-    private tools_dir_? : string ;
+    private requestedToolsDir_? : string ;
+    private exeDir_? : string ;
+    private toolsDir_? : string ;
 
     private logger_ : winston.Logger ;  
 
@@ -40,9 +41,9 @@ export class ModusToolboxEnvironment {
             ModusToolboxEnvironment.env_ = new ModusToolboxEnvironment(logger, exedir) ;
         }
         else {
-            if (exedir && exedir !== ModusToolboxEnvironment.env_.exe_dir_) {
+            if (exedir && exedir !== ModusToolboxEnvironment.env_.exeDir_) {
                 logger.error('ModusToolboxEnvironment already created with a different executable directory') ;
-                logger.error(`    Current: ${ModusToolboxEnvironment.env_.exe_dir_}, New: ${exedir}`) ;
+                logger.error(`    Current: ${ModusToolboxEnvironment.env_.exeDir_}, New: ${exedir}`) ;
                 return null ;
             }
 
@@ -55,14 +56,15 @@ export class ModusToolboxEnvironment {
     }
 
     private constructor(logger: winston.Logger, exedir?: string) {
+        super() ;
         this.logger_ = logger ; 
-        this.tools_db_ = new ToolsDB() ;
-        this.pack_db_ = new PackDB() ;
-        this.manifest_db_ = new MTBManifestDB() ;
+        this.toolsDb_ = new ToolsDB() ;
+        this.packDb_ = new PackDB() ;
+        this.manifestDb_ = new MTBManifestDB() ;
 
-        this.exe_dir_ = exedir ;
-        if (this.exe_dir_) {
-            this.exe_dir_ = path.normalize(this.exe_dir_) ;
+        this.exeDir_ = exedir ;
+        if (this.exeDir_) {
+            this.exeDir_ = path.normalize(this.exeDir_) ;
         }
         this.logger_ = logger ;
     }
@@ -72,41 +74,45 @@ export class ModusToolboxEnvironment {
     }
 
     public get manifestDB() : MTBManifestDB {
-        return this.manifest_db_ ;
+        return this.manifestDb_ ;
     }
 
     public get toolsDB() : ToolsDB {
-        return this.tools_db_ ;
+        return this.toolsDb_ ;
     }
 
     public get packDB() : PackDB {
-        return this.pack_db_ ;
+        return this.packDb_ ;
     }
 
     public get appInfo() : MTBAppInfo | undefined {
-        return this.app_info_ ;
+        return this.appInfo_ ;
     }
 
     public setRequestedToolsDir(dir: string) {
-        this.requested_tools_dir_ = dir ;
+        this.requestedToolsDir_ = dir ;
     }
 
     public get toolsDir() : string | undefined {
-        return this.tools_dir_ ;
+        return this.toolsDir_ ;
     }
 
     public get defaultToolsDir() : string | undefined {
         return this.setupToolsDir() ;
     }
 
+    public get isLoading() : boolean {
+        return this.isLoading_ ; 
+    }
+
     public load(flags: MTBLoadFlags, appdir?: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            if (this.isLoading) {
+            if (this.isLoading_) {
                 reject('ModusToolboxEnvironment is already loading') ;
                 return ;
             }
 
-            this.isLoading = true ;
+            this.isLoading_ = true ;
             this.appdir_ = appdir ;
             this.wants_ = flags ;
 
@@ -123,17 +129,24 @@ export class ModusToolboxEnvironment {
 
                     Promise.all(plist)
                         .then(() => {
-                            this.isLoading = false ;
+                            this.isLoading_ = false ;
                             this.wants_ = MTBLoadFlags.None ;
+                            this.emit('loaded', this.has_) ;
                             resolve() ;
                         })
                         .catch((err) => {
-                            this.isLoading = false ;
-                            this.wants_ = MTBLoadFlags.None ;
+                            this.isLoading_ = false ;
+                            this.has_ = MTBLoadFlags.None ;
+                            this.wants_ = MTBLoadFlags.None ;                            
+                            this.logger_.error('Error loading ModusToolbox environment:', err) ;
+                            this.emit('error', err) ;
+
                             reject(err) ;
                         }) ;
                 })
                 .catch((err) => {
+                    this.emit('error', err) ;
+                    this.isLoading_ = false ;
                     this.logger_.error( 'Error loading packs: ' + err) ;
                     reject(err) ;
                 }) ;
@@ -260,11 +273,11 @@ export class ModusToolboxEnvironment {
         let ret = new Promise<void>((resolve, reject) => {
             this.logger_.debug('Loading AppInfo') ;
             
-            if (!this.tools_dir_) {
-                this.tools_dir_ = this.setupToolsDir() ;
+            if (!this.toolsDir_) {
+                this.toolsDir_ = this.setupToolsDir() ;
             }
 
-            if (this.tools_dir_ === undefined) {
+            if (this.toolsDir_ === undefined) {
                 let msg = `loadapp: no tools directory located` ;
                 this.logger_.error(msg) ;
                 reject(new Error(msg)) ;
@@ -275,8 +288,8 @@ export class ModusToolboxEnvironment {
                 reject(new Error(msg)) ;                
             }
             else {
-                this.app_info_ = new MTBAppInfo(this, this.appdir_) ;
-                this.app_info_.load(this.logger_)
+                this.appInfo_ = new MTBAppInfo(this, this.appdir_) ;
+                this.appInfo_.load(this.logger_)
                     .then(()=> {
                         resolve() ;
                     })
@@ -294,7 +307,7 @@ export class ModusToolboxEnvironment {
         let ret = new Promise<void>(async (resolve, reject) => {
             this.logger_.debug('Loading Packs') ;
             try {
-                let loader = new PackDBLoader(this.logger_, this.pack_db_!, this.tools_db_!) ;
+                let loader = new PackDBLoader(this.logger_, this.packDb_!, this.toolsDb_!) ;
                 let dir = MTBUtils.allInfineonDeveloperCenterRegistryDir() ;
                 if (dir !== undefined) {
                     try {
@@ -330,32 +343,32 @@ export class ModusToolboxEnvironment {
 
     private loadTools() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            if (this.tools_dir_ === undefined) {
+            if (this.toolsDir_ === undefined) {
                 //
                 // If we loaded the application, the tools directory will be set.  If we are not
                 // loading an application, we need to set the tools directory to the default location.
                 // This is the location where the tools are installed.
                 //
-                this.tools_dir_ = this.setupToolsDir() ;
+                this.toolsDir_ = this.setupToolsDir() ;
             }
 
-            if (this.tools_dir_ === undefined) {
+            if (this.toolsDir_ === undefined) {
                 this.logger_.error( 'Error loading tools: cannot locate a tools directory') ;
                 reject(new Error('Error loading tools: cannot locate a tools directory')) ;
                 return ;
             }
 
             this.logger_.debug('Loading Tools') ;
-            this.tools_db_.addToolsDir({ dir: this.tools_dir_, source: MTBToolSource.ToolsDir}) ;
-            for(let packdir of this.pack_db_.getTechPacks().map((pack) => pack.path())) {
-                this.tools_db_.addToolsDir({ dir: packdir, source: MTBToolSource.TechPack }) ;
+            this.toolsDb_.addToolsDir({ dir: this.toolsDir_, source: MTBToolSource.ToolsDir}) ;
+            for(let packdir of this.packDb_.getTechPacks().map((pack) => pack.path())) {
+                this.toolsDb_.addToolsDir({ dir: packdir, source: MTBToolSource.TechPack }) ;
             }
-            if (this.pack_db_.eap) {
-                this.tools_db_.addToolsDir({ dir: this.pack_db_.eap.path(), source: MTBToolSource.Eap }) ;
+            if (this.packDb_.eap) {
+                this.toolsDb_.addToolsDir({ dir: this.packDb_.eap.path(), source: MTBToolSource.Eap }) ;
             }
-            this.tools_db_.scanAll(this.logger_)
+            this.toolsDb_.scanAll(this.logger_)
                 .then(() => {
-                    this.tools_db_.setActiveToolSet(this.pack_db_.eap) ;
+                    this.toolsDb_.setActiveToolSet(this.packDb_.eap) ;
                     this.loading_ &= ~MTBLoadFlags.Tools ;
                     this.has_ |= MTBLoadFlags.Tools ;
                     resolve() ;
@@ -371,9 +384,9 @@ export class ModusToolboxEnvironment {
     private searchToolsDir() : string | undefined {
         let ret = undefined ;
 
-        if (this.exe_dir_) {
+        if (this.exeDir_) {
 
-            let dir = this.exe_dir_ ;
+            let dir = this.exeDir_ ;
 
             while (!MTBUtils.isRootPath(dir)) {
                 if (dir.match(MTBUtils.toolsRegex1) || dir.match(MTBUtils.toolsRegex2)) {
@@ -442,8 +455,8 @@ export class ModusToolboxEnvironment {
         let toolspathDir = this.cyToolsPathDir() ;
         let commonDir = this.searchCommonDir() ;
 
-        if (this.requested_tools_dir_ !== undefined) {
-            ret = this.requested_tools_dir_ ;
+        if (this.requestedToolsDir_ !== undefined) {
+            ret = this.requestedToolsDir_ ;
         }
         else if (exeToolsDir) {
             ret = exeToolsDir ;
@@ -461,7 +474,7 @@ export class ModusToolboxEnvironment {
     private loadManifest() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.logger_.debug('Loading Manifest') ;
-            this.manifest_db_.loadManifestData(this.logger_, [ModusToolboxEnvironment.mtbDefaultManifest, ...this.pack_db_.getManifestFiles()])
+            this.manifestDb_.loadManifestData(this.logger_, [ModusToolboxEnvironment.mtbDefaultManifest, ...this.packDb_.getManifestFiles()])
                 .then(() => {
                     this.loading_ &= ~MTBLoadFlags.Manifest ;
                     this.has_ |= MTBLoadFlags.Manifest ;
