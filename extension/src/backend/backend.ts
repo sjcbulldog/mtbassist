@@ -67,6 +67,29 @@ export class BackendService {
         this.cmdhandler_.set('logMessage', this.logMessage.bind(this));
         this.cmdhandler_.set('setPlatform', this.setPlatform.bind(this));
         this.cmdhandler_.set('getDevKits', this.getDevKits.bind(this)) ;
+        this.cmdhandler_.set('getCodeExamples', this.getCodeExamples.bind(this));
+    }
+
+    private getCodeExamples(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            if (this.env_) {
+                this.env_.manifestDB.getCodeExamplesForBSP(request.data.bspId)
+                    .then((examples) => {
+                        resolve({
+                            response: 'setCodeExamples',
+                            data: examples
+                        });
+                    })
+                    .catch((error) => {
+                        this.logger_.error(`Error retrieving code examples: ${error.message}`);
+                        resolve({
+                            response: 'error',
+                            data: `Error retrieving code examples: ${error.message}`
+                        });
+                    });
+                }
+        });
+        return ret;
     }
 
     private getDevKits(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null>  {

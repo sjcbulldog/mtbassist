@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
-import { BackendService } from '../backend-service';
+import { BackendService } from '../backend/backend-service';
 import MtbNav from '../mtb-nav/mtb-nav';
 
 @Component({

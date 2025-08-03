@@ -1,7 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { MtbNav, MtbNavTab } from './mtb-nav/mtb-nav';
 import { Subject } from 'rxjs';
-import { BackendService } from './backend-service';
+import { BackendService } from './backend/backend-service';
 
 @Component({
   selector: 'app-root',

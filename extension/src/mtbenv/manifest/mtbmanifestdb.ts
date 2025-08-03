@@ -54,6 +54,36 @@ export class MTBManifestDB {
         return Array.from(this.boards_.values()) ;
     }
 
+    public getCodeExamplesForBSP(bspId: string): Promise<MTBApp[]> {
+        let ret = new Promise<MTBApp[]>((resolve, reject) => {
+            let bsp = this.boards_.get(bspId);
+            if (!bsp) {
+                resolve([]);
+                return;
+            }
+
+            let apps: MTBApp[] = [] ;
+            for(let app of this.apps_.values()) {
+                let valid = true ;
+                for(let req of app.requirements) {
+                    if (!bsp.provides.includes(req)) {
+                        valid = false;
+                        break ;
+                    }
+                }
+                if (valid) {
+                    apps.push(app);
+                }
+            }
+            resolve(apps);
+        }) ;
+        return ret;
+    }
+
+    public getBSPByName(name: string): MTBBoard | undefined {
+        return this.boards_.get(name);  
+    }
+
     public loadManifestData(logger: winston.Logger, paths: string[]) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.manifestLoader = new MtbManifestLoader(logger, this);

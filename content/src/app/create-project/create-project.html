@@ -178,7 +178,7 @@
         <form [formGroup]="exampleSelectionForm" class="example-form">
           <div class="form-row" *ngIf="selectedBSP">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Example Code</mat-label>
+              <mat-label>Code Example</mat-label>
               <mat-select formControlName="example" 
                          (selectionChange)="onExampleChange()"
                          [disabled]="isLoading || examples.length === 0">

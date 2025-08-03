@@ -5,12 +5,14 @@ export type FrontEndToBackEndRequestType =
     'logMessage' | 
     'setPlatform' |
     'getDevKits' |
+    'getCodeExamples' |
     'getStarted' |
     'platformSpecific' |
     'browseForFolder' ;
 
 export type BackEndToFrontEndResponseType =
     'setDevKits' |
+    'setCodeExamples' |
     'success' |
     'error' |
     'browseForFolderResult' ;
@@ -22,6 +24,12 @@ export interface BSPIdentifier {
     connectivity: string ;
     category: string ;
 }    
+
+export interface CodeExampleIdentifier {
+    name: string;
+    id: string;
+    description?: string; // Optional description of the example
+}
 
 export type DevKitDataType = 'cached' | 'manifest' | 'empty' | 'error';
 

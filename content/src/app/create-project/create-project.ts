@@ -12,7 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { BackendService } from '../backend-service';
+import { BackendService } from '../backend/backend-service';
 import { BSPIdentifier } from '../../comms';
 import { MatDivider } from "@angular/material/divider";
 
@@ -95,7 +95,7 @@ export class CreateProject implements OnInit, OnDestroy {
   private async loadCategories() {
     try {
       this.isLoading = true;
-      this.categories = await this.backendService.getBSPCategories();
+      this.categories = await this.backendService.manifestMgr.getBSPCategories();
     } catch (error) {
       console.error('Failed to load categories:', error);
       this.snackBar.open('Failed to load BSP categories', 'Close', { duration: 3000 });
@@ -121,7 +121,7 @@ export class CreateProject implements OnInit, OnDestroy {
 
     try {
       this.isLoading = true;
-      this.bsps = await this.backendService.getBSPsForCategory(category);
+      this.bsps = await this.backendService.manifestMgr.getBSPsForCategory(category);
     } catch (error) {
       console.error('Failed to load BSPs:', error);
       this.snackBar.open('Failed to load BSPs for category', 'Close', { duration: 3000 });
@@ -139,7 +139,7 @@ export class CreateProject implements OnInit, OnDestroy {
 
     try {
       this.isLoading = true;
-      this.examples = await this.backendService.getExamplesForBSP(bspId);
+      this.examples = (await this.backendService.manifestMgr.getExamplesForBSP(bspId)).map(example => example.name);
     } catch (error) {
       console.error('Failed to load examples:', error);
       this.snackBar.open('Failed to load examples for BSP', 'Close', { duration: 3000 });
