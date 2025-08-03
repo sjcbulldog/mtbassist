@@ -289,11 +289,15 @@
       }
       
       .mat-mdc-input-element {
-        color: var(--dark-text-primary) !important;
+        color: #ffffff !important; // White text for input values
       }
       
       .mat-mdc-select-value-text {
-        color: var(--dark-text-primary) !important;
+        color: #ffffff !important; // White text for selected values
+      }
+      
+      .mat-mdc-select-value {
+        color: #ffffff !important; // White text for select values
       }
       
       .mat-mdc-floating-label {
@@ -301,7 +305,7 @@
       }
       
       &.mat-focused .mat-mdc-floating-label {
-        color: var(--dark-text-primary) !important;
+        color: #ffffff !important; // White text for focused labels
       }
     }
   }
@@ -614,33 +618,56 @@
   color: white !important;
 }
 
+/* Additional Dark Theme Form Styling */
+::ng-deep .dark-theme {
+  // Ensure all select triggers show white text
+  .mat-mdc-select-trigger {
+    color: #ffffff !important;
+  }
+  
+  // Ensure all input placeholders are visible
+  .mat-mdc-input-element::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+  
+  // Ensure all form field content is white
+  .mat-mdc-form-field .mat-mdc-select-value {
+    color: #ffffff !important;
+  }
+  
+  // Ensure mat-select arrow is visible
+  .mat-mdc-select-arrow {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+}
+
 /* Theme-aware Dropdown Panel Styling */
 ::ng-deep .dark-theme .mat-mdc-select-panel {
   background-color: var(--dark-bg-secondary) !important;
   
   .mat-mdc-option {
-    color: var(--dark-text-primary) !important;
+    color: #ffffff !important; // White text for dropdown options
     background-color: var(--dark-bg-secondary) !important;
     
     &:hover,
     &.mdc-list-item--selected {
       background-color: var(--dark-bg-elevated) !important;
-      color: var(--dark-text-primary) !important;
+      color: #ffffff !important; // White text for selected/hovered options
     }
     
     &.mat-mdc-option-active {
       background-color: var(--dark-bg-elevated) !important;
-      color: var(--dark-text-primary) !important;
+      color: #ffffff !important; // White text for active options
     }
   }
   
   .bsp-option {
     .bsp-name {
-      color: var(--dark-text-primary) !important;
+      color: #ffffff !important; // White text for BSP names
     }
     
     .bsp-details {
-      color: var(--dark-text-secondary) !important;
+      color: rgba(255, 255, 255, 0.8) !important; // Light white for BSP details
     }
   }
 }
