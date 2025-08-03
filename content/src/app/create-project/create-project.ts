@@ -47,10 +47,12 @@ export class CreateProject implements OnInit, OnDestroy {
   isDarkTheme = true; // Default to dark theme
   categories: string[] = [];
   bsps: BSPIdentifier[] = [];
+  exampleCategories: string[] = [];
   examples: string[] = [];
 
   selectedCategory: string = '';
   selectedBSP: BSPIdentifier | null = null;
+  selectedExampleCategory: string = '';
   selectedExample: string = '';
 
   constructor(
@@ -88,6 +90,7 @@ export class CreateProject implements OnInit, OnDestroy {
     });
 
     this.exampleSelectionForm = this.formBuilder.group({
+      exampleCategory: ['', Validators.required],
       example: ['', Validators.required]
     });
   }
@@ -135,14 +138,44 @@ export class CreateProject implements OnInit, OnDestroy {
     if (!bspId) return;
 
     this.selectedBSP = this.bsps.find(bsp => bsp.id === bspId) || null;
-    this.exampleSelectionForm.patchValue({ example: '' });
+    this.exampleSelectionForm.patchValue({ exampleCategory: '', example: '' });
+    this.selectedExampleCategory = '';
+    this.selectedExample = '';
+    this.exampleCategories = [];
+    this.examples = [];
 
     try {
       this.isLoading = true;
-      this.examples = (await this.backendService.manifestMgr.getExamplesForBSP(bspId)).map(example => example.name);
+      // Load all examples for the BSP and extract unique categories
+      const allExamples = await this.backendService.manifestMgr.getExamplesForBSP(bspId);
+      this.exampleCategories = [...new Set(allExamples.map(example => example.category || 'General'))].sort();
+    } catch (error) {
+      console.error('Failed to load example categories:', error);
+      this.snackBar.open('Failed to load example categories for BSP', 'Close', { duration: 3000 });
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async onExampleCategoryChange() {
+    const category = this.exampleSelectionForm.get('exampleCategory')?.value;
+    if (!category || !this.selectedBSP) return;
+
+    this.selectedExampleCategory = category;
+    this.exampleSelectionForm.patchValue({ example: '' });
+    this.selectedExample = '';
+    this.examples = [];
+
+    try {
+      this.isLoading = true;
+      // Load examples for the selected BSP and category
+      const allExamples = await this.backendService.manifestMgr.getExamplesForBSP(this.selectedBSP.id);
+      this.examples = allExamples
+        .filter(example => (example.category || 'General') === category)
+        .map(example => example.name);
     } catch (error) {
       console.error('Failed to load examples:', error);
-      this.snackBar.open('Failed to load examples for BSP', 'Close', { duration: 3000 });
+      this.snackBar.open('Failed to load examples for category', 'Close', { duration: 3000 });
     } finally {
       this.isLoading = false;
     }
@@ -163,6 +196,7 @@ export class CreateProject implements OnInit, OnDestroy {
       location: this.projectInfoForm.value.projectLocation,
       category: this.selectedCategory,
       bsp: this.selectedBSP,
+      exampleCategory: this.selectedExampleCategory,
       example: this.selectedExample
     };
 
@@ -193,8 +227,10 @@ export class CreateProject implements OnInit, OnDestroy {
     this.exampleSelectionForm.reset();
     this.selectedCategory = '';
     this.selectedBSP = null;
+    this.selectedExampleCategory = '';
     this.selectedExample = '';
     this.bsps = [];
+    this.exampleCategories = [];
     this.examples = [];
   }
 

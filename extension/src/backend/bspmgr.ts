@@ -69,7 +69,15 @@ export class BSPMgr {
             this.devkits_.datatype = 'manifest';
             this.devkits_.kits = [] ;
             for(let board of this.env_.manifestDB.bsps.values()) {
-                this.devkits_.kits.push({ name: board.name, id: board.id, category: board.category, device: '', connectivity: '' }) ;
+                let id = { name: board.name, id: board.id, category: board.category, device: '', connectivity: '' };
+                if (board.chips.has('mcu')) {
+                    id.device = board.chips.get('mcu')! ;
+                }
+
+                if (board.chips.has('radio')) {
+                    id.connectivity = board.chips.get('radio')! ;
+                }
+                this.devkits_.kits.push(id);
             }
 
             //

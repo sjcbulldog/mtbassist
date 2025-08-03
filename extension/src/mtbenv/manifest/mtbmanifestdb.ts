@@ -64,6 +64,10 @@ export class MTBManifestDB {
 
             let apps: MTBApp[] = [] ;
             for(let app of this.apps_.values()) {
+                if (!app.category) {
+                    continue ;
+                }
+                
                 let valid = true ;
                 for(let req of app.requirements) {
                     if (!bsp.provides.includes(req)) {

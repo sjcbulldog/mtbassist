@@ -28,6 +28,7 @@ export interface BSPIdentifier {
 export interface CodeExampleIdentifier {
     name: string;
     id: string;
+    category: string ;
     description?: string; // Optional description of the example
 }
 

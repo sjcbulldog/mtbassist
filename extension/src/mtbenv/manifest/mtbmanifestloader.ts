@@ -297,6 +297,7 @@ export class MtbManifestLoader {
         let desc: string = obj.description as string;
         let reqs: string[] = [];
         let versions: MTBItemVersion[] = [];
+        let category: string | undefined = obj.category as string | undefined;
 
         if (obj.req_capabilities) {
             reqs = (obj.req_capabilities as string).split(' ');
@@ -325,7 +326,7 @@ export class MtbManifestLoader {
             }
         }
 
-        let app: MTBApp = new MTBApp(src, name, id, uri, desc, reqs, versions);
+        let app: MTBApp = new MTBApp(src, name, id, uri, desc, reqs, versions, category);
         this.db.addApp(this.logger_, app);
     }
 

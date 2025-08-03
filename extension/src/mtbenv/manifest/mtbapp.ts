@@ -25,11 +25,12 @@ import { URI } from 'vscode-uri' ;
 
 export class MTBApp extends MTBItem {
     public readonly description: string;
+    public category : string | undefined;
     public readonly requirements: string[];
     public readonly uri: URI;
     
     constructor(src: URI, name: string, id: string, uri: URI, description: string,
-        requirements: string[], versions: MTBItemVersion[]) 
+        requirements: string[], versions: MTBItemVersion[], category?: string)
     {
         super(src, id, name, versions) ;
 
@@ -37,6 +38,7 @@ export class MTBApp extends MTBItem {
         this.description = description;
         this.requirements = [...requirements];
         this.requirements.sort() ;
+        this.category = category ;
     }
 
     static merge(logger: winston.Logger, app1: MTBApp, app2: MTBApp): MTBApp | undefined {
@@ -52,6 +54,12 @@ export class MTBApp extends MTBItem {
 
         if (app1.description !== app2.description) {
             MTBItem.mergeMsg(logger, app1.id, "app", "description", app1.description, app2.description, app1.source, app2.source) ;
+        }
+
+        if (app1.category !== app2.category) {
+            if (app1.category === undefined) {
+                app1.category = app2.category;
+            }
         }
 
         if (!this.compareStringArrays(app1.requirements, app2.requirements)) {

@@ -9,6 +9,7 @@ export class ManifestManager {
 
     private codeExampleResolvers: (() => void)[] = [];
     private codeExamples: CodeExampleIdentifier[] = [] ;
+    private codeExampleCategories: string[] = [] ;
 
     private parent_: BackendService;
 
@@ -32,6 +33,7 @@ export class ManifestManager {
 
     public processCodeExamples(cmd: BackEndToFrontEndResponse): void {
         this.codeExamples = cmd.data as CodeExampleIdentifier[];
+        this.codeExampleCategories = [...new Set(this.codeExamples.map(example => example.category))];
         for (let resolver of this.codeExampleResolvers) {
             resolver();
         }

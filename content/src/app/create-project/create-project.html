@@ -131,7 +131,6 @@
                 <mat-option *ngFor="let bsp of bsps" [value]="bsp.id">
                   <div class="bsp-option">
                     <div class="bsp-name">{{ bsp.name }}</div>
-                    <div class="bsp-details">{{ bsp.device }} - {{ bsp.connectivity }}</div>
                   </div>
                 </mat-option>
               </mat-select>
@@ -173,12 +172,29 @@
       
       <div class="step-content">
         <h2>Code Example</h2>
-        <p class="step-description">Choose a starting example for your project</p>
+        <p class="step-description">Choose the category and specific example for your project</p>
         
         <form [formGroup]="exampleSelectionForm" class="example-form">
           <div class="form-row" *ngIf="selectedBSP">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Code Example</mat-label>
+              <mat-label>Example Category</mat-label>
+              <mat-select formControlName="exampleCategory" 
+                         (selectionChange)="onExampleCategoryChange()"
+                         [disabled]="isLoading || exampleCategories.length === 0">
+                <mat-option *ngFor="let category of exampleCategories" [value]="category">
+                  {{ category }}
+                </mat-option>
+              </mat-select>
+              <mat-hint>Select the category of code examples</mat-hint>
+              <mat-error *ngIf="exampleSelectionForm.get('exampleCategory')?.hasError('required')">
+                Example category is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+          
+          <div class="form-row" *ngIf="selectedExampleCategory">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Example Code</mat-label>
               <mat-select formControlName="example" 
                          (selectionChange)="onExampleChange()"
                          [disabled]="isLoading || examples.length === 0">
@@ -186,7 +202,7 @@
                   {{ example }}
                 </mat-option>
               </mat-select>
-              <mat-hint>Select a code example to start with</mat-hint>
+              <mat-hint>Select a specific code example to start with</mat-hint>
               <mat-error *ngIf="exampleSelectionForm.get('example')?.hasError('required')">
                 Example selection is required
               </mat-error>
@@ -259,6 +275,9 @@
               
               <mat-divider></mat-divider>
               
+              <div class="review-item">
+                <strong>Example Category:</strong> {{ selectedExampleCategory }}
+              </div>
               <div class="review-item">
                 <strong>Code Example:</strong> {{ selectedExample }}
               </div>
