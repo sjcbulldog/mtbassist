@@ -478,7 +478,19 @@
     }
     
     .review-item {
-      color: var(--dark-text-secondary);
+      color: var(--dark-text-primary); // Changed to primary white text for better visibility
+    }
+    
+    // Ensure BSP-related information is clearly visible in white
+    .bsp-category-item,
+    .bsp-board-item,
+    .bsp-device-item,
+    .bsp-connectivity-item {
+      color: #ffffff !important;
+      
+      strong {
+        color: #ffffff !important;
+      }
     }
   }
 }

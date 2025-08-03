@@ -66,6 +66,7 @@ export class CreateProject implements OnInit, OnDestroy {
     }
 
   ngOnInit() {
+    this.isDarkTheme = this.backendService.isDarkTheme;
     this.loadThemePreference();
     this.initializeForms();
     this.loadCategories();

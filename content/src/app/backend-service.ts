@@ -14,6 +14,7 @@ declare var acquireVsCodeApi: any | undefined ;
 export class BackendService {
   private pipe_?: PipeInterface ;
   private bspResolvers : (() => void)[] = [] ;
+  private isDarkTheme_ : boolean = true ;
 
   bsps : Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();
   bspCategories : Subject<string[]> = new Subject<string[]>();
@@ -28,6 +29,10 @@ export class BackendService {
     }
 
     this.refreshBSPs(); // Initial load of BSPs
+  }
+
+  public get isDarkTheme(): boolean {
+    return this.isDarkTheme_;
   }
 
   public log(message: string) {
