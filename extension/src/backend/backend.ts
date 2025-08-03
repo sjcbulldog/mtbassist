@@ -124,6 +124,8 @@ export class BackendService {
 
             if (request.data && typeof request.data === 'string') {
                 this.logger_.info('client:' + request.data) ;
+            } else if (typeof request.data === 'object' && ('level' in request.data) && ('message' in request.data)) {
+                this.logger_.log(request.data.level, request.data.message) ;
             } else if (request.data) {
                 this.logger_.info(`client: ${JSON.stringify(request.data)}`) ;
             } else {

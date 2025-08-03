@@ -209,17 +209,17 @@ export class MtbManifestLoader {
                     if (mtype === ManifestFileType.superManifest) {
                         this.superManifestData.set(urlname, text);
                         let percent: number = this.superManifestData.size / this.superManifestList.length * 100.0;
-                        this.logger_.debug("loaded super manifest file (" + percent.toFixed(1) + ") '" + urlname + "'");
+                        this.logger_.silly("loaded super manifest file (" + percent.toFixed(1) + ") '" + urlname + "'");
                     }
                     else if (mtype === ManifestFileType.contentManifest) {
                         this.manifestContentData.set(urlname, text);
                         let percent: number = this.manifestContentData.size / this.manifestContentList.length * 100.0;
-                        this.logger_.debug("loaded content manifest file (" + percent.toFixed(1) + ") '" + urlname + "'");
+                        this.logger_.silly("loaded content manifest file (" + percent.toFixed(1) + ") '" + urlname + "'");
                     }
                     else if (mtype === ManifestFileType.dependencyManifest) {
                         this.manifestDepData.set(urlname, text);
                         let percent: number = this.manifestDepData.size / this.manifestDepList.length * 100.0;
-                        this.logger_.debug("loaded dependency manifest file (" + percent.toFixed(1) + ") '" + urlname + "'");
+                        this.logger_.silly("loaded dependency manifest file (" + percent.toFixed(1) + ") '" + urlname + "'");
                     }
                     resolve();
                 })
@@ -531,7 +531,7 @@ export class MtbManifestLoader {
                 }
                 else {
                     try {
-                        this.logger_.debug("parsing content manifest file '" + loc + "'");
+                        this.logger_.silly("parsing content manifest file '" + loc + "'");
                         this.processContentManifestXML(loc, result);
                     }
                     catch (errobj) {
@@ -555,7 +555,7 @@ export class MtbManifestLoader {
                 }
                 else {
                     try {
-                        this.logger_.debug("parsing dependency manifest file '" + loc + "'");
+                        this.logger_.silly("parsing dependency manifest file '" + loc + "'");
                         this.processDependencyManifestXml(loc, result);
                     }
                     catch (errobj) {

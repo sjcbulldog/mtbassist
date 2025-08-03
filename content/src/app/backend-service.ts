@@ -4,10 +4,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, DevKitData, DevKitIdentifier } from '../comms';
-
-type backendType = 'vscode' | 'electron';
-
+import { BackEndToFrontEndResponse, DevKitData, BSPIdentifier } from '../comms';
 
 declare var acquireVsCodeApi: any | undefined ;
 
@@ -16,9 +13,12 @@ declare var acquireVsCodeApi: any | undefined ;
 })
 export class BackendService {
   private pipe_?: PipeInterface ;
+  private bspResolvers : (() => void)[] = [] ;
 
-  devkits : Subject<DevKitIdentifier[]> = new Subject<DevKitIdentifier[]>();
-  devkitCategories : Subject<string[]> = new Subject<string[]>();
+  bsps : Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();
+  bspCategories : Subject<string[]> = new Subject<string[]>();
+  navTab: Subject<number> = new Subject<number>() ;
+  browserFolder: Subject<string | null> = new Subject<string | null>();
 
   constructor() {
     this.pipe_ = this.createPipe() ;
@@ -26,6 +26,8 @@ export class BackendService {
       this.pipe_.registerResponseHandler(this.messageProc.bind(this));
       this.log(`BackendService initialized with ${this.pipe_.displayName} pipe.`);
     }
+
+    this.refreshBSPs(); // Initial load of BSPs
   }
 
   public log(message: string) {
@@ -50,80 +52,154 @@ export class BackendService {
     }
   }
 
-  public refreshBSPs() {
-    this.log('Refreshing BSPs') ;
+  public refreshBSPs() : Promise<void> {
+    let ret = new Promise<void>((resolve, reject) => {
+      this.log('Refreshing BSPs') ;
 
-    if (this.pipe_) {
-      this.pipe_.sendRequest({
-        request: 'getDevKits',
-        data: null
-      });
-    }
-  }
-
-  public async openDirectoryPicker(): Promise<string | null> {
-    return new Promise((resolve) => {
-      this.log('Opening directory picker');
-      
       if (this.pipe_) {
-        // Store the original handler
-        const originalHandler = this.messageProc.bind(this);
-        
-        // Create a temporary response handler for directory picker
-        const tempHandler = (response: BackEndToFrontEndResponse) => {
-          if (response.response === 'directorySelected') {
-            // Restore original handler
-            this.pipe_!.registerResponseHandler(originalHandler);
-            resolve(response.data as string);
-            return;
-          } else if (response.response === 'directoryPickerCancelled') {
-            // Restore original handler
-            this.pipe_!.registerResponseHandler(originalHandler);
-            resolve(null);
-            return;
-          }
-          // For other responses, pass to original handler
-          originalHandler(response);
-        };
-        
-        // Set the temporary handler
-        this.pipe_.registerResponseHandler(tempHandler);
-        
-        // Send the request
         this.pipe_.sendRequest({
-          request: 'openDirectoryPicker',
+          request: 'getDevKits',
           data: null
         });
-        
-        // Fallback timeout to restore handler if no response
-        setTimeout(() => {
-          this.pipe_!.registerResponseHandler(originalHandler);
-          resolve(null);
-        }, 10000); // 10 second timeout
-      } else {
-        // Fallback for browser mode - simulate directory selection
-        this.log('Browser mode: simulating directory selection');
-        setTimeout(() => {
-          const mockPaths = [
-            'C:\\Users\\Developer\\Documents\\ModusToolbox',
-            'C:\\workspace\\embedded-projects',
-            'D:\\development\\modustoolbox-apps',
-            'C:\\Users\\john\\Projects\\MTB'
-          ];
-          const mockPath = mockPaths[Math.floor(Math.random() * mockPaths.length)];
-          resolve(mockPath);
-        }, 500);
+      }
+    }) ;
+    return ret ;
+  }
+
+  public setNavTab(index: number) {
+    this.log(`Setting navigation tab to index: ${index}`);
+    this.navTab.next(index);
+  }
+
+  public browseForFolder(): void{
+    this.log('Requesting browser for folder');
+      if (this.pipe_) {
+        this.pipe_.sendRequest({
+          request: 'platformSpecific',
+          data: {
+            command: 'browseForFolder'
+          }
+        });
+      }
+  }
+
+  public async getBSPCategories(): Promise<string[]> {
+    return new Promise((resolve) => {
+      // First try to get from existing data
+      this.bspCategories.subscribe(categories => {
+        if (categories.length > 0) {
+          this.log(`Returning cached categories: ${categories.join(', ')}`);
+          resolve(categories);
+          return;
+        }
+      });
+      
+      // If no categories available, refresh BSPs
+      this.refreshBSPs()
+        .then(() => {
+          this.bspCategories.subscribe(categories => {
+            if (categories.length > 0) {
+              this.log(`Returning refreshed categories: ${categories.join(', ')}`);
+              resolve(categories);
+            } else {
+              this.log('No categories found after refresh');
+              resolve([]);
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Error refreshing BSPs:', error);
+          resolve([]);
+        });
+    });
+  }
+
+  public async getBSPsForCategory(category: string): Promise<BSPIdentifier[]> {
+    return new Promise((resolve) => {
+      this.bsps.subscribe(devkits => {
+        const filtered = devkits.filter(kit => kit.category === category);
+        if (filtered.length > 0) {
+          this.log(`Returning cached BSPs for category ${category}: ${filtered.map(k => k.name).join(', ')}`);
+          resolve(filtered);
+          return;
+        }
+      });
+
+      this.refreshBSPs()
+        .then(() => {
+          this.bsps.subscribe(devkits => {
+            const filtered = devkits.filter(kit => kit.category === category);
+            if (filtered.length > 0) {
+              this.log(`Returning refreshed BSPs for category ${category}: ${filtered.map(k => k.name).join(', ')}`);
+              resolve(filtered);
+            } else {
+              this.log(`No BSPs found for category ${category}`);
+              resolve([]);
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Error refreshing BSPs:', error);
+          resolve([]);
+        });
+    });
+  }
+
+  public async getExamplesForBSP(bspId: string): Promise<string[]> {
+    return new Promise((resolve) => {
+      this.log(`Getting examples for BSP: ${bspId}`);
+      
+      // Mock data for development
+      setTimeout(() => {
+        const mockExamples = [
+          'Hello World',
+          'LED Blink',
+          'WiFi Scan',
+          'BLE Heart Rate',
+          'TCP Client',
+          'CapSense Slider',
+          'FreeRTOS Tasks',
+          'Deep Sleep Demo'
+        ];
+        resolve(mockExamples);
+      }, 500);
+    });
+  }
+
+  public async createProject(projectData: any): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.log(`Creating project: ${JSON.stringify(projectData)}`);
+      
+      if (this.pipe_) {
+        this.pipe_.sendRequest({
+          request: 'platformSpecific',
+          data: {
+            command: 'createProject',
+            data: projectData
+          }
+        });
       }
     });
   }
 
   private messageProc(cmd: BackEndToFrontEndResponse) {
-    this.log(`Received command: ${cmd.response}`) ;
+    let str = JSON.stringify(cmd) ;
+    if (str.length > 128) {
+      str = str.substring(0, 128) + '...';
+    }
+    this.log(`Received response from backend: ${str}`) ;
+
     if (cmd.response === 'setDevKits') {
-      let devkits: DevKitIdentifier[] = (cmd.data! as DevKitData).kits as DevKitIdentifier[] ;
-      this.devkits.next(devkits);
+      let devkits: BSPIdentifier[] = (cmd.data! as DevKitData).kits as BSPIdentifier[] ;
+      this.bsps.next(devkits);
       let categories = [...new Set(devkits.map(kit => kit.category))];
-      this.devkitCategories.next(categories);
+      this.bspCategories.next(categories);
+      for(let resolver of this.bspResolvers) {
+        resolver();
+      }
+    }
+    else if (cmd.response === 'browseForFolderResult') {
+      this.browserFolder.next(cmd.data as string | null);
     }
   }
 

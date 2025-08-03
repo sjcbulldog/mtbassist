@@ -7,7 +7,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { BackendService } from '../backend-service';
-import { App } from '../app';
+import MtbNav from '../mtb-nav/mtb-nav';
 
 @Component({
   selector: 'app-getting-started',
@@ -24,12 +24,9 @@ import { App } from '../app';
   styleUrl: './getting-started.scss'
 })
 export class GettingStarted {
-  
-  constructor(private be: BackendService, private parent: App) {
+  constructor(private be: BackendService) {
+    this.be.log('GettingStarted component initialized');
   }
-
-
-
   features = [
     {
       icon: 'speed',
@@ -87,10 +84,10 @@ export class GettingStarted {
   onStepAction(step: any) {
     this.be.log(`Executing action for step ${step.step}: ${step.action}`);
     if (step.step === 1) {
-      this.parent.toptap.selectedIndex = 2; // Switch to Create Project tab
+      this.be.setNavTab(2) ; // Navigate to Create New Project tab (index 2)
     }
     else if (step.step === 2) {
-      this.parent.toptap.selectedIndex = 1; // Switch to Application Explorer tab
+      this.be.setNavTab(1) ; // Navigate to Application Explorer tab (index 1)
     }
   }
 }

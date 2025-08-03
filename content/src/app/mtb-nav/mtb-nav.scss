@@ -1,0 +1,154 @@
+.mtb-navigation {
+  width: 100%;
+  height: 100%;
+  
+  .mat-mdc-tab-group {
+    height: 100%;
+  }
+  
+  .mat-mdc-tab-body-wrapper {
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .mat-mdc-tab-body-content {
+    height: 100%;
+    overflow: auto;
+  }
+}
+
+/* Tab Content */
+.tab-content {
+  padding: 16px;
+  height: 100%;
+  overflow: auto;
+  
+  /* Ensure child components fill available space */
+  > * {
+    height: 100%;
+  }
+}
+
+.tab-panel {
+  height: 100%;
+  width: 100%;
+}
+
+/* Placeholder Content */
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #666;
+  text-align: center;
+  
+  h2 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-size: 1.5rem;
+    font-weight: 500;
+  }
+  
+  p {
+    margin: 0 0 16px 0;
+    font-size: 1rem;
+    color: #666;
+  }
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #ff9800;
+  }
+}
+
+/* Tab Label with Icon */
+.tab-icon {
+  margin-right: 8px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+}
+
+/* No Tabs Message */
+.no-tabs-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #666;
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: #ccc;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 16px;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tab-content {
+    padding: 12px;
+  }
+  
+  .tab-icon {
+    margin-right: 4px;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-content {
+    padding: 8px;
+  }
+  
+  /* Hide icons on very small screens to save space */
+  .tab-icon {
+    display: none;
+  }
+}
+
+/* Material Theme Customizations */
+.mat-mdc-tab-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.mat-mdc-tab {
+  min-width: 120px;
+  padding: 0 16px;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.mat-mdc-tab-label-content {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+/* Animation for smooth tab transitions */
+.mat-mdc-tab-body-content {
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Ensure full height layout */
+:host {
+  display: block;
+  height: 100%;
+}

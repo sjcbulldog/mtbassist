@@ -21,9 +21,9 @@ export class VSCodePipe implements PipeInterface {
 
     registerResponseHandler(handler: (response: BackEndToFrontEndResponse) => void): void {
         this.responseHandler = handler;
-        console.log('Response handler registered');        
         window.addEventListener('message', (event) => {
-            if (event.data && event.data.command && this.responseHandler) {
+            this.sendRequest({request: 'logMessage', data: { level : 'debug' , message : `received message: ${JSON.stringify(event.data)}`}});
+            if (event.data && event.data.response && this.responseHandler) {
                 this.responseHandler(event.data);
             }
         });

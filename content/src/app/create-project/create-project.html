@@ -1,0 +1,293 @@
+<div class="create-project-container" [class.dark-theme]="isDarkTheme" [class.light-theme]="!isDarkTheme">
+  <!-- Theme Toggle -->
+  <div class="theme-toggle">
+    <mat-slide-toggle 
+      [(ngModel)]="isDarkTheme" 
+      (change)="toggleTheme()"
+      color="primary">
+      <mat-icon>{{ isDarkTheme ? 'dark_mode' : 'light_mode' }}</mat-icon>
+      {{ isDarkTheme ? 'Dark' : 'Light' }} Theme
+    </mat-slide-toggle>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>
+      <mat-icon>add_circle_outline</mat-icon>
+      Create New ModusToolbox Project
+    </h1>
+    <p class="subtitle">Follow the steps below to create your new embedded application</p>
+  </div>
+
+  <!-- Stepper -->
+  <mat-stepper [linear]="true" #stepper class="project-stepper">
+    
+    <!-- Step 1: Project Information -->
+    <mat-step [stepControl]="projectInfoForm" label="Project Information">
+      <ng-template matStepperIcon="edit">
+        <mat-icon>folder</mat-icon>
+      </ng-template>
+      
+      <div class="step-content">
+        <h2>Project Details</h2>
+        <p class="step-description">Specify the project name and location</p>
+        
+        <form [formGroup]="projectInfoForm" class="project-form">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Project Name</mat-label>
+              <input matInput 
+                     formControlName="projectName" 
+                     placeholder="my-modustoolbox-app"
+                     maxlength="50">
+              <mat-hint>Use only letters, numbers, hyphens, and underscores</mat-hint>
+              <mat-error *ngIf="projectInfoForm.get('projectName')?.hasError('required')">
+                Project name is required
+              </mat-error>
+              <mat-error *ngIf="projectInfoForm.get('projectName')?.hasError('pattern')">
+                Invalid characters in project name
+              </mat-error>
+            </mat-form-field>
+          </div>
+          
+          <div class="form-row">
+            <div class="location-input-container">
+              <mat-form-field appearance="outline" class="location-field">
+                <mat-label>Project Location</mat-label>
+                <input matInput 
+                       formControlName="projectLocation" 
+                       placeholder="C:\\workspace\\my-projects">
+                <mat-hint>Choose where to create your project</mat-hint>
+                <mat-error *ngIf="projectInfoForm.get('projectLocation')?.hasError('required')">
+                  Project location is required
+                </mat-error>
+              </mat-form-field>
+              <button mat-raised-button 
+                      type="button"
+                      color="accent"
+                      class="browse-button"
+                      (click)="browseForDirectory()"
+                      [disabled]="isLoading"
+                      matTooltip="Browse for directory">
+                <mat-icon>folder_open</mat-icon>
+                Browse
+              </button>
+            </div>
+          </div>
+
+          <!-- Project Path Preview -->
+          <div class="project-path-preview" *ngIf="getProjectPath()">
+            <mat-icon>info</mat-icon>
+            <span>Project will be created at: <strong>{{ getProjectPath() }}</strong></span>
+          </div>
+        </form>
+        
+        <div class="step-actions">
+          <button mat-raised-button 
+                  color="primary" 
+                  matStepperNext 
+                  [disabled]="!projectInfoForm.valid || isLoading">
+            <mat-icon>arrow_forward</mat-icon>
+            Next: Select BSP
+          </button>
+        </div>
+      </div>
+    </mat-step>
+
+    <!-- Step 2: BSP Selection -->
+    <mat-step [stepControl]="bspSelectionForm" label="BSP Selection">
+      <ng-template matStepperIcon="edit">
+        <mat-icon>developer_board</mat-icon>
+      </ng-template>
+      
+      <div class="step-content">
+        <h2>Board Support Package</h2>
+        <p class="step-description">Select the BSP category and specific board</p>
+        
+        <form [formGroup]="bspSelectionForm" class="bsp-form">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>BSP Category</mat-label>
+              <mat-select formControlName="category" 
+                         (selectionChange)="onCategoryChange()"
+                         [disabled]="isLoading">
+                <mat-option *ngFor="let category of categories" [value]="category">
+                  {{ category }}
+                </mat-option>
+              </mat-select>
+              <mat-hint>Choose the type of development board</mat-hint>
+              <mat-error *ngIf="bspSelectionForm.get('category')?.hasError('required')">
+                BSP category is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+          
+          <div class="form-row" *ngIf="selectedCategory">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Board Support Package</mat-label>
+              <mat-select formControlName="bsp" 
+                         (selectionChange)="onBSPChange()"
+                         [disabled]="isLoading || bsps.length === 0">
+                <mat-option *ngFor="let bsp of bsps" [value]="bsp.id">
+                  <div class="bsp-option">
+                    <div class="bsp-name">{{ bsp.name }}</div>
+                    <div class="bsp-details">{{ bsp.device }} - {{ bsp.connectivity }}</div>
+                  </div>
+                </mat-option>
+              </mat-select>
+              <mat-hint>Choose the specific development board</mat-hint>
+              <mat-error *ngIf="bspSelectionForm.get('bsp')?.hasError('required')">
+                BSP selection is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Loading indicator -->
+          <div class="loading-indicator" *ngIf="isLoading">
+            <mat-spinner diameter="30"></mat-spinner>
+            <span>Loading BSPs...</span>
+          </div>
+        </form>
+        
+        <div class="step-actions">
+          <button mat-button matStepperPrevious [disabled]="isLoading">
+            <mat-icon>arrow_back</mat-icon>
+            Back
+          </button>
+          <button mat-raised-button 
+                  color="primary" 
+                  matStepperNext 
+                  [disabled]="!bspSelectionForm.valid || isLoading">
+            <mat-icon>arrow_forward</mat-icon>
+            Next: Select Example
+          </button>
+        </div>
+      </div>
+    </mat-step>
+
+    <!-- Step 3: Example Selection -->
+    <mat-step [stepControl]="exampleSelectionForm" label="Example Selection">
+      <ng-template matStepperIcon="edit">
+        <mat-icon>code</mat-icon>
+      </ng-template>
+      
+      <div class="step-content">
+        <h2>Code Example</h2>
+        <p class="step-description">Choose a starting example for your project</p>
+        
+        <form [formGroup]="exampleSelectionForm" class="example-form">
+          <div class="form-row" *ngIf="selectedBSP">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Example Code</mat-label>
+              <mat-select formControlName="example" 
+                         (selectionChange)="onExampleChange()"
+                         [disabled]="isLoading || examples.length === 0">
+                <mat-option *ngFor="let example of examples" [value]="example">
+                  {{ example }}
+                </mat-option>
+              </mat-select>
+              <mat-hint>Select a code example to start with</mat-hint>
+              <mat-error *ngIf="exampleSelectionForm.get('example')?.hasError('required')">
+                Example selection is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Loading indicator -->
+          <div class="loading-indicator" *ngIf="isLoading">
+            <mat-spinner diameter="30"></mat-spinner>
+            <span>Loading examples...</span>
+          </div>
+        </form>
+        
+        <div class="step-actions">
+          <button mat-button matStepperPrevious [disabled]="isLoading">
+            <mat-icon>arrow_back</mat-icon>
+            Back
+          </button>
+          <button mat-raised-button 
+                  color="primary" 
+                  matStepperNext 
+                  [disabled]="!exampleSelectionForm.valid || isLoading">
+            <mat-icon>arrow_forward</mat-icon>
+            Review & Create
+          </button>
+        </div>
+      </div>
+    </mat-step>
+
+    <!-- Step 4: Review & Create -->
+    <mat-step label="Create Project">
+      <ng-template matStepperIcon="edit">
+        <mat-icon>check_circle</mat-icon>
+      </ng-template>
+      
+      <div class="step-content">
+        <h2>Review Your Project</h2>
+        <p class="step-description">Confirm your selections and create the project</p>
+        
+        <div class="review-section">
+          <mat-card class="review-card">
+            <mat-card-header>
+              <mat-card-title>Project Summary</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="review-item">
+                <strong>Project Name:</strong> {{ projectInfoForm.value.projectName }}
+              </div>
+              <div class="review-item">
+                <strong>Location:</strong> {{ projectInfoForm.value.projectLocation }}
+              </div>
+              <div class="review-item">
+                <strong>Full Path:</strong> {{ getProjectPath() }}
+              </div>
+              
+              <mat-divider></mat-divider>
+              
+              <div class="review-item">
+                <strong>BSP Category:</strong> {{ selectedCategory }}
+              </div>
+              <div class="review-item">
+                <strong>Board:</strong> {{ selectedBSP?.name }}
+              </div>
+              <div class="review-item">
+                <strong>Device:</strong> {{ selectedBSP?.device }}
+              </div>
+              <div class="review-item">
+                <strong>Connectivity:</strong> {{ selectedBSP?.connectivity }}
+              </div>
+              
+              <mat-divider></mat-divider>
+              
+              <div class="review-item">
+                <strong>Example Code:</strong> {{ selectedExample }}
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+        
+        <div class="step-actions">
+          <button mat-button matStepperPrevious [disabled]="isLoading">
+            <mat-icon>arrow_back</mat-icon>
+            Back
+          </button>
+          <button mat-raised-button 
+                  color="primary" 
+                  (click)="createProject()"
+                  [disabled]="isLoading">
+            <mat-spinner *ngIf="isLoading" diameter="20" class="button-spinner"></mat-spinner>
+            <mat-icon *ngIf="!isLoading">rocket_launch</mat-icon>
+            {{ isLoading ? 'Creating...' : 'Create Project' }}
+          </button>
+          <button mat-button 
+                  (click)="resetForm()" 
+                  [disabled]="isLoading"
+                  class="reset-button">
+            <mat-icon>refresh</mat-icon>
+            Start Over
+          </button>
+        </div>
+      </div>
+    </mat-step>
+  </mat-stepper>
+</div>

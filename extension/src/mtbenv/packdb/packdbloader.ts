@@ -54,7 +54,7 @@ export class PackDBLoader {
             this.logger_.debug(`packdbloader: scanning directory '${dir}'`) ;
             for(let file of fs.readdirSync(dir)) {
                 let fullpath = path.join(dir, file) ;
-                if (path.extname(file) == '.json') {
+                if (path.extname(file) === '.json') {
                     this.checkOneJSONFile(fullpath) ;
                 }
             }
@@ -65,7 +65,7 @@ export class PackDBLoader {
     }
 
     private checkOneJSONFile(file: string) {
-        this.logger_.debug(`packdbloader: checking file '${file}'`) ;
+        this.logger_.silly(`packdbloader: checking file '${file}'`) ;
         let obj : IDCEntry ;
         
         try {
@@ -77,12 +77,12 @@ export class PackDBLoader {
 
         if (!obj.type || obj.type !== 'content-pack') {
             // not a content pack but might be a tool of interest
-            this.logger_.debug(`packdbloader: file '${file}' is not a content pack - checking if it is a tool`) ;
+            this.logger_.silly(`packdbloader: file '${file}' is not a content pack - checking if it is a tool`) ;
             this.checkTool(obj) ;
         }
         else {
             // content pack
-            this.logger_.debug(`packdbloader: file '${file}' is a content pack - loading it`) ;
+            this.logger_.silly(`packdbloader: file '${file}' is a content pack - loading it`) ;
             this.checkPack(obj) ;
         }
     }

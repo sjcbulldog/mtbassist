@@ -29,7 +29,7 @@ export class MTBAssistObject {
     private constructor(context: vscode.ExtensionContext) {
         this.context_ = context;
         this.logger_ = winston.createLogger({
-            level: 'silly',
+            level: 'debug',
             format: winston.format.combine(
                 winston.format.timestamp(),
                 winston.format.prettyPrint()
@@ -159,6 +159,7 @@ export class MTBAssistObject {
         this.cmdhandler_.set('documentation', this.documentation.bind(this));
         this.cmdhandler_.set('browseExamples', this.browseExamples.bind(this));
         this.cmdhandler_.set('community', this.community.bind(this));
+        this.cmdhandler_.set('browseForFolder', this.browseFolder.bind(this));
     }    
 
     private noMTBInstalled() {
@@ -353,14 +354,33 @@ export class MTBAssistObject {
             if (message.request === 'platformSpecific') {
                 this.logger_.debug(`Received platformSpecific request: ${JSON.stringify(message.data)}`);
                 if (this.cmdhandler_.has(message.data.command)) {
-                    this.cmdhandler_.get(message.data.command)!(message.data.data);
+                    this.cmdhandler_.get(message.data.command)!(message.data.data)
+                    .then((response: BackEndToFrontEndResponse | null) => {
+                        this.logger_.debug(`Response for platform specific command ${message.data.command}: ${JSON.stringify(response)}`);
+                        if (response) {
+                            this.panel_!.webview.postMessage(response);
+                        }
+                    })
+                    .catch((error: Error) => {
+                        this.logger_.error(`Error handling command ${message.data.command}: ${error.message}`);
+                    }) ;
                 } else {
                     this.logger_.error(`No handler found for vscode command: ${message.data.command}`);
                 }
             }
             else {
                 let be = BackendService.getInstance() ;
-                be.processRequest(message) ;
+                be.processRequest(message)
+                .then((response: BackEndToFrontEndResponse | null) => {
+                    let str = JSON.stringify(response) ;
+                    if (str.length > 128) {
+                        str = str.substring(0, 128) + '...' ;
+                    }
+                    this.logger_.debug(`Response for request ${message.request}: ${str}`);
+                    if (response) {
+                        this.panel_!.webview.postMessage(response);
+                    }
+                })
             }
         }) ;
     }
@@ -397,6 +417,28 @@ export class MTBAssistObject {
             let resp: BackEndToFrontEndResponse = { response: 'success', data: null };
             this.showWebContent(vscode.Uri.parse('https://community.infineon.com/t5/ModusToolbox/bd-p/modustoolboxforum/'));
             resolve(resp);
+        }) ;
+        return ret;
+    }
+
+    private browseFolder(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            vscode.window.showOpenDialog({
+                canSelectMany: false,
+                openLabel: 'Select Folder For New Project',
+                canSelectFiles: false,
+                canSelectFolders: true
+            }).then((uri) => {
+                let resp: BackEndToFrontEndResponse ;
+                if (!uri || uri.length === 0) {
+                    this.logger_.debug('No folder selected in browseFolder dialog.');
+                    resp = { response: 'error', data: 'No folder selected.' };
+                }
+                else {
+                    resp = { response: 'browseForFolderResult', data: uri[0].fsPath };
+                }
+                resolve(resp) ;
+            }) ;
         }) ;
         return ret;
     }

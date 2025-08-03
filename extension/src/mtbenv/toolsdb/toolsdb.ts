@@ -97,7 +97,7 @@ export class ToolsDB {
             }
         }
 
-        logger.debug(`reading tools json file ${jsonfile}`) ;
+        logger.silly(`reading tools json file ${jsonfile}`) ;
 
         let props = MTBUtils.readJSONFile(logger, 'toolsdb', jsonfile) ;
         if (props.prop_files && Array.isArray(props.prop_files)) {

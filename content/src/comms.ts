@@ -7,16 +7,15 @@ export type FrontEndToBackEndRequestType =
     'getDevKits' |
     'getStarted' |
     'platformSpecific' |
-    'openDirectoryPicker' ;
+    'browseForFolder' ;
 
 export type BackEndToFrontEndResponseType =
     'setDevKits' |
     'success' |
     'error' |
-    'directorySelected' |
-    'directoryPickerCancelled' ;
+    'browseForFolderResult' ;
 
-export interface DevKitIdentifier {
+export interface BSPIdentifier {
     name : string ;
     id: string ;
     device: string ;
@@ -28,7 +27,7 @@ export type DevKitDataType = 'cached' | 'manifest' | 'empty' | 'error';
 
 export interface DevKitData {
     datatype: DevKitDataType;
-    kits: DevKitIdentifier[];
+    kits: BSPIdentifier[];
 }
 
 export interface FrontEndToBackEndRequest {
