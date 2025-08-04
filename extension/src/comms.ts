@@ -8,12 +8,14 @@ export type FrontEndToBackEndRequestType =
     'getCodeExamples' |
     'getStarted' |
     'createProject' |
+    'loadWorkspace' |
     'platformSpecific' |
     'browseForFolder' ;
 
 export type BackEndToFrontEndResponseType =
     'setDevKits' |
     'setCodeExamples' |
+    'createProjectResult' |
     'success' |
     'error' |
     'browseForFolderResult' ;
@@ -24,6 +26,7 @@ export interface BSPIdentifier {
     device: string ;
     connectivity: string ;
     category: string ;
+    description: string;
 }    
 
 export interface CodeExampleIdentifier {

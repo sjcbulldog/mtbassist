@@ -6,8 +6,10 @@ import { ElectronAPI } from "./platform/electronapi";
 import { BackEndToFrontEndResponse, CodeExampleIdentifier, FrontEndToBackEndRequest, PlatformType } from "../comms";
 import { BSPMgr } from "./bspmgr";
 import { MTBApp } from "../mtbenv/manifest/mtbapp";
-import * as winston from 'winston';
 import { PlatformAPI } from "./platform/platformapi";
+import * as winston from 'winston';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export class BackendService {
     private static instance: BackendService | null = null;
@@ -87,6 +89,7 @@ export class BackendService {
         this.cmdhandler_.set('getDevKits', this.getDevKits.bind(this)) ;
         this.cmdhandler_.set('getCodeExamples', this.getCodeExamples.bind(this));
         this.cmdhandler_.set('createProject', this.createProject.bind(this));
+        this.cmdhandler_.set('loadWorkspace', this.loadWorkspace.bind(this));
     }
 
     private convertCodeExamples(examples: MTBApp[]): CodeExampleIdentifier[] {
@@ -148,13 +151,13 @@ export class BackendService {
             let resp: BackEndToFrontEndResponse | null = null;
 
             if (request.data) {
-                switch(request.data as PlatformType) {
+                switch(request.data.platform as PlatformType) {
                     case 'browser':
                         this.apis_ = new BrowserAPI();
                         break ;
 
                     case 'vscode':
-                        this.apis_ = new VSCodeAPI(this.env_!);
+                        this.apis_ = new VSCodeAPI(this.logger_, this.env_!);
                         break;
 
                     case 'electron':
@@ -177,19 +180,52 @@ export class BackendService {
         return ret ;
     }
 
+    private loadWorkspace(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            if (this.apis_) {
+                this.apis_.loadWorkspace(request.data.path)
+                    .then(() => {
+                        resolve({
+                            response: 'success',
+                            data: null
+                        });
+                    })
+                    .catch((error) => {
+                        this.logger_.error(`Error loading workspace: ${error.message}`);
+                        resolve({
+                            response: 'error',
+                            data: `Error loading workspace: ${error.message}`
+                        });
+                    });
+            }
+        });
+        return ret;
+    }
+
     private createProject(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
-            this.apis_!.createProject(request.data.location, request.data.appdir, request.data.bspid, request.data.ceid)
+            let fpath = path.join(request.data.location, request.data.name) ;
+            if (!fs.existsSync(fpath)) {
+                fs.mkdirSync(fpath, { recursive: true });
+            }
+            this.apis_!.createProject(request.data.location, request.data.name, request.data.bsp.id, request.data.example.id)
             .then(([status, messages]) => { 
                 if (status === 0) {
                     resolve({
-                        response: 'success',
-                        data: messages
+                        response: 'createProjectResult',
+                        data: {
+                            uuid: request.data.uuid,
+                            success: true
+                        }
                     });
                 } else {
                     resolve({
-                        response: 'error',
-                        data: messages.join('\n')
+                        response: 'createProjectResult',
+                        data: {
+                            uuid: request.data.uuid,
+                            success: false,
+                            message: messages.join('\n')
+                        }
                     });
                 }
             })

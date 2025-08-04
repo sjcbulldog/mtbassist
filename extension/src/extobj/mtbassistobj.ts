@@ -378,8 +378,8 @@ export class MTBAssistObject {
                     if (str.length > 128) {
                         str = str.substring(0, 128) + '...' ;
                     }
-                    this.logger_.debug(`Response for request ${message.request}: ${str}`);
                     if (response) {
+                        this.logger_.debug(`Response for request ${message.request}: ${str}`);                        
                         this.panel_!.webview.postMessage(response);
                     }
                 }) ;

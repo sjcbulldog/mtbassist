@@ -2,7 +2,7 @@ import { ModusToolboxEnvironment } from "../mtbenv/mtbenv/mtbenv";
 import * as path from 'path' ;
 import * as fs from 'fs' ;
 import { MTBLoadFlags } from "../mtbenv/mtbenv/loadflags";
-import { DevKitData } from "../comms";
+import { BSPIdentifier, DevKitData } from "../comms";
 
 export class BSPMgr {
     private extdir_: string ;
@@ -55,7 +55,8 @@ export class BSPMgr {
                 name: err.message, 
                 id: '', category: '',
                 device: "",
-                connectivity: ""
+                connectivity: "",
+                description: "An error occurred while loading BSPs: " + err.message
             } ]
         } ;
 
@@ -69,7 +70,14 @@ export class BSPMgr {
             this.devkits_.datatype = 'manifest';
             this.devkits_.kits = [] ;
             for(let board of this.env_.manifestDB.bsps.values()) {
-                let id = { name: board.name, id: board.id, category: board.category, device: '', connectivity: '' };
+                let id : BSPIdentifier = { 
+                    name: board.name, 
+                    id: board.id, 
+                    category: board.category, 
+                    device: '', 
+                    connectivity: '',
+                    description: board.description || ''
+                };
                 if (board.chips.has('mcu')) {
                     id.device = board.chips.get('mcu')! ;
                 }

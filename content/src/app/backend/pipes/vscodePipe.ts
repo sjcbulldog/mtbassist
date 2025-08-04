@@ -1,4 +1,4 @@
-import { BackEndToFrontEndResponse, FrontEndToBackEndRequest, PlatformType } from "../../comms";
+import { BackEndToFrontEndResponse, FrontEndToBackEndRequest, PlatformType } from "../../../comms";
 import { PipeInterface } from "./pipeInterface";
 
 declare var acquireVsCodeApi: any;

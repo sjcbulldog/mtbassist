@@ -45,6 +45,8 @@ export class CreateProject implements OnInit, OnDestroy {
 
     isLoading = false;
     isDarkTheme = true; // Default to dark theme
+    projectCreated = false;
+    projectPath = '';
     categories: string[] = [];
     bsps: BSPIdentifier[] = [];
     exampleCategories: string[] = [];
@@ -54,6 +56,8 @@ export class CreateProject implements OnInit, OnDestroy {
     selectedBSP: BSPIdentifier | null = null;
     selectedExampleCategory: string = '';
     selectedExample: CodeExampleIdentifier | null = null;
+    hoveredExample: CodeExampleIdentifier | null = null;
+    hoveredBSP: BSPIdentifier | null = null;
 
     constructor(
         private formBuilder: FormBuilder,
@@ -185,6 +189,22 @@ export class CreateProject implements OnInit, OnDestroy {
         this.selectedExample = this.examples.find(example => example.id === exampleValue) || null;
     }
 
+    onExampleHover(example: CodeExampleIdentifier) {
+        this.hoveredExample = example;
+    }
+
+    onExampleLeave() {
+        this.hoveredExample = null;
+    }
+
+    onBSPHover(bsp: BSPIdentifier) {
+        this.hoveredBSP = bsp;
+    }
+
+    onBSPLeave() {
+        this.hoveredBSP = null;
+    }
+
     async createProject() {
         if (!this.projectInfoForm.valid || !this.bspSelectionForm.valid || !this.exampleSelectionForm.valid) {
             this.snackBar.open('Please fill in all required fields', 'Close', { duration: 3000 });
@@ -203,13 +223,16 @@ export class CreateProject implements OnInit, OnDestroy {
             const success = await this.backendService.createProject(projectData);
             
             if (success) {
+                this.projectCreated = true;
+                this.projectPath = this.getProjectPath();
                 this.snackBar.open('Project created successfully!', 'Close', { 
                     duration: 5000,
                     panelClass: ['success-snackbar']
                 });
-                this.resetForm();
+                // Don't reset form anymore, keep the data for reference
             } else {
                 throw new Error('Project creation failed');
+                this.snackBar.open('Failed to create project. Please try again.', 'Close', { duration: 3000 });                
             }
         } catch (error) {
             console.error('Failed to create project:', error);
@@ -217,6 +240,12 @@ export class CreateProject implements OnInit, OnDestroy {
         } finally {
             this.isLoading = false;
         }
+    }
+
+    async loadProject() {
+        this.snackBar.open(`Loading project from: ${this.projectPath}`, 'Close', { duration: 3000 });
+        let p = this.projectInfoForm.value.projectLocation + '/' + this.projectInfoForm.value.projectName;
+        await this.backendService.loadWorkspace(p);
     }
 
     resetForm() {
@@ -227,6 +256,10 @@ export class CreateProject implements OnInit, OnDestroy {
         this.selectedBSP = null;
         this.selectedExampleCategory = '';
         this.selectedExample = null;
+        this.hoveredExample = null;
+        this.hoveredBSP = null;
+        this.projectCreated = false;
+        this.projectPath = '';
         this.bsps = [];
         this.exampleCategories = [];
         this.examples = [];

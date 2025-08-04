@@ -49,7 +49,7 @@
     "copyshared": "cp ../content/src/comms.ts src",
     "copy": "npm run copydist && npm run copyshared",
     "content": "cd ../content && npm run build",
-    "build": "npm run content && npm run copy && npm run compile && npm run package"
+    "build": "npm run content && npm run copy && npm run compile"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",

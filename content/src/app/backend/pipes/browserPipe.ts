@@ -2,7 +2,7 @@ import { PipeInterface } from "./pipeInterface";
 import { Buffer } from "buffer";
 import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { inject, Injectable } from "@angular/core";
-import { BackEndToFrontEndResponse, FrontEndToBackEndRequest, PlatformType } from "../../comms";
+import { BackEndToFrontEndResponse, FrontEndToBackEndRequest, PlatformType } from "../../../comms";
 
 @Injectable({
   providedIn: 'root'

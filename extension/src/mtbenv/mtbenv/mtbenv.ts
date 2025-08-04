@@ -217,36 +217,52 @@ export class ModusToolboxEnvironment extends EventEmitter {
 
     public static async runCmdCaptureOutput(cwd: string, cmd: string, args: string[]) : Promise<[number, string[]]> {
         let ret: Promise<[number, string[]]> = new Promise<[number, string[]]>((resolve, reject) => {
-            (async () => {
-                let text: string = "" ;
-                let cp: exec.ChildProcess = exec.spawn(cmd, args , 
-                    {
-                        cwd: cwd,
-                        windowsHide: true
-                    }) ;
+            let text: string = "" ;
+            let penv : any = {} ;
+            for(let key in process.env) {
+                if (key === 'PATH') {
+                    penv['PATH'] = ModusToolboxEnvironment.filterPath(process.env[key]!) ;
+                }
+                else {
+                    penv[key] = process.env[key] ;
+                }
+            }
+            let cp: exec.ChildProcess = exec.spawn(cmd, args, 
+                {
+                    cwd: cwd,
+                    env: penv,
+                    windowsHide: true
+                }) ;
 
-                cp.stdout?.on('data', (data) => {
-                    text += (data as Buffer).toString() ;
-                }) ;
-                cp.stderr?.on('data', (data) => {
-                    text += (data as Buffer).toString() ;                    
-                }) ;
-                cp.on('error', (err) => {
-                    reject(err);
-                }) ;
-                cp.on('close', (code) => {
-                    if (!code) {
-                        code = 0 ;
-                    }
+            cp.stdout?.on('data', (data) => {
+                text += (data as Buffer).toString() ;
+            }) ;
+            cp.stderr?.on('data', (data) => {
+                text += (data as Buffer).toString() ;                    
+            }) ;
+            cp.on('error', (err) => {
+                reject(err);
+            }) ;
+            cp.on('close', (code) => {
+                if (!code) {
+                    code = 0 ;
+                }
 
-                    let ret: string[] = text.split('\n') ;
-                    resolve([code, ret]);
-                });
-            })() ;
+                let ret: string[] = text.split('\n') ;
+                resolve([code, ret]);
+            });
         }) ;
 
         return ret;
     }    
+
+    private static filterPath(path: string) : string {
+        let paths = path.split(';') ;
+        let elems = paths.filter((p) => { return p.indexOf('cygwin') < 0 ; }) ;
+        elems.push('/usr/bin') ;    // Ensure /usr/bin is always included
+        elems.push('/bin') ;        // Ensure /bin is always included
+        return elems.join(';') ;
+    }
 
     private runCodeGenerator(pass: string, tool: MTBTool) : MTBCommand[]{
         let cmds: MTBCommand[] = [] ;

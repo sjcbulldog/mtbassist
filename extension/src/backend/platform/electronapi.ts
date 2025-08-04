@@ -14,4 +14,12 @@ export class ElectronAPI implements PlatformAPI {
             }, 1000);
         });
     }    
+
+    public loadWorkspace(p: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            // Simulate loading a workspace
+            console.log(`Loading workspace at ${p}`);
+            resolve();
+        });
+    }
 }

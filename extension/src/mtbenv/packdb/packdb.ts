@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs' ;
+import * as os from 'os' ;
 import { MTBPack } from "./mtbpack";
 import { URI } from 'vscode-uri';
 import { MTBNames } from '../misc/mtbnames';
@@ -11,13 +12,7 @@ export class PackDB {
     }
 
     public get isEarlyAccessPackActive() : boolean {
-        if (process.env.MTB_ENABLE_EARLY_ACCESS) {
-            let pack = this.packs_.get(process.env.MTB_ENABLE_EARLY_ACCESS) ;
-            if (pack && pack.packType() === 'early-access-pack') {
-                return true ;
-            }
-        }
-        return false ;
+        return this.eap !== undefined ;
     }
 
     public get eap() : MTBPack | undefined {
@@ -27,6 +22,17 @@ export class PackDB {
                 return pack ;
             }
         }
+
+        let settings = path.join(os.homedir(), '.modustoolbox', 'settings.json') ;
+        if (fs.existsSync(settings)) {
+            let data = JSON.parse(fs.readFileSync(settings, 'utf8')) ;
+            if (data && data.mtb && data.mtb.enabled_eap) {
+                let pack = this.packs_.get(data.mtb.enabled_eap) ;
+                if (pack && pack.packType() === 'early-access-pack') {
+                    return pack ;
+                }
+            }
+        }        
         return undefined ;
     }
 
@@ -72,14 +78,15 @@ export class PackDB {
 
     public getActivePacks() : MTBPack[] {
         let packs : MTBPack[] = [] ;
-        this.packs_.forEach((pack) => {
+        for(let pack of this.packs_.values()) {
             if (pack.packType() !== 'early-access-pack') {
                 packs.push(pack) ;
             }
-            else if (process.env.MTB_ENABLE_EARLY_ACCESS && process.env.MTB_ENABLE_EARLY_ACCESS === pack.featureId()) {
-                packs.push(pack) ;
-            }
-        });
+        }
+
+        if (this.isEarlyAccessPackActive) {
+            packs.push(this.eap!) ;
+        }
         return packs ;
     }
 }

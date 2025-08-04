@@ -1,4 +1,4 @@
-import { BackEndToFrontEndResponse, FrontEndToBackEndRequest, PlatformType } from "../../comms";
+import { BackEndToFrontEndResponse, FrontEndToBackEndRequest, PlatformType } from "../../../comms";
 
 export interface PipeInterface {
     get displayName() : string ;

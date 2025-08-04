@@ -261,10 +261,248 @@
       }
     }
   }
+  
+  .example-selection-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    width: 100%;
+    
+    .example-field {
+      flex: 1;
+      min-width: 300px;
+    }
+    
+    .example-description-panel {
+      flex: 1;
+      min-width: 250px;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid;
+      transition: all 0.3s ease;
+      
+      .description-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        margin-bottom: 12px;
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+      
+      .description-content {
+        line-height: 1.5;
+        font-size: 0.9rem;
+        
+        &.no-description {
+          font-style: italic;
+          opacity: 0.7;
+        }
+        
+        // HTML content styling
+        p {
+          margin: 0 0 8px 0;
+          
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+        
+        ul, ol {
+          margin: 8px 0;
+          padding-left: 20px;
+        }
+        
+        li {
+          margin-bottom: 4px;
+        }
+        
+        strong, b {
+          font-weight: 600;
+        }
+        
+        em, i {
+          font-style: italic;
+        }
+        
+        code {
+          padding: 2px 4px;
+          border-radius: 4px;
+          font-family: 'Courier New', monospace;
+          font-size: 0.85em;
+        }
+        
+        a {
+          text-decoration: none;
+          
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+  }
+  
+  .bsp-selection-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    width: 100%;
+    
+    .bsp-field {
+      flex: 1;
+      min-width: 300px;
+    }
+    
+    .bsp-description-panel {
+      flex: 2;
+      min-width: 500px;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid;
+      transition: all 0.3s ease;
+      
+      .description-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        margin-bottom: 12px;
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+      
+      .description-content {
+        line-height: 1.5;
+        font-size: 0.9rem;
+        
+        &.no-description {
+          font-style: italic;
+          opacity: 0.7;
+        }
+        
+        // HTML content styling
+        p {
+          margin: 0 0 8px 0;
+          
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+        
+        ul, ol {
+          margin: 8px 0;
+          padding-left: 20px;
+        }
+        
+        li {
+          margin-bottom: 4px;
+        }
+        
+        strong, b {
+          font-weight: 600;
+        }
+        
+        em, i {
+          font-style: italic;
+        }
+        
+        code {
+          padding: 2px 4px;
+          border-radius: 4px;
+          font-family: 'Courier New', monospace;
+          font-size: 0.85em;
+        }
+        
+        a {
+          text-decoration: none;
+          
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+    }
+  }
+  
+  // Theme support for description panels
+  .example-description-panel,
+  .bsp-description-panel {
+    background-color: var(--card-background);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+    
+    .description-header {
+      color: var(--text-primary);
+      
+      mat-icon {
+        color: var(--accent-color);
+      }
+    }
+    
+    .description-content {
+      color: var(--text-secondary);
+      
+      &.no-description {
+        color: var(--text-disabled);
+      }
+      
+      // Dark theme HTML content styling
+      code {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #f8f8f2;
+      }
+      
+      a {
+        color: #64b5f6;
+        
+        &:hover {
+          color: #90caf9;
+        }
+      }
+    }
+  }
 }
 
 // Dark theme forms
 .dark-theme {
+  --primary-background: #1a1a1a;
+  --card-background: #2d2d2d;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-disabled: #888888;
+  --accent-color: #4CAF50;
+  --border-color: #444444;
+  
+  .example-selection-container {
+    .example-description-panel {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      
+      &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      }
+    }
+  }
+  
+  .bsp-selection-container {
+    .bsp-description-panel {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      
+      &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      }
+    }
+  }
+  
   .project-form,
   .bsp-form,
   .example-form {
@@ -313,6 +551,66 @@
 
 // Light theme forms
 .light-theme {
+  --primary-background: #ffffff;
+  --card-background: #f8f9fa;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-disabled: #999999;
+  --accent-color: #2196F3;
+  --border-color: #e0e0e0;
+  
+  .example-selection-container {
+    .example-description-panel {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      
+      &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      }
+      
+      .description-content {
+        // Light theme HTML content styling
+        code {
+          background-color: rgba(0, 0, 0, 0.05);
+          color: #d73e48;
+        }
+        
+        a {
+          color: #1976d2;
+          
+          &:hover {
+            color: #1565c0;
+          }
+        }
+      }
+    }
+  }
+  
+  .bsp-selection-container {
+    .bsp-description-panel {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      
+      &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      }
+      
+      .description-content {
+        // Light theme HTML content styling
+        code {
+          background-color: rgba(0, 0, 0, 0.05);
+          color: #d73e48;
+        }
+        
+        a {
+          color: #1976d2;
+          
+          &:hover {
+            color: #1565c0;
+          }
+        }
+      }
+    }
+  }
+  
   .project-form,
   .bsp-form,
   .example-form {
@@ -494,16 +792,101 @@
   .review-item {
     margin-bottom: 12px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     
     strong {
       min-width: 140px;
+      flex-shrink: 0;
+    }
+    
+    // HTML content styling for description
+    span[innerHTML] {
+      flex: 1;
+      
+      p {
+        margin: 0 0 8px 0;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+      
+      ul, ol {
+        margin: 4px 0;
+        padding-left: 20px;
+      }
+      
+      li {
+        margin-bottom: 2px;
+      }
+      
+      strong, b {
+        font-weight: 600;
+      }
+      
+      em, i {
+        font-style: italic;
+      }
+      
+      code {
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85em;
+      }
+      
+      a {
+        text-decoration: none;
+        
+        &:hover {
+          text-decoration: underline;
+        }
+      }
     }
   }
   
   mat-divider {
     margin: 16px 0;
+  }
+}
+
+/* Success Section */
+.success-section {
+  max-width: 600px;
+  margin-bottom: 32px;
+}
+
+.success-card {
+  border-radius: 12px;
+  border: 2px solid #4caf50;
+  
+  .success-avatar {
+    background-color: #4caf50;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+  
+  .success-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    
+    mat-icon {
+      color: #4caf50;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
   }
 }
 
@@ -518,6 +901,22 @@
     
     .review-item {
       color: var(--dark-text-primary); // Changed to primary white text for better visibility
+      
+      // HTML content styling for dark theme
+      span[innerHTML] {
+        code {
+          background-color: rgba(255, 255, 255, 0.1);
+          color: #f8f8f2;
+        }
+        
+        a {
+          color: #64b5f6;
+          
+          &:hover {
+            color: #90caf9;
+          }
+        }
+      }
     }
     
     // Ensure BSP-related information is clearly visible in white
@@ -544,6 +943,54 @@
     }
     
     .review-item {
+      color: var(--light-text-secondary);
+      
+      // HTML content styling for light theme
+      span[innerHTML] {
+        code {
+          background-color: rgba(0, 0, 0, 0.05);
+          color: #d73e48;
+        }
+        
+        a {
+          color: #1976d2;
+          
+          &:hover {
+            color: #1565c0;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Dark theme success section
+.dark-theme {
+  .success-card {
+    background-color: var(--dark-bg-secondary);
+    color: var(--dark-text-primary);
+    
+    .mat-mdc-card-title {
+      color: var(--dark-text-primary);
+    }
+    
+    .mat-mdc-card-subtitle {
+      color: var(--dark-text-secondary);
+    }
+  }
+}
+
+// Light theme success section
+.light-theme {
+  .success-card {
+    background-color: var(--light-bg-primary);
+    color: var(--light-text-primary);
+    
+    .mat-mdc-card-title {
+      color: var(--light-text-primary);
+    }
+    
+    .mat-mdc-card-subtitle {
       color: var(--light-text-secondary);
     }
   }
@@ -590,6 +1037,32 @@
       margin-top: 0;
       width: 100%;
       height: 48px;
+    }
+  }
+  
+  .example-selection-container {
+    flex-direction: column;
+    gap: 16px;
+    
+    .example-field {
+      min-width: auto;
+    }
+    
+    .example-description-panel {
+      min-width: auto;
+    }
+  }
+  
+  .bsp-selection-container {
+    flex-direction: column;
+    gap: 16px;
+    
+    .bsp-field {
+      min-width: auto;
+    }
+    
+    .bsp-description-panel {
+      min-width: auto;
     }
   }
   

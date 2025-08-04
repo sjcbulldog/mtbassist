@@ -1,9 +1,9 @@
 import { Injectable, Pipe } from '@angular/core';
 import { Subject } from 'rxjs';
-import { PipeInterface } from '../pipes/pipeInterface';
-import { ElectronPipe } from '../pipes/electronPipe';
-import { VSCodePipe } from '../pipes/vscodePipe';
-import { BrowserPipe } from '../pipes/browserPipe';
+import { PipeInterface } from './pipes/pipeInterface';
+import { ElectronPipe } from './pipes/electronPipe';
+import { VSCodePipe } from './pipes/vscodePipe';
+import { BrowserPipe } from './pipes/browserPipe';
 import { BackEndToFrontEndResponse, DevKitData, BSPIdentifier, FrontEndToBackEndRequest } from '../../comms';
 import { ManifestManager } from './manifestmgr';
 import { ProjectManager } from './projectmgr';
@@ -31,6 +31,12 @@ export class BackendService {
 
     this.manifestManager_ = new ManifestManager(this);
     this.projectManager_ = new ProjectManager(this);
+
+    this.sendRequest({
+      request: 'setPlatform',
+      data: {
+        platform: this.pipe_ ? this.pipe_.platform : 'unknown'
+      }}) ;
   }
 
   public get manifestMgr(): ManifestManager {
@@ -69,7 +75,6 @@ export class BackendService {
     }
   }
 
-
   public setNavTab(index: number) {
     this.log(`Setting navigation tab to index: ${index}`);
     this.navTab.next(index);
@@ -91,6 +96,15 @@ export class BackendService {
     return this.projectManager_.createProject(projectData);
   }
 
+  public async loadWorkspace(path: string): Promise<void> {
+    if (this.pipe_) {
+      this.pipe_.sendRequest({
+        request: 'loadWorkspace',
+        data: path
+      });
+    }
+  }
+
   private messageProc(cmd: BackEndToFrontEndResponse) {
     let str = JSON.stringify(cmd) ;
     if (str.length > 128) {
@@ -103,6 +117,15 @@ export class BackendService {
     }
     else if (cmd.response === 'setCodeExamples') {
       this.manifestManager_.processCodeExamples(cmd);
+    }
+    else if (cmd.response === 'createProjectResult') {
+      this.projectManager_.createProjectResponse(cmd);
+    }
+    else if (cmd.response === 'success') {
+      this.log(`Command succeeded: ${cmd.data}`);
+    }
+    else if (cmd.response === 'error') {
+      this.log(`Command failed: ${cmd.data}`);
     }
     else if (cmd.response === 'browseForFolderResult') {
       this.browserFolder.next(cmd.data as string | null);
