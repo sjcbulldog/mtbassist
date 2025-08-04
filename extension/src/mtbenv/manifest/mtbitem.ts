@@ -26,12 +26,36 @@ export class MTBItem
     public readonly source: URI ;
     public readonly id: string;
     public readonly versions: MTBItemVersion[];
+    public readonly provides: string[] = [] ;
+    public readonly requires: string[] = [] ;
+    public readonly requiresv2: string[] = [] ;
 
     constructor(src: URI, id: string, name: string, versions: MTBItemVersion[]) {
         this.name = name ;
         this.source = src ;
         this.id = id ;
         this.versions = versions ;
+    }
+
+    public setProvides(provides: string[]) {    
+        this.provides.push(...provides) ;
+        this.provides.sort() ;
+    }
+
+    public setRequires(reqs: string[]) {
+        this.requires.push(...reqs) ;
+        this.requires.sort() ;
+    }
+
+    public setRequires2(reqs: string[]) {
+        this.requiresv2.push(...reqs) ;
+        this.requiresv2.sort() ;
+    }
+
+    public get getLatestVersion() : MTBItemVersion | undefined {
+        if (this.versions.length > 0) {
+            return this.versions[0] ;
+        }
     }
 
     public containsVersion(num: string) : boolean {

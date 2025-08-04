@@ -54,10 +54,71 @@ export class MTBManifestDB {
         return Array.from(this.boards_.values()) ;
     }
 
+    private getLatestBSPFromId(id: string) : [MTBBoard, MTBItemVersion] | [] {
+        let ret : [MTBBoard, MTBItemVersion] | [] = [] ;
+        let bsp = this.boards_.get(id);
+        if (bsp) {
+            let latestVersion = bsp!.getLatestVersion;
+            if (latestVersion) {
+                ret = [bsp, latestVersion];
+            }
+        }
+        return ret;
+    }
+
+    private matchCodeExampleToBSP(example: MTBApp, bsp: MTBBoard, version: MTBItemVersion): boolean {
+        let provides : string[] = [...bsp.provides, ...version.provides] ;
+
+        for(let app of example.versions) {
+            let reqs = [...example.requirements, ...app.requirements] ;
+            let reqsv2 = [...example.requirementsv2, ...app.requirementsv2] ;
+
+            let v1 = true ;
+            for(let req of reqs) {
+                if (!provides.includes(req)) {
+                    v1 = false;
+                    break;
+                }
+            }
+
+            let v2 = true ;
+            if (v1) {
+                for(let req2 of reqsv2) {
+                    if (req2.startsWith('[') && req2.endsWith(']')) {
+                        let orgroup = req2.substring(1, req2.length - 1).split(',');
+                        let found = false;
+                        for(let org of orgroup) {
+                            if (provides.includes(org.trim())) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            v2 = false;
+                            break;
+                        }
+                    }
+                    else {
+                        // This is a non-versioned requirement, just check if the board provides it
+                        if (!bsp.provides.includes(req2)) {
+                            v2 = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (v1 && v2) {
+                return true ;
+            }
+        }
+        return false;
+    }
+
     public getCodeExamplesForBSP(bspId: string): Promise<MTBApp[]> {
         let ret = new Promise<MTBApp[]>((resolve, reject) => {
-            let bsp = this.boards_.get(bspId);
-            if (!bsp) {
+            let [bsp, version] = this.getLatestBSPFromId(bspId) ;
+            if (bsp === undefined || version === undefined) {
                 resolve([]);
                 return;
             }
@@ -67,15 +128,7 @@ export class MTBManifestDB {
                 if (!app.category) {
                     continue ;
                 }
-                
-                let valid = true ;
-                for(let req of app.requirements) {
-                    if (!bsp.provides.includes(req)) {
-                        valid = false;
-                        break ;
-                    }
-                }
-                if (valid) {
+                if (this.matchCodeExampleToBSP(app, bsp, version)) {
                     apps.push(app);
                 }
             }

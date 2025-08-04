@@ -1,11 +1,10 @@
 import * as path from 'path' ;
-import * as fs from 'fs' ;
-import * as exec from 'child_process' ;
 import * as os from 'os' ;
 import * as vscode from 'vscode' ;
 import { MTBDevKit } from './mtbdevkit';
 import { MtbManagerBase } from '../mgrbase/mgrbase';
 import { MTBAssistObject } from '../extobj/mtbassistobj';
+import { ModusToolboxEnvironment } from '../mtbenv';
 
 export class MTBDevKitMgr extends MtbManagerBase {
 
@@ -113,7 +112,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                     }
 
                     args.push(serial) ;
-                    this.runCmdLogOutput(os.homedir(), fwload, args)
+                    ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, args)
                         .then((result) => {
                             this.scanForDevKits()
                             .then((st: boolean) => {
@@ -159,7 +158,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                 let opts = {
                     modal: true
                 } ;
-                this.runCmdLogOutput(os.homedir(), fwload, args)
+                ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, args)
                 .then((result) => {
                     this.scanForDevKits()
                     .then((st: boolean) => {
@@ -208,7 +207,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
 
                 let args: string[] = ["--device-list"] ;
 
-                this.runCmdCaptureOutput(os.homedir(), fwload, args)
+                ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, args)
                     .then((result) => { (async() => { 
                             let res: [number, string[]] = result as [number, string[]] ;
                             if (res[0] !== 0 && !this.isNotConnected(res)) {
@@ -371,7 +370,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
             }
             let args: string[] = [ "--info", kit.serial] ;
 
-            this.runCmdCaptureOutput(os.homedir(), fwload, args)
+            ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, args)
             .then((result) => {
                 let res: [number, string[]] = result as [number, string[]] ;
                 if (res[0] !== 0) {
@@ -431,39 +430,6 @@ export class MTBDevKitMgr extends MtbManagerBase {
         return ret ;
     }
 
-    private async runCmdCaptureOutput(cwd: string, cmd: string, args: string[]) : Promise<[number, string[]]> {
-        let ret: Promise<[number, string[]]> = new Promise<[number, string[]]>((resolve, reject) => {
-            (async () => {
-                let text: string = "" ;
-                let cp: exec.ChildProcess = exec.spawn(cmd, args , 
-                    {
-                        cwd: cwd,
-                        windowsHide: true
-                    }) ;
-
-                cp.stdout?.on('data', (data) => {
-                    text += (data as Buffer).toString() ;
-                }) ;
-                cp.stderr?.on('data', (data) => {
-                    text += (data as Buffer).toString() ;                    
-                }) ;
-                cp.on('error', (err) => {
-                    reject(err);
-                }) ;
-                cp.on('close', (code) => {
-                    if (!code) {
-                        code = 0 ;
-                    }
-
-                    let ret: string[] = text.split('\n') ;
-                    resolve([code, ret]);
-                });
-            })() ;
-        }) ;
-
-        return ret;
-    }
-
     private sendToLog(text: string) : string {
         while (true) {
             let index: number = text.indexOf('\n') ;
@@ -478,41 +444,6 @@ export class MTBDevKitMgr extends MtbManagerBase {
 
         return text ;
     }
-
-    private async runCmdLogOutput(cwd: string, cmd: string, args: string[]) : Promise<[number, string[]]> {
-        let ret: Promise<[number, string[]]> = new Promise<[number, string[]]>((resolve, reject) => {
-            (async () => {
-                let text: string = "" ;
-                let cp: exec.ChildProcess = exec.spawn(cmd, args , 
-                    {
-                        cwd: cwd,
-                        windowsHide: true
-                    }) ;
-
-                cp.stdout?.on('data', (data) => {
-                    text += (data as Buffer).toString() ;
-                    text = this.sendToLog(text) ;
-                }) ;
-                cp.stderr?.on('data', (data) => {
-                    text += (data as Buffer).toString() ;
-                    text = this.sendToLog(text) ;
-                }) ;
-                cp.on('error', (err) => {
-                    reject(err);
-                }) ;
-                cp.on('close', (code) => {
-                    if (!code) {
-                        code = 0 ;
-                    }
-
-                    let ret: string[] = text.split('\n') ;
-                    resolve([code, ret]);
-                });
-            })() ;
-        }) ;
-
-        return ret;
-    }    
 
     private findFWLoader() : string | undefined {
         let ext = this.ext ;

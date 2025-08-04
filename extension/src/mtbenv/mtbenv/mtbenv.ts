@@ -4,14 +4,15 @@ import { PackDB } from '../packdb/packdb';
 import { PackDBLoader } from '../packdb/packdbloader';
 import { MTBToolSource, ToolsDB } from '../toolsdb/toolsdb';
 import { MTBUtils } from '../misc/mtbutils';
-import * as path from 'path';
-import * as fs from 'fs';
 import { MTBVersion } from '../misc/mtbversion';
 import { MTBAppInfo } from '../appdata/mtbappinfo';
 import { MTBOptProgramCodeGen, MTBTool } from '../toolsdb/mtbtool';
 import { MTBCommand } from './mtbcmd';
 import * as winston from 'winston';
 import * as EventEmitter from 'events';
+import * as exec from 'child_process' ;
+import * as path from 'path';
+import * as fs from 'fs';
 
 export class ModusToolboxEnvironment extends EventEmitter {
     // Static variables
@@ -213,6 +214,39 @@ export class ModusToolboxEnvironment extends EventEmitter {
         }
         return ret;
     }
+
+    public static async runCmdCaptureOutput(cwd: string, cmd: string, args: string[]) : Promise<[number, string[]]> {
+        let ret: Promise<[number, string[]]> = new Promise<[number, string[]]>((resolve, reject) => {
+            (async () => {
+                let text: string = "" ;
+                let cp: exec.ChildProcess = exec.spawn(cmd, args , 
+                    {
+                        cwd: cwd,
+                        windowsHide: true
+                    }) ;
+
+                cp.stdout?.on('data', (data) => {
+                    text += (data as Buffer).toString() ;
+                }) ;
+                cp.stderr?.on('data', (data) => {
+                    text += (data as Buffer).toString() ;                    
+                }) ;
+                cp.on('error', (err) => {
+                    reject(err);
+                }) ;
+                cp.on('close', (code) => {
+                    if (!code) {
+                        code = 0 ;
+                    }
+
+                    let ret: string[] = text.split('\n') ;
+                    resolve([code, ret]);
+                });
+            })() ;
+        }) ;
+
+        return ret;
+    }    
 
     private runCodeGenerator(pass: string, tool: MTBTool) : MTBCommand[]{
         let cmds: MTBCommand[] = [] ;

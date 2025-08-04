@@ -6,6 +6,7 @@ import { VSCodePipe } from '../pipes/vscodePipe';
 import { BrowserPipe } from '../pipes/browserPipe';
 import { BackEndToFrontEndResponse, DevKitData, BSPIdentifier, FrontEndToBackEndRequest } from '../../comms';
 import { ManifestManager } from './manifestmgr';
+import { ProjectManager } from './projectmgr';
 
 declare var acquireVsCodeApi: any | undefined ;
 
@@ -16,6 +17,7 @@ export class BackendService {
   private pipe_?: PipeInterface ;
   private isDarkTheme_ : boolean = true ;
   private manifestManager_: ManifestManager;
+  private projectManager_ : ProjectManager ;
 
   navTab: Subject<number> = new Subject<number>() ;
   browserFolder: Subject<string | null> = new Subject<string | null>();
@@ -28,6 +30,7 @@ export class BackendService {
     }
 
     this.manifestManager_ = new ManifestManager(this);
+    this.projectManager_ = new ProjectManager(this);
   }
 
   public get manifestMgr(): ManifestManager {
@@ -85,19 +88,7 @@ export class BackendService {
   }
 
   public async createProject(projectData: any): Promise<boolean> {
-    return new Promise((resolve) => {
-      this.log(`Creating project: ${JSON.stringify(projectData)}`);
-      
-      if (this.pipe_) {
-        this.pipe_.sendRequest({
-          request: 'platformSpecific',
-          data: {
-            command: 'createProject',
-            data: projectData
-          }
-        });
-      }
-    });
+    return this.projectManager_.createProject(projectData);
   }
 
   private messageProc(cmd: BackEndToFrontEndResponse) {

@@ -1,18 +1,18 @@
-import { MTBLoadFlags } from "../mtbenv/mtbenv/loadflags";
 import { ModusToolboxEnvironment } from "../mtbenv/mtbenv/mtbenv";
 import { URI } from "vscode-uri";
-import { PlatformAPI } from "./platform/platformapi";
 import { BrowserAPI } from "./platform/browserapi";
 import { VSCodeAPI } from "./platform/vscodeapi";
 import { ElectronAPI } from "./platform/electronapi";
-import { BackEndToFrontEndResponse, FrontEndToBackEndRequest, PlatformType } from "../comms";
+import { BackEndToFrontEndResponse, CodeExampleIdentifier, FrontEndToBackEndRequest, PlatformType } from "../comms";
 import { BSPMgr } from "./bspmgr";
+import { MTBApp } from "../mtbenv/manifest/mtbapp";
 import * as winston from 'winston';
+import { PlatformAPI } from "./platform/platformapi";
 
 export class BackendService {
     private static instance: BackendService | null = null;
 
-    private apis_? : PlatformAPI ;
+    private apis_: PlatformAPI | undefined = undefined;
     private env_ : ModusToolboxEnvironment | undefined;
     private logger_ : winston.Logger ;
     private bsps_ : BSPMgr | undefined;
@@ -63,11 +63,47 @@ export class BackendService {
         return this.bsps_!;
     }
 
+    public processRequest(request: FrontEndToBackEndRequest) : Promise<BackEndToFrontEndResponse | null> {
+        let ret : Promise<BackEndToFrontEndResponse | null> ;
+
+        let handler = this.cmdhandler_.get(request.request) ;
+        if (handler) {
+            ret = handler(request) ;
+        }
+        else {
+            ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+                resolve({
+                    response: 'error',
+                    data: `No handler found for command: ${request.request}`
+                }) ;
+            }) ;
+        }
+        return ret;
+    }    
+
     private bindCommandHandlers(): void {
         this.cmdhandler_.set('logMessage', this.logMessage.bind(this));
         this.cmdhandler_.set('setPlatform', this.setPlatform.bind(this));
         this.cmdhandler_.set('getDevKits', this.getDevKits.bind(this)) ;
         this.cmdhandler_.set('getCodeExamples', this.getCodeExamples.bind(this));
+        this.cmdhandler_.set('createProject', this.createProject.bind(this));
+    }
+
+    private convertCodeExamples(examples: MTBApp[]): CodeExampleIdentifier[] {
+        let codeExamples: CodeExampleIdentifier[] = [];
+        for(let example of examples) {
+            if (!example.id || !example.name || !example.category) {
+                this.logger_.warn(`Code example ${example.name} is missing required fields.`);
+                continue;
+            }
+            codeExamples.push({
+                id: example.id,
+                name: example.name,
+                category: example.category,
+                description: example.description || ''
+            });
+        }
+        return codeExamples;
     }
 
     private getCodeExamples(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
@@ -77,7 +113,7 @@ export class BackendService {
                     .then((examples) => {
                         resolve({
                             response: 'setCodeExamples',
-                            data: examples
+                            data: this.convertCodeExamples(examples)
                         });
                     })
                     .catch((error) => {
@@ -118,7 +154,7 @@ export class BackendService {
                         break ;
 
                     case 'vscode':
-                        this.apis_ = new VSCodeAPI();
+                        this.apis_ = new VSCodeAPI(this.env_!);
                         break;
 
                     case 'electron':
@@ -141,6 +177,13 @@ export class BackendService {
         return ret ;
     }
 
+    private createProject(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            console.log('createProject request received:', request.data);
+        }) ;
+        return ret;
+    }
+
     private logMessage(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             let resp: BackEndToFrontEndResponse | null = null;
@@ -160,21 +203,4 @@ export class BackendService {
         return ret;
     }
 
-    public processRequest(request: FrontEndToBackEndRequest) : Promise<BackEndToFrontEndResponse | null> {
-        let ret : Promise<BackEndToFrontEndResponse | null> ;
-
-        let handler = this.cmdhandler_.get(request.request) ;
-        if (handler) {
-            ret = handler(request) ;
-        }
-        else {
-            ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
-                resolve({
-                    response: 'error',
-                    data: `No handler found for command: ${request.request}`
-                }) ;
-            }) ;
-        }
-        return ret;
-    }
 } ;

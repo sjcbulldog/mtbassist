@@ -25,7 +25,6 @@ export class MTBBoard extends MTBItem {
     public readonly summary: string;
     public readonly boardUri: URI;
     public readonly documentationUri: URI;
-    public readonly provides: string[];
     public readonly chips: Map<string, string>;
 
     //id, name, category, desc, summary, boardUri, documentationUri, provs, chips, versions) ;
@@ -41,8 +40,7 @@ export class MTBBoard extends MTBItem {
         this.documentationUri = docUri;
         this.chips = chips;
 
-        this.provides = [...provs] ;
-        this.provides.sort() ;
+        this.setProvides(provs) ;   
     }
 
     public chipString() : string {

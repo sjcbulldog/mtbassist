@@ -27,10 +27,11 @@ export class MTBApp extends MTBItem {
     public readonly description: string;
     public category : string | undefined;
     public readonly requirements: string[];
+    public readonly requirementsv2: string[] ;
     public readonly uri: URI;
     
     constructor(src: URI, name: string, id: string, uri: URI, description: string,
-        requirements: string[], versions: MTBItemVersion[], category?: string)
+        requirements: string[], requirementsv2: string[], versions: MTBItemVersion[], category?: string)
     {
         super(src, id, name, versions) ;
 
@@ -38,6 +39,8 @@ export class MTBApp extends MTBItem {
         this.description = description;
         this.requirements = [...requirements];
         this.requirements.sort() ;
+        this.requirementsv2 = [...requirementsv2] ;
+        this.requirementsv2.sort() ;
         this.category = category ;
     }
 

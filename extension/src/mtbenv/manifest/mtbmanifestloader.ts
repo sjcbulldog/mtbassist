@@ -296,11 +296,16 @@ export class MtbManifestLoader {
         let uri: URI = obj.uri as URI;
         let desc: string = obj.description as string;
         let reqs: string[] = [];
+        let reqsv2: string[] = [];
         let versions: MTBItemVersion[] = [];
         let category: string | undefined = obj.category as string | undefined;
 
-        if (obj.req_capabilities) {
+        if (obj.req_capabilities && typeof obj.req_capabilities === 'string') {
             reqs = (obj.req_capabilities as string).split(' ');
+        }
+
+        if (obj.req_capabilities_v2 && typeof obj.req_capabilities_v2 === 'string') {
+            reqsv2 = (obj.req_capabilities_v2 as string).split(' ');
         }
 
         if (obj.versions) {
@@ -312,21 +317,27 @@ export class MtbManifestLoader {
                 let num: string = one.num as string;
                 let commit: string = one.commit as string;
                 let reqperver: string[] = [];
+                let reqperver2: string[] = [] ;
 
                 if (one['$']) {
                     let attrs = one['$'];
                     if (attrs.req_capabilities_per_version) {
                         reqperver = (attrs.req_capabilities_per_version as string).split(' ');
                     }
+
+                    if (attrs.req_capabilities_per_version_v2 && typeof attrs.req_capabilities_per_version_v2 === 'string') {
+                        reqperver2 = (attrs.req_capabilities_per_version_v2 as string).split(' ');
+                    }
                 }
 
                 let vers: MTBItemVersion = new MTBItemVersion(num, commit);
                 vers.setRequirements(reqperver);
+                vers.setRequirements2(reqperver2);
                 versions.push(vers);
             }
         }
 
-        let app: MTBApp = new MTBApp(src, name, id, uri, desc, reqs, versions, category);
+        let app: MTBApp = new MTBApp(src, name, id, uri, desc, reqs, reqsv2, versions, category);
         this.db.addApp(this.logger_, app);
     }
 
@@ -367,16 +378,17 @@ export class MtbManifestLoader {
 
                 if (one['$']) {
                     let attrs = one['$'];
-                    if (attrs.req_capabilities_per_version) {
+                    if (attrs.prov_capabilities_per_version) {
                         provpervers = (attrs.prov_capabilities_per_version as string).split(' ');
                     }
+
                     if (attrs.flow_version) {
                         flows = (attrs.flow_version as string).split(' ');
                     }
                 }
 
                 let vers: MTBItemVersion = new MTBItemVersion(num, commit);
-                vers.setRequirements(provpervers);
+                vers.setProvides(provpervers);
                 vers.setFlows(flows);
                 versions.push(vers);
             }

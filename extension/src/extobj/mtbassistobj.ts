@@ -28,8 +28,10 @@ export class MTBAssistObject {
 
     private constructor(context: vscode.ExtensionContext) {
         this.context_ = context;
+        let logstate = this.context_.globalState.get('logLevel', 'debug') ;
+
         this.logger_ = winston.createLogger({
-            level: 'debug',
+            level: logstate,
             format: winston.format.combine(
                 winston.format.timestamp(),
                 winston.format.prettyPrint()
@@ -380,7 +382,7 @@ export class MTBAssistObject {
                     if (response) {
                         this.panel_!.webview.postMessage(response);
                     }
-                })
+                }) ;
             }
         }) ;
     }

@@ -29,6 +29,8 @@ export class MTBItemVersion {
     public readonly num: string;
     public readonly commit: string;
     public requirements: string[];
+    public requirementsv2: string[] ;
+    public provides: string[];
     public flows: string[];
     public toolsMinVersion: string | undefined;
     public dependencies: MTBItemVersionDependency[] ;
@@ -38,12 +40,22 @@ export class MTBItemVersion {
         this.commit = commit;
         this.toolsMinVersion = undefined;
         this.requirements = [];
+        this.requirementsv2 = [] ;
+        this.provides = [];
         this.flows = [];
         this.dependencies = [] ;
     }
 
+    public setProvides(provides: string[]) {
+        this.provides = provides;       
+    }
+
     public setRequirements(reqs: string[]) {
         this.requirements = reqs;
+    }
+
+    public setRequirements2(reqs: string[]) {
+        this.requirementsv2 = reqs;
     }
 
     public setFlows(flows: string[]) {

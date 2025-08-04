@@ -7,6 +7,7 @@ export type FrontEndToBackEndRequestType =
     'getDevKits' |
     'getCodeExamples' |
     'getStarted' |
+    'createProject' |
     'platformSpecific' |
     'browseForFolder' ;
 
@@ -30,6 +31,12 @@ export interface CodeExampleIdentifier {
     id: string;
     category: string ;
     description?: string; // Optional description of the example
+}
+
+export interface CreateProjectResponse {
+    uuid: string ;
+    success: boolean ;
+    message?: string;
 }
 
 export type DevKitDataType = 'cached' | 'manifest' | 'empty' | 'error';
