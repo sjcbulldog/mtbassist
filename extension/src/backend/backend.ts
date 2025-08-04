@@ -179,7 +179,27 @@ export class BackendService {
 
     private createProject(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
-            console.log('createProject request received:', request.data);
+            this.apis_!.createProject(request.data.location, request.data.appdir, request.data.bspid, request.data.ceid)
+            .then(([status, messages]) => { 
+                if (status === 0) {
+                    resolve({
+                        response: 'success',
+                        data: messages
+                    });
+                } else {
+                    resolve({
+                        response: 'error',
+                        data: messages.join('\n')
+                    });
+                }
+            })
+            .catch((error) => {
+                this.logger_.error(`Error creating project: ${error.message}`);
+                resolve({
+                    response: 'error',
+                    data: `Error creating project: ${error.message}`
+                });
+            });
         }) ;
         return ret;
     }

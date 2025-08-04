@@ -198,8 +198,10 @@
               <mat-select formControlName="example" 
                          (selectionChange)="onExampleChange()"
                          [disabled]="isLoading || examples.length === 0">
-                <mat-option *ngFor="let example of examples" [value]="example">
-                  {{ example }}
+                <mat-option *ngFor="let example of examples" [value]="example.id">
+                  <div class="example-option">
+                    <div class="example-name">{{ example.name }}</div>
+                  </div>
                 </mat-option>
               </mat-select>
               <mat-hint>Select a specific code example to start with</mat-hint>
@@ -279,7 +281,10 @@
                 <strong>Example Category:</strong> {{ selectedExampleCategory }}
               </div>
               <div class="review-item">
-                <strong>Code Example:</strong> {{ selectedExample }}
+                <strong>Code Example:</strong> {{ selectedExample?.name }}
+              </div>
+              <div class="review-item" *ngIf="selectedExample?.description">
+                <strong>Description:</strong> {{ selectedExample?.description }}
               </div>
             </mat-card-content>
           </mat-card>

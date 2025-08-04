@@ -13,7 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { BackendService } from '../backend/backend-service';
-import { BSPIdentifier } from '../../comms';
+import { BSPIdentifier, CodeExampleIdentifier } from '../../comms';
 import { MatDivider } from "@angular/material/divider";
 
 @Component({
@@ -48,12 +48,12 @@ export class CreateProject implements OnInit, OnDestroy {
     categories: string[] = [];
     bsps: BSPIdentifier[] = [];
     exampleCategories: string[] = [];
-    examples: string[] = [];
+    examples: CodeExampleIdentifier[] = [];
 
     selectedCategory: string = '';
     selectedBSP: BSPIdentifier | null = null;
     selectedExampleCategory: string = '';
-    selectedExample: string = '';
+    selectedExample: CodeExampleIdentifier | null = null;
 
     constructor(
         private formBuilder: FormBuilder,
@@ -140,7 +140,7 @@ export class CreateProject implements OnInit, OnDestroy {
         this.selectedBSP = this.bsps.find(bsp => bsp.id === bspId) || null;
         this.exampleSelectionForm.patchValue({ exampleCategory: '', example: '' });
         this.selectedExampleCategory = '';
-        this.selectedExample = '';
+        this.selectedExample = null;
         this.exampleCategories = [];
         this.examples = [];
 
@@ -163,7 +163,7 @@ export class CreateProject implements OnInit, OnDestroy {
 
         this.selectedExampleCategory = category;
         this.exampleSelectionForm.patchValue({ example: '' });
-        this.selectedExample = '';
+        this.selectedExample = null;
         this.examples = [];
 
         try {
@@ -171,8 +171,7 @@ export class CreateProject implements OnInit, OnDestroy {
             // Load examples for the selected BSP and category
             const allExamples = await this.backendService.manifestMgr.getExamplesForBSP(this.selectedBSP.id);
             this.examples = allExamples
-                .filter(example => (example.category || 'General') === category)
-                .map(example => example.name);
+                .filter(example => (example.category || 'General') === category);
         } catch (error) {
             console.error('Failed to load examples:', error);
             this.snackBar.open('Failed to load examples for category', 'Close', { duration: 3000 });
@@ -182,7 +181,8 @@ export class CreateProject implements OnInit, OnDestroy {
     }
 
     onExampleChange() {
-        this.selectedExample = this.exampleSelectionForm.get('example')?.value || '';
+        const exampleValue = this.exampleSelectionForm.get('example')?.value;
+        this.selectedExample = this.examples.find(example => example.id === exampleValue) || null;
     }
 
     async createProject() {
@@ -194,11 +194,8 @@ export class CreateProject implements OnInit, OnDestroy {
         const projectData = {
             name: this.projectInfoForm.value.projectName,
             location: this.projectInfoForm.value.projectLocation,
-            category: this.selectedCategory,
             bsp: this.selectedBSP,
-            exampleCategory: this.selectedExampleCategory,
             example: this.selectedExample,
-            exampleid: this.selectedExample
         };
 
         try {
@@ -229,7 +226,7 @@ export class CreateProject implements OnInit, OnDestroy {
         this.selectedCategory = '';
         this.selectedBSP = null;
         this.selectedExampleCategory = '';
-        this.selectedExample = '';
+        this.selectedExample = null;
         this.bsps = [];
         this.exampleCategories = [];
         this.examples = [];

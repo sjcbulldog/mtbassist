@@ -6,7 +6,7 @@ export class ElectronAPI implements PlatformAPI {
         return 'electron';
     }
 
-    public createProject(projdir: string, bspid: string, ceid: string): Promise<[number, string[]]> {
+    public createProject(projdir: string, appdir: string, bspid: string, ceid: string): Promise<[number, string[]]> {
         return new Promise<[number, string[]]>((resolve, reject) => {
             // Simulate project creation
             setTimeout(() => {

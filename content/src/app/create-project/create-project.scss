@@ -420,6 +420,41 @@
   }
 }
 
+/* Example Option */
+.example-option {
+  .example-name {
+    font-weight: 500;
+  }
+  
+  .example-description {
+    font-size: 0.85rem;
+    margin-top: 2px;
+    opacity: 0.8;
+  }
+}
+
+// Dark theme example options
+.dark-theme .example-option {
+  .example-name {
+    color: var(--dark-text-primary) !important;
+  }
+  
+  .example-description {
+    color: var(--dark-text-secondary) !important;
+  }
+}
+
+// Light theme example options
+.light-theme .example-option {
+  .example-name {
+    color: var(--light-text-primary) !important;
+  }
+  
+  .example-description {
+    color: var(--light-text-secondary) !important;
+  }
+}
+
 /* Loading Indicator */
 .loading-indicator {
   display: flex;
@@ -670,6 +705,16 @@
       color: rgba(255, 255, 255, 0.8) !important; // Light white for BSP details
     }
   }
+  
+  .example-option {
+    .example-name {
+      color: #ffffff !important; // White text for example names
+    }
+    
+    .example-description {
+      color: rgba(255, 255, 255, 0.8) !important; // Light white for example descriptions
+    }
+  }
 }
 
 ::ng-deep .light-theme .mat-mdc-select-panel {
@@ -697,6 +742,16 @@
     }
     
     .bsp-details {
+      color: var(--light-text-secondary) !important;
+    }
+  }
+  
+  .example-option {
+    .example-name {
+      color: var(--light-text-primary) !important;
+    }
+    
+    .example-description {
       color: var(--light-text-secondary) !important;
     }
   }

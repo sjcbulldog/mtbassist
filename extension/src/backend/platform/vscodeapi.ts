@@ -18,7 +18,7 @@ export class VSCodeAPI implements PlatformAPI {
         return 'vscode';
     }
 
-    createProject(projdir: string, bspid: string, ceid: string): Promise<[number, string[]]> {
+    createProject(projdir: string, appdir: string, bspid: string, ceid: string): Promise<[number, string[]]> {
         return new Promise<[number, string[]]>((resolve, reject) => {
             let cliPath = this.findProjectCreatorCLIPath();
             if (cliPath === undefined) {
