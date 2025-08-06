@@ -36,14 +36,17 @@
             <mat-icon>construction</mat-icon>
           </div>
         </div>
-        
-        <div *ngSwitchDefault class="tab-panel">
-          <div class="placeholder-content">
+
+        <div *ngSwitchCase="1" class="tab-panel">
+          <app-app-view *ngIf="tab.component === 'AppView'"></app-app-view>
+          <div *ngIf="!tab.component || tab.component !== 'AppView'" class="placeholder-content">
             <h2>{{ tab.label }}</h2>
-            <p>This section is under development.</p>
+            <p>Content coming soon...</p>
             <mat-icon>construction</mat-icon>
           </div>
         </div>
+
+
       </ng-container>
     </div>
   </mat-tab>

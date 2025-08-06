@@ -30,6 +30,11 @@ export class App {
       label: 'Create New Project',
       component: 'CreateProject',
       icon: 'add_circle'
+    },
+    {
+      label: 'View Application',
+      component: 'AppView',
+      icon: 'view_list'
     }
   ];
 }

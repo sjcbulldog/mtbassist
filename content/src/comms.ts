@@ -75,12 +75,6 @@ export interface Tool {
     id: string ;
 }
 
-export interface MemoryUsage {
-    memtype: string ;       // The name of the memory
-    size: number;           // Size in bytes
-    used: number;           // Used size in bytes
-}
-
 export interface MiddlewareLibrary {
     title: string ;
     id: string ;
@@ -99,4 +93,19 @@ export interface ApplicationInfo {
     projects: ProjectInfo[] ;
     memoryUsage: MemoryUsage[] ;
     tools: Tool[] ;
+}
+
+export interface MemoryUsage {
+  type: string;
+  used: number;
+  total: number;
+  percentage: number;
+  unit: string;
+}
+
+export interface MemoryStats {
+  totalUsed: number;
+  totalAvailable: number;
+  memoryTypes: MemoryUsage[];
+  lastUpdated: Date;
 }
