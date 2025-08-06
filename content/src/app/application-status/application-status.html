@@ -1,0 +1,210 @@
+<div class="application-status">
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading application status...</p>
+  </div>
+
+  <div *ngIf="!isLoading && applicationStatus" class="content">
+    <mat-tab-group class="status-tabs">
+      <!-- Application Information Tab -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>dashboard</mat-icon>
+          Application
+        </ng-template>
+        
+        <div class="tab-content">
+          <!-- Application Overview -->
+          <div class="overview-section">
+            <div class="app-info">
+              <h3>{{ applicationStatus.name }}</h3>
+              <div class="details">
+                <span class="version">v{{ applicationStatus.version }}</span>
+                <span class="status" [class]="applicationStatus.status">
+                  {{ applicationStatus.status }}
+                </span>
+              </div>
+              <p class="build-date">Built: {{ applicationStatus.buildDate | date:'medium' }}</p>
+            </div>
+          </div>
+
+          <!-- Memory Usage Section -->
+          <div class="memory-section">
+            <h3>Memory Usage</h3>
+            <div class="memory-grid">
+              <div *ngFor="let memory of applicationStatus.memory" class="memory-item">
+                <div class="memory-header">
+                  <span class="memory-type">{{ memory.type }}</span>
+                  <span class="percentage">{{ memory.percentage.toFixed(1) }}%</span>
+                </div>
+                <div class="progress-bar">
+                  <div 
+                    class="progress-fill" 
+                    [style.width.%]="memory.percentage"
+                    [style.background-color]="getMemoryColorHex(memory.percentage)"
+                  ></div>
+                </div>
+                <div class="memory-details">
+                  <span class="used">{{ formatBytes(memory.used) }}</span>
+                  <span class="total">/ {{ formatBytes(memory.total) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Application Documentation Section -->
+          <div class="documentation-section">
+            <h3>Application Documentation</h3>
+            <div class="doc-grid">
+              <div *ngFor="let doc of applicationStatus.documentation" class="doc-item" (click)="openDocument(doc)">
+                <div class="doc-icon">
+                  <span [innerHTML]="getDocumentIconSymbol(doc.type)"></span>
+                </div>
+                <div class="doc-info">
+                  <h4>{{ doc.name }}</h4>
+                  <div class="doc-meta">
+                    <span class="size">{{ doc.size }}</span>
+                    <span class="modified">{{ doc.lastModified | date:'short' }}</span>
+                  </div>
+                </div>
+                <div class="doc-type">{{ doc.type.toUpperCase() }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Application Middleware Section -->
+          <div class="middleware-section">
+            <h3>Application Middleware</h3>
+            <div class="middleware-grid">
+              <div *ngFor="let middleware of applicationStatus.middleware" class="middleware-item">
+                <div class="middleware-header">
+                  <div class="middleware-info">
+                    <h4>{{ middleware.name }}</h4>
+                    <span class="version">v{{ middleware.version }}</span>
+                  </div>
+                  <div class="status-indicator">
+                    <span 
+                      class="status-icon" 
+                      [class]="middleware.status"
+                      [innerHTML]="getMiddlewareIconSymbol(middleware.status)"
+                    ></span>
+                    <span class="status-text" [class]="middleware.status">{{ middleware.status }}</span>
+                  </div>
+                </div>
+                <p class="description">{{ middleware.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Project Tabs -->
+      <mat-tab *ngFor="let project of applicationStatus.projects">
+        <ng-template mat-tab-label>
+          <span [innerHTML]="getProjectTypeIcon(project.type)"></span>
+          {{ project.name }}
+        </ng-template>
+        
+        <div class="tab-content">
+          <!-- Project Overview -->
+          <div class="project-overview">
+            <div class="project-info">
+              <h3>{{ project.name }}</h3>
+              <div class="project-details">
+                <div class="detail-item">
+                  <span class="label">Version:</span>
+                  <span class="value">v{{ project.version }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Type:</span>
+                  <span class="value project-type" [class]="project.type">{{ project.type }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Status:</span>
+                  <span class="value status" [class]="project.status">{{ project.status }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Last Build:</span>
+                  <span class="value">{{ project.buildDate | date:'medium' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Documentation -->
+          <div class="documentation-section">
+            <h3>Project Documentation</h3>
+            <div class="doc-grid">
+              <div *ngFor="let doc of project.documentation" class="doc-item" (click)="openDocument(doc)">
+                <div class="doc-icon">
+                  <span [innerHTML]="getDocumentIconSymbol(doc.type)"></span>
+                </div>
+                <div class="doc-info">
+                  <h4>{{ doc.name }}</h4>
+                  <div class="doc-meta">
+                    <span class="size">{{ doc.size }}</span>
+                    <span class="modified">{{ doc.lastModified | date:'short' }}</span>
+                  </div>
+                </div>
+                <div class="doc-type">{{ doc.type.toUpperCase() }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Middleware -->
+          <div class="middleware-section">
+            <h3>Project Middleware</h3>
+            <div class="middleware-grid">
+              <div *ngFor="let middleware of project.middleware" class="middleware-item">
+                <div class="middleware-header">
+                  <div class="middleware-info">
+                    <h4>{{ middleware.name }}</h4>
+                    <span class="version">v{{ middleware.version }}</span>
+                  </div>
+                  <div class="status-indicator">
+                    <span 
+                      class="status-icon" 
+                      [class]="middleware.status"
+                      [innerHTML]="getMiddlewareIconSymbol(middleware.status)"
+                    ></span>
+                    <span class="status-text" [class]="middleware.status">{{ middleware.status }}</span>
+                  </div>
+                </div>
+                <p class="description">{{ middleware.description }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Tools -->
+          <div class="tools-section">
+            <h3>Associated Tools</h3>
+            <div class="tools-grid">
+              <div *ngFor="let tool of project.tools" class="tool-item">
+                <div class="tool-header">
+                  <div class="tool-info">
+                    <div class="tool-name">
+                      <span class="tool-icon" [innerHTML]="getToolIcon(tool.type)"></span>
+                      <h4>{{ tool.name }}</h4>
+                    </div>
+                    <div class="tool-meta">
+                      <span class="version">v{{ tool.version }}</span>
+                      <span class="type">{{ tool.type }}</span>
+                    </div>
+                  </div>
+                  <div class="status-indicator">
+                    <span class="status-dot" [style.background-color]="getToolStatusColor(tool.status)"></span>
+                    <span class="status-text" [class]="tool.status">{{ tool.status }}</span>
+                  </div>
+                </div>
+                <p class="description">{{ tool.description }}</p>
+                <div *ngIf="tool.path" class="tool-path">
+                  <strong>Path:</strong> {{ tool.path }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

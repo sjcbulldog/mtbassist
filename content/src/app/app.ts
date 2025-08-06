@@ -32,9 +32,9 @@ export class App {
       icon: 'add_circle'
     },
     {
-      label: 'View Application',
-      component: 'AppView',
-      icon: 'view_list'
+      label: 'Application Status',
+      component: 'ApplicationStatus',
+      icon: 'dashboard'
     }
   ];
 }

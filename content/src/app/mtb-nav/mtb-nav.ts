@@ -5,7 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { GettingStarted } from '../getting-started/getting-started';
 import { CreateProject } from '../create-project/create-project';
-import { AppView } from '../app-view/app-view';
+import { ApplicationStatus } from '../application-status/application-status';
 
 export interface MtbNavTab {
   label: string;
@@ -22,7 +22,7 @@ export interface MtbNavTab {
     MatIconModule,
     GettingStarted,
     CreateProject,
-    AppView,
+    ApplicationStatus,
   ],
   templateUrl: './mtb-nav.html',
   styleUrl: './mtb-nav.scss'
