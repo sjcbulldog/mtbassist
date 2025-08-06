@@ -18,13 +18,6 @@
           <div class="overview-section">
             <div class="app-info">
               <h3>{{ applicationStatus.name }}</h3>
-              <div class="details">
-                <span class="version">v{{ applicationStatus.version }}</span>
-                <span class="status" [class]="applicationStatus.status">
-                  {{ applicationStatus.status }}
-                </span>
-              </div>
-              <p class="build-date">Built: {{ applicationStatus.buildDate | date:'medium' }}</p>
             </div>
           </div>
 

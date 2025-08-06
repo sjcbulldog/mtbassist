@@ -128,6 +128,22 @@
     background: var(--card-background);
   }
 
+  // Override tab header background for dark theme
+  :host-context(.dark-theme) & {
+    .mat-mdc-tab-header {
+      background: #000000 !important;
+    }
+  }
+
+  // Media query fallback for auto dark detection
+  @media (prefers-color-scheme: dark) {
+    :host:not(.light-theme) & {
+      .mat-mdc-tab-header {
+        background: #000000 !important;
+      }
+    }
+  }
+
   .mat-mdc-tab {
     color: var(--text-secondary);
 
@@ -183,6 +199,179 @@
     
     mat-icon {
       color: var(--primary-color) !important;
+    }
+  }
+}
+
+// Global dark theme overrides for Material tabs - using ::ng-deep for penetration
+:host-context(.dark-theme) {
+  ::ng-deep .status-tabs {
+    .mat-mdc-tab-header {
+      background: #000000 !important;
+    }
+
+    .mat-mdc-tab {
+      color: #ffffff !important;
+    }
+
+    .mat-mdc-tab:not(.mdc-tab--active) {
+      color: #ffffff !important;
+
+      .mdc-tab__text-label {
+        color: #ffffff !important;
+      }
+      
+      mat-icon {
+        color: #ffffff !important;
+      }
+
+      .mat-mdc-tab-label {
+        color: #ffffff !important;
+
+        span {
+          color: #ffffff !important;
+        }
+
+        mat-icon {
+          color: #ffffff !important;
+        }
+      }
+    }
+
+    .mat-mdc-tab.mdc-tab--active {
+      color: #4fc3f7 !important;
+
+      .mdc-tab__text-label {
+        color: #4fc3f7 !important;
+      }
+      
+      mat-icon {
+        color: #4fc3f7 !important;
+      }
+
+      .mat-mdc-tab-label {
+        color: #4fc3f7 !important;
+
+        span {
+          color: #4fc3f7 !important;
+        }
+
+        mat-icon {
+          color: #4fc3f7 !important;
+        }
+      }
+    }
+
+    // Target the ripple and additional Material elements
+    .mat-mdc-tab .mdc-tab__ripple {
+      color: #ffffff !important;
+    }
+
+    .mat-mdc-tab.mdc-tab--active .mdc-tab__ripple {
+      color: #4fc3f7 !important;
+    }
+  }
+}
+
+// Media query fallback with ::ng-deep
+@media (prefers-color-scheme: dark) {
+  :host:not(.light-theme) {
+    ::ng-deep .status-tabs {
+      .mat-mdc-tab-header {
+        background: #000000 !important;
+      }
+
+      .mat-mdc-tab {
+        color: #ffffff !important;
+      }
+
+      .mat-mdc-tab:not(.mdc-tab--active) {
+        color: #ffffff !important;
+
+        .mdc-tab__text-label {
+          color: #ffffff !important;
+        }
+        
+        mat-icon {
+          color: #ffffff !important;
+        }
+
+        .mat-mdc-tab-label {
+          color: #ffffff !important;
+
+          span {
+            color: #ffffff !important;
+          }
+
+          mat-icon {
+            color: #ffffff !important;
+          }
+        }
+      }
+
+      .mat-mdc-tab.mdc-tab--active {
+        color: #4fc3f7 !important;
+
+        .mdc-tab__text-label {
+          color: #4fc3f7 !important;
+        }
+        
+        mat-icon {
+          color: #4fc3f7 !important;
+        }
+
+        .mat-mdc-tab-label {
+          color: #4fc3f7 !important;
+
+          span {
+            color: #4fc3f7 !important;
+          }
+
+          mat-icon {
+            color: #4fc3f7 !important;
+          }
+        }
+      }
+
+      // Target the ripple and additional Material elements
+      .mat-mdc-tab .mdc-tab__ripple {
+        color: #ffffff !important;
+      }
+
+      .mat-mdc-tab.mdc-tab--active .mdc-tab__ripple {
+        color: #4fc3f7 !important;
+      }
+    }
+  }
+}
+
+// Alternative approach - try targeting at the global level without host-context
+::ng-deep .dark-theme .status-tabs {
+  .mat-mdc-tab-header {
+    background: #000000 !important;
+  }
+
+  .mat-mdc-tab {
+    color: #ffffff !important;
+
+    &:not(.mdc-tab--active) {
+      .mdc-tab__text-label {
+        color: #ffffff !important;
+      }
+      
+      mat-icon {
+        color: #ffffff !important;
+      }
+    }
+
+    &.mdc-tab--active {
+      .mdc-tab__text-label {
+        color: #4fc3f7 !important;
+      }
+      
+      mat-icon {
+        color: #4fc3f7 !important;
+      }
     }
   }
 }

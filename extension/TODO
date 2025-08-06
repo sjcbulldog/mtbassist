@@ -1,16 +1,49 @@
-o Feed real project creation data from the vscode extension to the create-project progress
-  indicator in the angular component.
+TODO
+-------------------------------------------------------------------------------------------
 
-o Fix the black on black text in the selector for bsp category and code example category
+o Application status backend connections
+  - app data
+  - app memory data (based one build)   - DO ME LAST, VERY HARD
+  - app documents
+  - app tools
+  - project list
+    - project documents
+    - project tools
+    - project middleware
 
-o Replace the recent projects tab with different, new control.
+o Create recent projects page
+  - add reference to the getting started page
 
-o Fill out the application explorer
+o Fill out the application status view
+  - Add items for 
+  - Make tools, middleware, documetation collaspable
   
+o Port over intellisense support
+  - Use app status view to set the current intellisense project
 
+o Port over task generation support
+
+o Port over keyword based documentation
+
+o Port over, check run make getlibs
+
+o Port over, check run make vscode (generate launch configs)
+
+o Dev Kit page
 
 Test
+--------------------------------------------------------------------------------------------
 - Getting Started - light
 - Getting Started - dark
 - Create Project - light
 - Create Project - dark
+
+Done
+---------------------------------------------------------------------------------------------
+o Fix the black on black text in the selector for bsp category and code example category
+o Create 'create project' component
+o Feed real project creation data from the vscode extension to the create-project progress
+  indicator in the angular component
+o Create application status page (basic version)
+o Create getting started page
+o Connect getting started page events to backend

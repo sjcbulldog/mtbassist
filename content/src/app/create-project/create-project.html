@@ -1,15 +1,4 @@
 <div class="create-project-container" [class.dark-theme]="isDarkTheme" [class.light-theme]="!isDarkTheme">
-  <!-- Theme Toggle -->
-  <div class="theme-toggle">
-    <mat-slide-toggle 
-      [(ngModel)]="isDarkTheme" 
-      (change)="toggleTheme()"
-      color="primary">
-      <mat-icon>{{ isDarkTheme ? 'dark_mode' : 'light_mode' }}</mat-icon>
-      {{ isDarkTheme ? 'Dark' : 'Light' }} Theme
-    </mat-slide-toggle>
-  </div>
-
   <!-- Header -->
   <div class="header">
     <h1>

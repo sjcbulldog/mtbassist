@@ -17,3 +17,201 @@ html {
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+// Global dark theme overrides for Material tabs in application-status component
+.dark-theme {
+  .status-tabs {
+    .mat-mdc-tab-header {
+      background-color: #000000 !important;
+    }
+
+    .mat-mdc-tab {
+      color: #ffffff !important;
+
+      .mdc-tab__text-label {
+        color: #ffffff !important;
+      }
+      
+      .mat-mdc-tab-label {
+        color: #ffffff !important;
+        
+        span {
+          color: #ffffff !important;
+        }
+        
+        mat-icon {
+          color: #ffffff !important;
+        }
+      }
+      
+      mat-icon {
+        color: #ffffff !important;
+      }
+
+      // Additional specific targeting for tab label text
+      .mat-tab-label-content {
+        color: #ffffff !important;
+      }
+
+      .mat-tab-label {
+        color: #ffffff !important;
+      }
+
+      // Target any text nodes directly
+      span, .mdc-tab__text-label span {
+        color: #ffffff !important;
+      }
+    }
+
+    .mat-mdc-tab.mdc-tab--active {
+      color: #4fc3f7 !important;
+
+      .mdc-tab__text-label {
+        color: #4fc3f7 !important;
+      }
+      
+      .mat-mdc-tab-label {
+        color: #4fc3f7 !important;
+        
+        span {
+          color: #4fc3f7 !important;
+        }
+        
+        mat-icon {
+          color: #4fc3f7 !important;
+        }
+      }
+      
+      mat-icon {
+        color: #4fc3f7 !important;
+      }
+
+      // Additional specific targeting for active tab label text
+      .mat-tab-label-content {
+        color: #4fc3f7 !important;
+      }
+
+      .mat-tab-label {
+        color: #4fc3f7 !important;
+      }
+
+      // Target any text nodes directly
+      span, .mdc-tab__text-label span {
+        color: #4fc3f7 !important;
+      }
+    }
+
+    .mdc-tab-indicator__content--underline {
+      background-color: #4fc3f7 !important;
+    }
+
+    // Force all tab label text to be white (inactive) or blue (active)
+    .mat-mdc-tab:not(.mdc-tab--active) * {
+      color: #ffffff !important;
+    }
+
+    .mat-mdc-tab.mdc-tab--active * {
+      color: #4fc3f7 !important;
+    }
+  }
+}
+
+// Media query fallback for system dark theme preference
+@media (prefers-color-scheme: dark) {
+  body:not(.light-theme) {
+    .status-tabs {
+      .mat-mdc-tab-header {
+        background-color: #000000 !important;
+      }
+
+      .mat-mdc-tab {
+        color: #ffffff !important;
+
+        .mdc-tab__text-label {
+          color: #ffffff !important;
+        }
+        
+        .mat-mdc-tab-label {
+          color: #ffffff !important;
+          
+          span {
+            color: #ffffff !important;
+          }
+          
+          mat-icon {
+            color: #ffffff !important;
+          }
+        }
+        
+        mat-icon {
+          color: #ffffff !important;
+        }
+
+        // Additional specific targeting for tab label text
+        .mat-tab-label-content {
+          color: #ffffff !important;
+        }
+
+        .mat-tab-label {
+          color: #ffffff !important;
+        }
+
+        // Target any text nodes directly
+        span, .mdc-tab__text-label span {
+          color: #ffffff !important;
+        }
+      }
+
+      .mat-mdc-tab.mdc-tab--active {
+        color: #4fc3f7 !important;
+
+        .mdc-tab__text-label {
+          color: #4fc3f7 !important;
+        }
+        
+        .mat-mdc-tab-label {
+          color: #4fc3f7 !important;
+          
+          span {
+            color: #4fc3f7 !important;
+          }
+          
+          mat-icon {
+            color: #4fc3f7 !important;
+          }
+        }
+        
+        mat-icon {
+          color: #4fc3f7 !important;
+        }
+
+        // Additional specific targeting for active tab label text
+        .mat-tab-label-content {
+          color: #4fc3f7 !important;
+        }
+
+        .mat-tab-label {
+          color: #4fc3f7 !important;
+        }
+
+        // Target any text nodes directly
+        span, .mdc-tab__text-label span {
+          color: #4fc3f7 !important;
+        }
+      }
+
+      .mdc-tab-indicator__content--underline {
+        background-color: #4fc3f7 !important;
+      }
+
+      // Force all tab label text to be white (inactive) or blue (active)
+      .mat-mdc-tab:not(.mdc-tab--active) * {
+        color: #ffffff !important;
+      }
+
+      .mat-mdc-tab.mdc-tab--active * {
+        color: #4fc3f7 !important;
+      }
+    }
+  }
+}

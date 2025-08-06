@@ -9,6 +9,7 @@ export type FrontEndToBackEndRequestType =
     'getStarted' |
     'createProject' |
     'loadWorkspace' |
+    'getAppStatus' |
     'platformSpecific' |
     'browseForFolder' ;
 
@@ -16,10 +17,11 @@ export type BackEndToFrontEndResponseType =
     'setDevKits' |
     'setCodeExamples' |
     'createProjectResult' |
-    'oob' | 
+    'browseForFolderResult' |
+    'appStatusResult' |
+    'oob' |
     'success' |
-    'error' |
-    'browseForFolderResult' ;
+    'error' ;
 
 export interface BSPIdentifier {
     name : string ;
@@ -108,4 +110,57 @@ export interface MemoryStats {
   totalAvailable: number;
   memoryTypes: MemoryUsage[];
   lastUpdated: Date;
+}
+
+
+export interface MemoryInfo {
+  type: string;
+  used: number;
+  total: number;
+  percentage: number;
+}
+
+export interface Documentation {
+  name: string;
+  type: 'pdf' | 'html' | 'markdown' | 'text';
+  size: string;
+  lastModified: Date;
+  url?: string;
+}
+
+export interface Middleware {
+  name: string;
+  version: string;
+  status: 'active' | 'inactive' | 'error';
+  description: string;
+}
+
+export interface Tool {
+  name: string;
+  version: string;
+  type: 'compiler' | 'debugger' | 'analyzer' | 'utility';
+  status: 'available' | 'missing' | 'outdated';
+  description: string;
+  path?: string;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  version: string;
+  type: 'application' | 'library' | 'middleware';
+  status: 'active' | 'inactive' | 'building' | 'error';
+  buildDate: Date;
+  documentation: Documentation[];
+  middleware: Middleware[];
+  tools: Tool[];
+}
+
+export interface ApplicationStatusData {
+  valid: boolean ;
+  name: string;
+  memory: MemoryInfo[];
+  documentation: Documentation[];
+  middleware: Middleware[];
+  projects: Project[];
 }

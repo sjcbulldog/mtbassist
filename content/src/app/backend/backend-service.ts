@@ -4,9 +4,10 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, DevKitData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage } from '../../comms';
+import { BackEndToFrontEndResponse, DevKitData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType } from '../../comms';
 import { ManifestManager } from './manifestmgr';
 import { ProjectManager } from './projectmgr';
+import { AppStatusBackend } from './appmgrbe';
 
 declare var acquireVsCodeApi: any | undefined ;
 
@@ -18,10 +19,14 @@ export class BackendService {
   private isDarkTheme_ : boolean = true ;
   private manifestManager_: ManifestManager;
   private projectManager_ : ProjectManager ;
+  private appStatusManager_ : AppStatusBackend;
+
+  private handlers_ : Map<string, (cmd: BackEndToFrontEndResponse) => void> = new Map<string, (cmd: BackEndToFrontEndResponse) => void>();
 
   navTab: Subject<number> = new Subject<number>() ;
   browserFolder: Subject<string | null> = new Subject<string | null>();
   memoryStats = new BehaviorSubject<MemoryStats | null>(null);  
+  appStatusData: BehaviorSubject<ApplicationStatusData | null> = new BehaviorSubject<ApplicationStatusData | null>(null);
 
   progressMessage: Subject<string> = new Subject<string>();
   progressPercent: Subject<number> = new Subject<number>();
@@ -35,6 +40,7 @@ export class BackendService {
 
     this.manifestManager_ = new ManifestManager(this);
     this.projectManager_ = new ProjectManager(this);
+    this.appStatusManager_ = new AppStatusBackend(this);
 
     this.sendRequest({
       request: 'setPlatform',
@@ -43,8 +49,19 @@ export class BackendService {
       }}) ;
   }
 
+  public registerHandler(cmd: BackEndToFrontEndResponseType, handler: (cmd: BackEndToFrontEndResponse) => void): void {  
+    if (this.handlers_.has(cmd)) {
+      this.log(`Warning: Overriding existing handler for command: ${cmd}`) ;
+    }
+    this.handlers_.set(cmd, handler);
+  }
+
   public get manifestMgr(): ManifestManager {
     return this.manifestManager_;
+  }
+
+  public get appStatusMgr() : AppStatusBackend {
+    return new AppStatusBackend(this);
   }
 
   public get isDarkTheme(): boolean {
@@ -112,44 +129,21 @@ export class BackendService {
     }
   }
 
-  private fetchMemoryStats(): Observable<MemoryStats> {
-    // Mock data - replace with actual API calls
-    const mockMemoryData: MemoryUsage[] = [
-      { type: 'SRAM', used: 45600, total: 65536, percentage: 69.6, unit: 'bytes' },
-      { type: 'RRAM', used: 128000, total: 262144, percentage: 48.8, unit: 'bytes' },
-      { type: 'SOCMEM', used: 32768, total: 65536, percentage: 50.0, unit: 'bytes' },
-      { type: 'DTCM', used: 16384, total: 32768, percentage: 50.0, unit: 'bytes' },
-      { type: 'ITCM', used: 24576, total: 32768, percentage: 75.0, unit: 'bytes' },
-      { type: 'XIP', used: 1048576, total: 2097152, percentage: 50.0, unit: 'bytes' }
-    ];
-
-    const totalUsed = mockMemoryData.reduce((sum, mem) => sum + mem.used, 0);
-    const totalAvailable = mockMemoryData.reduce((sum, mem) => sum + mem.total, 0);
-
-    const memoryStats: MemoryStats = {
-      totalUsed,
-      totalAvailable,
-      memoryTypes: mockMemoryData,
-      lastUpdated: new Date()
-    };
-
-    return of(memoryStats);
+  private setupHandlers() {
+    this.registerHandler('browseForFolderResult', this.browseForFolderResult.bind(this));
+    this.registerHandler('oob', this.oobResult.bind(this));
   }
 
-  formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  private browseForFolderResult(cmd: BackEndToFrontEndResponse) {
+      this.browserFolder.next(cmd.data as string | null);
   }
 
-  getUsageLevel(percentage: number): 'low' | 'medium' | 'high' | 'critical' {
-    if (percentage < 50) return 'low';
-    if (percentage < 75) return 'medium';
-    if (percentage < 90) return 'high';
-    return 'critical';
-  }  
+  private oobResult(cmd: BackEndToFrontEndResponse) {
+      if (cmd.data.oobtype && cmd.data.oobtype === 'progress') {
+        this.progressMessage.next(cmd.data.message || '');
+        this.progressPercent.next(cmd.data.percent || 0);
+      }
+  }
 
   private messageProc(cmd: BackEndToFrontEndResponse) {
     let str = JSON.stringify(cmd) ;
@@ -158,32 +152,14 @@ export class BackendService {
     }
     this.log(`Received response from backend: ${str}`) ;
 
-    if (cmd.response === 'setDevKits') {
-      this.manifestManager_.processDevKits(cmd);
+    const handler = this.handlers_.get(cmd.response);
+    if (!handler) {
+      this.log(`No handler found for command: ${cmd.response}`);
+      return;
     }
-    else if (cmd.response === 'setCodeExamples') {
-      this.manifestManager_.processCodeExamples(cmd);
-    }
-    else if (cmd.response === 'createProjectResult') {
-      this.projectManager_.createProjectResponse(cmd);
-    }
-    else if (cmd.response === 'success') {
-      this.log(`Command succeeded: ${cmd.data}`);
-    }
-    else if (cmd.response === 'error') {
-      this.log(`Command failed: ${cmd.data}`);
-    }
-    else if (cmd.response === 'browseForFolderResult') {
-      this.browserFolder.next(cmd.data as string | null);
-    }
-    else if (cmd.response === 'oob') {
-      if (cmd.data.oobtype && cmd.data.oobtype === 'progress') {
-        this.progressMessage.next(cmd.data.message || '');
-        this.progressPercent.next(cmd.data.percent || 0);
-      }
-    }
+    handler(cmd);
   }
-
+  
   private isElectron(): boolean {
     return typeof window !== 'undefined' && window && window.feexpAPI && typeof window.feexpAPI.send === 'function';
   }

@@ -12,7 +12,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { BackendService } from '../backend/backend-service';
 import { BSPIdentifier, CodeExampleIdentifier } from '../../comms';
 import { MatDivider } from "@angular/material/divider";
@@ -34,7 +33,6 @@ import { MatDivider } from "@angular/material/divider";
         MatProgressBarModule,
         MatSnackBarModule,
         MatTooltipModule,
-        MatSlideToggleModule,
         MatDivider
 ],
     templateUrl: './create-project.html',
@@ -78,7 +76,6 @@ export class CreateProject implements OnInit, OnDestroy {
 
     ngOnInit() {
         this.isDarkTheme = this.backendService.isDarkTheme;
-        this.loadThemePreference();
         this.initializeForms();
         this.loadCategories();
     }
@@ -301,19 +298,6 @@ export class CreateProject implements OnInit, OnDestroy {
             return `${location}\\${name}`;
         }
         return '';
-    }
-
-    toggleTheme() {
-        this.isDarkTheme = !this.isDarkTheme;
-        // Optionally save the theme preference to localStorage
-        localStorage.setItem('createProject-theme', this.isDarkTheme ? 'dark' : 'light');
-    }
-
-    private loadThemePreference() {
-        const savedTheme = localStorage.getItem('createProject-theme');
-        if (savedTheme) {
-            this.isDarkTheme = savedTheme === 'dark';
-        }
     }
 }
 

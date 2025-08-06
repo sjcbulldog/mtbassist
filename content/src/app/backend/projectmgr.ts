@@ -7,6 +7,7 @@ export class ProjectManager {
 
     constructor(backendService: BackendService) {
         this.backendService = backendService;
+        this.backendService.registerHandler('createProjectResult', this.createProjectResponse.bind(this));
     }
 
     public createProject(projectInfo: any) : Promise<boolean> {

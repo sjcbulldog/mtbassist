@@ -3,7 +3,7 @@ import { URI } from "vscode-uri";
 import { BrowserAPI } from "./platform/browserapi";
 import { VSCodeAPI } from "./platform/vscodeapi";
 import { ElectronAPI } from "./platform/electronapi";
-import { BackEndToFrontEndResponse, CodeExampleIdentifier, FrontEndToBackEndRequest, PlatformType } from "../comms";
+import { ApplicationStatusData, BackEndToFrontEndResponse, CodeExampleIdentifier, Document, Documentation, FrontEndToBackEndRequest, MemoryInfo, Middleware, PlatformType, Project, ProjectInfo } from "../comms";
 import { BSPMgr } from "./bspmgr";
 import { MTBApp } from "../mtbenv/manifest/mtbapp";
 import { PlatformAPI } from "./platform/platformapi";
@@ -11,6 +11,7 @@ import * as winston from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
 import { EventEmitter } from "stream";
+import { MTBLoadFlags } from "../mtbenv";
 
 export class BackendService extends EventEmitter {
     private static instance: BackendService | null = null;
@@ -93,6 +94,46 @@ export class BackendService extends EventEmitter {
         this.cmdhandler_.set('getCodeExamples', this.getCodeExamples.bind(this));
         this.cmdhandler_.set('createProject', this.createProject.bind(this));
         this.cmdhandler_.set('loadWorkspace', this.loadWorkspace.bind(this));
+        this.cmdhandler_.set('getAppStatus', this.getAppStatus.bind(this));
+    }
+
+    private getAppStatus(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            let appst : ApplicationStatusData ;
+
+            if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo)) {
+                let mem : MemoryInfo[] = [] ;
+                let docs: Documentation[] = [] ;
+                let projs : Project[] = [] ;
+                let middleware: Middleware[] = [] ;
+
+                appst = {
+                    valid: true,
+                    name: this.env_.appInfo?.appdir || '',
+                    memory: mem,
+                    documentation: docs,
+                    middleware: middleware,
+                    projects: projs,
+                } ;
+            } else {
+                appst = {
+                    valid: false,
+                    name : '',
+                    memory: [],
+                    documentation: [],
+                    middleware: [],
+                    projects: []
+                };
+            }
+
+            let resp: BackEndToFrontEndResponse = {
+                response: 'appStatusResult',
+                data: appst
+            } ;
+
+            resolve(resp) ;
+        }) ;
+        return ret ;
     }
 
     private convertCodeExamples(examples: MTBApp[]): CodeExampleIdentifier[] {

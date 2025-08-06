@@ -16,6 +16,9 @@ export class ManifestManager {
     constructor(be: BackendService) {
         this.parent_ = be;
         this.refreshBSPs();
+
+        this.parent_.registerHandler('setDevKits', this.processDevKits.bind(this));
+        this.parent_.registerHandler('setCodeExamples', this.processCodeExamples.bind(this));
     }
 
     public refreshBSPs(): Promise<void> {
