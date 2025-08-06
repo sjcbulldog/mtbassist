@@ -37,15 +37,6 @@
           </div>
         </div>
         
-        <div *ngSwitchCase="2" class="tab-panel">
-          <app-application-explorer *ngIf="tab.component === 'ApplicationExplorer'"></app-application-explorer>
-          <div *ngIf="!tab.component || tab.component !== 'ApplicationExplorer'" class="placeholder-content">
-            <h2>{{ tab.label }}</h2>
-            <p>This section is under development.</p>
-            <mat-icon>construction</mat-icon>
-          </div>
-        </div>
-        
         <div *ngSwitchDefault class="tab-panel">
           <div class="placeholder-content">
             <h2>{{ tab.label }}</h2>

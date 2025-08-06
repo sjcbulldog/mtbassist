@@ -30,11 +30,6 @@ export class App {
       label: 'Create New Project',
       component: 'CreateProject',
       icon: 'add_circle'
-    },
-    {
-      label: 'Application Explorer',
-      component: 'ApplicationExplorer',
-      icon: 'apps'
     }
   ];
 }
