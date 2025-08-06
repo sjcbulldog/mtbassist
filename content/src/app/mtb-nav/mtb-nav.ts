@@ -4,6 +4,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { GettingStarted } from '../getting-started/getting-started';
 import { CreateProject } from '../create-project/create-project';
+import { ApplicationExplorerComponent } from '../application-explorer/application-explorer';
 
 export interface MtbNavTab {
   label: string;
@@ -19,7 +20,8 @@ export interface MtbNavTab {
     MatTabsModule,
     MatIconModule,
     GettingStarted,
-    CreateProject
+    CreateProject,
+    ApplicationExplorerComponent
   ],
   templateUrl: './mtb-nav.html',
   styleUrl: './mtb-nav.scss'

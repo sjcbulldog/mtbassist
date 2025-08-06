@@ -1,0 +1,16 @@
+o Feed real project creation data from the vscode extension to the create-project progress
+  indicator in the angular component.
+
+o Fix the black on black text in the selector for bsp category and code example category
+
+o Replace the recent projects tab with different, new control.
+
+o Fill out the application explorer
+  
+
+
+Test
+- Getting Started - light
+- Getting Started - dark
+- Create Project - light
+- Create Project - dark

@@ -1,0 +1,244 @@
+<div class="application-explorer">
+  
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+    <span>Loading application information...</span>
+  </div>
+
+  <!-- Application Explorer Content -->
+  <div *ngIf="!isLoading && applicationInfo" class="explorer-content">
+    
+    <!-- Application Overview Tile -->
+    <mat-card class="application-overview-tile">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon class="app-icon">apps</mat-icon>
+          ModusToolbox Application
+        </mat-card-title>
+        <div class="header-actions">
+          <button mat-icon-button 
+                  (click)="toggleTheme()" 
+                  [matTooltip]="currentThemeTooltip"
+                  class="theme-toggle">
+            <mat-icon>{{ currentThemeIcon }}</mat-icon>
+          </button>
+          <button mat-icon-button 
+                  (click)="refreshApplicationInfo()" 
+                  matTooltip="Refresh application info"
+                  class="refresh-button">
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+        <!-- Memory Usage Section -->
+        <div class="memory-section">
+          <h3 class="section-title">
+            <mat-icon>memory</mat-icon>
+            Memory Usage
+          </h3>
+          <div class="memory-grid">
+            <div *ngFor="let memory of applicationInfo.memoryUsage" class="memory-item">
+              <div class="memory-header">
+                <span class="memory-type">{{ memory.memtype }}</span>
+                <span class="memory-percentage">
+                  {{ getMemoryUsagePercentage(memory) }}%
+                </span>
+              </div>
+              <mat-progress-bar 
+                [value]="getMemoryUsagePercentage(memory)"
+                [color]="getMemoryUsageColor(getMemoryUsagePercentage(memory))"
+                class="memory-bar">
+              </mat-progress-bar>
+              <div class="memory-details">
+                <span>{{ formatBytes(memory.used) }} / {{ formatBytes(memory.size) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider class="section-divider"></mat-divider>
+
+        <!-- Application Documents Section -->
+        <div class="collapsible-section">
+          <div class="section-header" (click)="toggleApplicationDocuments()">
+            <h3 class="section-title">
+              <mat-icon>description</mat-icon>
+              Application Documents
+              <span class="item-count">({{ applicationInfo.documents.length }})</span>
+            </h3>
+            <mat-icon class="expand-icon" [class.expanded]="applicationDocumentsExpanded">
+              {{ applicationDocumentsExpanded ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
+          </div>
+          
+          <div class="collapsible-content" [class.expanded]="applicationDocumentsExpanded">
+            <mat-list class="document-list">
+              <mat-list-item *ngFor="let doc of applicationInfo.documents" 
+                           class="document-item"
+                           (click)="openDocument(doc)">
+                <mat-icon matListItemIcon>article</mat-icon>
+                <div matListItemTitle>{{ doc.title }}</div>
+                <div matListItemLine class="document-url">{{ doc.url }}</div>
+                <mat-icon matListItemMeta class="action-icon">open_in_new</mat-icon>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </div>
+
+        <mat-divider class="section-divider"></mat-divider>
+
+        <!-- Application Tools Section -->
+        <div class="collapsible-section">
+          <div class="section-header" (click)="toggleApplicationTools()">
+            <h3 class="section-title">
+              <mat-icon>build</mat-icon>
+              Application Tools
+              <span class="item-count">({{ applicationInfo.tools.length }})</span>
+            </h3>
+            <mat-icon class="expand-icon" [class.expanded]="applicationToolsExpanded">
+              {{ applicationToolsExpanded ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
+          </div>
+          
+          <div class="collapsible-content" [class.expanded]="applicationToolsExpanded">
+            <div class="tools-grid">
+              <button *ngFor="let tool of applicationInfo.tools" 
+                      mat-raised-button 
+                      class="tool-button"
+                      (click)="launchTool(tool)"
+                      [matTooltip]="'Launch ' + tool.name">
+                <mat-icon>build_circle</mat-icon>
+                {{ tool.name }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Projects Section -->
+    <div class="projects-section">
+      <h2 class="projects-title">
+        <mat-icon>folder_open</mat-icon>
+        Projects ({{ applicationInfo.projects.length }})
+      </h2>
+      
+      <div class="projects-grid" 
+           [style.grid-template-columns]="'repeat(' + getProjectGridColumns() + ', 1fr)'">
+        
+        <mat-card *ngFor="let project of applicationInfo.projects" class="project-tile">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon class="project-icon">folder_special</mat-icon>
+              {{ project.name }}
+            </mat-card-title>
+          </mat-card-header>
+
+          <mat-card-content>
+            
+            <!-- Project Libraries Section -->
+            <div class="collapsible-section">
+              <div class="section-header" (click)="toggleProjectLibraries(project.name)">
+                <h4 class="section-title">
+                  <mat-icon>extension</mat-icon>
+                  Libraries
+                  <span class="item-count">({{ project.libraries.length }})</span>
+                </h4>
+                <mat-icon class="expand-icon" [class.expanded]="isProjectLibrariesExpanded(project.name)">
+                  {{ isProjectLibrariesExpanded(project.name) ? 'expand_less' : 'expand_more' }}
+                </mat-icon>
+              </div>
+              
+              <div class="collapsible-content" [class.expanded]="isProjectLibrariesExpanded(project.name)">
+                <div class="libraries-list">
+                  <mat-chip-set class="library-chips">
+                    <mat-chip *ngFor="let lib of project.libraries" 
+                             class="library-chip"
+                             [matTooltip]="lib.title + ' v' + lib.version">
+                      <mat-icon matChipAvatar>package</mat-icon>
+                      {{ lib.title }}
+                      <span class="version">v{{ lib.version }}</span>
+                    </mat-chip>
+                  </mat-chip-set>
+                </div>
+              </div>
+            </div>
+
+            <mat-divider class="section-divider"></mat-divider>
+
+            <!-- Project Documents Section -->
+            <div class="collapsible-section">
+              <div class="section-header" (click)="toggleProjectDocuments(project.name)">
+                <h4 class="section-title">
+                  <mat-icon>description</mat-icon>
+                  Documents
+                  <span class="item-count">({{ project.documents.length }})</span>
+                </h4>
+                <mat-icon class="expand-icon" [class.expanded]="isProjectDocumentsExpanded(project.name)">
+                  {{ isProjectDocumentsExpanded(project.name) ? 'expand_less' : 'expand_more' }}
+                </mat-icon>
+              </div>
+              
+              <div class="collapsible-content" [class.expanded]="isProjectDocumentsExpanded(project.name)">
+                <mat-list class="document-list compact">
+                  <mat-list-item *ngFor="let doc of project.documents" 
+                               class="document-item"
+                               (click)="openDocument(doc)">
+                    <mat-icon matListItemIcon>article</mat-icon>
+                    <div matListItemTitle>{{ doc.title }}</div>
+                    <mat-icon matListItemMeta class="action-icon">open_in_new</mat-icon>
+                  </mat-list-item>
+                </mat-list>
+              </div>
+            </div>
+
+            <mat-divider class="section-divider"></mat-divider>
+
+            <!-- Project Tools Section -->
+            <div class="collapsible-section">
+              <div class="section-header" (click)="toggleProjectTools(project.name)">
+                <h4 class="section-title">
+                  <mat-icon>build</mat-icon>
+                  Tools
+                  <span class="item-count">({{ project.tools.length }})</span>
+                </h4>
+                <mat-icon class="expand-icon" [class.expanded]="isProjectToolsExpanded(project.name)">
+                  {{ isProjectToolsExpanded(project.name) ? 'expand_less' : 'expand_more' }}
+                </mat-icon>
+              </div>
+              
+              <div class="collapsible-content" [class.expanded]="isProjectToolsExpanded(project.name)">
+                <div class="tools-grid compact">
+                  <button *ngFor="let tool of project.tools" 
+                          mat-stroked-button 
+                          class="tool-button compact"
+                          (click)="launchTool(tool)"
+                          [matTooltip]="'Launch ' + tool.name">
+                    <mat-icon>build_circle</mat-icon>
+                    {{ tool.name }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !applicationInfo" class="empty-state">
+    <mat-icon class="empty-icon">inbox</mat-icon>
+    <h3>No Application Information</h3>
+    <p>Application information will appear here when available</p>
+    <button mat-raised-button color="primary" (click)="refreshApplicationInfo()">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+</div>

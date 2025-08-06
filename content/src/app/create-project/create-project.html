@@ -346,6 +346,31 @@
           </mat-card>
         </div>
         
+        <!-- Progress Section -->
+        <div class="progress-section" *ngIf="isLoading">
+          <mat-card class="progress-card">
+            <mat-card-header>
+              <div mat-card-avatar class="progress-avatar">
+                <mat-icon>construction</mat-icon>
+              </div>
+              <mat-card-title>Creating Your Project</mat-card-title>
+              <mat-card-subtitle>{{ progressMessage }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="progress-container">
+                <mat-progress-bar 
+                  mode="determinate" 
+                  [value]="progressValue"
+                  color="primary">
+                </mat-progress-bar>
+                <div class="progress-text">
+                  {{ progressValue.toFixed(0) }}% Complete
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+        
         <div class="step-actions">
           <button mat-button matStepperPrevious [disabled]="isLoading">
             <mat-icon>arrow_back</mat-icon>
@@ -356,9 +381,8 @@
                   (click)="createProject()"
                   [disabled]="isLoading"
                   *ngIf="!projectCreated">
-            <mat-spinner *ngIf="isLoading" diameter="20" class="button-spinner"></mat-spinner>
             <mat-icon *ngIf="!isLoading">rocket_launch</mat-icon>
-            {{ isLoading ? 'Creating...' : 'Create Project' }}
+            {{ isLoading ? 'Creating Project...' : 'Create Project' }}
           </button>
           <button mat-raised-button 
                   color="accent" 

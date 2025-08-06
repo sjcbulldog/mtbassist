@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -30,6 +31,7 @@ import { MatDivider } from "@angular/material/divider";
         MatCardModule,
         MatSelectModule,
         MatProgressSpinnerModule,
+        MatProgressBarModule,
         MatSnackBarModule,
         MatTooltipModule,
         MatSlideToggleModule,
@@ -47,6 +49,9 @@ export class CreateProject implements OnInit, OnDestroy {
     isDarkTheme = true; // Default to dark theme
     projectCreated = false;
     projectPath = '';
+    progressValue = 0;
+    progressMessage = 'Initializing project...';
+    private progressInterval?: number;
     categories: string[] = [];
     bsps: BSPIdentifier[] = [];
     exampleCategories: string[] = [];
@@ -220,6 +225,8 @@ export class CreateProject implements OnInit, OnDestroy {
 
         try {
             this.isLoading = true;
+            this.startProgressSimulation();
+            
             const success = await this.backendService.createProject(projectData);
             
             if (success) {
@@ -232,20 +239,39 @@ export class CreateProject implements OnInit, OnDestroy {
                 // Don't reset form anymore, keep the data for reference
             } else {
                 throw new Error('Project creation failed');
-                this.snackBar.open('Failed to create project. Please try again.', 'Close', { duration: 3000 });                
             }
         } catch (error) {
             console.error('Failed to create project:', error);
             this.snackBar.open('Failed to create project. Please try again.', 'Close', { duration: 3000 });
         } finally {
+            this.clearProgress();
             this.isLoading = false;
+        }
+    }
+
+    private startProgressSimulation() {
+        this.progressValue = 0;
+        this.progressMessage = 'Initializing project...';
+
+        this.backendService.progressMessage.subscribe(message => {
+            this.progressMessage = message;
+        });
+
+        this.backendService.progressPercent.subscribe(percent => {
+            this.progressValue = percent;
+        });
+    }
+    
+    private clearProgress() {
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = undefined;
         }
     }
 
     async loadProject() {
         this.snackBar.open(`Loading project from: ${this.projectPath}`, 'Close', { duration: 3000 });
-        let p = this.projectInfoForm.value.projectLocation + '/' + this.projectInfoForm.value.projectName;
-        await this.backendService.loadWorkspace(p);
+        await this.backendService.loadWorkspace(this.projectInfoForm.value.projectLocation, this.projectInfoForm.value.projectName);
     }
 
     resetForm() {
@@ -260,6 +286,9 @@ export class CreateProject implements OnInit, OnDestroy {
         this.hoveredBSP = null;
         this.projectCreated = false;
         this.projectPath = '';
+        this.clearProgress();
+        this.progressValue = 0;
+        this.progressMessage = 'Initializing project...';
         this.bsps = [];
         this.exampleCategories = [];
         this.examples = [];

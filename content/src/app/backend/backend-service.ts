@@ -22,6 +22,9 @@ export class BackendService {
   navTab: Subject<number> = new Subject<number>() ;
   browserFolder: Subject<string | null> = new Subject<string | null>();
 
+  progressMessage: Subject<string> = new Subject<string>();
+  progressPercent: Subject<number> = new Subject<number>();
+
   constructor() {
     this.pipe_ = this.createPipe() ;
     if (this.pipe_) {
@@ -96,13 +99,93 @@ export class BackendService {
     return this.projectManager_.createProject(projectData);
   }
 
-  public async loadWorkspace(path: string): Promise<void> {
+  public async loadWorkspace(path: string, proj: string): Promise<void> {
     if (this.pipe_) {
       this.pipe_.sendRequest({
         request: 'loadWorkspace',
-        data: path
+        data: {
+          path: path,
+          project: proj
+        }
       });
     }
+  }
+
+  public async getApplicationInfo(): Promise<any> {
+    // For now, return mock data since the backend integration is not yet implemented
+    // In a real implementation, this would communicate with the backend to get actual application info
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          documents: [
+            { title: 'ModusToolbox User Guide', url: 'https://infineon.com/modustoolbox-guide' },
+            { title: 'API Reference', url: 'https://infineon.com/api-docs' },
+            { title: 'Getting Started Guide', url: 'https://infineon.com/getting-started' }
+          ],
+          tools: [
+            { name: 'Device Configurator', id: 'device-config' },
+            { name: 'CAPSENSE Tuner', id: 'capsense-tuner' },
+            { name: 'Library Manager', id: 'lib-manager' },
+            { name: 'Project Creator', id: 'project-creator' }
+          ],
+          memoryUsage: [
+            { memtype: 'Flash', size: 2097152, used: 1234567 },
+            { memtype: 'SRAM', size: 1048576, used: 445566 },
+            { memtype: 'EEPROM', size: 32768, used: 12345 }
+          ],
+          projects: [
+            {
+              name: 'Sensor Hub Project',
+              libraries: [
+                { title: 'PSoC HAL', id: 'psoc-hal', version: '2.4.0' },
+                { title: 'FreeRTOS', id: 'freertos', version: '10.4.6' },
+                { title: 'CAPSENSE', id: 'capsense', version: '3.0.0' }
+              ],
+              documents: [
+                { title: 'Project README', url: 'file:///project/README.md' },
+                { title: 'Hardware Design', url: 'file:///project/hardware.pdf' }
+              ],
+              tools: [
+                { name: 'CAPSENSE Tuner', id: 'capsense-tuner' },
+                { name: 'Device Configurator', id: 'device-config' }
+              ]
+            },
+            {
+              name: 'Connectivity Module',
+              libraries: [
+                { title: 'WiFi Host Driver', id: 'wifi-hd', version: '2.1.0' },
+                { title: 'LWIP', id: 'lwip', version: '2.1.3' },
+                { title: 'MBEDTLS', id: 'mbedtls', version: '2.28.0' }
+              ],
+              documents: [
+                { title: 'WiFi Configuration Guide', url: 'file:///project/wifi-config.md' },
+                { title: 'Network Protocol Stack', url: 'file:///project/network.pdf' }
+              ],
+              tools: [
+                { name: 'WiFi Configurator', id: 'wifi-config' },
+                { name: 'Security Configurator', id: 'security-config' }
+              ]
+            },
+            {
+              name: 'Motor Control System',
+              libraries: [
+                { title: 'Motor Control Library', id: 'motor-ctrl', version: '1.5.2' },
+                { title: 'ADC Library', id: 'adc-lib', version: '2.0.1' },
+                { title: 'PWM Library', id: 'pwm-lib', version: '1.8.0' }
+              ],
+              documents: [
+                { title: 'Motor Control Theory', url: 'file:///project/motor-theory.pdf' },
+                { title: 'Calibration Guide', url: 'file:///project/calibration.md' }
+              ],
+              tools: [
+                { name: 'Motor Tuner', id: 'motor-tuner' },
+                { name: 'Oscilloscope', id: 'oscilloscope' }
+              ]
+            }
+          ]
+        });
+      }, 800); // Simulate network delay
+    });
   }
 
   private messageProc(cmd: BackEndToFrontEndResponse) {
@@ -129,6 +212,12 @@ export class BackendService {
     }
     else if (cmd.response === 'browseForFolderResult') {
       this.browserFolder.next(cmd.data as string | null);
+    }
+    else if (cmd.response === 'oob') {
+      if (cmd.data.oobtype && cmd.data.oobtype === 'progress') {
+        this.progressMessage.next(cmd.data.message || '');
+        this.progressPercent.next(cmd.data.percent || 0);
+      }
     }
   }
 

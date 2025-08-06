@@ -29,18 +29,19 @@
         </div>
         
         <div *ngSwitchCase="1" class="tab-panel">
-          <div class="placeholder-content">
+          <app-create-project *ngIf="tab.component === 'CreateProject'"></app-create-project>
+          <div *ngIf="!tab.component || tab.component !== 'CreateProject'" class="placeholder-content">
             <h2>{{ tab.label }}</h2>
-            <p>This section is under development.</p>
+            <p>Content coming soon...</p>
             <mat-icon>construction</mat-icon>
           </div>
         </div>
         
         <div *ngSwitchCase="2" class="tab-panel">
-          <app-create-project *ngIf="tab.component === 'CreateProject'"></app-create-project>
-          <div *ngIf="!tab.component || tab.component !== 'CreateProject'" class="placeholder-content">
+          <app-application-explorer *ngIf="tab.component === 'ApplicationExplorer'"></app-application-explorer>
+          <div *ngIf="!tab.component || tab.component !== 'ApplicationExplorer'" class="placeholder-content">
             <h2>{{ tab.label }}</h2>
-            <p>Content coming soon...</p>
+            <p>This section is under development.</p>
             <mat-icon>construction</mat-icon>
           </div>
         </div>

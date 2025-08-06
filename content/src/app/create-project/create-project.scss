@@ -360,8 +360,9 @@
     }
     
     .bsp-description-panel {
-      flex: 2;
-      min-width: 500px;
+      flex: 3;
+      min-width: 750px;
+      max-width: 900px;
       padding: 16px;
       border-radius: 8px;
       border: 1px solid;
@@ -496,9 +497,62 @@
   .bsp-selection-container {
     .bsp-description-panel {
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      background-color: var(--dark-bg-secondary);
+      border-color: var(--dark-border);
+      color: var(--dark-text-primary);
       
       &:hover {
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+        border-color: var(--dark-border-focused);
+      }
+      
+      .description-header {
+        color: var(--dark-text-primary);
+        
+        mat-icon {
+          color: var(--dark-text-primary);
+        }
+        
+        span {
+          color: var(--dark-text-primary);
+          font-weight: 600;
+        }
+      }
+      
+      .description-content {
+        color: var(--dark-text-secondary);
+        
+        &.no-description {
+          color: var(--dark-text-disabled);
+        }
+        
+        // Dark theme HTML content styling
+        p {
+          color: var(--dark-text-secondary);
+        }
+        
+        code {
+          background-color: rgba(255, 255, 255, 0.1);
+          color: #81c784;
+          padding: 2px 4px;
+          border-radius: 4px;
+        }
+        
+        a {
+          color: #64b5f6;
+          
+          &:hover {
+            color: #90caf9;
+          }
+        }
+        
+        strong, b {
+          color: var(--dark-text-primary);
+        }
+        
+        em, i {
+          color: var(--dark-text-secondary);
+        }
       }
     }
   }
@@ -507,7 +561,7 @@
   .bsp-form,
   .example-form {
     .mat-mdc-form-field {
-      background-color: var(--dark-bg-secondary);
+      background-color: #000000 !important; // Solid black background
       border-radius: 8px;
       padding: 4px 8px;
       
@@ -537,6 +591,25 @@
       .mat-mdc-select-value {
         color: #ffffff !important; // White text for select values
       }
+
+      // Additional select styling for comprehensive coverage
+      .mat-mdc-select-trigger {
+        color: #ffffff !important; // White text for select trigger
+      }
+
+      .mat-mdc-select-placeholder {
+        color: rgba(255, 255, 255, 0.7) !important; // White placeholder text
+      }
+
+      .mat-mdc-select-arrow {
+        color: #ffffff !important; // White arrow
+      }
+
+      // Ensure all text in select is white
+      .mat-select-value,
+      .mat-select-value-text {
+        color: #ffffff !important;
+      }
       
       .mat-mdc-floating-label {
         color: var(--dark-text-secondary) !important;
@@ -544,6 +617,41 @@
       
       &.mat-focused .mat-mdc-floating-label {
         color: #ffffff !important; // White text for focused labels
+      }
+    }
+
+    // Specific styling for mat-select elements
+    mat-select {
+      color: #ffffff !important;
+      
+      .mat-mdc-select-value {
+        color: #ffffff !important;
+      }
+      
+      .mat-mdc-select-value-text {
+        color: #ffffff !important;
+      }
+    }
+  }
+}
+
+// Global dark theme styling for select dropdowns (rendered outside component)
+body.dark-theme,
+.dark-theme {
+  .mat-mdc-select-panel {
+    background-color: var(--dark-bg-secondary) !important;
+    
+    .mat-mdc-option {
+      color: #ffffff !important;
+      
+      &:hover,
+      &.mdc-list-item--selected {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+      }
+      
+      .mdc-list-item__primary-text {
+        color: #ffffff !important;
       }
     }
   }
@@ -615,13 +723,13 @@
   .bsp-form,
   .example-form {
     .mat-mdc-form-field {
-      background-color: var(--light-bg-primary);
+      background-color: #000000 !important; // Solid black background
       border-radius: 8px;
       
       .mdc-notched-outline__leading,
       .mdc-notched-outline__notch,
       .mdc-notched-outline__trailing {
-        border-color: var(--light-border) !important;
+        border-color: #333333 !important; // Slightly lighter border for visibility on black
       }
       
       &.mat-focused {
@@ -634,19 +742,36 @@
       }
       
       .mat-mdc-input-element {
-        color: var(--light-text-primary) !important;
+        color: #ffffff !important; // White text on black background
       }
       
       .mat-mdc-select-value-text {
-        color: var(--light-text-primary) !important;
+        color: #ffffff !important; // White text for selected values
       }
       
       .mat-mdc-floating-label {
-        color: var(--light-text-secondary) !important;
+        color: rgba(255, 255, 255, 0.7) !important; // Light white for labels
       }
       
       &.mat-focused .mat-mdc-floating-label {
-        color: var(--light-text-primary) !important;
+        color: #ffffff !important; // White text for focused labels
+      }
+
+      // Ensure all select elements have white text
+      .mat-mdc-select-value {
+        color: #ffffff !important;
+      }
+
+      .mat-mdc-select-trigger {
+        color: #ffffff !important;
+      }
+
+      .mat-mdc-select-placeholder {
+        color: rgba(255, 255, 255, 0.7) !important;
+      }
+
+      .mat-mdc-select-arrow {
+        color: #ffffff !important;
       }
     }
   }
@@ -890,6 +1015,47 @@
   }
 }
 
+/* Progress Section */
+.progress-section {
+  max-width: 600px;
+  margin-bottom: 32px;
+}
+
+.progress-card {
+  border-radius: 12px;
+  border: 2px solid #2196f3;
+  
+  .progress-avatar {
+    background-color: #2196f3;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+  
+  .progress-container {
+    margin-top: 16px;
+    
+    mat-progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    
+    .progress-text {
+      text-align: center;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+  }
+}
+
 // Dark theme review section
 .dark-theme {
   .review-card {
@@ -978,11 +1144,37 @@
       color: var(--dark-text-secondary);
     }
   }
+  
+  .progress-card {
+    background-color: var(--dark-bg-secondary);
+    color: var(--dark-text-primary);
+    
+    .mat-mdc-card-title {
+      color: var(--dark-text-primary);
+    }
+    
+    .mat-mdc-card-subtitle {
+      color: var(--dark-text-secondary);
+    }
+  }
 }
 
 // Light theme success section
 .light-theme {
   .success-card {
+    background-color: var(--light-bg-primary);
+    color: var(--light-text-primary);
+    
+    .mat-mdc-card-title {
+      color: var(--light-text-primary);
+    }
+    
+    .mat-mdc-card-subtitle {
+      color: var(--light-text-secondary);
+    }
+  }
+  
+  .progress-card {
     background-color: var(--light-bg-primary);
     color: var(--light-text-primary);
     
@@ -1014,7 +1206,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .create-project-container {
     padding: 16px;
   }
@@ -1063,6 +1255,7 @@
     
     .bsp-description-panel {
       min-width: auto;
+      max-width: 100%;
     }
   }
   
@@ -1150,7 +1343,8 @@
 }
 
 /* Theme-aware Dropdown Panel Styling */
-::ng-deep .dark-theme .mat-mdc-select-panel {
+::ng-deep .dark-theme .mat-mdc-select-panel,
+::ng-deep .cdk-overlay-container .dark-theme .mat-mdc-select-panel {
   background-color: var(--dark-bg-secondary) !important;
   
   .mat-mdc-option {
@@ -1167,9 +1361,25 @@
       background-color: var(--dark-bg-elevated) !important;
       color: #ffffff !important; // White text for active options
     }
+    
+    // Ensure all text elements are white
+    .mdc-list-item__primary-text {
+      color: #ffffff !important;
+    }
+    
+    .mdc-list-item__secondary-text {
+      color: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    // Force white text on all child elements
+    span, div, p {
+      color: #ffffff !important;
+    }
   }
   
   .bsp-option {
+    color: #ffffff !important;
+    
     .bsp-name {
       color: #ffffff !important; // White text for BSP names
     }
@@ -1180,12 +1390,82 @@
   }
   
   .example-option {
+    color: #ffffff !important;
+    
     .example-name {
       color: #ffffff !important; // White text for example names
     }
     
     .example-description {
       color: rgba(255, 255, 255, 0.8) !important; // Light white for example descriptions
+    }
+  }
+}
+
+// Additional global styling to ensure dropdown text is white in dark theme
+::ng-deep .cdk-overlay-container {
+  .mat-mdc-select-panel {
+    .mat-mdc-option {
+      .bsp-option {
+        color: #ffffff !important;
+        
+        .bsp-name {
+          color: #ffffff !important;
+        }
+        
+        .bsp-details {
+          color: rgba(255, 255, 255, 0.8) !important;
+        }
+      }
+      
+      .example-option {
+        color: #ffffff !important;
+        
+        .example-name {
+          color: #ffffff !important;
+        }
+        
+        .example-description {
+          color: rgba(255, 255, 255, 0.8) !important;
+        }
+      }
+    }
+  }
+}
+
+// Body-level styling for dark theme dropdowns
+body.dark-theme {
+  .mat-mdc-select-panel {
+    background-color: #1e1e1e !important;
+    
+    .mat-mdc-option {
+      color: #ffffff !important;
+      background-color: #1e1e1e !important;
+      
+      &:hover,
+      &.mdc-list-item--selected {
+        background-color: #2d2d2d !important;
+        color: #ffffff !important;
+      }
+      
+      .mdc-list-item__primary-text {
+        color: #ffffff !important;
+      }
+      
+      .bsp-option,
+      .example-option {
+        color: #ffffff !important;
+        
+        .bsp-name,
+        .example-name {
+          color: #ffffff !important;
+        }
+        
+        .bsp-details,
+        .example-description {
+          color: rgba(255, 255, 255, 0.8) !important;
+        }
+      }
     }
   }
 }

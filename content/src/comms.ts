@@ -16,6 +16,7 @@ export type BackEndToFrontEndResponseType =
     'setDevKits' |
     'setCodeExamples' |
     'createProjectResult' |
+    'oob' | 
     'success' |
     'error' |
     'browseForFolderResult' ;
@@ -57,4 +58,45 @@ export interface FrontEndToBackEndRequest {
 export interface BackEndToFrontEndResponse {
     response: BackEndToFrontEndResponseType ;
     data: any ;
+}
+
+export interface RecentlyOpenedProject {
+    directory: string ;
+    when: string ; // ISO date/time string
+} ;
+
+export interface Document {
+    title: string ;
+    url: string ;
+}
+
+export interface Tool {
+    name: string;          // Name of the tool
+    id: string ;
+}
+
+export interface MemoryUsage {
+    memtype: string ;       // The name of the memory
+    size: number;           // Size in bytes
+    used: number;           // Used size in bytes
+}
+
+export interface MiddlewareLibrary {
+    title: string ;
+    id: string ;
+    version: string ;
+}
+
+export interface ProjectInfo {
+    name: string ;
+    libraries: MiddlewareLibrary[] ;
+    documents: Document[] ;
+    tools: Tool[] ;
+}
+
+export interface ApplicationInfo {
+    documents: Document[] ;
+    projects: ProjectInfo[] ;
+    memoryUsage: MemoryUsage[] ;
+    tools: Tool[] ;
 }

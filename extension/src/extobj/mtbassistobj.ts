@@ -57,6 +57,17 @@ export class MTBAssistObject {
         return this.envLoaded_ ;
     }
 
+    private reportProgress(data : any) {        
+        if (this.panel_) {
+            data.oobtype = 'progress' ;
+            let oob: BackEndToFrontEndResponse = {
+                response: 'oob',
+                data: data
+            } ;
+            this.panel_.webview.postMessage(oob) ;
+        }
+    }
+
     public async initialize() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_) ;
@@ -72,6 +83,7 @@ export class MTBAssistObject {
                 resolve() ;
             }
             else {
+                BackendService.getInstance().on('progress', this.reportProgress.bind(this));    
                 this.loadMTBApplication().then(() => {
                     this.logger_.info('MTB Application loaded successfully.');
                     this.preInitializeManagers()

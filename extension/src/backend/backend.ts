@@ -10,8 +10,9 @@ import { PlatformAPI } from "./platform/platformapi";
 import * as winston from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
+import { EventEmitter } from "stream";
 
-export class BackendService {
+export class BackendService extends EventEmitter {
     private static instance: BackendService | null = null;
 
     private apis_: PlatformAPI | undefined = undefined;
@@ -28,6 +29,8 @@ export class BackendService {
     //       the backend can store data.
     //
     private constructor(logger: winston.Logger, uri: URI, env: ModusToolboxEnvironment) {
+        super();
+
         //
         // Note, this env object may be in the middle of loading data.  When we want to access it, we should check if it is loaded.
         //
@@ -146,6 +149,10 @@ export class BackendService {
         return ret ;
     }
 
+    private sendProgress(data: any) : void {
+        this.emit('progress', data) ;
+    }
+
     private setPlatform(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             let resp: BackEndToFrontEndResponse | null = null;
@@ -169,6 +176,9 @@ export class BackendService {
                         resp = { response: 'error', data: `Unknown platform type: ${request.data}` };
                         break ;
                 }
+                if (this.apis_) {
+                    this.apis_.on('progress', this.sendProgress.bind(this));                
+                }
             }
             else {
                 this.logger_.error("setPlatform command received without platform type.") ;
@@ -183,7 +193,7 @@ export class BackendService {
     private loadWorkspace(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             if (this.apis_) {
-                this.apis_.loadWorkspace(request.data.path)
+                this.apis_.loadWorkspace(request.data.path, request.data.project)
                     .then(() => {
                         resolve({
                             response: 'success',

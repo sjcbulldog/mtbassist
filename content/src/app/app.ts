@@ -27,19 +27,14 @@ export class App {
       icon: 'home'
     },
     {
-      label: 'Application Explorer',
-      component: null, // Placeholder for now
-      icon: 'explore'
-    },
-    {
       label: 'Create New Project',
       component: 'CreateProject',
       icon: 'add_circle'
     },
     {
-      label: 'Development Kits',
-      component: null, // Placeholder for now
-      icon: 'developer_board'
+      label: 'Application Explorer',
+      component: 'ApplicationExplorer',
+      icon: 'apps'
     }
   ];
 }

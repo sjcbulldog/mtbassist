@@ -1,7 +1,8 @@
+import EventEmitter = require("events");
 import { PlatformType } from "../../comms";
 import { PlatformAPI } from "./platformapi";
 
-export class BrowserAPI implements PlatformAPI {
+export class BrowserAPI extends EventEmitter implements PlatformAPI {
     public getPlatform(): PlatformType {
         return 'browser';
     }
@@ -15,10 +16,9 @@ export class BrowserAPI implements PlatformAPI {
         });
     }    
 
-    public loadWorkspace(p: string): Promise<void> {
+    public loadWorkspace(projdir: string, projname: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             // Simulate loading a workspace
-            console.log(`Loading workspace at ${p}`);
             resolve();
         });
     }
