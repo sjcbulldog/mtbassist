@@ -106,7 +106,7 @@
           <div class="tools-section" *ngIf="applicationStatus.projects && applicationStatus.projects.length > 0 && applicationStatus.projects[0].tools">
             <h3>Application Tools</h3>
             <div class="tools-grid">
-              <div *ngFor="let tool of applicationStatus.projects[0].tools" class="tool-item">
+              <div *ngFor="let tool of applicationStatus.tools" class="tool-item">
                 <div class="tool-header">
                   <div class="tool-info">
                     <div class="tool-meta" *ngIf="tool.version">
