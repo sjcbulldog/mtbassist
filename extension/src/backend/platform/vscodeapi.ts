@@ -252,8 +252,13 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
     }    
 
     private dumpMakeOutput(lines: string[]) {
+        let reg = /loaded asset ('.*')/ ;
         for (let line of lines) {   
             this.logger_.debug(`Make output: ${line}`) ;
+            let m = reg.exec(line);
+            if (m) {
+                this.emit('loadedAsset', m[1]);
+            }
         }
     }
 

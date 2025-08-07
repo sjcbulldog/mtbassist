@@ -77,6 +77,19 @@ export class MTBAssistObject {
         }
     }
 
+    private loadedAsset(asset: string) {
+        if (this.panel_) {
+            let oob: BackEndToFrontEndResponse = {
+                response: 'oob',
+                data: {
+                    oobtype: 'loadedAsset',
+                    asset: asset
+                }
+            };
+            this.panel_.webview.postMessage(oob);
+        }
+    }
+
     private switchToTab(index: number) {
         if (this.panel_) {
             let oob: BackEndToFrontEndResponse = {
@@ -107,6 +120,7 @@ export class MTBAssistObject {
             else {
                 BackendService.getInstance().on('progress', this.reportProgress.bind(this));
                 BackendService.getInstance().on('updateAppStatus', this.pushAppStatus.bind(this));
+                BackendService.getInstance().on('loadedAsset', this.loadedAsset.bind(this));
                 this.loadMTBApplication().then(() => {
                     this.createAppStructure() ;
                     this.logger_.info('MTB Application loaded successfully.');
@@ -537,6 +551,14 @@ export class MTBAssistObject {
             let pinfo = this.projectInfo_.get('') ;
 
             let projects = [...this.projectInfo_.values()].filter((proj) => proj.name !== '').sort((a, b) => a.name.localeCompare(b.name)) ;
+            for(let p of projects) {
+                let envp = this.env_!.appInfo!.projects?.find((proj) => proj.name === p.name) ;
+                if (envp) {
+                    p.missingAssets = envp.missingAssets.length > 0 ;
+                    p.missingAssetDetails = envp.missingAssets.map((asset) => asset.name()) ;
+                }
+            }
+            
             this.logger_.debug(`Found ${projects.length} projects in the application.`) ;
             appst = {
                 valid: true,

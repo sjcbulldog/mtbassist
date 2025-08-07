@@ -136,6 +136,12 @@
                         Fix Missing Assets
                       }
                     </button>
+                    @if (isFixingAssets(project) && getCurrentlyLoadingAsset(project)) {
+                      <div class="loading-asset-indicator">
+                        <div class="loading-spinner"></div>
+                        <span class="loading-text">Loading: {{ getCurrentlyLoadingAsset(project) }}</span>
+                      </div>
+                    }
                   </div>
                 </div>
               }

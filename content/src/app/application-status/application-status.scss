@@ -11,6 +11,7 @@
   --text-color: #212529;
   --text-secondary: #6c757d;
   --primary-color: #007bff;
+  --primary-color-rgb: 0, 123, 255;
   --primary-hover: #0056b3;
   --secondary-color: #f8f9fa;
   --border-color: #dee2e6;
@@ -832,15 +833,49 @@
           font-weight: 500;
           transition: all 0.2s ease;
 
-          &:hover {
+          &:hover:not(:disabled) {
             background: var(--warning-color-hover, #e0a800);
             transform: translateY(-1px);
+          }
+
+          &:disabled {
+            background: var(--text-secondary, #6c757d);
+            color: #ffffff;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.7;
           }
 
           mat-icon {
             font-size: 1rem;
             width: 1rem;
             height: 1rem;
+          }
+        }
+
+        .loading-asset-indicator {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-top: 0.5rem;
+          padding: 0.5rem;
+          background: rgba(var(--primary-color-rgb, 0, 123, 255), 0.1);
+          border: 1px solid var(--primary-color, #007bff);
+          border-radius: 4px;
+          font-size: 0.75rem;
+
+          .loading-spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--border-color, #e0e0e0);
+            border-top: 2px solid var(--primary-color, #007bff);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+
+          .loading-text {
+            color: var(--primary-color, #007bff);
+            font-weight: 500;
           }
         }
       }

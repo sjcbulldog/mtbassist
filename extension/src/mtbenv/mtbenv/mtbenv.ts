@@ -106,6 +106,34 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return this.isLoading_ ; 
     }
 
+    public reloadAppInfo() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            if (this.appdir_ === undefined) {
+                reject('AppInfo was requested via the load flags, but the appdir argument was not provided') ;
+            }
+            else {
+                this.loading_ |= MTBLoadFlags.AppInfo ;
+                this.loadAppInfo()
+                .then(() => {
+                    this.isLoading_ = false ;
+                    this.has_ |= MTBLoadFlags.AppInfo ;
+                    this.emit('loaded', this.has_) ;
+                    resolve() ;
+                })
+                .catch((err) => {
+                    this.isLoading_ = false ;
+                    this.has_ &= ~MTBLoadFlags.AppInfo ;
+                    this.wants_ &= ~MTBLoadFlags.AppInfo ;
+                    this.logger_.error('Error reloading AppInfo:', err) ;
+                    this.emit('error', err) ;
+                    reject(err) ;
+                }) ;
+            }            
+        }) ;
+
+        return ret ;
+    }
+
     public load(flags: MTBLoadFlags, appdir?: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             if (this.isLoading_) {
@@ -114,7 +142,9 @@ export class ModusToolboxEnvironment extends EventEmitter {
             }
 
             this.isLoading_ = true ;
-            this.appdir_ = appdir ;
+            if (appdir !== undefined) {
+                this.appdir_ = appdir ;
+            }
             this.wants_ = flags ;
 
             this.loadPacks()

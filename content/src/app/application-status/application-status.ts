@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,21 +24,32 @@ export class ApplicationStatus implements OnInit {
   errorMessage = '';
   currentDate = new Date();
   fixingAssetsProjects: Set<string> = new Set(); // Track which projects are currently fixing assets
+  currentlyLoadingAsset: string = ''; // Track which asset is currently being loaded
 
-  constructor(private be: BackendService) {
+  constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
     // Subscribe to app status data
     this.be.appStatusData.subscribe({
       next: (data) => {
-        console.log('Application status data received:', data);
+        this.be.log('Application status data received:') ;
         this.applicationStatus = data;
         this.isLoading = false;
         this.hasError = false;
+        this.fixingAssetsProjects.clear() ;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading application status:', error);
         this.hasError = true;
         this.errorMessage = 'Failed to load application status: ' + error.message;
         this.isLoading = false;
+      }
+    });
+
+    // Subscribe to loaded asset updates
+    this.be.loadedAsset.subscribe({
+      next: (asset) => {
+        console.log('Currently loading asset:', asset);
+        this.currentlyLoadingAsset = asset;
       }
     });
   }    
@@ -206,29 +217,29 @@ export class ApplicationStatus implements OnInit {
     return this.fixingAssetsProjects.has(project.name);
   }
 
+  // Get the currently loading asset display text
+  getCurrentlyLoadingAsset(project: any): string {
+    if (this.isFixingAssets(project) && this.currentlyLoadingAsset) {
+      return this.currentlyLoadingAsset;
+    }
+    return '';
+  }
+
   // Fix missing assets for a project
   fixMissingAssets(project: any): void {
     if (this.isFixingAssets(project)) {
       return; // Already fixing assets for this project
     }
 
-    console.log('Starting to fix missing assets for project:', project.name);
     this.fixingAssetsProjects.add(project.name);
+    this.currentlyLoadingAsset = ''; // Reset current asset
 
     try {
       this.be.fixMissingAssets(project);
-      
-      // Set a timeout to remove the loading state after a reasonable time
-      // In a real implementation, you'd want to listen for completion events
-      setTimeout(() => {
-        this.fixingAssetsProjects.delete(project.name);
-        // Refresh app status to get updated data
-        this.be.appStatusMgr?.refreshAppStatus();
-      }, 10000); // 10 seconds timeout
-      
     } catch (error) {
       console.error('Error fixing missing assets for project:', project.name, error);
       this.fixingAssetsProjects.delete(project.name);
+      this.currentlyLoadingAsset = ''; // Clear current asset on error
     }
   }
 

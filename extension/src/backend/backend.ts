@@ -102,11 +102,21 @@ export class BackendService extends EventEmitter {
             if (this.apis_) {
                 this.apis_.fixMissingAssets(request.data as string)
                     .then(() => {
-                        this.emit('updateAppStatus') ;
-                        resolve({
-                            response: 'success',
-                            data: null
-                        });
+                        this.env_?.reloadAppInfo()
+                        .then(() => {
+                            this.emit('updateAppStatus') ;
+                            resolve({
+                                response: 'success',
+                                data: null
+                            });
+                        })
+                        .catch((error) => {
+                            this.logger_.error(`Error reloading app info after fixing assets: ${error.message}`);
+                            resolve({
+                                response: 'error',
+                                data: `Error reloading app info after fixing assets: ${error.message}`
+                            });
+                        }) ;
                     })
                     .catch((error) => {
                         this.logger_.error(`Error fixing missing assets: ${error.message}`);
@@ -183,6 +193,10 @@ export class BackendService extends EventEmitter {
         this.emit('progress', data) ;
     }
 
+    private loadedAsset(asset: string) : void {
+        this.emit('loadedAsset', asset) ;
+    }
+
     private setPlatform(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             let resp: BackEndToFrontEndResponse | null = null;
@@ -207,7 +221,8 @@ export class BackendService extends EventEmitter {
                         break ;
                 }
                 if (this.apis_) {
-                    this.apis_.on('progress', this.sendProgress.bind(this));                
+                    this.apis_.on('progress', this.sendProgress.bind(this)); 
+                    this.apis_.on('loadedAsset', this.loadedAsset.bind(this)) ;
                 }
             }
             else {
