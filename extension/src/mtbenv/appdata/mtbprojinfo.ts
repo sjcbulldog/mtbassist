@@ -66,6 +66,10 @@ export class MTBProjectInfo {
         this.vars_ = vars ;
     }
 
+    public get assetsRequests() : MTBAssetRequest[] {
+        return this.asset_requests_ ;   
+    }
+
     public get name() : string {
         return path.basename(this.rootdir_) ;
     }

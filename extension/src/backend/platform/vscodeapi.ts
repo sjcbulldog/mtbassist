@@ -229,6 +229,54 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
         });
     }   
 
+    public fixMissingAssets(projname: string): Promise<void> {
+        let ret = new Promise<void>((resolve) => {
+            let proj = this.env_.appInfo?.projects.find((p) => p.name === projname);
+            if (!proj) {
+                this.logger_.error(`Project '${projname}' not found.`) ;
+                resolve() ;
+                return;
+            }
+
+            this.runMakeGetLibs(this.env_.appInfo!.appdir, proj.name)
+            .then((result) => {
+                if (result[0] !== 0) {
+                    this.logger_.error(`Failed to fix missing assets for project '${projname}': ${result[1].join('\n')}`) ;
+                } else {
+                    this.logger_.info(`Successfully fixed missing assets for project '${projname}'.`) ;
+                }
+                resolve() ;
+            }) ;
+        }) ;
+        return ret ;
+    }    
+
+    private dumpMakeOutput(lines: string[]) {
+        for (let line of lines) {   
+            this.logger_.debug(`Make output: ${line}`) ;
+        }
+    }
+
+    private runMakeGetLibs(appdir: string, projdir: string): Promise<[number, string[]]> {
+        return new Promise<[number, string[]]>((resolve, reject) => {
+            let p = path.join(appdir, projdir);
+            let cliPath = this.findMakePath();
+            if (cliPath === undefined) {
+                resolve([-1, ["modus shell not found."]]) ;
+            }
+            else {
+                this.makeLines_ = 0 ;
+                ModusToolboxEnvironment.runCmdCaptureOutput(p, cliPath, ['getlibs'], this.dumpMakeOutput.bind(this))
+                .then((result) => {
+                    resolve([0, [``]]);
+                })
+                .catch((error) => {
+                    resolve([-1, [``]]);
+                });
+            }
+        });
+    }       
+
     private findMakePath() : string | undefined {
         let tool = this.env_.toolsDB.findToolByGUID(VSCodeAPI.modusShellToolUuid);
         if (tool === undefined) {

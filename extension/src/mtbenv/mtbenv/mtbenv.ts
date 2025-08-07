@@ -221,14 +221,21 @@ export class ModusToolboxEnvironment extends EventEmitter {
             let sofar = 0 ;
             let text: string = "" ;
             let penv : any = {} ;
+            let found = false ;
             for(let key in process.env) {
                 if (key === 'PATH') {
                     penv['PATH'] = ModusToolboxEnvironment.filterPath(process.env[key]!) ;
+                    found = true ;
                 }
                 else {
                     penv[key] = process.env[key] ;
                 }
             }
+
+            if (!found) {
+                penv['PATH'] = ModusToolboxEnvironment.filterPath('') ;
+            }
+
             let cp: exec.ChildProcess = exec.spawn(cmd, args, 
                 {
                     cwd: cwd,

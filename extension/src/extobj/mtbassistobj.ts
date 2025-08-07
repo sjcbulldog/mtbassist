@@ -9,11 +9,16 @@ import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import { BackendService } from '../backend/backend';
 import { ApplicationStatusData, BackEndToFrontEndResponse, Documentation, FrontEndToBackEndRequest, MemoryInfo, Middleware, Project, Tool } from '../comms';
+import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49' ;
     private static readonly mtbLaunchToolName = 'mtblaunch' ;
     private static theInstance_: MTBAssistObject | undefined = undefined;
+
+    private static readonly gettingStartedTab = 0 ;
+    private static readonly createProjectTab = 1 ;
+    private static readonly applicationStatusTab = 2 ;
 
     private context_: vscode.ExtensionContext;
     private logger_ : winston.Logger ;
@@ -72,6 +77,19 @@ export class MTBAssistObject {
         }
     }
 
+    private switchToTab(index: number) {
+        if (this.panel_) {
+            let oob: BackEndToFrontEndResponse = {
+                response: 'oob',
+                data: {
+                    oobtype: 'selectTab',
+                    index: index
+                }
+            };
+            this.panel_.webview.postMessage(oob);
+        }
+    }
+
     public async initialize() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_) ;
@@ -88,6 +106,7 @@ export class MTBAssistObject {
             }
             else {
                 BackendService.getInstance().on('progress', this.reportProgress.bind(this));
+                BackendService.getInstance().on('updateAppStatus', this.pushAppStatus.bind(this));
                 this.loadMTBApplication().then(() => {
                     this.createAppStructure() ;
                     this.logger_.info('MTB Application loaded successfully.');
@@ -100,6 +119,9 @@ export class MTBAssistObject {
                                     this.logger_.debug('Welcome page command executed successfully.');
                                     this.postInitializeManagers()
                                         .then(() => { 
+                                            if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo) && this.env_.appInfo) {
+                                                this.switchToTab(MTBAssistObject.applicationStatusTab) ;
+                                            }                                            
                                             this.getLaunchData()
                                             .then(() => {
                                                 this.logger_.info('Post-initialization of managers completed successfully.');
@@ -367,15 +389,8 @@ export class MTBAssistObject {
         return path.join(tool.path, MTBAssistObject.mtbLaunchToolName);
     }
 
-
-    // name: string;
-    // uuid: string;
-    // version: string;
-    // description: string;
-    // path?: string;
-
-    private addGlobalLaunch(cfg: any) {
-        let pinfo = this.projectInfo_.get('') ;
+    private addLaunch(proj: string, cfg: any) {
+        let pinfo = this.projectInfo_.get(proj) ;
         if (!pinfo) {
             return ;
         }
@@ -389,30 +404,43 @@ export class MTBAssistObject {
         pinfo.tools.push(tool) ;
     }
 
-    private addBSPLaunch(cfg: any) {
-    }
+    private addDoc(proj: string, cfg: any) {
+        let pinfo = this.projectInfo_.get(proj) ;
+        if (!pinfo) {
+            return ;
+        }
 
-    private addProjectLaunch(cfg: any) {
+        pinfo.documentation = pinfo.documentation.filter(doc => doc.location !== cfg.location);
+        let doc: Documentation = {
+            name: cfg.title,
+            location: cfg.location,
+        } ;
+        pinfo.documentation.push(doc) ;
     }
 
     private procesMtbLaunchData(data: any) {
         if (data && data.configs && Array.isArray(data.configs)) {
             for(let cfg of data.configs) {
                 if (cfg.scope) {
-                    if (cfg.scope === 'global') {
-                        this.addGlobalLaunch(cfg) ;
-                    }
-                    else if (cfg.scope === 'bsp') {
-                        this.addBSPLaunch(cfg) ;
+                    if (cfg.scope === 'global' || cfg.scope === 'bsp') {
+                        this.addLaunch('', cfg) ;
                     }
                     else if (cfg.scope === 'project') {
-                        this.addProjectLaunch(cfg) ;
+                        this.addLaunch(cfg.project, cfg) ;
                     }
                 }
             }
         }
 
         if (data && data.documentation && Array.isArray(data.documentation)) {
+            for(let cfg of data.documentation) {
+                if (cfg.project === '') {
+                    this.addDoc('', cfg) ;
+                }
+                else {
+                    this.addDoc(cfg.project, cfg) ;
+                }
+            }
         }
     }
 
@@ -451,6 +479,18 @@ export class MTBAssistObject {
         return ret;
     }
 
+    private getMiddlewareFromEnv(proj: MTBProjectInfo) : Middleware[] {
+        let ret: Middleware[] = [] ;
+        for(let asset of proj.assetsRequests) {
+            let mw: Middleware = {
+                name: asset.repoName(),
+                version: asset.commit()
+            } ;
+            ret.push(mw) ;
+        }
+        return ret ;
+    }
+
     private createAppStructure() {
         if (!this.env_ || !this.env_.has(MTBLoadFlags.AppInfo)) {
             this.logger_.debug('No ModusToolbox application info found - cannot create app structure.');
@@ -461,8 +501,10 @@ export class MTBAssistObject {
             let project: Project = {
                 name: proj.name,
                 documentation: [],
-                middleware: [],
+                middleware: this.getMiddlewareFromEnv(proj),
                 tools: [],
+                missingAssets: proj.missingAssets.length > 0,
+                missingAssetDetails: proj.missingAssets.map((asset) => asset.name())
             };
             this.projectInfo_.set(proj.name, project);
         }
@@ -472,6 +514,8 @@ export class MTBAssistObject {
             documentation: [],
             middleware: [],
             tools: [],
+            missingAssets: false,
+            missingAssetDetails: [],
         });
     }
 
@@ -492,13 +536,15 @@ export class MTBAssistObject {
         if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo)) {
             let pinfo = this.projectInfo_.get('') ;
 
+            let projects = [...this.projectInfo_.values()].filter((proj) => proj.name !== '').sort((a, b) => a.name.localeCompare(b.name)) ;
+            this.logger_.debug(`Found ${projects.length} projects in the application.`) ;
             appst = {
                 valid: true,
                 name: this.env_.appInfo?.appdir || '',
                 memory: this.meminfo_,
                 documentation: pinfo?.documentation || [],
                 middleware: pinfo?.middleware || [],
-                projects: [...this.projectInfo_.values()],
+                projects: projects,
                 tools: pinfo?.tools || [],
             } ;
         } else {

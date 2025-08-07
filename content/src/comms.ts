@@ -11,7 +11,8 @@ export type FrontEndToBackEndRequestType =
     'loadWorkspace' |
     'getAppStatus' |
     'platformSpecific' |
-    'browseForFolder' ;
+    'browseForFolder' |
+    'fixMissingAssets' ;
 
 export type BackEndToFrontEndResponseType =
     'setDevKits' |
@@ -112,7 +113,6 @@ export interface MemoryStats {
   lastUpdated: Date;
 }
 
-
 export interface MemoryInfo {
   type: string;
   used: number;
@@ -122,17 +122,12 @@ export interface MemoryInfo {
 
 export interface Documentation {
   name: string;
-  type: 'pdf' | 'html' | 'markdown' | 'text';
-  size: string;
-  lastModified: Date;
-  url?: string;
+  location: string ;
 }
 
 export interface Middleware {
   name: string;
   version: string;
-  status: 'active' | 'inactive' | 'error';
-  description: string;
 }
 
 export interface Tool {
@@ -146,6 +141,8 @@ export interface Project {
   documentation: Documentation[];
   middleware: Middleware[];
   tools: Tool[];
+  missingAssets: boolean;
+  missingAssetDetails: string[];
 }
 
 export interface ApplicationStatusData {

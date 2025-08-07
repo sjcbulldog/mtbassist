@@ -23,6 +23,7 @@ export class ApplicationStatus implements OnInit {
   hasError = false;
   errorMessage = '';
   currentDate = new Date();
+  fixingAssetsProjects: Set<string> = new Set(); // Track which projects are currently fixing assets
 
   constructor(private be: BackendService) {
     // Subscribe to app status data
@@ -184,10 +185,54 @@ export class ApplicationStatus implements OnInit {
     }
   }
 
-  openDocument(doc: Documentation): void {
-    if (doc.url) {
-      window.open(doc.url, '_blank');
+  // Check if a project has missing assets
+  hasMissingAssets(project: any): boolean {
+    return project.missingAssets || false ;
+  }
+
+  // Get missing assets details for a project
+  getMissingAssetsDetails(project: any): string[] {
+    return project.missingAssetDetails || [] ;
+  }
+
+  // Check if a specific middleware is missing
+  isMiddlewareMissing(project: any, middlewareName: string): boolean {
+    const missingAssets = this.getMissingAssetsDetails(project);
+    return missingAssets.includes(middlewareName);
+  }
+
+  // Check if a project is currently fixing assets
+  isFixingAssets(project: any): boolean {
+    return this.fixingAssetsProjects.has(project.name);
+  }
+
+  // Fix missing assets for a project
+  fixMissingAssets(project: any): void {
+    if (this.isFixingAssets(project)) {
+      return; // Already fixing assets for this project
     }
+
+    console.log('Starting to fix missing assets for project:', project.name);
+    this.fixingAssetsProjects.add(project.name);
+
+    try {
+      this.be.fixMissingAssets(project);
+      
+      // Set a timeout to remove the loading state after a reasonable time
+      // In a real implementation, you'd want to listen for completion events
+      setTimeout(() => {
+        this.fixingAssetsProjects.delete(project.name);
+        // Refresh app status to get updated data
+        this.be.appStatusMgr?.refreshAppStatus();
+      }, 10000); // 10 seconds timeout
+      
+    } catch (error) {
+      console.error('Error fixing missing assets for project:', project.name, error);
+      this.fixingAssetsProjects.delete(project.name);
+    }
+  }
+
+  openDocument(doc: Documentation): void {
   }
 
   refresh(): void {

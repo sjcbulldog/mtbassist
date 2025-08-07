@@ -80,6 +80,17 @@ export class BackendService {
     }
   }
 
+  public fixMissingAssets(project: any): void { 
+    this.log('Requesting fix for missing assets ${project.name}');
+    if (this.pipe_) {
+      this.log(`Sending request to fix missing assets for project: ${JSON.stringify(project)}`);
+      this.pipe_.sendRequest({
+        request: 'fixMissingAssets',
+        data: project.name
+      });
+    }
+  }
+
   public sendRequest(request: FrontEndToBackEndRequest) : void {
     if (this.pipe_) {
       this.pipe_.sendRequest(request);
@@ -146,8 +157,12 @@ export class BackendService {
         this.progressPercent.next(cmd.data.percent || 0);
       }
       else if (cmd.data.oobtype && cmd.data.oobtype === 'appStatus') {
-        let appStatusData: ApplicationStatusData = cmd.data.appStatusData;
+        let appStatusData: ApplicationStatusData = cmd.data;
         this.appStatusData.next(appStatusData);
+      }
+      else if (cmd.data.oobtype && cmd.data.oobtype === 'selectTab') {
+        let index = cmd.data.index || 0;
+        this.navTab.next(index);
       }
   }
 

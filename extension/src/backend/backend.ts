@@ -94,6 +94,35 @@ export class BackendService extends EventEmitter {
         this.cmdhandler_.set('getCodeExamples', this.getCodeExamples.bind(this));
         this.cmdhandler_.set('createProject', this.createProject.bind(this));
         this.cmdhandler_.set('loadWorkspace', this.loadWorkspace.bind(this));
+        this.cmdhandler_.set('fixMissingAssets', this.fixMissingAssets.bind(this)); 
+    }
+
+    private fixMissingAssets(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            if (this.apis_) {
+                this.apis_.fixMissingAssets(request.data as string)
+                    .then(() => {
+                        this.emit('updateAppStatus') ;
+                        resolve({
+                            response: 'success',
+                            data: null
+                        });
+                    })
+                    .catch((error) => {
+                        this.logger_.error(`Error fixing missing assets: ${error.message}`);
+                        resolve({
+                            response: 'error',
+                            data: `Error fixing missing assets: ${error.message}`
+                        });
+                    });
+            } else {
+                resolve({
+                    response: 'error',
+                    data: 'Platform API is not initialized.'
+                });
+            }
+        }) ;
+        return ret ;
     }
 
     private convertCodeExamples(examples: MTBApp[]): CodeExampleIdentifier[] {
