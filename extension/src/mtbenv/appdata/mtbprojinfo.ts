@@ -66,6 +66,10 @@ export class MTBProjectInfo {
         this.vars_ = vars ;
     }
 
+    public get name() : string {
+        return path.basename(this.rootdir_) ;
+    }
+
     public get missingAssets() : MTBAssetRequest[] {
         return this.missing_assets_ ;
     }
@@ -346,7 +350,7 @@ export class MTBProjectInfo {
         }
     }
 
-    private expandPath(line: string) : string | Error {
+    private expandPath(line: string) : string | Error | null {
         let ret = line ;
 
         let start = line.indexOf(MTBProjectInfo.ExpandIngorePathPrefix) ;
@@ -356,13 +360,13 @@ export class MTBProjectInfo {
 
         let end = line.indexOf(')', start) ;
         if (end === -1) {
-            return new Error(`invalid ignore path '${line}'`)
+            return new Error(`invalid ignore path '${line}'`) ;
         }
 
         let varname = line.substring(start + MTBProjectInfo.ExpandIngorePathPrefix.length, end) ;
         let asset = this.asset_requests_.find((req) => { return req.name() === varname ;}) ;
         if (!asset) {
-            return new Error(`invalid ignore path '${line}' - there is not asset with the name '${varname}'`)
+            return null ;
         }
 
         ret = line.substring(0, start) + asset.fullPath(this.dirList) + line.substring(end + 1) ;
@@ -389,6 +393,9 @@ export class MTBProjectInfo {
                     let err = result as Error ;
                     let msg = `loadapp: error reading cyignore file '${fpath}' - ${err.message}` ;
                     logger.error(msg) ;
+                    continue ;
+                }
+                else if (result === null) {
                     continue ;
                 }
 

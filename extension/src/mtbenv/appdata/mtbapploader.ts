@@ -10,7 +10,7 @@ import * as winston from 'winston';
 export class MTBAppLoader {
     private app_ : MTBAppInfo ;
     private toolsdir_ : string ;
-    private modus_shell_dir_? : string ;
+    private modusShellDir_? : string ;
     private logger_ : winston.Logger ;
 
     constructor(logger: winston.Logger, app: MTBAppInfo, toolsdir: string) {
@@ -19,7 +19,7 @@ export class MTBAppLoader {
         this.logger_ = logger ;
     }
 
-    public load() : Promise<void> {
+    public async load() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             if (!this.toolsdir_) {
                 let msg = `loadapp: cannot load application - no tools directory located` ;
@@ -39,7 +39,7 @@ export class MTBAppLoader {
                         reject(new Error(msg)) ;
                     }
                     else {
-                        MTBUtils.callGetAppInfo(this.modus_shell_dir_!, this.app_.appdir)
+                        MTBUtils.callGetAppInfo(this.logger_, this.modusShellDir_!, this.app_.appdir)
                             .then((vars) => {
                                 this.app_.setVars(vars) ;
                                 let err = this.app_.isValid() ;
@@ -51,11 +51,12 @@ export class MTBAppLoader {
                                 if (type === MTBNames.MTB_TYPE_APPLICATION) {
                                     this.loadApplication(vars)
                                         .then(() => {
+                                            this.logger_.debug('Loading AppInfo Complete') ;
                                             resolve() ;
                                         })
                                         .catch((err) => {
                                             reject(err) ;
-                                        })
+                                        });
                                 }
                                 else if (type === MTBNames.MTB_TYPE_COMBINED) {
                                     this.loadCombined(vars)
@@ -64,7 +65,7 @@ export class MTBAppLoader {
                                         })
                                         .catch((err) => {
                                             reject(err) ;
-                                        })
+                                        });
                                 }
                                 else if (type === MTBNames.MTB_TYPE_PROJECT) {
                                     let msg = `loadapp: the makefile in directory '${this.app_.appdir}' returned a type of 'PROJECT' which is not valid in the top level directory` ;
@@ -90,10 +91,10 @@ export class MTBAppLoader {
     private setupModusShell() : boolean {
         let ret = true ;
 
-        if (!this.modus_shell_dir_) {
-            this.modus_shell_dir_ = path.join(this.toolsdir_, 'modus-shell') ;
-            if (!fs.existsSync(this.modus_shell_dir_) || !fs.statSync(this.modus_shell_dir_).isDirectory()) {
-                this.modus_shell_dir_ = undefined ;
+        if (!this.modusShellDir_) {
+            this.modusShellDir_ = path.join(this.toolsdir_, 'modus-shell') ;
+            if (!fs.existsSync(this.modusShellDir_) || !fs.statSync(this.modusShellDir_).isDirectory()) {
+                this.modusShellDir_ = undefined ;
                 ret = false ;
             }
         }
@@ -125,7 +126,7 @@ export class MTBAppLoader {
                 reject(new Error(msg)) ;                
             }
 
-            MTBUtils.callGetAppInfo(this.modus_shell_dir_!, projdir)
+            MTBUtils.callGetAppInfo(this.logger_, this.modusShellDir_!, projdir)
                 .then((vars) => {
                     let projinfo = new MTBProjectInfo(this.app_, projdir, vars) ;
                     this.processProject(projinfo)

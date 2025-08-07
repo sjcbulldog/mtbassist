@@ -20,15 +20,35 @@ import { BackendService } from '../backend/backend-service';
 export class ApplicationStatus implements OnInit {
   applicationStatus: ApplicationStatusData | null = null;
   isLoading = true;
+  hasError = false;
+  errorMessage = '';
+  currentDate = new Date();
 
   constructor(private be: BackendService) {
-    this.be.appStatusData.subscribe(data => {
-      this.applicationStatus = data;
-      this.isLoading = false;
+    // Subscribe to app status data
+    this.be.appStatusData.subscribe({
+      next: (data) => {
+        console.log('Application status data received:', data);
+        this.applicationStatus = data;
+        this.isLoading = false;
+        this.hasError = false;
+      },
+      error: (error) => {
+        console.error('Error loading application status:', error);
+        this.hasError = true;
+        this.errorMessage = 'Failed to load application status: ' + error.message;
+        this.isLoading = false;
+      }
     });
-  }
+  }    
 
   ngOnInit(): void {
+    // Request app status refresh
+    try {
+      this.be.appStatusMgr?.refreshAppStatus();
+    } catch (error) {
+      console.error('Error refreshing app status:', error);
+    }
   }
 
   formatBytes(bytes: number): string {
@@ -172,7 +192,18 @@ export class ApplicationStatus implements OnInit {
 
   refresh(): void {
     this.isLoading = true;
-    this.be.appStatusMgr.refreshAppStatus() ;
+    this.hasError = false;
+    this.errorMessage = '';
+    this.currentDate = new Date();
+    
+    try {
+      this.be.appStatusMgr?.refreshAppStatus();
+    } catch (error) {
+      console.error('Error refreshing app status:', error);
+      this.hasError = true;
+      this.errorMessage = 'Failed to refresh application status';
+      this.isLoading = false;
+    }
   }
 }
 

@@ -130,7 +130,7 @@ export class MTBUtils {
         return obj ;
     }
 
-    public static runProg(cmd: string, cwd: string, args: string[]) : Promise<[number, string[]]> {
+    public static async runProg(logger: winston.Logger, cmd: string, cwd: string, args: string[]) : Promise<[number, string[]]> {
         let ret = new Promise<[number, string[]]>((resolve, reject) => {
             let text: string = "" ;
             let cp: exec.ChildProcess = exec.spawn(cmd, args, 
@@ -162,27 +162,38 @@ export class MTBUtils {
         return ret ;
     }
 
-    public static callMake(shtools: string, cwd: string, makeargs: string[]) {
-        let makepath = path.join(shtools, 'bin', 'make') ;
-        let bashpath = path.join(shtools, 'bin', 'bash') ;
+    public static async callMake(logger: winston.Logger, shtools: string, cwd: string, makeargs: string[]) : Promise<[number, string[]]> {
+        let ret = new Promise<[number, string[]]>((resolve, reject) => {
+            let makepath = path.join(shtools, 'bin', 'make') ;
+            let bashpath = path.join(shtools, 'bin', 'bash') ;
 
-        if (process.platform === 'win32') {
-            makepath += '.exe' ;
-            bashpath += '.exe' ;
+            if (process.platform === 'win32') {
+                makepath += '.exe' ;
+                bashpath += '.exe' ;
 
-            makepath = makepath.replace(/\\/g,'/') ;
-            bashpath = bashpath.replace(/\\/g,'/') ;
-        }
+                makepath = makepath.replace(/\\/g,'/') ;
+                bashpath = bashpath.replace(/\\/g,'/') ;
+            }
 
-        let pgm = 'PATH=/bin:/usr/bin ; ' + makepath + ' ' + makeargs.join(' ') ;
+            let pgm = 'PATH=/bin:/usr/bin ; ' + makepath + ' ' + makeargs.join(' ') ;
 
-        let args = ['--norc', '--noprofile', '-c', pgm] ;
-        return this.runProg(bashpath, cwd, args) ;
+            let args = ['--norc', '--noprofile', '-c', pgm] ;
+
+            MTBUtils.runProg(logger, bashpath, cwd, args)
+            .then((result) => {
+                resolve(result) ;
+            })
+            .catch((err) => {
+                logger.error(`Error in callMake command: ${bashpath} in ${cwd} with args: ${args.join(' ')} - ${err}`) ;
+                reject(err) ;
+            }) ;
+        }) ;
+        return ret ;
     }
 
-    public static callGetAppInfo(shtools: string, cwd: string) : Promise<Map<string, string>> {
+    public static async callGetAppInfo(logger: winston.Logger, shtools: string, cwd: string) : Promise<Map<string, string>> {
         let ret = new Promise<Map<string, string>>((resolve, reject) => { 
-            this.callMake(shtools, cwd, ['get_app_info', 'CY_PROTOCOL=2', 'MTB_QUERY=1'])
+            this.callMake(logger, shtools, cwd, ['get_app_info', 'CY_PROTOCOL=2', 'MTB_QUERY=1'])
                 .then((result) => {
                     if (result[0] !== 0) {
                         reject(new Error(`the call to 'make get_app_info' returns status code ${result[0]}`)) ;
@@ -202,9 +213,8 @@ export class MTBUtils {
                 })
                 .catch((err) => {
                     reject(err) ;
-                })
+                }) ;
         }) ;
         return ret ;
-
     }
 }

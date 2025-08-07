@@ -7,6 +7,7 @@ import * as winston from 'winston';
 import * as vscode from 'vscode';
 import * as vscodeuri from 'vscode-uri';
 import * as EventEmitter from 'events' ;
+import { MTBLoadFlags } from "../../mtbenv/mtbenv/loadflags";
 
 interface OutputPercentMap {
     match: RegExp ;
@@ -57,6 +58,8 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
         super() ;
         this.env_ = env;
         this.logger_ = logger;
+
+        this.env_.on('loaded', this.dataLoaded.bind(this)) ;
     }
 
     public getPlatform(): PlatformType {
@@ -71,6 +74,10 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
             vscode.commands.executeCommand("vscode.openFolder", wkspuri) ;
             resolve();
         }) ;
+    }
+
+    private dataLoaded(data: MTBLoadFlags) {
+        this.emit('dataLoaded', data);
     }
 
     private createProjectCallback(lines: string[]) {

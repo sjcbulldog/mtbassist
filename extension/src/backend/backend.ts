@@ -97,41 +97,61 @@ export class BackendService extends EventEmitter {
         this.cmdhandler_.set('getAppStatus', this.getAppStatus.bind(this));
     }
 
-    private getAppStatus(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
-        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
-            let appst : ApplicationStatusData ;
+    private getAppStatusFromEnv() : ApplicationStatusData  {
+        let appst : ApplicationStatusData ;        
+        if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo)) {
+            let mem : MemoryInfo[] = [] ;
+            let docs: Documentation[] = [] ;
+            let projs : Project[] = [] ;
+            let middleware: Middleware[] = [] ;
 
-            if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo)) {
-                let mem : MemoryInfo[] = [] ;
-                let docs: Documentation[] = [] ;
-                let projs : Project[] = [] ;
-                let middleware: Middleware[] = [] ;
-
-                appst = {
-                    valid: true,
-                    name: this.env_.appInfo?.appdir || '',
-                    memory: mem,
-                    documentation: docs,
-                    middleware: middleware,
-                    projects: projs,
-                } ;
-            } else {
-                appst = {
-                    valid: false,
-                    name : '',
-                    memory: [],
+            for(let p of this.env_.appInfo?.projects || []) {
+                let proj: Project = {
+                    name: p.name,
                     documentation: [],
                     middleware: [],
-                    projects: []
+                    tools: [],
                 };
+                projs.push(proj);
             }
 
-            let resp: BackEndToFrontEndResponse = {
-                response: 'appStatusResult',
-                data: appst
+            appst = {
+                valid: true,
+                name: this.env_.appInfo?.appdir || '',
+                memory: mem,
+                documentation: docs,
+                middleware: middleware,
+                projects: projs,
             } ;
-
-            resolve(resp) ;
+        } else {
+            appst = {
+                valid: false,
+                name : '',
+                memory: [],
+                documentation: [],
+                middleware: [],
+                projects: []
+            };
+        }
+        return appst ;
+    }
+                
+    private getAppStatus(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            if (this.env_ && this.env_.isLoading) {
+                this.env_.on('loaded', () => {
+                    resolve({
+                        response: 'appStatusResult',
+                        data: this.getAppStatusFromEnv()
+                    }) ;                    
+                }) ;
+            }
+            else {
+                resolve({
+                    response: 'appStatusResult',
+                    data: this.getAppStatusFromEnv()
+                }) ;
+            }
         }) ;
         return ret ;
     }

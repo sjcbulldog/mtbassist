@@ -131,6 +131,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
                     Promise.all(plist)
                         .then(() => {
                             this.isLoading_ = false ;
+                            this.has_ = this.has_ | this.wants_ ;
                             this.wants_ = MTBLoadFlags.None ;
                             this.emit('loaded', this.has_) ;
                             resolve() ;
@@ -339,7 +340,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ret ;
     }
 
-    private loadAppInfo() : Promise<void> {
+    private async loadAppInfo() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.logger_.debug('Loading AppInfo') ;
             
@@ -367,8 +368,6 @@ export class ModusToolboxEnvironment extends EventEmitter {
                         reject(err) ;
                     }) ;
             }
-
-            resolve() ;
         }) ;
         return ret ;
     }
@@ -401,6 +400,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
                         return ;
                     }
                 }
+                this.logger_.debug('Loading Packs complete') ;
                 resolve() ;
             }
             catch(err) {
@@ -441,6 +441,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
                     this.toolsDb_.setActiveToolSet(this.packDb_.eap) ;
                     this.loading_ &= ~MTBLoadFlags.Tools ;
                     this.has_ |= MTBLoadFlags.Tools ;
+                    this.logger_.debug('Loading Tools complete') ;
                     resolve() ;
                 })
                 .catch((err) => {   

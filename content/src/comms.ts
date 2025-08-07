@@ -145,12 +145,7 @@ export interface Tool {
 }
 
 export interface Project {
-  id: string;
   name: string;
-  version: string;
-  type: 'application' | 'library' | 'middleware';
-  status: 'active' | 'inactive' | 'building' | 'error';
-  buildDate: Date;
   documentation: Documentation[];
   middleware: Middleware[];
   tools: Tool[];
