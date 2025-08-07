@@ -14,8 +14,10 @@ export class AppStatusBackend {
         let ret = new Promise<void>((resolve, reject) => {
             this.appStatusResolvers.push(resolve);
             this.parent_.sendRequest({
-                request: 'getAppStatus',
-                data: null
+                request: 'platformSpecific',
+                data: {
+                    command: 'getAppStatus'
+                }
             });
         });
         return ret;

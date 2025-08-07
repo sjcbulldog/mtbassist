@@ -42,6 +42,8 @@ export class BackendService {
     this.projectManager_ = new ProjectManager(this);
     this.appStatusManager_ = new AppStatusBackend(this);
 
+    this.setupHandlers();
+
     this.sendRequest({
       request: 'setPlatform',
       data: {
@@ -143,12 +145,17 @@ export class BackendService {
         this.progressMessage.next(cmd.data.message || '');
         this.progressPercent.next(cmd.data.percent || 0);
       }
+      else if (cmd.data.oobtype && cmd.data.oobtype === 'appStatus') {
+        let appStatusData: ApplicationStatusData = cmd.data.appStatusData;
+        this.appStatusData.next(appStatusData);
+      }
   }
 
   private messageProc(cmd: BackEndToFrontEndResponse) {
+    let maxstr = 1024 ;
     let str = JSON.stringify(cmd) ;
-    if (str.length > 128) {
-      str = str.substring(0, 128) + '...';
+    if (str.length > maxstr) {
+      str = str.substring(0, maxstr) + '...';
     }
     this.log(`Received response from backend: ${str}`) ;
 

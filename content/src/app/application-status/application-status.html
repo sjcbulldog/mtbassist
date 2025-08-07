@@ -30,6 +30,7 @@
                   {{ applicationStatus.valid ? 'Valid' : 'Invalid' }}
                 </span>
               </div>
+              <p class="build-date">Status checked: {{ currentDate | date:'medium' }}</p>
             </div>
           </div>
 
@@ -100,19 +101,38 @@
               </div>
             </div>
           </div>
+
+          <!-- Application Tools Section -->
+          <div class="tools-section" *ngIf="applicationStatus.projects && applicationStatus.projects.length > 0 && applicationStatus.projects[0].tools">
+            <h3>Application Tools</h3>
+            <div class="tools-grid">
+              <div *ngFor="let tool of applicationStatus.projects[0].tools" class="tool-item">
+                <div class="tool-header">
+                  <div class="tool-info">
+                    <div class="tool-meta" *ngIf="tool.version">
+                      <span class="version">v{{ tool.version }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </mat-tab>
 
       <!-- Project Tabs -->
       <mat-tab *ngFor="let project of applicationStatus.projects">
+        <ng-template mat-tab-label>
+          <span>📦</span>
+          {{ project.name }}
+        </ng-template>
         
         <div class="tab-content">
           <!-- Project Overview -->
           <div class="project-overview">
             <div class="project-info">
               <h3>{{ project.name }}</h3>
-              <div class="project-details">
-              </div>
+              <!-- Project details (version, type, status, last build) removed as requested -->
             </div>
           </div>
 
@@ -168,22 +188,12 @@
                 <div class="tool-header">
                   <div class="tool-info">
                     <div class="tool-name">
-                      <span class="tool-icon" [innerHTML]="getToolIcon(tool.type)"></span>
                       <h4>{{ tool.name }}</h4>
                     </div>
                     <div class="tool-meta">
                       <span class="version">v{{ tool.version }}</span>
-                      <span class="type">{{ tool.type }}</span>
                     </div>
                   </div>
-                  <div class="status-indicator">
-                    <span class="status-dot" [style.background-color]="getToolStatusColor(tool.status)"></span>
-                    <span class="status-text" [class]="tool.status">{{ tool.status }}</span>
-                  </div>
-                </div>
-                <p class="description">{{ tool.description }}</p>
-                <div *ngIf="tool.path" class="tool-path">
-                  <strong>Path:</strong> {{ tool.path }}
                 </div>
               </div>
             </div>

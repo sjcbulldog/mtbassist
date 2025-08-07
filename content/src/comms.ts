@@ -138,10 +138,7 @@ export interface Middleware {
 export interface Tool {
   name: string;
   version: string;
-  type: 'compiler' | 'debugger' | 'analyzer' | 'utility';
-  status: 'available' | 'missing' | 'outdated';
-  description: string;
-  path?: string;
+  id: string;
 }
 
 export interface Project {
@@ -158,4 +155,5 @@ export interface ApplicationStatusData {
   documentation: Documentation[];
   middleware: Middleware[];
   projects: Project[];
+  tools: Tool[];
 }

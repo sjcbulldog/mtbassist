@@ -94,66 +94,6 @@ export class BackendService extends EventEmitter {
         this.cmdhandler_.set('getCodeExamples', this.getCodeExamples.bind(this));
         this.cmdhandler_.set('createProject', this.createProject.bind(this));
         this.cmdhandler_.set('loadWorkspace', this.loadWorkspace.bind(this));
-        this.cmdhandler_.set('getAppStatus', this.getAppStatus.bind(this));
-    }
-
-    private getAppStatusFromEnv() : ApplicationStatusData  {
-        let appst : ApplicationStatusData ;        
-        if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo)) {
-            let mem : MemoryInfo[] = [] ;
-            let docs: Documentation[] = [] ;
-            let projs : Project[] = [] ;
-            let middleware: Middleware[] = [] ;
-
-            for(let p of this.env_.appInfo?.projects || []) {
-                let proj: Project = {
-                    name: p.name,
-                    documentation: [],
-                    middleware: [],
-                    tools: [],
-                };
-                projs.push(proj);
-            }
-
-            appst = {
-                valid: true,
-                name: this.env_.appInfo?.appdir || '',
-                memory: mem,
-                documentation: docs,
-                middleware: middleware,
-                projects: projs,
-            } ;
-        } else {
-            appst = {
-                valid: false,
-                name : '',
-                memory: [],
-                documentation: [],
-                middleware: [],
-                projects: []
-            };
-        }
-        return appst ;
-    }
-                
-    private getAppStatus(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
-        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
-            if (this.env_ && this.env_.isLoading) {
-                this.env_.on('loaded', () => {
-                    resolve({
-                        response: 'appStatusResult',
-                        data: this.getAppStatusFromEnv()
-                    }) ;                    
-                }) ;
-            }
-            else {
-                resolve({
-                    response: 'appStatusResult',
-                    data: this.getAppStatusFromEnv()
-                }) ;
-            }
-        }) ;
-        return ret ;
     }
 
     private convertCodeExamples(examples: MTBApp[]): CodeExampleIdentifier[] {
