@@ -268,7 +268,8 @@ export class CreateProject implements OnInit, OnDestroy {
 
     async loadProject() {
         this.snackBar.open(`Loading project from: ${this.projectPath}`, 'Close', { duration: 3000 });
-        await this.backendService.loadWorkspace(this.projectInfoForm.value.projectLocation, this.projectInfoForm.value.projectName);
+        this.backendService.log(`Loading workspace ${JSON.stringify(this.exampleSelectionForm.value)}`);
+        await this.backendService.loadWorkspace(this.projectInfoForm.value.projectLocation, this.projectInfoForm.value.projectName, this.exampleSelectionForm.value.example) ;
     }
 
     resetForm() {

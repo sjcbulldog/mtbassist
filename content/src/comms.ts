@@ -12,7 +12,8 @@ export type FrontEndToBackEndRequestType =
     'getAppStatus' |
     'platformSpecific' |
     'browseForFolder' |
-    'fixMissingAssets' ;
+    'fixMissingAssets' |
+    'buildAction' ;
 
 export type BackEndToFrontEndResponseType =
     'setDevKits' |
@@ -76,17 +77,12 @@ export interface Document {
 export interface Tool {
     name: string;          // Name of the tool
     id: string ;
-}
-
-export interface MiddlewareLibrary {
-    title: string ;
-    id: string ;
-    version: string ;
+    launchData: any ;
 }
 
 export interface ProjectInfo {
     name: string ;
-    libraries: MiddlewareLibrary[] ;
+    libraries: Middleware[] ;
     documents: Document[] ;
     tools: Tool[] ;
 }
@@ -128,6 +124,7 @@ export interface Documentation {
 export interface Middleware {
   name: string;
   version: string;
+  newer: boolean ;
 }
 
 export interface Tool {

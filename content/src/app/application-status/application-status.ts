@@ -1,3 +1,4 @@
+// ...existing code...
 import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -25,6 +26,9 @@ export class ApplicationStatus implements OnInit {
   currentDate = new Date();
   fixingAssetsProjects: Set<string> = new Set(); // Track which projects are currently fixing assets
   currentlyLoadingAsset: string = ''; // Track which asset is currently being loaded
+  
+  // Collapsed states for project sections (projectName -> sectionName -> boolean)
+  collapsedSections: Map<string, Map<string, boolean>> = new Map();
 
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
     // Subscribe to app status data
@@ -48,11 +52,15 @@ export class ApplicationStatus implements OnInit {
     // Subscribe to loaded asset updates
     this.be.loadedAsset.subscribe({
       next: (asset) => {
-        console.log('Currently loading asset:', asset);
         this.currentlyLoadingAsset = asset;
       }
     });
   }    
+
+  // Called when a middleware tile is clicked in the project tab
+  onMiddlewareClick(project: any, middleware: any): void {
+    this.be.platformSpecific('libmgr', null) ;
+  }
 
   ngOnInit(): void {
     // Request app status refresh
@@ -244,6 +252,7 @@ export class ApplicationStatus implements OnInit {
   }
 
   openDocument(doc: Documentation): void {
+    this.be.platformSpecific('open', doc) ;
   }
 
   refresh(): void {
@@ -260,6 +269,62 @@ export class ApplicationStatus implements OnInit {
       this.errorMessage = 'Failed to refresh application status';
       this.isLoading = false;
     }
+  }
+
+  // Build Actions
+  buildApplication(): void {
+    this.be.executeBuildAction('build');
+  }
+
+  rebuildApplication(): void {
+    this.be.executeBuildAction('rebuild');
+  }
+
+  cleanApplication(): void {
+    this.be.executeBuildAction('clean');
+  }
+
+  eraseApplication(): void {
+    this.be.executeBuildAction('erase');
+  }
+
+  programApplication(): void {
+    this.be.executeBuildAction('program');
+  }
+
+  // Project-specific Build Actions
+  buildProject(project: any): void {
+    this.be.executeBuildAction('build', project.name);
+  }
+
+  rebuildProject(project: any): void {
+    this.be.executeBuildAction('rebuild', project.name);
+  }
+
+  cleanProject(project: any): void {
+    this.be.executeBuildAction('clean', project.name);
+  }
+
+  programProject(project: any): void {
+    this.be.executeBuildAction('program', project.name);
+  }
+
+  // Collapsible section methods
+  toggleSection(projectName: string, sectionName: string): void {
+    if (!this.collapsedSections.has(projectName)) {
+      this.collapsedSections.set(projectName, new Map());
+    }
+    const projectSections = this.collapsedSections.get(projectName)!;
+    const currentState = projectSections.get(sectionName) || false;
+    projectSections.set(sectionName, !currentState);
+  }
+
+  isSectionCollapsed(projectName: string, sectionName: string): boolean {
+    const projectSections = this.collapsedSections.get(projectName);
+    if (!projectSections) {
+      return false; // Default to expanded
+    }
+    return projectSections.get(sectionName) || false;
   }
 }
 

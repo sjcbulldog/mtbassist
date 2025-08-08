@@ -3,15 +3,15 @@ import { URI } from "vscode-uri";
 import { BrowserAPI } from "./platform/browserapi";
 import { VSCodeAPI } from "./platform/vscodeapi";
 import { ElectronAPI } from "./platform/electronapi";
-import { ApplicationStatusData, BackEndToFrontEndResponse, CodeExampleIdentifier, Document, Documentation, FrontEndToBackEndRequest, MemoryInfo, Middleware, PlatformType, Project, ProjectInfo } from "../comms";
+import { BackEndToFrontEndResponse, CodeExampleIdentifier, FrontEndToBackEndRequest, PlatformType } from "../comms";
 import { BSPMgr } from "./bspmgr";
 import { MTBApp } from "../mtbenv/manifest/mtbapp";
 import { PlatformAPI } from "./platform/platformapi";
+import { EventEmitter } from "stream";
 import * as winston from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
-import { EventEmitter } from "stream";
-import { MTBLoadFlags } from "../mtbenv";
+
 
 export class BackendService extends EventEmitter {
     private static instance: BackendService | null = null;
@@ -95,6 +95,20 @@ export class BackendService extends EventEmitter {
         this.cmdhandler_.set('createProject', this.createProject.bind(this));
         this.cmdhandler_.set('loadWorkspace', this.loadWorkspace.bind(this));
         this.cmdhandler_.set('fixMissingAssets', this.fixMissingAssets.bind(this)); 
+        this.cmdhandler_.set('buildAction', this.runAction.bind(this)) ;
+    }
+
+    private runAction(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            this.apis_?.runAction(request.data.action, request.data.project)
+            .then(() => {   
+                resolve({
+                    response: 'success',
+                    data: null
+                });
+            }) ;
+        });
+        return ret;
     }
 
     private fixMissingAssets(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
@@ -223,6 +237,7 @@ export class BackendService extends EventEmitter {
                 if (this.apis_) {
                     this.apis_.on('progress', this.sendProgress.bind(this)); 
                     this.apis_.on('loadedAsset', this.loadedAsset.bind(this)) ;
+                    this.apis_.on('runtask', this.runTask.bind(this)) ;
                 }
             }
             else {
@@ -235,10 +250,15 @@ export class BackendService extends EventEmitter {
         return ret ;
     }
 
+    private runTask(task: string) {
+        this.emit('runtask', task) ;
+    }
+
     private loadWorkspace(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             if (this.apis_) {
-                this.apis_.loadWorkspace(request.data.path, request.data.project)
+                let projpath = path.join(request.data.path, request.data.project) ;
+                this.apis_.loadWorkspace(projpath, request.data.project, request.data.example)
                     .then(() => {
                         resolve({
                             response: 'success',
@@ -259,6 +279,7 @@ export class BackendService extends EventEmitter {
 
     private createProject(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            this.emit('showOutput') ;
             let fpath = path.join(request.data.location, request.data.name) ;
             if (!fs.existsSync(fpath)) {
                 fs.mkdirSync(fpath, { recursive: true });
@@ -299,15 +320,32 @@ export class BackendService extends EventEmitter {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             let resp: BackEndToFrontEndResponse | null = null;
 
-            if (request.data && typeof request.data === 'string') {
-                this.logger_.info('client:' + request.data) ;
-            } else if (typeof request.data === 'object' && ('level' in request.data) && ('message' in request.data)) {
-                this.logger_.log(request.data.level, request.data.message) ;
-            } else if (request.data) {
-                this.logger_.info(`client: ${JSON.stringify(request.data)}`) ;
-            } else {
-                this.logger_.info('client: no message provided') ;
-                resp = { response: 'error', data: 'logMessage: No message provided.' };
+            let str = '' ;
+            if (request.data && request.data.message) {
+                if (typeof request.data.message === 'string') {
+                    str = request.data.message;
+                }
+                else { 
+                    str = JSON.stringify(request.data.message);
+                }
+            }
+
+            if (str.length > 0) {
+                let type = request.data.type || 'debug';
+                switch(type) {
+                    case 'info':
+                        this.logger_.info('client:' + str);
+                        break;
+                    case 'warn':
+                        this.logger_.warn('client:' + str);
+                        break;
+                    case 'error':
+                        this.logger_.error('client:' + str);
+                        break;
+                    default:
+                        this.logger_.log(type, 'client:' + str);
+                        break;
+                }
             }
             resolve(resp) ;
         }) ;

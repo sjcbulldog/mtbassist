@@ -5,55 +5,75 @@
   [mat-align-tabs]="alignment"
   class="mtb-navigation">
   
-  <mat-tab 
-    *ngFor="let tab of tabs; let i = index" 
-    [label]="tab.label"
-    [disabled]="tab.disabled || false">
-    
-    <!-- Tab content with icon support -->
-    <ng-template mat-tab-label *ngIf="tab.icon">
-      <mat-icon class="tab-icon">{{ tab.icon }}</mat-icon>
-      {{ tab.label }}
-    </ng-template>
-    
-    <!-- Tab content area -->
-    <div class="tab-content">
-      <ng-container [ngSwitch]="i">
-        <div *ngSwitchCase="0" class="tab-panel">
-          <app-getting-started *ngIf="tab.component === 'GettingStarted'"></app-getting-started>
-          <div *ngIf="!tab.component || tab.component !== 'GettingStarted'" class="placeholder-content">
-            <h2>{{ tab.label }}</h2>
-            <p>Content coming soon...</p>
-            <mat-icon>construction</mat-icon>
-          </div>
-        </div>
-        
-        <div *ngSwitchCase="1" class="tab-panel">
-          <app-create-project *ngIf="tab.component === 'CreateProject'"></app-create-project>
-          <div *ngIf="!tab.component || tab.component !== 'CreateProject'" class="placeholder-content">
-            <h2>{{ tab.label }}</h2>
-            <p>Content coming soon...</p>
-            <mat-icon>construction</mat-icon>
-          </div>
-        </div>
-        
-        <div *ngSwitchCase="2" class="tab-panel">
-          <app-application-status *ngIf="tab.component === 'ApplicationStatus'"></app-application-status>
-          <div *ngIf="!tab.component || tab.component !== 'ApplicationStatus'" class="placeholder-content">
-            <h2>{{ tab.label }}</h2>
-            <p>Content coming soon...</p>
-            <mat-icon>construction</mat-icon>
-          </div>
-        </div>
-      </ng-container>
-    </div>
-  </mat-tab>
+  @for (tab of tabs; track tab.label; let i = $index) {
+    <mat-tab 
+      [label]="tab.label"
+      [disabled]="tab.disabled || false">
+      
+      <!-- Tab content with icon support -->
+      @if (tab.icon) {
+        <ng-template mat-tab-label>
+          <mat-icon class="tab-icon">{{ tab.icon }}</mat-icon>
+          {{ tab.label }}
+        </ng-template>
+      }
+      
+      <!-- Tab content area -->
+      <div class="tab-content">
+        @switch (i) {
+          @case (0) {
+            <div class="tab-panel">
+              @if (tab.component === 'GettingStarted') {
+                <app-getting-started></app-getting-started>
+              } @else {
+                <div class="placeholder-content">
+                  <h2>{{ tab.label }}</h2>
+                  <p>Content coming soon...</p>
+                  <mat-icon>construction</mat-icon>
+                </div>
+              }
+            </div>
+          }
+          
+          @case (1) {
+            <div class="tab-panel">
+              @if (tab.component === 'CreateProject') {
+                <app-create-project></app-create-project>
+              } @else {
+                <div class="placeholder-content">
+                  <h2>{{ tab.label }}</h2>
+                  <p>Content coming soon...</p>
+                  <mat-icon>construction</mat-icon>
+                </div>
+              }
+            </div>
+          }
+          
+          @case (2) {
+            <div class="tab-panel">
+              @if (tab.component === 'ApplicationStatus') {
+                <app-application-status></app-application-status>
+              } @else {
+                <div class="placeholder-content">
+                  <h2>{{ tab.label }}</h2>
+                  <p>Content coming soon...</p>
+                  <mat-icon>construction</mat-icon>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    </mat-tab>
+  }
   
   <!-- Fallback when no tabs are provided -->
-  <mat-tab label="No Content" *ngIf="tabs.length === 0" disabled>
-    <div class="no-tabs-message">
-      <mat-icon>info</mat-icon>
-      <p>No tabs configured</p>
-    </div>
-  </mat-tab>
+  @if (tabs.length === 0) {
+    <mat-tab label="No Content" disabled>
+      <div class="no-tabs-message">
+        <mat-icon>info</mat-icon>
+        <p>No tabs configured</p>
+      </div>
+    </mat-tab>
+  }
 </mat-tab-group>

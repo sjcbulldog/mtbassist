@@ -10,6 +10,10 @@ import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import { BackendService } from '../backend/backend';
 import { ApplicationStatusData, BackEndToFrontEndResponse, Documentation, FrontEndToBackEndRequest, MemoryInfo, Middleware, Project, Tool } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
+import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
+import { MTBTasks } from '../misc/mtbtasks';
+import { browseropen } from '../browseropen';
+import * as exec from 'child_process' ;
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49' ;
@@ -21,6 +25,7 @@ export class MTBAssistObject {
     private static readonly applicationStatusTab = 2 ;
 
     private context_: vscode.ExtensionContext;
+    private channel_ ;
     private logger_ : winston.Logger ;
     private env_ : ModusToolboxEnvironment | null = null ; 
     private panel_: vscode.WebviewPanel | undefined = undefined;
@@ -28,15 +33,18 @@ export class MTBAssistObject {
     private postInitDone_ : boolean = false;
     private envLoaded_ : boolean = false;
     private noMtbFound_ : boolean = false;
-    private cmdhandler_ : Map<string, (request: FrontEndToBackEndRequest) => Promise<BackEndToFrontEndResponse | null>> = new Map();
+    private cmdhandler_ : Map<string, (data: any) => Promise<BackEndToFrontEndResponse | null>> = new Map();
     private projectInfo_ : Map<string, Project> = new Map() ;
     private meminfo_ : MemoryInfo[] = [] ;
+    private tasks_ : MTBTasks | undefined = undefined ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
 
     private constructor(context: vscode.ExtensionContext) {
         this.context_ = context;
+        this.channel_ = vscode.window.createOutputChannel("ModusToolbox") ;      
+
         let logstate = this.context_.globalState.get('logLevel', 'debug') ;
 
         this.logger_ = winston.createLogger({
@@ -47,11 +55,15 @@ export class MTBAssistObject {
             ),
             transports: [
                 new ConsoleTransport(),
-                new VSCodeTransport(),
+                new VSCodeTransport(this.channel_),
             ]
         }) ;
 
         this.bindCommandHandlers() ;
+    }
+
+    public bringChannelToFront() {
+        this.channel_.show(true);
     }
 
     public get noMTBFound() : boolean {
@@ -121,6 +133,8 @@ export class MTBAssistObject {
                 BackendService.getInstance().on('progress', this.reportProgress.bind(this));
                 BackendService.getInstance().on('updateAppStatus', this.pushAppStatus.bind(this));
                 BackendService.getInstance().on('loadedAsset', this.loadedAsset.bind(this));
+                BackendService.getInstance().on('showOutput', this.bringChannelToFront.bind(this)); 
+                BackendService.getInstance().on('runtask', this.runTask.bind(this));    
                 this.loadMTBApplication().then(() => {
                     this.createAppStructure() ;
                     this.logger_.info('MTB Application loaded successfully.');
@@ -134,31 +148,44 @@ export class MTBAssistObject {
                                     this.postInitializeManagers()
                                         .then(() => { 
                                             if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo) && this.env_.appInfo) {
+                                                let p = path.join(this.env_.appInfo!.appdir, '.vscode', 'tasks.json') ;
+                                                this.tasks_ = new MTBTasks(this.env_, this.logger_, p);
                                                 this.switchToTab(MTBAssistObject.applicationStatusTab) ;
-                                            }                                            
-                                            this.getLaunchData()
-                                            .then(() => {
-                                                this.logger_.info('Post-initialization of managers completed successfully.');
-                                                this.env?.load(MTBLoadFlags.Manifest)
-                                                    .then(() => {
-                                                        this.logger_.info('ModusToolbox manifests loaded successfully.');
+                                                this.getLaunchData()
+                                                .then(() => {
+                                                    this.logger_.info('Post-initialization of managers completed successfully.');
+                                                    this.env?.load(MTBLoadFlags.Manifest)
+                                                        .then(() => {
+                                                            this.logger_.info('ModusToolbox manifests loaded successfully.');
 
-                                                        //
-                                                        // Now, we have have updated the application status so we do an OOB push
-                                                        // of the application status so that the new information from MTBLaunch
-                                                        // is picked up by the UI.
-                                                        //
-                                                        this.pushAppStatus() ;
-                                                        resolve();
-                                                    })
-                                                    .catch((error: Error) => {
-                                                        this.logger_.error('Failed to load manifest files:', error.message);
-                                                        resolve() ;
-                                                    });
-                                            })
-                                            .catch((error: Error) => {
-                                                this.logger_.error('Error during post-initialization of managers:', error.message);
-                                            });
+                                                            //
+                                                            // Now, we have have updated the application status so we do an OOB push
+                                                            // of the application status so that the new information from MTBLaunch
+                                                            // is picked up by the UI.
+                                                            //
+                                                            this.pushAppStatus() ;
+                                                            this.updateAllTasks() ;
+                                                            resolve();
+                                                        })
+                                                        .catch((error: Error) => {
+                                                            this.logger_.error('Failed to load manifest files:', error.message);
+                                                            resolve() ;
+                                                        });
+                                                })
+                                                .catch((error: Error) => {
+                                                    this.logger_.error('Error during post-initialization of managers:', error.message);
+                                                });
+                                            }
+                                            else {
+                                                this.env?.load(MTBLoadFlags.Manifest)
+                                                .then(() => {
+                                                    this.logger_.info('ModusToolbox manifests loaded successfully.');
+                                                    resolve() ;
+                                                })
+                                                .catch((error: Error) => {
+                                                    this.logger_.error('Failed to load ModusToolbox manifests:', error.message);
+                                                });
+                                            }
                                         }) ;
                                 }) ;
                         })
@@ -219,6 +246,17 @@ export class MTBAssistObject {
         return MTBAssistObject.theInstance_;
     }
 
+    private runTask(task: string) {
+        if (this.tasks_?.doesTaskExist(task)) {
+            vscode.commands.executeCommand('workbench.action.tasks.runTask', task) ;
+        }
+        else {
+            this.logger_.warn(`Task not found: ${task}`);
+            vscode.window.showWarningMessage(`The requested task '${task}' does not exist.`);
+            this.updateAllTasks() ;
+        }
+    }
+
     private bindCommandHandlers(): void {
         this.cmdhandler_.set('gettingStarted', this.gettingStarted.bind(this));
         this.cmdhandler_.set('documentation', this.documentation.bind(this));
@@ -226,7 +264,72 @@ export class MTBAssistObject {
         this.cmdhandler_.set('community', this.community.bind(this));
         this.cmdhandler_.set('browseForFolder', this.browseFolder.bind(this));
         this.cmdhandler_.set('getAppStatus', this.getAppStatus.bind(this));
+        this.cmdhandler_.set('open', this.open.bind(this)) ;
+        this.cmdhandler_.set('libmgr', this.launchLibraryManager.bind(this)) ;
     }    
+
+    static readonly libmgrProgUUID: string = 'd5e53262-9571-4d51-85db-1b47f98a0ff6' ;
+
+    private getLaunchConfig(project: string, uuid: string) : Tool | undefined {
+        let ret : Tool | undefined = undefined ;
+            let pinfo = this.projectInfo_.get('') ;
+            if (pinfo) {
+                ret = pinfo.tools.find((t) => t.id === uuid);
+            }        
+        return ret;
+    }
+
+    private launch(tool: Tool) {
+        let cfg = tool.launchData ;
+
+        let args: string[] = [] ;
+        for(let i = 0 ; i < cfg.cmdline.length ; i++) {
+            if (i !== 0) {
+                args.push(cfg.cmdline[i]) ;
+            }
+        }
+        vscode.window.showInformationMessage("Starting program '" + cfg.shortName) ;
+
+        let envobj : any = {} ;
+        for(let key of Object.keys(process.env)) {
+            if (key.indexOf("ELECTRON") === -1) {
+                envobj[key] = process.env[key] ;
+            }
+        }
+
+        exec.execFile(cfg.cmdline[0], 
+            args, 
+            { 
+                cwd: this.env_?.appInfo?.appdir,
+                env: envobj
+            }, (error, stdout, stderr) => 
+            {
+                if (error) {
+                    vscode.window.showErrorMessage(error.message) ;
+                }
+                this.pushAppStatus() ;
+            }
+        );        
+    }
+
+    private launchLibraryManager(request: any) : Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            let tool = this.getLaunchConfig('', MTBAssistObject.libmgrProgUUID);
+            if (tool) {
+                this.launch(tool) ;
+            }
+            resolve(null) ;
+        });
+        return ret;
+    }
+
+    private open(request: any) : Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            browseropen(request.location) ;
+            resolve(null) ;
+        });
+        return ret;
+    }
 
     private noMTBInstalled() {
         let disposable: vscode.Disposable;
@@ -414,6 +517,7 @@ export class MTBAssistObject {
             name: cfg['display-name'],
             id: cfg.id,
             version: cfg.version,
+            launchData: cfg
         } ;
         pinfo.tools.push(tool) ;
     }
@@ -495,10 +599,20 @@ export class MTBAssistObject {
 
     private getMiddlewareFromEnv(proj: MTBProjectInfo) : Middleware[] {
         let ret: Middleware[] = [] ;
+        let a : MTBAssetRequest ;
         for(let asset of proj.assetsRequests) {
+            let newer = false ;
+            let item = this.env_!.manifestDB.findItemByID(asset.repoName()) ;
+            if (item) {
+                let versions = item.newerVersions(asset.commit()) ;
+                if (versions.length > 0) {
+                    newer = true ;
+                }
+            }
             let mw: Middleware = {
                 name: asset.repoName(),
-                version: asset.commit()
+                version: asset.commit(),
+                newer: newer
             } ;
             ret.push(mw) ;
         }
@@ -556,6 +670,7 @@ export class MTBAssistObject {
                 if (envp) {
                     p.missingAssets = envp.missingAssets.length > 0 ;
                     p.missingAssetDetails = envp.missingAssets.map((asset) => asset.name()) ;
+                    p.middleware = this.getMiddlewareFromEnv(envp) ;
                 }
             }
             
@@ -565,7 +680,7 @@ export class MTBAssistObject {
                 name: this.env_.appInfo?.appdir || '',
                 memory: this.meminfo_,
                 documentation: pinfo?.documentation || [],
-                middleware: pinfo?.middleware || [],
+                middleware: [],
                 projects: projects,
                 tools: pinfo?.tools || [],
             } ;
@@ -718,4 +833,28 @@ export class MTBAssistObject {
         }) ;
         return ret;
     }
+
+    private updateAllTasks() {
+        if (this.tasks_) {
+            if (!this.tasks_.isValid()) {
+                vscode.window.showInformationMessage("The file 'tasks.json' is not a valid tasks file (or does not exist) and cannot be parsed as JSONC. Do you want to recreate this file with the default tasks?", "Yes", "No")
+                    .then((answer) => {
+                        if (answer === "Yes") {
+                            this.tasks_!.reset() ;
+                            this.tasks_!.addAll() ;
+                            this.tasks_!.writeTasks() ;
+                        }
+                    }) ;
+            }
+            else if (this.tasks_.doWeNeedTaskUpdates()) {
+                vscode.window.showInformationMessage("The ModusToolbox Assistant works best with a specific set of tasks for the application and the projects.  This may add or change existing tasks.  Do you want to make these changes?", "Yes", "No")
+                    .then((answer) => {
+                        if (answer === "Yes") {
+                            this.tasks_!.addAll() ;
+                            this.tasks_!.writeTasks() ;
+                        }
+                    }) ;
+            }
+        }         
+    }    
 }

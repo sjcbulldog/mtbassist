@@ -30,12 +30,16 @@
                      placeholder="my-modustoolbox-app"
                      maxlength="50">
               <mat-hint>Use only letters, numbers, hyphens, and underscores</mat-hint>
-              <mat-error *ngIf="projectInfoForm.get('projectName')?.hasError('required')">
-                Project name is required
-              </mat-error>
-              <mat-error *ngIf="projectInfoForm.get('projectName')?.hasError('pattern')">
-                Invalid characters in project name
-              </mat-error>
+              @if (projectInfoForm.get('projectName')?.hasError('required')) {
+                <mat-error>
+                  Project name is required
+                </mat-error>
+              }
+              @if (projectInfoForm.get('projectName')?.hasError('pattern')) {
+                <mat-error>
+                  Invalid characters in project name
+                </mat-error>
+              }
             </mat-form-field>
           </div>
           
@@ -47,9 +51,11 @@
                        formControlName="projectLocation" 
                        placeholder="C:\\workspace\\my-projects">
                 <mat-hint>Choose where to create your project</mat-hint>
-                <mat-error *ngIf="projectInfoForm.get('projectLocation')?.hasError('required')">
-                  Project location is required
-                </mat-error>
+                @if (projectInfoForm.get('projectLocation')?.hasError('required')) {
+                  <mat-error>
+                    Project location is required
+                  </mat-error>
+                }
               </mat-form-field>
               <button mat-raised-button 
                       type="button"
@@ -65,10 +71,12 @@
           </div>
 
           <!-- Project Path Preview -->
-          <div class="project-path-preview" *ngIf="getProjectPath()">
-            <mat-icon>info</mat-icon>
-            <span>Project will be created at: <strong>{{ getProjectPath() }}</strong></span>
-          </div>
+          @if (getProjectPath()) {
+            <div class="project-path-preview">
+              <mat-icon>info</mat-icon>
+              <span>Project will be created at: <strong>{{ getProjectPath() }}</strong></span>
+            </div>
+          }
         </form>
         
         <div class="step-actions">
@@ -99,60 +107,76 @@
               <mat-label>BSP Category</mat-label>
               <mat-select formControlName="category" 
                          (selectionChange)="onCategoryChange()"
-                         [disabled]="isLoading">
-                <mat-option *ngFor="let category of categories" [value]="category">
-                  {{ category }}
-                </mat-option>
+                         [disabled]="isLoading"
+                         panelClass="bsp-dropdown-panel">
+                @for (category of categories; track category) {
+                  <mat-option [value]="category">
+                    {{ category }}
+                  </mat-option>
+                }
               </mat-select>
               <mat-hint>Choose the type of development board</mat-hint>
-              <mat-error *ngIf="bspSelectionForm.get('category')?.hasError('required')">
-                BSP category is required
-              </mat-error>
+              @if (bspSelectionForm.get('category')?.hasError('required')) {
+                <mat-error>
+                  BSP category is required
+                </mat-error>
+              }
             </mat-form-field>
           </div>
           
-          <div class="form-row" *ngIf="selectedCategory">
-            <div class="bsp-selection-container">
-              <mat-form-field appearance="outline" class="bsp-field">
-                <mat-label>Board Support Package</mat-label>
-                <mat-select formControlName="bsp" 
-                           (selectionChange)="onBSPChange()"
-                           [disabled]="isLoading || bsps.length === 0">
-                  <mat-option *ngFor="let bsp of bsps" [value]="bsp.id"
-                             (mouseenter)="onBSPHover(bsp)"
-                             (mouseleave)="onBSPLeave()">
-                    <div class="bsp-option">
-                      <div class="bsp-name">{{ bsp.name }}</div>
+          @if (selectedCategory) {
+            <div class="form-row">
+              <div class="bsp-selection-container">
+                <mat-form-field appearance="outline" class="bsp-field">
+                  <mat-label>Board Support Package</mat-label>
+                  <mat-select formControlName="bsp" 
+                             (selectionChange)="onBSPChange()"
+                             [disabled]="isLoading || bsps.length === 0"
+                             panelClass="bsp-dropdown-panel">
+                    @for (bsp of bsps; track bsp.id) {
+                      <mat-option [value]="bsp.id"
+                                 (mouseenter)="onBSPHover(bsp)"
+                                 (mouseleave)="onBSPLeave()">
+                        {{ bsp.name }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint>Choose the specific development board</mat-hint>
+                  @if (bspSelectionForm.get('bsp')?.hasError('required')) {
+                    <mat-error>
+                      BSP selection is required
+                    </mat-error>
+                  }
+                </mat-form-field>
+                
+                @if (hoveredBSP || selectedBSP) {
+                  <div class="bsp-description-panel">
+                    <div class="description-header">
+                      <mat-icon>developer_board</mat-icon>
+                      <span>{{ (hoveredBSP || selectedBSP)?.name }}</span>
                     </div>
-                  </mat-option>
-                </mat-select>
-                <mat-hint>Choose the specific development board</mat-hint>
-                <mat-error *ngIf="bspSelectionForm.get('bsp')?.hasError('required')">
-                  BSP selection is required
-                </mat-error>
-              </mat-form-field>
-              
-              <div class="bsp-description-panel" *ngIf="hoveredBSP || selectedBSP">
-                <div class="description-header">
-                  <mat-icon>developer_board</mat-icon>
-                  <span>{{ (hoveredBSP || selectedBSP)?.name }}</span>
-                </div>
-                <div class="description-content" 
-                     *ngIf="(hoveredBSP || selectedBSP)?.description"
-                     [innerHTML]="(hoveredBSP || selectedBSP)?.description">
-                </div>
-                <div class="description-content no-description" *ngIf="!(hoveredBSP || selectedBSP)?.description">
-                  No description available for this BSP.
-                </div>
+                    @if ((hoveredBSP || selectedBSP)?.description) {
+                      <div class="description-content" 
+                           [innerHTML]="(hoveredBSP || selectedBSP)?.description">
+                      </div>
+                    } @else {
+                      <div class="description-content no-description">
+                        No description available for this BSP.
+                      </div>
+                    }
+                  </div>
+                }
               </div>
             </div>
-          </div>
+          }
 
           <!-- Loading indicator -->
-          <div class="loading-indicator" *ngIf="isLoading">
-            <mat-spinner diameter="30"></mat-spinner>
-            <span>Loading BSPs...</span>
-          </div>
+          @if (isLoading) {
+            <div class="loading-indicator">
+              <mat-spinner diameter="30"></mat-spinner>
+              <span>Loading BSPs...</span>
+            </div>
+          }
         </form>
         
         <div class="step-actions">
@@ -182,65 +206,83 @@
         <p class="step-description">Choose the category and specific example for your project</p>
         
         <form [formGroup]="exampleSelectionForm" class="example-form">
-          <div class="form-row" *ngIf="selectedBSP">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Example Category</mat-label>
-              <mat-select formControlName="exampleCategory" 
-                         (selectionChange)="onExampleCategoryChange()"
-                         [disabled]="isLoading || exampleCategories.length === 0">
-                <mat-option *ngFor="let category of exampleCategories" [value]="category">
-                  {{ category }}
-                </mat-option>
-              </mat-select>
-              <mat-hint>Select the category of code examples</mat-hint>
-              <mat-error *ngIf="exampleSelectionForm.get('exampleCategory')?.hasError('required')">
-                Example category is required
-              </mat-error>
-            </mat-form-field>
-          </div>
-          
-          <div class="form-row" *ngIf="selectedExampleCategory">
-            <div class="example-selection-container">
-              <mat-form-field appearance="outline" class="example-field">
-                <mat-label>Example Code</mat-label>
-                <mat-select formControlName="example" 
-                           (selectionChange)="onExampleChange()"
-                           [disabled]="isLoading || examples.length === 0">
-                  <mat-option *ngFor="let example of examples" [value]="example.id"
-                             (mouseenter)="onExampleHover(example)"
-                             (mouseleave)="onExampleLeave()">
-                    <div class="example-option">
-                      <div class="example-name">{{ example.name }}</div>
-                    </div>
-                  </mat-option>
+          @if (selectedBSP) {
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Example Category</mat-label>
+                <mat-select formControlName="exampleCategory" 
+                           (selectionChange)="onExampleCategoryChange()"
+                           [disabled]="isLoading || exampleCategories.length === 0"
+                           panelClass="example-dropdown-panel">
+                  @for (category of exampleCategories; track category) {
+                    <mat-option [value]="category">
+                      {{ category }}
+                    </mat-option>
+                  }
                 </mat-select>
-                <mat-hint>Select a specific code example to start with</mat-hint>
-                <mat-error *ngIf="exampleSelectionForm.get('example')?.hasError('required')">
-                  Example selection is required
-                </mat-error>
+                <mat-hint>Select the category of code examples</mat-hint>
+                @if (exampleSelectionForm.get('exampleCategory')?.hasError('required')) {
+                  <mat-error>
+                    Example category is required
+                  </mat-error>
+                }
               </mat-form-field>
-              
-              <div class="example-description-panel" *ngIf="hoveredExample || selectedExample">
-                <div class="description-header">
-                  <mat-icon>info</mat-icon>
-                  <span>{{ (hoveredExample || selectedExample)?.name }}</span>
-                </div>
-                <div class="description-content" 
-                     *ngIf="(hoveredExample || selectedExample)?.description"
-                     [innerHTML]="(hoveredExample || selectedExample)?.description">
-                </div>
-                <div class="description-content no-description" *ngIf="!(hoveredExample || selectedExample)?.description">
-                  No description available for this example.
-                </div>
+            </div>
+          }
+          
+          @if (selectedExampleCategory) {
+            <div class="form-row">
+              <div class="example-selection-container">
+                <mat-form-field appearance="outline" class="example-field">
+                  <mat-label>Example Code</mat-label>
+                  <mat-select formControlName="example" 
+                             (selectionChange)="onExampleChange()"
+                             [disabled]="isLoading || examples.length === 0"
+                             panelClass="example-dropdown-panel">
+                    @for (example of examples; track example.id) {
+                      <mat-option [value]="example.id"
+                                 (mouseenter)="onExampleHover(example)"
+                                 (mouseleave)="onExampleLeave()">
+                          {{ example.name }}
+                      </mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint>Select a specific code example to start with</mat-hint>
+                  @if (exampleSelectionForm.get('example')?.hasError('required')) {
+                    <mat-error>
+                      Example selection is required
+                    </mat-error>
+                  }
+                </mat-form-field>
+                
+                @if (hoveredExample || selectedExample) {
+                  <div class="example-description-panel">
+                    <div class="description-header">
+                      <mat-icon>info</mat-icon>
+                      <span>{{ (hoveredExample || selectedExample)?.name }}</span>
+                    </div>
+                    @if ((hoveredExample || selectedExample)?.description) {
+                      <div class="description-content" 
+                           [innerHTML]="(hoveredExample || selectedExample)?.description">
+                      </div>
+                    } @else {
+                      <div class="description-content no-description">
+                        No description available for this example.
+                      </div>
+                    }
+                  </div>
+                }
               </div>
             </div>
-          </div>
+          }
 
           <!-- Loading indicator -->
-          <div class="loading-indicator" *ngIf="isLoading">
-            <mat-spinner diameter="30"></mat-spinner>
-            <span>Loading examples...</span>
-          </div>
+          @if (isLoading) {
+            <div class="loading-indicator">
+              <mat-spinner diameter="30"></mat-spinner>
+              <span>Loading examples...</span>
+            </div>
+          }
         </form>
         
         <div class="step-actions">
@@ -308,78 +350,87 @@
               <div class="review-item">
                 <strong>Code Example:</strong> {{ selectedExample?.name }}
               </div>
-              <div class="review-item" *ngIf="selectedExample?.description">
-                <strong>Description:</strong> 
-                <span [innerHTML]="selectedExample?.description"></span>
-              </div>
+              @if (selectedExample?.description) {
+                <div class="review-item">
+                  <strong>Description:</strong> 
+                  <span [innerHTML]="selectedExample?.description"></span>
+                </div>
+              }
             </mat-card-content>
           </mat-card>
         </div>
         
         <!-- Success Card -->
-        <div class="success-section" *ngIf="projectCreated">
-          <mat-card class="success-card">
-            <mat-card-header>
-              <div mat-card-avatar class="success-avatar">
-                <mat-icon>check_circle</mat-icon>
-              </div>
-              <mat-card-title>Project Created Successfully!</mat-card-title>
-              <mat-card-subtitle>Your ModusToolbox project is ready</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="success-item">
-                <mat-icon>folder</mat-icon>
-                <span>Project location: <strong>{{ projectPath }}</strong></span>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
+        @if (projectCreated) {
+          <div class="success-section">
+            <mat-card class="success-card">
+              <mat-card-header>
+                <div mat-card-avatar class="success-avatar">
+                  <mat-icon>check_circle</mat-icon>
+                </div>
+                <mat-card-title>Project Created Successfully!</mat-card-title>
+                <mat-card-subtitle>Your ModusToolbox project is ready</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="success-item">
+                  <mat-icon>folder</mat-icon>
+                  <span>Project location: <strong>{{ projectPath }}</strong></span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        }
         
         <!-- Progress Section -->
-        <div class="progress-section" *ngIf="isLoading">
-          <mat-card class="progress-card">
-            <mat-card-header>
-              <div mat-card-avatar class="progress-avatar">
-                <mat-icon>construction</mat-icon>
-              </div>
-              <mat-card-title>Creating Your Project</mat-card-title>
-              <mat-card-subtitle>{{ progressMessage }}</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="progress-container">
-                <mat-progress-bar 
-                  mode="determinate" 
-                  [value]="progressValue"
-                  color="primary">
-                </mat-progress-bar>
-                <div class="progress-text">
-                  {{ progressValue.toFixed(0) }}% Complete
+        @if (isLoading) {
+          <div class="progress-section">
+            <mat-card class="progress-card">
+              <mat-card-header>
+                <div mat-card-avatar class="progress-avatar">
+                  <mat-icon>construction</mat-icon>
                 </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
+                <mat-card-title>Creating Your Project</mat-card-title>
+                <mat-card-subtitle>{{ progressMessage }}</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="progress-container">
+                  <mat-progress-bar 
+                    mode="determinate" 
+                    [value]="progressValue"
+                    color="primary">
+                  </mat-progress-bar>
+                  <div class="progress-text">
+                    {{ progressValue.toFixed(0) }}% Complete
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        }
         
         <div class="step-actions">
           <button mat-button matStepperPrevious [disabled]="isLoading">
             <mat-icon>arrow_back</mat-icon>
             Back
           </button>
-          <button mat-raised-button 
-                  color="primary" 
-                  (click)="createProject()"
-                  [disabled]="isLoading"
-                  *ngIf="!projectCreated">
-            <mat-icon *ngIf="!isLoading">rocket_launch</mat-icon>
-            {{ isLoading ? 'Creating Project...' : 'Create Project' }}
-          </button>
-          <button mat-raised-button 
-                  color="accent" 
-                  (click)="loadProject()"
-                  *ngIf="projectCreated">
-            <mat-icon>folder_open</mat-icon>
-            Load Project
-          </button>
+          @if (projectCreated) {
+            <button mat-raised-button 
+                    color="accent" 
+                    (click)="loadProject()">
+              <mat-icon>folder_open</mat-icon>
+              Load Project
+            </button>
+          } @else {
+            <button mat-raised-button 
+                    color="primary" 
+                    (click)="createProject()"
+                    [disabled]="isLoading">
+              @if (!isLoading) {
+                <mat-icon>rocket_launch</mat-icon>
+              }
+              {{ isLoading ? 'Creating Project...' : 'Create Project' }}
+            </button>
+          }
           <button mat-button 
                   (click)="resetForm()" 
                   [disabled]="isLoading"

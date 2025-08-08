@@ -29,15 +29,17 @@
   <div class="features-section">
     <h2 class="section-title">Key Features</h2>
     <div class="features-grid">
-      <mat-card class="feature-card" *ngFor="let feature of features">
-        <mat-card-content>
-          <div class="feature-header">
-            <mat-icon class="feature-icon" [style.color]="'#00acc1'">{{ feature.icon }}</mat-icon>
-            <h3 class="feature-title">{{ feature.title }}</h3>
-          </div>
-          <p class="feature-description">{{ feature.description }}</p>
-        </mat-card-content>
-      </mat-card>
+      @for (feature of features; track feature.title) {
+        <mat-card class="feature-card">
+          <mat-card-content>
+            <div class="feature-header">
+              <mat-icon class="feature-icon" [style.color]="'#00acc1'">{{ feature.icon }}</mat-icon>
+              <h3 class="feature-title">{{ feature.title }}</h3>
+            </div>
+            <p class="feature-description">{{ feature.description }}</p>
+          </mat-card-content>
+        </mat-card>
+      }
     </div>
   </div>
 
@@ -47,21 +49,23 @@
     <mat-card class="quickstart-card">
       <mat-card-content>
         <mat-accordion>
-          <mat-expansion-panel *ngFor="let step of quickStartSteps; let i = index" [expanded]="i === 0">
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                <span class="step-number">{{ step.step }}</span>
-                {{ step.title }}
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-            <div class="step-content">
-              <p>{{ step.description }}</p>
-              <button mat-button color="primary" (click)="onStepAction(step)">
-                <mat-icon>arrow_forward</mat-icon>
-                {{ step.action }}
-              </button>
-            </div>
-          </mat-expansion-panel>
+          @for (step of quickStartSteps; track step.step; let i = $index) {
+            <mat-expansion-panel [expanded]="i === 0">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <span class="step-number">{{ step.step }}</span>
+                  {{ step.title }}
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <div class="step-content">
+                <p>{{ step.description }}</p>
+                <button mat-button color="primary" (click)="onStepAction(step)">
+                  <mat-icon>arrow_forward</mat-icon>
+                  {{ step.action }}
+                </button>
+              </div>
+            </mat-expansion-panel>
+          }
         </mat-accordion>
       </mat-card-content>
     </mat-card>

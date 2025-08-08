@@ -4,20 +4,23 @@ import TransportStream = require('winston-transport');
 
 export class VSCodeTransport extends TransportStream {
     private channel_ : vscode.OutputChannel;
-    constructor() {
+
+    constructor(channel: vscode.OutputChannel) {
         super();
-        this.channel_ = vscode.window.createOutputChannel("ModusToolbox") ;        
+        this.channel_ = channel ;  
     }
 
-    log(info: winston.LogEntry, callback: () => void): void {
+    public log(info: winston.LogEntry, callback: () => void): void {
         let str = info.level ;
-        if (info.timestamp) {
-            str += ` [${info.timestamp}]`;
-        }
-        str += `: ${info.message}`;
-        this.channel_.appendLine(str) ;
-        if (info.stack) {
-            this.channel_.appendLine(info.stack);
+        if (str !== 'silly' && str !== 'debug') {
+            if (info.timestamp) {
+                str += ` [${info.timestamp}]`;
+            }
+            str += `: ${info.message}`;
+            this.channel_.appendLine(str) ;
+            if (info.stack) {
+                this.channel_.appendLine(info.stack);
+            }
         }
         callback();
     }

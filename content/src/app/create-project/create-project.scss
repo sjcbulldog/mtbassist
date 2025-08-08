@@ -565,30 +565,30 @@
       }
       
       .mat-mdc-select-value-text {
-        color: #ffffff !important; // White text for selected values
+        color: #000000 !important; // Black text for selected values on white background
       }
       
       .mat-mdc-select-value {
-        color: #ffffff !important; // White text for select values
+        color: #000000 !important; // Black text for select values on white background
       }
 
       // Additional select styling for comprehensive coverage
       .mat-mdc-select-trigger {
-        color: #ffffff !important; // White text for select trigger
+        color: #000000 !important; // Black text for select trigger
       }
 
       .mat-mdc-select-placeholder {
-        color: rgba(255, 255, 255, 0.7) !important; // White placeholder text
+        color: rgba(0, 0, 0, 0.7) !important; // Dark placeholder text
       }
 
       .mat-mdc-select-arrow {
-        color: #ffffff !important; // White arrow
+        color: #000000 !important; // Black arrow
       }
 
-      // Ensure all text in select is white
+      // Ensure all text in select is black for visibility on white background
       .mat-select-value,
       .mat-select-value-text {
-        color: #ffffff !important;
+        color: #000000 !important;
       }
       
       .mat-mdc-floating-label {
@@ -602,14 +602,52 @@
 
     // Specific styling for mat-select elements
     mat-select {
-      color: #ffffff !important;
+      color: #000000 !important;
       
       .mat-mdc-select-value {
-        color: #ffffff !important;
+        color: #000000 !important;
       }
       
       .mat-mdc-select-value-text {
         color: #ffffff !important;
+      }
+      
+      // Additional select text styling
+      .mat-select-trigger {
+        color: #000000 !important;
+      }
+      
+      .mat-select-value {
+        color: #000000 !important;
+      }
+      
+      .mat-select-value-text {
+        color: #000000 !important;
+      }
+    }
+    
+    // Additional form field styling for comprehensive coverage
+    .mat-mdc-form-field {
+      // Override any Angular Material default styling - keep text inputs white for dark theme
+      .mdc-text-field__input {
+        color: #ffffff !important;
+      }
+      
+      // But keep selects black since they appear on white background
+      .mat-mdc-select {
+        color: #000000 !important;
+      }
+      
+      .mat-mdc-select-value {
+        color: #000000 !important;
+      }
+      
+      .mat-mdc-select-value-text {
+        color: #000000 !important;
+      }
+      
+      .mat-mdc-select-trigger {
+        color: #000000 !important;
       }
     }
   }
@@ -722,11 +760,11 @@ body.dark-theme,
       }
       
       .mat-mdc-input-element {
-        color: #ffffff !important; // White text on black background
+        color: #ffffff !important; // White text for text inputs on dark background
       }
       
       .mat-mdc-select-value-text {
-        color: #ffffff !important; // White text for selected values
+        color: #000000 !important; // Black text for selected values
       }
       
       .mat-mdc-floating-label {
@@ -737,13 +775,13 @@ body.dark-theme,
         color: #ffffff !important; // White text for focused labels
       }
 
-      // Ensure all select elements have white text
+      // Ensure all select elements have black text
       .mat-mdc-select-value {
-        color: #ffffff !important;
+        color: #000000 !important;
       }
 
       .mat-mdc-select-trigger {
-        color: #ffffff !important;
+        color: #000000 !important;
       }
 
       .mat-mdc-select-placeholder {
@@ -751,7 +789,7 @@ body.dark-theme,
       }
 
       .mat-mdc-select-arrow {
-        color: #ffffff !important;
+        color: #000000 !important;
       }
     }
   }
@@ -1486,6 +1524,147 @@ body.dark-theme {
     
     .example-description {
       color: var(--light-text-secondary) !important;
+    }
+  }
+}
+
+/* Additional Global Styling for Dark Theme BSP and Example Selectors */
+::ng-deep .dark-theme {
+  // Force white text on all select elements in dark theme
+  .mat-mdc-form-field {
+    .mat-mdc-select {
+      color: #ffffff !important;
+    }
+    
+    .mat-mdc-select-value {
+      color: #ffffff !important;
+    }
+    
+    .mat-mdc-select-value-text {
+      color: #ffffff !important;
+    }
+    
+    .mat-mdc-select-trigger {
+      color: #ffffff !important;
+    }
+    
+    .mat-select-value {
+      color: #ffffff !important;
+    }
+    
+    .mat-select-value-text {
+      color: #ffffff !important;
+    }
+    
+    .mat-select-trigger {
+      color: #ffffff !important;
+    }
+  }
+  
+  // Specific targeting for BSP and example form fields
+  .bsp-form .mat-mdc-form-field,
+  .example-form .mat-mdc-form-field {
+    background-color: #000000 !important;
+    
+    .mat-mdc-select,
+    .mat-mdc-select-value,
+    .mat-mdc-select-value-text,
+    .mat-mdc-select-trigger,
+    .mat-select-value,
+    .mat-select-value-text,
+    .mat-select-trigger {
+      color: #ffffff !important;
+    }
+    
+    // Ensure input text is also white
+    .mat-mdc-input-element,
+    input {
+      color: #ffffff !important;
+    }
+  }
+}
+
+/* Force white text on all form controls in dark theme */
+::ng-deep .create-project-container.dark-theme {
+  .mat-mdc-form-field {
+    background-color: #000000 !important;
+    
+    * {
+      color: #ffffff !important;
+    }
+    
+    .mat-mdc-select,
+    .mat-mdc-select-value,
+    .mat-mdc-select-value-text,
+    .mat-mdc-select-trigger,
+    .mat-select-value,
+    .mat-select-value-text,
+    .mat-select-trigger,
+    .mat-mdc-input-element,
+    input {
+      color: #ffffff !important;
+    }
+  }
+}
+
+// Specific styling for BSP and Example selector dropdowns in dark theme
+// Using ::ng-deep to target only the dropdown panels without affecting main background
+.create-project-container.dark-theme {
+  
+  // Target only the dropdown panels using ::ng-deep
+  ::ng-deep .mat-mdc-select-panel.bsp-dropdown-panel,
+  ::ng-deep .mat-mdc-select-panel.example-dropdown-panel {
+    background-color: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+    
+    .mat-mdc-option {
+      color: #000000 !important;
+      background-color: transparent !important;
+      
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.08) !important;
+        color: #000000 !important;
+      }
+      
+      &.mdc-list-item--selected {
+        background-color: rgba(0, 0, 0, 0.12) !important;
+        color: #000000 !important;
+      }
+      
+      &:focus,
+      &.mat-mdc-option-focus {
+        background-color: rgba(0, 0, 0, 0.08) !important;
+        color: #000000 !important;
+      }
+      
+      &.mat-mdc-option-active {
+        background-color: rgba(0, 0, 0, 0.12) !important;
+        color: #000000 !important;
+      }
+      
+      .mdc-list-item__primary-text {
+        color: #000000 !important;
+      }
+      
+      // Ensure nested elements also have black text
+      .bsp-option,
+      .example-option,
+      .bsp-name,
+      .example-name {
+        color: #000000 !important;
+      }
+      
+      // Target any spans or divs within options
+      span,
+      div {
+        color: #000000 !important;
+      }
+      
+      // Catch-all for any text content
+      * {
+        color: #000000 !important;
+      }
     }
   }
 }

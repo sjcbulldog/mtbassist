@@ -71,12 +71,15 @@ export class BackendService {
     return this.isDarkTheme_;
   }
 
-  public log(message: string) {
+  public log(message: string, type?: string) {
     console.log(`BackendService: ${message}`);
     if (this.pipe_) {
       this.pipe_.sendRequest({
         request: 'logMessage',
-        data: message
+        data: {
+          message: message,
+          type: type || 'debug'
+        }
       });
     }
   }
@@ -131,13 +134,14 @@ export class BackendService {
     return this.projectManager_.createProject(projectData);
   }
 
-  public async loadWorkspace(path: string, proj: string): Promise<void> {
+  public async loadWorkspace(path: string, proj: string, id: string): Promise<void> {
     if (this.pipe_) {
       this.pipe_.sendRequest({
         request: 'loadWorkspace',
         data: {
           path: path,
-          project: proj
+          project: proj,
+          example: id
         }
       });
     }
@@ -146,6 +150,19 @@ export class BackendService {
   private setupHandlers() {
     this.registerHandler('browseForFolderResult', this.browseForFolderResult.bind(this));
     this.registerHandler('oob', this.oobResult.bind(this));
+  }
+
+  public executeBuildAction(action: string, project?: string): void {
+    this.log(`Executing build action: ${action}`);
+    if (this.pipe_) {
+      this.pipe_.sendRequest({
+        request: 'buildAction',
+        data: {
+          action: action,
+          project: project
+        }
+      });
+    }
   }
 
   private browseForFolderResult(cmd: BackEndToFrontEndResponse) {

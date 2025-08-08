@@ -18,11 +18,11 @@ interface OutputPercentMap {
 }
 
 export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
-    private static projectCreatorToolUuid = '9aac89d2-e375-474f-a1cd-79caefed2f9c' ;
-    private static projectCreatorCLIName = 'project-creator-cli' ;
-    private static modusShellToolUuid = '0afffb32-ea89-4f58-9ee8-6950d44cb004' ;
-    private static modusShellMakePath = 'bin/make' ;
-    private static gitAutoDetectSettingName = 'git.autoRepositoryDetection' ;
+    private static readonly projectCreatorToolUuid = '9aac89d2-e375-474f-a1cd-79caefed2f9c' ;
+    private static readonly projectCreatorCLIName = 'project-creator-cli' ;
+    private static readonly modusShellToolUuid = '0afffb32-ea89-4f58-9ee8-6950d44cb004' ;
+    private static readonly modusShellMakePath = 'bin/make' ;
+    private static readonly gitAutoDetectSettingName = 'git.autoRepositoryDetection' ;
 
     private static createProjectMessages : OutputPercentMap[] = [
         { 
@@ -66,9 +66,17 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
         return 'vscode';
     }
 
-    public loadWorkspace(projdir: string, projname: string): Promise<void> {
+    public loadWorkspace(projdir: string, projpath: string, projname: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            let p = path.join(projdir, projname, projname + '.code-workspace');
+            let p = path.join(projdir, projname + '.code-workspace');
+            if (!fs.existsSync(p)) {
+                p = path.join(projdir, projpath + '.code-workspace') ;
+                if (!fs.existsSync(p)) {
+                    this.logger_.error(`Workspace file not found: ${p}`) ;
+                    reject(new Error(`Workspace file not found: ${p}`)) ;
+                    return;
+                }
+            }
             this.logger_.info(`Loading VS Code workspace... ${p}`) ;
             let wkspuri = vscodeuri.URI.file(p) ;
             vscode.commands.executeCommand("vscode.openFolder", wkspuri) ;
@@ -82,6 +90,7 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
 
     private createProjectCallback(lines: string[]) {
         for(let line of lines) {
+            this.logger_.info(line) ;
             let m = VSCodeAPI.createProjectMessages[this.createProjectIndex_].match.exec(line);
             if (m) {
                 //
@@ -186,6 +195,9 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
                         return;
                     }
                     this.sendProgress('Preparing VS Code workspace', 80);
+                    this.logger_.info('-----------------------------------------------') ;
+                    this.logger_.info('Preparing project for VSCode') ;
+                    this.logger_.info('-----------------------------------------------') ;                      
                     this.runMakeVSCodeCommand(projdir, appdir)
                     .then((makeResult) => {
                         if (makeResult[0] !== 0) {
@@ -202,11 +214,53 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
         }) ;
     }
 
+    public runAction(action: string, project: string | undefined): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            let task = this.mapActionToTask(action, project);
+            this.emit('runtask', task) ;
+            resolve() ;
+        });
+    }
+
+    private mapActionToTask(action: string, project: string | undefined) : string {
+        let ret ;
+        switch(action) {
+            case 'build':
+                ret = `Build`;
+                break ;
+            case 'rebuild':
+                ret = `Rebuild`;
+                break ;
+            case 'clean':
+                ret = `Clean`;
+                break ;
+            case 'program':
+                ret = `Program`;
+                break ;
+            case 'erase':
+                ret = `Erase All`;
+                break ;
+            default:
+                ret  = '' ;
+                break ;
+        }
+
+        if (ret.length > 0 && project) {
+            ret += ` ${project}`;
+        }
+
+        return ret ;
+    }
+
     private makeVSCodeCallback(lines: string[]) {
         let laststep = VSCodeAPI.createProjectMessages[VSCodeAPI.createProjectMessages.length - 1].maximum ;
         this.makeLines_ += lines.length ;
         this.createProjectPercent_ = Math.round((this.makeLines_ / 168) * (100 - laststep)) + laststep ;
         this.sendProgress('Preparing VS Code workspace', this.createProjectPercent_);
+              
+        for(let line of lines) {
+            this.logger_.info(line) ;            
+        }
     }
 
     private runMakeVSCodeCommand(projdir: string, appdir: string): Promise<[number, string[]]> {

@@ -26,10 +26,20 @@ export class ElectronAPI extends EventEmitter implements PlatformAPI {
         });
     }    
 
-    public loadWorkspace(projdir: string, projname: string): Promise<void> {
+    public loadWorkspace(projdir: string, projpath: string, projname: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             // Simulate loading a workspace
             resolve();
+        });
+    }
+
+    public runAction(action: string, project: string | undefined): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            // Simulate running an action
+            setTimeout(() => {
+                console.log(`Action '${action}' has been run for project '${project}'.`);
+                resolve();
+            }, 1000);
         });
     }
 }

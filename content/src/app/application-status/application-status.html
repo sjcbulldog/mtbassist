@@ -36,6 +36,30 @@
                 </span>
               </div>
               <p class="build-date">Status checked: {{ currentDate | date:'medium' }}</p>
+              
+              <!-- Application Build Actions -->
+              <div class="app-build-actions">
+                <button mat-raised-button class="app-build-btn build-btn" (click)="buildApplication()">
+                  <mat-icon>build</mat-icon>
+                  Build
+                </button>
+                <button mat-raised-button class="app-build-btn rebuild-btn" (click)="rebuildApplication()">
+                  <mat-icon>refresh</mat-icon>
+                  Rebuild
+                </button>
+                <button mat-raised-button class="app-build-btn clean-btn" (click)="cleanApplication()">
+                  <mat-icon>cleaning_services</mat-icon>
+                  Clean
+                </button>
+                <button mat-raised-button class="app-build-btn erase-btn" (click)="eraseApplication()">
+                  <mat-icon>delete</mat-icon>
+                  Erase
+                </button>
+                <button mat-raised-button class="app-build-btn program-btn" (click)="programApplication()">
+                  <mat-icon>download</mat-icon>
+                  Program
+                </button>
+              </div>
             </div>
           </div>
 
@@ -67,8 +91,13 @@
 
           <!-- Application Documentation Section -->
           <div class="documentation-section">
-            <h3>Application Documentation</h3>
-            <div class="doc-grid">
+            <h3 class="collapsible-header" (click)="toggleSection('application', 'documentation')">
+              <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed('application', 'documentation')">
+                expand_more
+              </mat-icon>
+              Application Documentation
+            </h3>
+            <div class="doc-grid" [class.collapsed]="isSectionCollapsed('application', 'documentation')">
               @for (doc of applicationStatus.documentation; track doc.name) {
                 <div class="doc-item" (click)="openDocument(doc)">
                   <div class="doc-info">
@@ -80,8 +109,13 @@
           </div>
 
           <div class="tools-section">
-            <h3>Application Tools</h3>
-            <div class="tools-grid">
+            <h3 class="collapsible-header" (click)="toggleSection('application', 'tools')">
+              <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed('application', 'tools')">
+                expand_more
+              </mat-icon>
+              Application Tools
+            </h3>
+            <div class="tools-grid" [class.collapsed]="isSectionCollapsed('application', 'tools')">
               @for (tool of applicationStatus.tools; track tool.name) {
                 <div class="tool-item">
                   <div class="tool-header">
@@ -115,6 +149,26 @@
             <div class="project-info">
               <h3>{{ project.name }}</h3>
               <!-- Project details (version, type, status, last build) removed as requested -->
+              
+              <!-- Project Build Actions -->
+              <div class="project-build-actions">
+                <button mat-raised-button class="project-build-btn build-btn" (click)="buildProject(project)">
+                  <mat-icon>build</mat-icon>
+                  Build
+                </button>
+                <button mat-raised-button class="project-build-btn rebuild-btn" (click)="rebuildProject(project)">
+                  <mat-icon>refresh</mat-icon>
+                  Rebuild
+                </button>
+                <button mat-raised-button class="project-build-btn clean-btn" (click)="cleanProject(project)">
+                  <mat-icon>cleaning_services</mat-icon>
+                  Clean
+                </button>
+                <button mat-raised-button class="project-build-btn program-btn" (click)="programProject(project)">
+                  <mat-icon>download</mat-icon>
+                  Program
+                </button>
+              </div>
               
               <!-- Missing Assets Indicator -->
               @if (hasMissingAssets(project)) {
@@ -150,8 +204,13 @@
 
           <!-- Project Documentation -->
           <div class="documentation-section">
-            <h3>Project Documentation</h3>
-            <div class="doc-grid">
+            <h3 class="collapsible-header" (click)="toggleSection(project.name, 'documentation')">
+              <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed(project.name, 'documentation')">
+                expand_more
+              </mat-icon>
+              Project Documentation
+            </h3>
+            <div class="doc-grid" [class.collapsed]="isSectionCollapsed(project.name, 'documentation')">
               @for (doc of project.documentation; track doc.name) {
                 <div class="doc-item" (click)="openDocument(doc)">
                   <div class="doc-info">
@@ -164,14 +223,25 @@
 
           <!-- Project Middleware -->
           <div class="middleware-section">
-            <h3>Project Middleware</h3>
-            <div class="middleware-grid">
+            <h3 class="collapsible-header" (click)="toggleSection(project.name, 'middleware')">
+              <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed(project.name, 'middleware')">
+                expand_more
+              </mat-icon>
+              Project Middleware
+            </h3>
+            <div class="middleware-grid" [class.collapsed]="isSectionCollapsed(project.name, 'middleware')">
               @for (middleware of project.middleware; track middleware.name) {
-                <div class="middleware-item" [class.missing-middleware]="isMiddlewareMissing(project, middleware.name)">
+                <div class="middleware-item" [class.missing-middleware]="isMiddlewareMissing(project, middleware.name)" (click)="onMiddlewareClick(project, middleware)">
                   <div class="middleware-header">
                     <div class="middleware-info">
                       <h4>{{ middleware.name }}</h4>
-                      <span class="version">v{{ middleware.version }}</span>
+                      <span class="version">{{ middleware.version }}</span>
+                      @if (middleware.newer) {
+                        <div class="newer-version-indicator">
+                          <mat-icon class="newer-icon">update</mat-icon>
+                          <span class="newer-text">Update Available</span>
+                        </div>
+                      }
                       @if (isMiddlewareMissing(project, middleware.name)) {
                         <div class="missing-indicator">
                           <mat-icon class="missing-icon">warning</mat-icon>
@@ -187,8 +257,13 @@
 
           <!-- Project Tools -->
           <div class="tools-section">
-            <h3>Associated Tools</h3>
-            <div class="tools-grid">
+            <h3 class="collapsible-header" (click)="toggleSection(project.name, 'tools')">
+              <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed(project.name, 'tools')">
+                expand_more
+              </mat-icon>
+              Tools
+            </h3>
+            <div class="tools-grid" [class.collapsed]="isSectionCollapsed(project.name, 'tools')">
               @for (tool of project.tools; track tool.name) {
                 <div class="tool-item">
                   <div class="tool-header">

@@ -95,4 +95,8 @@ export class MTBTool {
     public get version() : MTBVersion {
         return this.version_ ;
     }
+
+    public findProgramByUUID(uuid: string) : MTBOptProgram | undefined {
+        return this.props_.opt.programs.find((pgm) => pgm.id === uuid) ;
+    }
 }
