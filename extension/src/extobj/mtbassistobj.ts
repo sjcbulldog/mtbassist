@@ -693,7 +693,7 @@ export class MTBAssistObject {
     }
 
     private pushDevKitStatus() {
-        this.logger_.debug('Pushing devkit status to the UI.') ;
+        this.logger_.debug(`Pushing devkits to UI - ${this.devkitMgr_?.devKitInfo.length || 0} found`);
         if (this.panel_) {
             let st : any = {
                 kits: this.devkitMgr_?.devKitInfo || [],

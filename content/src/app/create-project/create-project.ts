@@ -1,3 +1,4 @@
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -13,7 +14,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BackendService } from '../backend/backend-service';
-import { BSPIdentifier, CodeExampleIdentifier } from '../../comms';
+import { BSPIdentifier, CodeExampleIdentifier, DevKitInfo } from '../../comms';
 import { MatDivider } from "@angular/material/divider";
 
 @Component({
@@ -62,9 +63,18 @@ export class CreateProject implements OnInit, OnDestroy {
     hoveredExample: CodeExampleIdentifier | null = null;
     hoveredBSP: BSPIdentifier | null = null;
 
+    // Dev kit integration
+    devKits: DevKitInfo[] = [];
+    selectedDevKit: DevKitInfo | null = null;
+
+    // Only show dev kits with a non-empty, non-'unknown' name
+    public get filteredDevKits(): DevKitInfo[] {
+        return this.devKits.filter(kit => kit.name && kit.name.trim() !== '' && kit.name.toLowerCase() !== 'unknown');
+    }
+
     constructor(
         private formBuilder: FormBuilder,
-        private backendService: BackendService,
+        public backendService: BackendService,
         private snackBar: MatSnackBar) {
                 this.backendService.browserFolder.subscribe(folder => {
                     if (folder) {
@@ -72,12 +82,71 @@ export class CreateProject implements OnInit, OnDestroy {
                         this.snackBar.open('Directory selected successfully', 'Close', { duration: 2000 });
                     }
                 }) ;
+        // Subscribe to dev kit status
+        this.backendService.devKitStatus.subscribe(kits => {
+            this.devKits = kits;
+        });
         }
 
     ngOnInit() {
         this.isDarkTheme = this.backendService.isDarkTheme;
         this.initializeForms();
         this.loadCategories();
+    // Initial dev kit fetch (if needed)
+    this.backendService.platformSpecific?.('refreshDevKits', null);
+    }
+    // Called when a dev kit is selected from the UI
+    onDevKitSelect(kit: DevKitInfo) {
+        this.selectedDevKit = kit;
+        // Try to find a BSP that matches this kit
+        // Match by name or serial, or by boardFeatures if needed
+        // Find the BSP whose name or device matches the kit name or a feature
+        let foundBSP: BSPIdentifier | undefined;
+        let foundCategory: string | undefined;
+        for (const bsp of this.bsps) {
+            if (
+                bsp.name === kit.name ||
+                bsp.device === kit.name ||
+                kit.boardFeatures.includes(bsp.name) ||
+                kit.boardFeatures.includes(bsp.device)
+            ) {
+                foundBSP = bsp;
+                foundCategory = bsp.category;
+                break;
+            }
+        }
+        // If not found in loaded bsps, search all categories
+        if (!foundBSP) {
+            for (const category of this.categories) {
+                this.backendService.manifestMgr.getBSPsForCategory(category).then(bsps => {
+                    for (const bsp of bsps) {
+                        if (
+                            bsp.name === kit.name ||
+                            bsp.device === kit.name ||
+                            kit.boardFeatures.includes(bsp.name) ||
+                            kit.boardFeatures.includes(bsp.device)
+                        ) {
+                            foundBSP = bsp;
+                            foundCategory = bsp.category;
+                            // Patch forms and state
+                            this.bspSelectionForm.patchValue({ category: foundCategory, bsp: foundBSP.id });
+                            this.selectedCategory = foundCategory!;
+                            this.selectedBSP = foundBSP!;
+                            this.onCategoryChange();
+                            this.onBSPChange();
+                            return;
+                        }
+                    }
+                });
+            }
+        } else {
+            // Patch forms and state
+            this.bspSelectionForm.patchValue({ category: foundCategory, bsp: foundBSP.id });
+            this.selectedCategory = foundCategory!;
+            this.selectedBSP = foundBSP!;
+            this.onCategoryChange();
+            this.onBSPChange();
+        }
     }
 
     ngOnDestroy() {

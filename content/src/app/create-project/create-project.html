@@ -101,6 +101,30 @@
         <h2>Board Support Package</h2>
         <p class="step-description">Select the BSP category and specific board</p>
         
+        <!-- Connected Dev Kits UI -->
+        <div class="devkit-bsp-section">
+          <div class="devkit-list-header">
+            <span class="devkit-list-title"><mat-icon>usb</mat-icon> Connected Kits</span>
+            <button mat-icon-button (click)="backendService.platformSpecific('refreshDevKits', null)" [disabled]="isLoading" matTooltip="Refresh connected kits">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </div>
+          @if (filteredDevKits.length > 0) {
+            <div class="devkit-bsp-list">
+              @for (kit of filteredDevKits; track kit.serial) {
+                <div class="devkit-bsp-card" [class.selected]="selectedDevKit?.serial === kit.serial" (click)="onDevKitSelect(kit)">
+                  <div class="devkit-bsp-main">
+                    <span class="devkit-bsp-name">{{ kit.name }}</span>
+                    <span class="devkit-bsp-serial">SN: {{ kit.serial }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="no-kits">No development kits connected.</div>
+          }
+        </div>
+
         <form [formGroup]="bspSelectionForm" class="bsp-form">
           <div class="form-row">
             <mat-form-field appearance="outline" class="full-width">

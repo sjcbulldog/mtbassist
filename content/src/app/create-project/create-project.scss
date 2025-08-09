@@ -1,3 +1,75 @@
+// Dev kit BSP section styles
+.devkit-bsp-section {
+  margin-bottom: 2rem;
+  padding: 1rem 0 0.5rem 0;
+  border-bottom: 1px solid var(--light-border, #e0e0e0);
+}
+.devkit-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.devkit-list-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.devkit-bsp-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.devkit-bsp-card {
+  background: var(--card-background, #fff);
+  border: 2px solid var(--light-border, #e0e0e0);
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  min-width: 220px;
+  cursor: pointer;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.devkit-bsp-card.selected {
+  border-color: var(--dark-accent, #1976d2);
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.13);
+}
+.devkit-bsp-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.08rem;
+  font-weight: 500;
+}
+.devkit-bsp-serial {
+  color: var(--text-secondary, #888);
+  font-size: 0.95rem;
+}
+.devkit-bsp-fw {
+  color: var(--text-secondary, #888);
+  font-size: 0.95rem;
+  margin-top: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.devkit-bsp-fw.outdated {
+  color: #d32f2f;
+  font-weight: bold;
+}
+.devkit-bsp-features {
+  font-size: 0.93rem;
+  color: var(--text-secondary, #888);
+  margin-top: 0.2rem;
+}
+.no-kits {
+  color: #888;
+  text-align: center;
+  padding: 1rem 0;
+  font-size: 1.05rem;
+}
 // Theme Variables
 :root {
   // Dark Theme Colors

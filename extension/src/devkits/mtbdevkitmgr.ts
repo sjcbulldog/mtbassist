@@ -201,10 +201,12 @@ export class MTBDevKitMgr extends MtbManagerBase {
     public scanForDevKits() : Promise<boolean> {
         let ret: Promise<boolean> = new Promise<boolean>((resolve, reject) => {
             if (this.scanning) {
-                reject(new Error("You have asked to scan for development kits while a previous scan is still in progress.  Only one scan is allowed at a time.")) ;
+                resolve(true) ;
+                return ;
             }
+            this.scanning = true ;            
+            this.kits = [] ;
             (async() => {
-                this.scanning = true ;
                 let fwload = this.findFWLoader() ;
                 if (fwload === undefined) {
                     this.scanning = false ;
