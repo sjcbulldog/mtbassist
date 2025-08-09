@@ -62,6 +62,10 @@ export class ApplicationStatus implements OnInit {
     this.be.platformSpecific('libmgr', null) ;
   }
 
+  onToolClick(project: any, tool: any): void {
+    this.be.platformSpecific('tool', { tool: tool, project: project }) ;
+  }
+
   ngOnInit(): void {
     // Request app status refresh
     try {

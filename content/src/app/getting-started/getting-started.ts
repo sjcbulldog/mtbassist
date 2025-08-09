@@ -84,10 +84,10 @@ export class GettingStarted {
   onStepAction(step: any) {
     this.be.log(`Executing action for step ${step.step}: ${step.action}`);
     if (step.step === 1) {
-      this.be.setNavTab(2) ; // Navigate to Create New Project tab (index 2)
+      this.be.setNavTab(1) ; // Navigate to Create New Project tab (index 2)
     }
     else if (step.step === 2) {
-      this.be.setNavTab(3) ; // Navigate to Application Explorer tab (index 1)
+      this.be.setNavTab(2) ; // Navigate to Application Explorer tab (index 1)
     }
   }
 }

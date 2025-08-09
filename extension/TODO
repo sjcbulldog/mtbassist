@@ -7,15 +7,14 @@ o Create Project Component
   - when EAP is enabled
 
 o Application Status Component
-  - launch document view from application status page (apps & projects)
-  - launch tool from application status page (apps & projects)
-  - launch library manager when click on middleware tile
-  - app memory data (based one build)
-    o on build task completion - grab memory usage
-
+  - launch document view from application status page (apps & projects)                               done
+  - launch tool from application status page (apps & projects)                                        done
+  - launch library manager when click on middleware tile                                              done
   - flag middleware that may have a newer version - click launches library manager                    done
   - make documents and tools collapsable on app                                                       done
   - make documents, tools, middleware collapsable on projects                                         done
+
+o Memory usage
 
 o Recent Projects Component
   - Divide into last day, last week, and per month after
@@ -29,7 +28,7 @@ o Outside of main GUI
     Port over current intellisense support
     Use the application tiles to select active intellisense project
 
-  - Port over task generation support
+  - Port over task generation support                                                                 done
   - Port over keyword based documentation
   - Port over, check run make vscode (generate launch configs)
 

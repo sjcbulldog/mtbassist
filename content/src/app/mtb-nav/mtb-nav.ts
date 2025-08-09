@@ -1,8 +1,8 @@
+
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
-
 import { GettingStarted } from '../getting-started/getting-started';
 import { CreateProject } from '../create-project/create-project';
 import { ApplicationStatus } from '../application-status/application-status';
@@ -28,10 +28,10 @@ export interface MtbNavTab {
   styleUrl: './mtb-nav.scss'
 })
 export class MtbNav {
-    @Input() tabs: MtbNavTab[] = [];
-    @Input() backgroundColor: 'primary' | 'accent' | 'warn' = 'primary';
-    @Input() alignment: 'start' | 'center' | 'end' = 'center';
-    @Input() selectedIndex: number = 0;
+  @Input() tabs: MtbNavTab[] = [];
+  @Input() backgroundColor: 'primary' | 'accent' | 'warn' = 'primary';
+  @Input() alignment: 'start' | 'center' | 'end' = 'center';
+  @Input() selectedIndex: number = 0;
 
   constructor() {}
 

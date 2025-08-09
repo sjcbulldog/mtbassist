@@ -266,13 +266,24 @@ export class MTBAssistObject {
         this.cmdhandler_.set('getAppStatus', this.getAppStatus.bind(this));
         this.cmdhandler_.set('open', this.open.bind(this)) ;
         this.cmdhandler_.set('libmgr', this.launchLibraryManager.bind(this)) ;
+        this.cmdhandler_.set('tool', this.tool.bind(this)) ;
     }    
 
-    static readonly libmgrProgUUID: string = 'd5e53262-9571-4d51-85db-1b47f98a0ff6' ;
+    private tool(request: any) : Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            let tool = this.getLaunchConfig(request.project ? request.project.name : '', request.tool.id);
+            if (tool) {
+                this.launch(tool) ;
+            }
+            resolve(null) ;
+        });
+        return ret;
+    }
 
+    static readonly libmgrProgUUID: string = 'd5e53262-9571-4d51-85db-1b47f98a0ff6' ;
     private getLaunchConfig(project: string, uuid: string) : Tool | undefined {
         let ret : Tool | undefined = undefined ;
-            let pinfo = this.projectInfo_.get('') ;
+            let pinfo = this.projectInfo_.get(project) ;
             if (pinfo) {
                 ret = pinfo.tools.find((t) => t.id === uuid);
             }        

@@ -63,31 +63,6 @@
             </div>
           </div>
 
-          <!-- Memory Usage Section -->
-          <div class="memory-section">
-            <h3>Memory Usage</h3>
-            <div class="memory-grid">
-              @for (memory of applicationStatus.memory; track memory.type) {
-                <div class="memory-item">
-                  <div class="memory-header">
-                    <span class="memory-type">{{ memory.type }}</span>
-                    <span class="percentage">{{ memory.percentage.toFixed(1) }}%</span>
-                  </div>
-                  <div class="progress-bar">
-                    <div 
-                      class="progress-fill" 
-                      [style.width.%]="memory.percentage"
-                      [style.background-color]="getMemoryColorHex(memory.percentage)"
-                    ></div>
-                  </div>
-                  <div class="memory-details">
-                    <span class="used">{{ formatBytes(memory.used) }}</span>
-                    <span class="total">/ {{ formatBytes(memory.total) }}</span>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
 
           <!-- Application Documentation Section -->
           <div class="documentation-section">
@@ -117,7 +92,7 @@
             </h3>
             <div class="tools-grid" [class.collapsed]="isSectionCollapsed('application', 'tools')">
               @for (tool of applicationStatus.tools; track tool.name) {
-                <div class="tool-item">
+                <div class="tool-item"  (click)="onToolClick(null, tool)">
                   <div class="tool-header">
                     <div class="tool-info">
                       <h4 style="color: black;">{{ tool.name }}</h4>
@@ -265,7 +240,7 @@
             </h3>
             <div class="tools-grid" [class.collapsed]="isSectionCollapsed(project.name, 'tools')">
               @for (tool of project.tools; track tool.name) {
-                <div class="tool-item">
+                <div class="tool-item" (click)="onToolClick(project, tool)">
                   <div class="tool-header">
                     <div class="tool-info">
                       <div class="tool-name">
