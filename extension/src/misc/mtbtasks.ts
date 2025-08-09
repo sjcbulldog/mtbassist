@@ -18,8 +18,6 @@ export class MTBTasks
     public static taskNameClean = "Clean" ;
     public static taskNameBuildProgram = "Build & Program" ;
     public static taskNameBuildProgramNinja = "Build/Ninja & Program" ;
-    public static taskNameGenerateHex = "Generate Hex" ;
-    public static taskNameGenerateHexNinja = "Generate Hex/Ninja" ;    
 
     private static appTaskNames: any[] = [ 
         MTBTasks.taskNameRebuild,
@@ -28,8 +26,6 @@ export class MTBTasks
         MTBTasks.taskNameErase,                     // Skip if in a project
         MTBTasks.taskNameBuildProgram,
         MTBTasks.taskNameQuickProgram,
-        MTBTasks.taskNameGenerateHex,               // Skip if single project type
-        MTBTasks.taskNameGenerateHexNinja,          // Skip if single project type or if ninja is off
         MTBTasks.taskNameRebuildNinja,              // Skip if NINJA is off
         MTBTasks.taskNameBuildNinja,                // Skip if NINJA is off
         MTBTasks.taskNameBuildProgramNinja] ;       // Skip if NINJA is off
@@ -95,11 +91,6 @@ export class MTBTasks
                 continue ;
             }
 
-            if ((taskname === MTBTasks.taskNameGenerateHex || taskname === MTBTasks.taskNameGenerateHexNinja) && 
-                        this.env_.appInfo?.type() === ApplicationType.Application) {
-                continue ;
-            }
-
             this.addTask(taskname) ;
         }        
 
@@ -108,11 +99,7 @@ export class MTBTasks
                 for(let taskname of MTBTasks.appTaskNames) {                
                     if (taskname.indexOf("ninja") !== -1 && !ninja) {
                         continue ;
-                    }
-
-                    if (taskname === MTBTasks.taskNameGenerateHex || taskname === MTBTasks.taskNameGenerateHexNinja) {
-                        continue ;
-                    }                    
+                    }                 
 
                     if (taskname.indexOf(MTBTasks.taskNameErase) !== -1) {
                         continue ;
@@ -146,7 +133,6 @@ export class MTBTasks
             if (task) {
                 if (task.missing) {
                     this.logger_.info(`task '${task.label}' is missing`) ;
-
                 }
                 else {
                     this.logger_.info(`task '${task.label}' is different than expected`) ;
@@ -225,8 +211,6 @@ export class MTBTasks
             let taskname = this.createTaskName(MTBTasks.taskNameBuild, project.name) ;
             depends.push(taskname) ;
         }
-        depends.push(MTBTasks.taskNameGenerateHex) ;
-
         let task =  {
             "label": MTBTasks.taskNameBuild,
             "dependsOrder": "sequence",
@@ -254,7 +238,6 @@ export class MTBTasks
         // so the order is consistent.
         //
         depends.sort() ;
-        depends.push(MTBTasks.taskNameGenerateHexNinja) ;
 
         let task =  {
             "label": MTBTasks.taskNameBuildNinja,
@@ -468,16 +451,6 @@ export class MTBTasks
         else if (taskname === MTBTasks.taskNameBuildProgramNinja) {
             task = this.generateMakeTask(false, MTBTasks.taskNameBuildProgramNinja, "program", "NINJA=1", true, project, true, false) ;            
         }
-        else if (taskname === MTBTasks.taskNameGenerateHex) {
-            if (project === undefined && this.env_.appInfo?.type() === ApplicationType.Application) {
-                task = this.generateMakeTask(false, MTBTasks.taskNameGenerateHex, "build", "", false) ;
-            }
-        }
-        else if (taskname === MTBTasks.taskNameGenerateHexNinja) {
-            if (project === undefined && this.env_.appInfo?.type() === ApplicationType.Application) {
-                task = this.generateMakeTask(false, MTBTasks.taskNameGenerateHexNinja, "build", "NINJA=1", false) ;
-            }
-        }        
         
         return task ;
     }

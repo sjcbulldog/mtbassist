@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import { BackEndToFrontEndResponse, BSPIdentifier, CodeExampleIdentifier, DevKitData } from "../../comms";
+import { BackEndToFrontEndResponse, BSPIdentifier, CodeExampleIdentifier, BSPData } from "../../comms";
 import { BackendService } from "./backend-service";
 
 export class ManifestManager {
@@ -17,7 +17,7 @@ export class ManifestManager {
         this.parent_ = be;
         this.refreshBSPs();
 
-        this.parent_.registerHandler('setDevKits', this.processDevKits.bind(this));
+        this.parent_.registerHandler('setBSPs', this.processDevKits.bind(this));
         this.parent_.registerHandler('setCodeExamples', this.processCodeExamples.bind(this));
     }
 
@@ -27,7 +27,7 @@ export class ManifestManager {
             this.bspResolvers.push(resolve) ;            
             this.parent_.sendRequest(
                 {
-                    request: 'getDevKits',
+                    request: 'getBSPs',
                     data: null
                 });
         });
@@ -56,7 +56,7 @@ export class ManifestManager {
     }
 
     public processDevKits(cmd: BackEndToFrontEndResponse): void {
-        this.bsps = (cmd.data! as DevKitData).kits as BSPIdentifier[];
+        this.bsps = (cmd.data! as BSPData).bsps as BSPIdentifier[];
         this.bspCategories = [...new Set(this.bsps.map(bsp => bsp.category))];
 
         for (let resolver of this.bspResolvers) {

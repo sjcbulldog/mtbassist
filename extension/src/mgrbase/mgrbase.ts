@@ -1,10 +1,12 @@
 import * as winston from 'winston';
 import { MTBAssistObject } from "../extobj/mtbassistobj";
+import EventEmitter = require('events');
 
-export class MtbManagerBase {
+export class MtbManagerBase extends EventEmitter {
     private ext_ : MTBAssistObject ;
 
     public constructor(ext: MTBAssistObject) {
+        super() ;
         this.ext_ = ext ;
     }
 

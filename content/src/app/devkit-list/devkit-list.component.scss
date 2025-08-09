@@ -1,0 +1,102 @@
+.update-fw-btn {
+  margin-left: 0.5rem;
+  background: var(--primary-color, #007bff);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.update-fw-btn:hover {
+  background: var(--primary-hover, #0056b3);
+}
+.devkit-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.refresh-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+}
+.refresh-btn:hover {
+  background: var(--hover-background, #f0f0f0);
+}
+.devkit-list {
+  padding: 1.5rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.devkit-card {
+  background: var(--card-background, #fff);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  transition: box-shadow 0.2s;
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+.devkit-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+  border-color: var(--primary-color, #007bff);
+}
+.devkit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+.devkit-name {
+  color: var(--primary-color, #007bff);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.devkit-serial {
+  color: var(--text-secondary, #888);
+  font-size: 0.95rem;
+  margin-left: 1.5rem;
+}
+.devkit-fw {
+  color: var(--text-secondary, #888);
+  font-size: 0.95rem;
+  margin-left: 1.5rem;
+  display: flex;
+  align-items: center;
+}
+.devkit-fw.outdated, .devkit-details .outdated {
+  color: #d32f2f;
+  font-weight: bold;
+}
+.devkit-details {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  color: var(--text-color, #222);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+}
+.no-kits {
+  color: #888;
+  text-align: center;
+  padding: 2rem 0;
+  font-size: 1.1rem;
+}
+@media (max-width: 600px) {
+  .devkit-details {
+    grid-template-columns: 1fr;
+  }
+  .devkit-card {
+    padding: 1rem;
+  }
+}

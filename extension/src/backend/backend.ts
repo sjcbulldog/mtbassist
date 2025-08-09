@@ -90,7 +90,7 @@ export class BackendService extends EventEmitter {
     private bindCommandHandlers(): void {
         this.cmdhandler_.set('logMessage', this.logMessage.bind(this));
         this.cmdhandler_.set('setPlatform', this.setPlatform.bind(this));
-        this.cmdhandler_.set('getDevKits', this.getDevKits.bind(this)) ;
+        this.cmdhandler_.set('getBSPs', this.getBSPs.bind(this)) ;
         this.cmdhandler_.set('getCodeExamples', this.getCodeExamples.bind(this));
         this.cmdhandler_.set('createProject', this.createProject.bind(this));
         this.cmdhandler_.set('loadWorkspace', this.loadWorkspace.bind(this));
@@ -188,12 +188,12 @@ export class BackendService extends EventEmitter {
         return ret;
     }
 
-    private getDevKits(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null>  {
+    private getBSPs(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null>  {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             this.bspsMgr.getDevKits()
                 .then((kits) => {
                     resolve({
-                        response: 'setDevKits',
+                        response: 'setBSPs',
                         data: kits}) ;
                 })
                 .catch((error) => {

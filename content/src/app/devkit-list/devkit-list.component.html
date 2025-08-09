@@ -1,0 +1,35 @@
+<div class="devkit-list">
+  <div class="devkit-list-header">
+    <h2>Connected Development Kits</h2>
+    <button class="refresh-btn" (click)="refreshDevKits()" title="Refresh">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+  @if (devkits.length > 0) {
+    @for (kit of devkits; track kit.serial) {
+      <div class="devkit-card">
+        <div class="devkit-header">
+          <span class="devkit-name">{{ kit.name }}</span>
+          <span class="devkit-serial">SN: {{ kit.serial }}</span>
+          <span class="devkit-fw" [ngClass]="{ 'outdated': kit.fwOutOfDate }">
+            FW: {{ kit.firmwareVersion }}
+            @if (kit.fwOutOfDate) {
+              <mat-icon>warning</mat-icon>
+              <button class="update-fw-btn" (click)="updateFirmware(kit)" title="Update Firmware">
+                Update Firmware
+              </button>
+            }
+          </span>
+        </div>
+        <div class="devkit-details">
+          <div><strong>Features:</strong> {{ kit.boardFeatures.join(', ') }}</div>
+          <div><strong>KitProg Type:</strong> {{ kit.kitProgType }}</div>
+          <div><strong>USB Mode:</strong> {{ kit.usbMode }}</div>
+          <div><strong>Bridging:</strong> {{ kit.bridgingTypes.join(', ') }}</div>
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="no-kits">No development kits connected.</div>
+  }
+</div>

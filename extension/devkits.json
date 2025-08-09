@@ -1,6 +1,6 @@
 {
   "datatype": "cached",
-  "kits": [
+  "bsps": [
     {
       "name": "CYW943907AEVAL1F",
       "id": "CYW943907AEVAL1F",

@@ -4,7 +4,7 @@ export type PlatformType = 'browser' | 'electron' | 'vscode' ;
 export type FrontEndToBackEndRequestType = 
     'logMessage' | 
     'setPlatform' |
-    'getDevKits' |
+    'getBSPs' |
     'getCodeExamples' |
     'getStarted' |
     'createProject' |
@@ -16,7 +16,7 @@ export type FrontEndToBackEndRequestType =
     'buildAction' ;
 
 export type BackEndToFrontEndResponseType =
-    'setDevKits' |
+    'setBSPs' |
     'setCodeExamples' |
     'createProjectResult' |
     'browseForFolderResult' |
@@ -47,11 +47,11 @@ export interface CreateProjectResponse {
     message?: string;
 }
 
-export type DevKitDataType = 'cached' | 'manifest' | 'empty' | 'error';
+export type BSPsDataType = 'cached' | 'manifest' | 'empty' | 'error';
 
-export interface DevKitData {
-    datatype: DevKitDataType;
-    kits: BSPIdentifier[];
+export interface BSPData {
+    datatype: BSPsDataType;
+    bsps: BSPIdentifier[];
 }
 
 export interface FrontEndToBackEndRequest {
@@ -150,4 +150,15 @@ export interface ApplicationStatusData {
   middleware: Middleware[];
   projects: Project[];
   tools: Tool[];
+}
+
+export interface DevKitInfo {
+  name: string ;
+  serial: string ;
+  firmwareVersion: string ;
+  boardFeatures: string[] ;
+  kitProgType: string ;
+  usbMode: string ;
+  bridgingTypes : string[] ; 
+  fwOutOfDate: boolean ;
 }

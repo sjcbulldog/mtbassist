@@ -35,6 +35,11 @@ export class App {
       label: 'Application Status',
       component: 'ApplicationStatus',
       icon: 'dashboard'
-    }
+    },
+    {
+      label: 'Dev Kit List',
+      component: 'DevkitListComponent',
+      icon: 'dashboard'
+    }    
   ];
 }

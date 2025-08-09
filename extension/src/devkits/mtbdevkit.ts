@@ -1,3 +1,4 @@
+import { DevKitInfo } from "../comms";
 
 
 export class MTBDevKit {
@@ -24,5 +25,18 @@ export class MTBDevKit {
         this.mode = mode;
         this.version = version ;
         this.outdated = outdated;
+    }
+
+    public get info() : DevKitInfo {
+        return {
+            name: this.name || 'Unknown',
+            serial: this.serial,
+            firmwareVersion: this.version,
+            boardFeatures: this.boardFeatures,
+            kitProgType: this.kptype,
+            usbMode: this.mode,
+            bridgingTypes: this.bridgingProperties ? this.bridgingProperties.split(',') : [],
+            fwOutOfDate: this.outdated,
+        }
     }
 } ;

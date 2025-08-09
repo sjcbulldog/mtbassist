@@ -227,10 +227,8 @@ export class MTBAssistObject {
         MTBAssistObject.theInstance_ = new MTBAssistObject(context);
         MTBAssistObject.theInstance_.initialize()
             .then(() => {
-                MTBAssistObject.theInstance_!.logger.info('MTBAssistObject initialized successfully.');
             })
             .catch((error: Error) => {
-                MTBAssistObject.theInstance_!.logger.error('Failed to initialize MTBAssistObject:', error.message);
             });
         //
         // Note, this might not be fully initialized yet, but we return the instance anyway.
@@ -267,7 +265,9 @@ export class MTBAssistObject {
         this.cmdhandler_.set('open', this.open.bind(this)) ;
         this.cmdhandler_.set('libmgr', this.launchLibraryManager.bind(this)) ;
         this.cmdhandler_.set('tool', this.tool.bind(this)) ;
-    }    
+        this.cmdhandler_.set('refreshDevKits', this.refreshDevKits.bind(this)) ;
+        this.cmdhandler_.set('updateFirmware', this.updateFirmware.bind(this)) ;
+    }   
 
     private tool(request: any) : Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
@@ -366,6 +366,7 @@ export class MTBAssistObject {
     private postInitializeManagers() : Promise<void> {
         let promise = new Promise<void>((resolve, reject) => {
             this.devkitMgr_ = new MTBDevKitMgr(this);
+            this.devkitMgr_.on('updated', this.pushDevKitStatus.bind(this)) ;
             this.devkitMgr_.init()
                 .then(() => {
                     this.postInitDone_ = true ;
@@ -670,6 +671,42 @@ export class MTBAssistObject {
         }
     }
 
+    private updateFirmware(request: any) : Promise<BackEndToFrontEndResponse> {
+        let ret = new Promise<BackEndToFrontEndResponse>((resolve, reject) => {
+            this.devkitMgr_?.updateFirmware(request.serial) ;
+        });
+        return ret;
+    }
+
+    private refreshDevKits() : Promise<BackEndToFrontEndResponse> {
+        let ret = new Promise<BackEndToFrontEndResponse>((resolve, reject) => {
+            this.devkitMgr_?.scanForDevKits()
+            .then(() => {
+                this.pushDevKitStatus();
+                resolve({
+                    response: 'success',
+                    data: null
+                });
+            });
+        }) ;
+        return ret;
+    }
+
+    private pushDevKitStatus() {
+        this.logger_.debug('Pushing devkit status to the UI.') ;
+        if (this.panel_) {
+            let st : any = {
+                kits: this.devkitMgr_?.devKitInfo || [],
+                oobtype: 'devKitStatus'
+            };
+            let oob: BackEndToFrontEndResponse = {
+                response: 'oob',
+                data: st
+            } ;
+            this.panel_.webview.postMessage(oob) ;            
+        }
+    }
+
     private getAppStatusFromEnv() : ApplicationStatusData  {
         let appst : ApplicationStatusData ;        
         if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo)) {
@@ -758,7 +795,7 @@ export class MTBAssistObject {
                 if (this.cmdhandler_.has(message.data.command)) {
                     this.cmdhandler_.get(message.data.command)!(message.data.data)
                     .then((response: BackEndToFrontEndResponse | null) => {
-                        this.logger_.debug(`Response for platform specific command ${message.data.command}: ${JSON.stringify(response)}`);
+                        this.logger_.silly(`Response for platform specific command ${message.data.command}: ${JSON.stringify(response)}`);
                         if (response) {
                             this.panel_!.webview.postMessage(response);
                         }

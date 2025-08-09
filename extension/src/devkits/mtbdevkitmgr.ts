@@ -5,6 +5,7 @@ import { MTBDevKit } from './mtbdevkit';
 import { MtbManagerBase } from '../mgrbase/mgrbase';
 import { MTBAssistObject } from '../extobj/mtbassistobj';
 import { ModusToolboxEnvironment } from '../mtbenv';
+import { DevKitInfo } from '../comms';
 
 export class MTBDevKitMgr extends MtbManagerBase {
 
@@ -33,11 +34,15 @@ export class MTBDevKitMgr extends MtbManagerBase {
         super(ext);
     }
 
+    public get devKitInfo() : DevKitInfo[] {
+        return this.kits.map(kit => kit.info) ;
+    }
+
     public init() : Promise<void> {
         let promise = new Promise<void>((resolve, reject) => {
             this.scanForDevKits()
                 .then((st: boolean) => {
-                    this.logger.info('MTBDevKitMgr initialized successfully.');
+                    this.logger.info(`MTBDevKitMgr initialized successfully - ${JSON.stringify(this.devKitInfo)}.`);
                     resolve();
                 })
                 .catch((error: Error) => {
@@ -116,6 +121,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                         .then((result) => {
                             this.scanForDevKits()
                             .then((st: boolean) => {
+                                this.emit('updated') ;
                                 resolve() ;
                             })
                             .catch((err) => {
@@ -162,6 +168,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                 .then((result) => {
                     this.scanForDevKits()
                     .then((st: boolean) => {
+                        this.emit('updated') ;                        
                         resolve() ;
                     })
                     .catch((err) => {
@@ -221,6 +228,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                                     await this.extractKits(res[1]);
                                 }
                                 this.scanning = false ;
+                                this.emit('updated') ;
                                 resolve(true) ;
                             }
                         })() ;
@@ -399,10 +407,8 @@ export class MTBDevKitMgr extends MtbManagerBase {
     private async extractKits(lines: string[]) : Promise<void> {
         let ret: Promise<void> = new Promise<void>((resolve, reject) => { 
             (async() => { 
-                for(let kit of this.kits) {
-                    kit.present = false ;
-                }
-
+                this.kits = [] ;
+                
                 for(let line of lines) {
                     if (MTBDevKitMgr.kitLineMatch.test(line)) {
                         await this.extractOneKit(line);

@@ -4,7 +4,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, DevKitData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType } from '../../comms';
+import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo } from '../../comms';
 import { ManifestManager } from './manifestmgr';
 import { ProjectManager } from './projectmgr';
 import { AppStatusBackend } from './appmgrbe';
@@ -28,6 +28,7 @@ export class BackendService {
   memoryStats = new BehaviorSubject<MemoryStats | null>(null);  
   appStatusData: BehaviorSubject<ApplicationStatusData | null> = new BehaviorSubject<ApplicationStatusData | null>(null);
   loadedAsset: Subject<string> = new Subject<string>();
+  devKitStatus: Subject<DevKitInfo[]> = new Subject<DevKitInfo[]>();
 
   progressMessage: Subject<string> = new Subject<string>();
   progressPercent: Subject<number> = new Subject<number>();
@@ -180,7 +181,6 @@ export class BackendService {
         for(let proj of appStatusData.projects) {
           str += ' ' + proj.missingAssets ? 'true' : 'false';
         }
-        this.log('Received application status data/missing : ' + str) ;
         this.appStatusData.next(appStatusData);
       }
       else if (cmd.data.oobtype && cmd.data.oobtype === 'selectTab') {
@@ -190,6 +190,10 @@ export class BackendService {
       else if (cmd.data.oobtype && cmd.data.oobtype === 'loadedAsset') {
         let asset = cmd.data.asset || '';
         this.loadedAsset.next(asset);
+      }
+      else if (cmd.data.oobtype && cmd.data.oobtype === 'devKitStatus') {
+        this.log(`Received dev kit status update - ${JSON.stringify(cmd.data.kits)}`);
+        this.devKitStatus.next(cmd.data.kits) ;
       }
   }
 
