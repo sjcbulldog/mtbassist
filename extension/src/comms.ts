@@ -169,11 +169,10 @@ export interface RecentEntry {
     bspname: string ;
 } ;
 
-
 export interface MTBSetting {
     name: string ;
     owner: 'modus' | 'extension' ;
-    type: 'string' | 'number' | 'boolean' | 'choice' | 'uri' ;
+    type: 'string' | 'number' | 'boolean' | 'choice' | 'uri' | 'dirpath' | 'filepath' ;
     value: string | number | boolean ;
     choices? : string[] ;
     description: string ;

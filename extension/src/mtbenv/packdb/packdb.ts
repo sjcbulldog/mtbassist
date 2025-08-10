@@ -28,6 +28,7 @@ export class PackDB {
             }
         }
 
+        // TODO: merge this with the overall settings
         let settings = path.join(os.homedir(), '.modustoolbox', 'settings.json') ;
         if (fs.existsSync(settings)) {
             let data = JSON.parse(fs.readFileSync(settings, 'utf8')) ;
