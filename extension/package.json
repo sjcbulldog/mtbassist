@@ -36,17 +36,25 @@
         "command": "mtbassist2.mtbSetIntellisenseProject",
         "title": "ModusToolbox Assistant: Set Intellisense Project"
       }
-    ]
+    ],
+    "terminal": {
+      "profiles": [
+        {
+          "id": "mtbassist2.mtbShell",
+          "title": "ModusToolbox Shell"
+        }
+      ]
+    }    
   },
   "extensionDependencies": [
     "vscode.git",
     "llvm-vs-code-extensions.vscode-clangd"
-  ],  
+  ],
   "scripts": {
     "vscode:prepublish": "npm run package",
     "compile": "webpack",
     "watch": "webpack --watch",
-    "debug" : "npm run build && npm run watch",
+    "debug": "npm run build && npm run watch",
     "package": "webpack --mode production --devtool hidden-source-map",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",

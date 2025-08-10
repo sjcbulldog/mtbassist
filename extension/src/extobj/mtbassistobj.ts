@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os' ;
 import { VSCodeTransport } from './vscodetransport';
 import { ConsoleTransport } from './consoletransport';
 import { ModusToolboxEnvironment } from '../mtbenv/mtbenv/mtbenv';
@@ -21,8 +22,9 @@ export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49' ;
     private static readonly mtbLaunchToolName = 'mtblaunch' ;
     private static theInstance_: MTBAssistObject | undefined = undefined;
-    static readonly libmgrProgUUID: string = 'd5e53262-9571-4d51-85db-1b47f98a0ff6' ;
-    static readonly devcfgProgUUID: string = '45159e28-aab0-4fee-af1e-08dcb3a8c4fd' ;
+    private static readonly libmgrProgUUID: string = 'd5e53262-9571-4d51-85db-1b47f98a0ff6' ;
+    private static readonly devcfgProgUUID: string = '45159e28-aab0-4fee-af1e-08dcb3a8c4fd' ;
+    private static readonly modusShellUUID: string = '0afffb32-ea89-4f58-9ee8-6950d44cb004' ;
 
     private static readonly gettingStartedTab = 0 ;
     private static readonly createProjectTab = 1 ;
@@ -169,7 +171,7 @@ export class MTBAssistObject {
                                                 .then(() => {
                                                     this.logger_.info('Post-initialization of managers completed successfully.');
                                                     this.env?.load(MTBLoadFlags.Manifest)
-                                                        .then(() => {
+                                                        .then(async () => {
                                                             this.logger_.info('ModusToolbox manifests loaded successfully.');
 
                                                             //
@@ -177,6 +179,7 @@ export class MTBAssistObject {
                                                             // of the application status so that the new information from MTBLaunch
                                                             // is picked up by the UI.
                                                             //
+                                                            await this.createModusShellTerminal() ;
                                                             this.pushAppStatus() ;
                                                             this.pushAllBSPs() ;
                                                             this.updateAllTasks() ;
@@ -1048,4 +1051,56 @@ export class MTBAssistObject {
             }
         }         
     }    
+
+    private getTerminalWorkingDirectory() {
+
+    }
+
+    private createModusShellTerminal() : Promise<void> {
+        let ret = new Promise<void>((resolve) => {
+
+            if (!this.env_!.appInfo) {
+                this.logger_.error('ModusToolbox application info not found - cannot create terminal profile.');
+                resolve();
+                return;
+            }
+
+            let shtool = this.env_!.toolsDB.findToolByGUID(MTBAssistObject.modusShellUUID);
+            if (!shtool) {
+                this.logger_.error('ModusToolbox shell tool not found - cannot create terminal profile.');
+                resolve();
+                return;
+            }
+
+            let shpath = path.join(shtool.path, 'bin', 'bash') ;
+            if (process.platform === "win32") {
+                shpath += ".exe";
+            }
+
+            let termdir = this.env_!.appInfo.appdir ;
+
+            vscode.window.registerTerminalProfileProvider('mtbassist2.mtbShell', {
+                provideTerminalProfile(token: vscode.CancellationToken): vscode.ProviderResult<vscode.TerminalProfile> {
+                    return {
+                        options: {
+                            name: "ModusToolbox Shell",
+                            shellPath: shpath,
+                            shellArgs: ["--login"],
+                            cwd: termdir,
+                            isTransient: true,
+                            env: {
+                                ["HOME"]: os.homedir(),
+                                ["PATH"]: "/bin:/usr/bin",
+                                ["CHERE_INVOKING"]: termdir,
+                            },
+                            strictEnv: false,
+                            message: "Welcome To ModusToolbox Shell",
+                        }
+                    };
+                }
+            });
+            resolve();
+        });
+        return ret;
+    }
 }

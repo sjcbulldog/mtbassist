@@ -33,21 +33,16 @@ o Dev Kits Component
 o Settings
   - Use VSCode settings
 
-o Outside of main GUI
-  - Intellisense
-    Port over current intellisense support
-    Use the application tiles to select active intellisense project
-
+o Outside of main GUI                                                                             
+  - Intellisense: port over current intellisense support                                              done
   - Port over task generation support                                                                 done
   - Port over keyword based documentation
   - Port over, check run make vscode (generate launch configs)
 
 0 Install software component
-  - 
 
 o Help component
   - index on the left like a boot
-  
 
 o Test
   - be sure all tools come from the EAP if the EAP is enabled
