@@ -79,7 +79,7 @@
           }
         </form>
         
-        <div class="step-actions">
+  <div class="step-actions" #stepActionsSection>
           <button mat-raised-button 
                   color="primary" 
                   matStepperNext 
@@ -407,7 +407,7 @@
         
         <!-- Progress Section -->
         @if (isLoading) {
-          <div class="progress-section">
+          <div class="progress-section" #progressSection>
             <mat-card class="progress-card">
               <mat-card-header>
                 <div mat-card-avatar class="progress-avatar">

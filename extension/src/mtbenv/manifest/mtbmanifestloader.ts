@@ -25,6 +25,7 @@ import { MTBMiddleware } from './mtbmiddleware';
 import { URI } from 'vscode-uri';
 import * as winston from 'winston';
 import fetch, { Response } from 'node-fetch';
+import { PackManifest } from '../packdb/packdb';
 
 enum ManifestFileType {
     superManifest,
@@ -36,14 +37,14 @@ export class MtbManifestLoader {
     private logger_ : winston.Logger ;
     private isLoading: boolean;
 
-    private superManifestList: string[];
-    private superManifestData: Map<string, string>;
+    private superManifestList: PackManifest[];
+    private superManifestData: Map<URI, string>;
 
-    private manifestContentList: string[];
-    private manifestContentData: Map<string, string>;
+    private manifestContentList: PackManifest[];
+    private manifestContentData: Map<URI, string>;
 
-    private manifestDepList: string[];
-    private manifestDepData: Map<string, string>;
+    private manifestDepList: PackManifest[];
+    private manifestDepData: Map<URI, string>;
 
     private db: MTBManifestDB;
 
@@ -53,14 +54,14 @@ export class MtbManifestLoader {
         this.isLoading = false;
 
         this.superManifestList = [];
-        this.superManifestData = new Map<string, string>();
+        this.superManifestData = new Map<URI, string>();
         this.manifestContentList = [];
-        this.manifestContentData = new Map<string, string>();
+        this.manifestContentData = new Map<URI, string>();
         this.manifestDepList = [];
-        this.manifestDepData = new Map<string, string>();
+        this.manifestDepData = new Map<URI, string>();
     }
 
-    public loadManifestData(paths: string[]): Promise<void> {
+    public loadManifestData(paths: PackManifest[]): Promise<void> {
         this.superManifestList = paths ;
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
             let p = this.loadAllSuperManifests() ;
@@ -137,10 +138,9 @@ export class MtbManifestLoader {
     private processAllSuperManifests(): Promise<any> {
         let parray: Promise<any>[] = [];
         for(var loc of this.superManifestList) {
-            if (this.superManifestData.has(loc)) {
-                let data: string = this.superManifestData.get(loc) as string;
-                let srcuri: URI = URI.parse(loc) ;
-                parray.push(this.parseSuperManifest(srcuri, data));
+            if (this.superManifestData.has(loc.uripath)) {
+                let data: string = this.superManifestData.get(loc.uripath) as string;
+                parray.push(this.parseSuperManifest(loc, data, loc.iseap));
             }
         }
 
@@ -150,10 +150,9 @@ export class MtbManifestLoader {
     private processAllContentManifests(): Promise<void[]> {
         let parray: Promise<void>[] = [];
         for(var loc of this.manifestContentList) {
-            if (this.manifestContentData.has(loc)) {
-                let data: string = this.manifestContentData.get(loc) as string;
-                let srcuri: URI = URI.parse(loc) ;
-                let pro = this.parseContentManifest(srcuri, data);
+            if (this.manifestContentData.has(loc.uripath)) {
+                let data: string = this.manifestContentData.get(loc.uripath) as string;
+                let pro = this.parseContentManifest(loc, data);
                 parray.push(pro);
             }
         };
@@ -164,10 +163,9 @@ export class MtbManifestLoader {
     private processAllDependencyManifests(): Promise<void[]> {
         let parray: Promise<void>[] = [];
         for(var loc of this.manifestDepList) {
-            if (this.manifestDepData.has(loc)) {
-                let data: string = this.manifestDepData.get(loc) as string;
-                let srcuri: URI = URI.parse(loc) ;
-                let pro = this.parseDependencyManifest(srcuri, data);
+            if (this.manifestDepData.has(loc.uripath)) {
+                let data: string = this.manifestDepData.get(loc.uripath) as string;
+                let pro = this.parseDependencyManifest(loc, data);
                 parray.push(pro);
             }
         };
@@ -175,15 +173,14 @@ export class MtbManifestLoader {
         return Promise.all(parray);
     }
 
-    private getManifestData(urlname: string) : Promise<string> {
+    private getManifestData(uri: URI) : Promise<string> {
         let ret = new Promise<string>((resolve, reject) => {
-            let uri = URI.parse(urlname) ;
             if (uri.scheme === 'file') {
                 let text = fs.readFileSync(uri.fsPath, 'utf8') ;
                 resolve(text);
             }
             else if (uri.scheme === 'http' || uri.scheme === 'https') {
-                fetch(urlname)
+                fetch(uri.toString())
                     .then((resp: Response) => {
                         resp.text()
                             .then(text => {
@@ -202,24 +199,24 @@ export class MtbManifestLoader {
         return ret;
     }
 
-    private loadManifestFile(urlname: string, mtype: ManifestFileType): Promise<void> {
+    private loadManifestFile(path: PackManifest, mtype: ManifestFileType): Promise<void> {
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
-            this.getManifestData(urlname)
+            this.getManifestData(path.uripath)
                 .then(text => {
                     if (mtype === ManifestFileType.superManifest) {
-                        this.superManifestData.set(urlname, text);
+                        this.superManifestData.set(path.uripath, text);
                         let percent: number = this.superManifestData.size / this.superManifestList.length * 100.0;
-                        this.logger_.silly("loaded super manifest file (" + percent.toFixed(1) + ") '" + urlname + "'");
+                        this.logger_.silly("loaded super manifest file (" + percent.toFixed(1) + ") '" + path.uripath + "'");
                     }
                     else if (mtype === ManifestFileType.contentManifest) {
-                        this.manifestContentData.set(urlname, text);
+                        this.manifestContentData.set(path.uripath, text);
                         let percent: number = this.manifestContentData.size / this.manifestContentList.length * 100.0;
-                        this.logger_.silly("loaded content manifest file (" + percent.toFixed(1) + ") '" + urlname + "'");
+                        this.logger_.silly("loaded content manifest file (" + percent.toFixed(1) + ") '" + path.uripath + "'");
                     }
                     else if (mtype === ManifestFileType.dependencyManifest) {
-                        this.manifestDepData.set(urlname, text);
+                        this.manifestDepData.set(path.uripath, text);
                         let percent: number = this.manifestDepData.size / this.manifestDepList.length * 100.0;
-                        this.logger_.silly("loaded dependency manifest file (" + percent.toFixed(1) + ") '" + urlname + "'");
+                        this.logger_.silly("loaded dependency manifest file (" + percent.toFixed(1) + ") '" + path.uripath + "'");
                     }
                     resolve();
                 })
@@ -243,54 +240,54 @@ export class MtbManifestLoader {
         return ret ;
     }
 
-    private processAppManifestList(src: URI, mlist: any) {
+    private processAppManifestList(pmf: PackManifest, mlist: any) {
         let urilist: any[] = mlist['app-manifest'];
         if (!Array.isArray(urilist)) {
-            urilist = this.fixManifestList(src, urilist) ;
+            urilist = this.fixManifestList(pmf.uripath, urilist) ;
         }
 
         for(let one of urilist) {
-            this.manifestContentList.push(one['uri']);
+            this.manifestContentList.push({ uripath: URI.parse(one['uri']), iseap: pmf.iseap}) ;
         }
     }
 
-    private processBoardManifestList(src: URI, mlist: any) {
+    private processBoardManifestList(pfm: PackManifest, mlist: any) {
         let urilist: any[] = mlist['board-manifest'];
         if (!Array.isArray(urilist)) {
-            urilist = this.fixManifestList(src, urilist) ;
+            urilist = this.fixManifestList(pfm.uripath, urilist) ;
         }
 
         for (var one of urilist) {
-            this.manifestContentList.push(one['uri']);
+            this.manifestContentList.push({ uripath: URI.parse(one['uri']), iseap: pfm.iseap}) ;
             let attrs = one['$'];
             if (attrs) {
                 let depurl = attrs['dependency-url'];
                 if (depurl) {
-                    this.manifestDepList.push(depurl);
+                    this.manifestDepList.push({ uripath: URI.parse(depurl), iseap: pfm.iseap });   
                 }
             }
         };
     }
 
-    private processMiddlewareManifestList(src: URI, mlist: any) {
+    private processMiddlewareManifestList(src: PackManifest, mlist: any) {
         let urilist: any[] = mlist['middleware-manifest'];
         if (!Array.isArray(urilist)) {
-            urilist = this.fixManifestList(src, urilist) ;
+            urilist = this.fixManifestList(src.uripath, urilist) ;
         }
 
         for (var one of urilist) {
-            this.manifestContentList.push(one['uri']);
+            this.manifestContentList.push({ uripath: URI.parse(one['uri']), iseap: src.iseap}) ;
             let attrs = one['$'];
             if (attrs) {
                 let depurl = attrs['dependency-url'];
                 if (depurl) {
-                    this.manifestDepList.push(depurl);
+                    this.manifestDepList.push({ uripath: URI.parse(depurl), iseap: src.iseap });
                 }
             }
         };
     }
 
-    private processApp(src: URI, obj: any) {
+    private processApp(pfm: PackManifest, obj: any) {
         let name: string = obj.name as string;
         let id: string = obj.id as string;
         let uri: URI = obj.uri as URI;
@@ -337,11 +334,11 @@ export class MtbManifestLoader {
             }
         }
 
-        let app: MTBApp = new MTBApp(src, name, id, uri, desc, reqs, reqsv2, versions, category);
+        let app: MTBApp = new MTBApp(pfm, name, id, uri, desc, reqs, reqsv2, versions, category);
         this.db.addApp(this.logger_, app);
     }
 
-    private processBoard(src: URI, obj: any) {
+    private processBoard(pfm: PackManifest, obj: any) {
         let boardUri: URI = obj.board_uri as URI;
         let category: string = obj.category as string;
         let desc: string = obj.description as string;
@@ -394,11 +391,11 @@ export class MtbManifestLoader {
             }
         }
 
-        let board: MTBBoard = new MTBBoard(src, id, name, category, desc, summary, boardUri, documentationUri, provs, chips, versions);
+        let board: MTBBoard = new MTBBoard(pfm, id, name, category, desc, summary, boardUri, documentationUri, provs, chips, versions);
         this.db.addBoard(this.logger_, board);
     }
 
-    private processMiddleware(src: URI, obj: any) {
+    private processMiddleware(src: PackManifest, obj: any) {
         let id: string = obj.id as string;
         let name: string = obj.name as string;
         let uri: URI = obj.uri as URI;
@@ -451,7 +448,7 @@ export class MtbManifestLoader {
         this.db.addMiddleware(this.logger_, middleware);
     }
 
-    private processDependerVersions(src: URI, id: string, versions: any[]) {
+    private processDependerVersions(pfm: PackManifest, id: string, versions: any[]) {
         for(var one of versions) {
             let commit:string = one.commit as string ;
             let dependees = one.dependees.dependee ;
@@ -468,7 +465,7 @@ export class MtbManifestLoader {
         }
     }
 
-    private processDependencyManifestXml(src: URI, manifest: any) {
+    private processDependencyManifestXml(pfm: PackManifest, manifest: any) {
         let deps = manifest.dependencies ;
         let dependers = deps.depender ;
         if (!Array.isArray(deps.depender)) {
@@ -482,18 +479,18 @@ export class MtbManifestLoader {
             if (!Array.isArray(versions)) {
                 versions = [versions] ;
             }
-            this.processDependerVersions(src, id, versions) ;
+            this.processDependerVersions(pfm, id, versions) ;
         }
     }
 
-    private processContentManifestXML(src: URI, manifest: any) {
+    private processContentManifestXML(pfm: PackManifest, manifest: any) {
         if (manifest.apps) {
             let apparray = manifest.apps.app as object[];
             if (!Array.isArray(apparray)) {
                 apparray = [apparray] ;
             }
             for (let app of apparray) {
-                this.processApp(src, app);
+                this.processApp(pfm, app);
             }
         }
         else if (manifest.boards) {
@@ -502,7 +499,7 @@ export class MtbManifestLoader {
                 boardarray = [boardarray] ;
             }
             for (let board of boardarray) {
-                this.processBoard(src, board);
+                this.processBoard(pfm, board);
             }
         }
         else if (manifest.middleware) {
@@ -511,12 +508,12 @@ export class MtbManifestLoader {
                 middlearray = [middlearray] ;
             }
             for (let middleware of middlearray) {
-                this.processMiddleware(src, middleware);
+                this.processMiddleware(pfm, middleware);
             }
         }
     }
 
-    private processSuperManifestXML(src: URI, manifest: any) {
+    private processSuperManifestXML(pmf: PackManifest, manifest: any) {
         let toplevel: any = manifest['super-manifest'];
         let props = toplevel['$'];
         let ver = props['version'];
@@ -525,16 +522,16 @@ export class MtbManifestLoader {
         }
 
         let manlist = toplevel[MTBManifestNames.appManifestList];
-        this.processAppManifestList(src, manlist);
+        this.processAppManifestList(pmf, manlist);
 
         manlist = toplevel[MTBManifestNames.boardManifestList];
-        this.processBoardManifestList(src, manlist);
+        this.processBoardManifestList(pmf, manlist);
 
         manlist = toplevel[MTBManifestNames.middlewareManifesetList];
-        this.processMiddlewareManifestList(src, manlist);
+        this.processMiddlewareManifestList(pmf, manlist);
     }
 
-    private parseContentManifest(loc: URI, data: string): Promise<void> {
+    private parseContentManifest(pfm: PackManifest, data: string): Promise<void> {
         var parseString = require('xml2js').parseString;
 
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
@@ -544,8 +541,8 @@ export class MtbManifestLoader {
                 }
                 else {
                     try {
-                        this.logger_.silly("parsing content manifest file '" + loc + "'");
-                        this.processContentManifestXML(loc, result);
+                        this.logger_.silly("parsing content manifest file '" + pfm.uripath + "'");
+                        this.processContentManifestXML(pfm, result);
                     }
                     catch (errobj) {
                         reject(errobj);
@@ -558,7 +555,7 @@ export class MtbManifestLoader {
         return ret;
     }
 
-    private parseDependencyManifest(loc: URI, data: string): Promise<void> {
+    private parseDependencyManifest(loc: PackManifest, data: string): Promise<void> {
         var parseString = require('xml2js').parseString;
 
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
@@ -582,7 +579,7 @@ export class MtbManifestLoader {
         return ret;
     }
 
-    private parseSuperManifest(loc: URI, data: string): Promise<any> {
+    private parseSuperManifest(pfm: PackManifest, data: string, iseap: boolean): Promise<any> {
         var parseString = require('xml2js').parseString;
 
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
@@ -592,8 +589,8 @@ export class MtbManifestLoader {
                 }
                 else {
                     try {
-                        this.logger_.debug("parsing supermanifest file '" + loc + "'");
-                        this.processSuperManifestXML(loc, result);
+                        this.logger_.debug("parsing supermanifest file '" + pfm.uripath + "'");
+                        this.processSuperManifestXML(pfm, result);
                     }
                     catch (errobj) {
                         reject(errobj);

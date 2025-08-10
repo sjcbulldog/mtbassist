@@ -18,6 +18,7 @@ import * as winston from 'winston';
 import { MTBItem } from './mtbitem';
 import { MTBItemVersion } from './mtbitemversion';
 import { URI } from 'vscode-uri' ;
+import { PackManifest } from '../packdb/packdb';
 
 //
 // This class represents a single application or code example that is available and defined
@@ -30,12 +31,12 @@ export class MTBApp extends MTBItem {
     public readonly requirementsv2: string[] ;
     public readonly uri: URI;
     
-    constructor(src: URI, name: string, id: string, uri: URI, description: string,
+    constructor(src: PackManifest, name: string, id: string, uri: URI, description: string,
         requirements: string[], requirementsv2: string[], versions: MTBItemVersion[], category?: string)
     {
         super(src, id, name, versions) ;
 
-        this.uri = uri;
+        this.uri = src.uripath ;
         this.description = description;
         this.requirements = [...requirements];
         this.requirements.sort() ;
@@ -48,15 +49,15 @@ export class MTBApp extends MTBItem {
         let ret: MTBApp | undefined = app1 ;
 
         if (app1.name !== app2.name) {
-            MTBItem.mergeMsg(logger, app1.id, "app", "name", app1.name, app2.name, app1.source, app2.source) ;
+            MTBItem.mergeMsg(logger, app1.id, "app", "name", app1.name, app2.name, app1.source.uripath, app2.source.uripath) ;
         }
 
         if (app1.uri !== app2.uri) {
-            MTBItem.mergeMsg(logger, app1.id, "app", "uri", app1.uri.toString(), app2.uri.toString(), app1.source, app2.source) ;
+            MTBItem.mergeMsg(logger, app1.id, "app", "uri", app1.uri.toString(), app2.uri.toString(), app1.source.uripath, app2.source.uripath) ;
         }
 
         if (app1.description !== app2.description) {
-            MTBItem.mergeMsg(logger, app1.id, "app", "description", app1.description, app2.description, app1.source, app2.source) ;
+            MTBItem.mergeMsg(logger, app1.id, "app", "description", app1.description, app2.description, app1.source.uripath, app2.source.uripath) ;
         }
 
         if (app1.category !== app2.category) {
@@ -66,7 +67,7 @@ export class MTBApp extends MTBItem {
         }
 
         if (!this.compareStringArrays(app1.requirements, app2.requirements)) {
-            MTBItem.mergeMsg(logger, app1.id, "app", "requirements", app1.requirements.join(','), app2.requirements.join(','), app1.source, app2.source) ;
+            MTBItem.mergeMsg(logger, app1.id, "app", "requirements", app1.requirements.join(','), app2.requirements.join(','), app1.source.uripath, app2.source.uripath) ;
         }
 
         for(let ver of app2.versions) {

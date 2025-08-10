@@ -19,18 +19,19 @@ import { URI } from "vscode-uri";
 import { MTBItemVersion } from "./mtbitemversion";
 import { MTBVersion } from '../misc/mtbversion';
 import * as winston from 'winston';
+import { PackManifest } from "../packdb/packdb";
 
 export class MTBItem
 {
     public readonly name: string;
-    public readonly source: URI ;
+    public readonly source: PackManifest ;
     public readonly id: string;
     public readonly versions: MTBItemVersion[];
     public readonly provides: string[] = [] ;
     public readonly requires: string[] = [] ;
     public readonly requiresv2: string[] = [] ;
 
-    constructor(src: URI, id: string, name: string, versions: MTBItemVersion[]) {
+    constructor(src: PackManifest, id: string, name: string, versions: MTBItemVersion[]) {
         this.name = name ;
         this.source = src ;
         this.id = id ;

@@ -1,5 +1,5 @@
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
@@ -35,15 +35,16 @@ import { MatDivider } from "@angular/material/divider";
         MatSnackBarModule,
         MatTooltipModule,
         MatDivider
-],
+    ],
     templateUrl: './create-project.html',
     styleUrl: './create-project.scss'
 })
 export class CreateProject implements OnInit, OnDestroy {
+    @ViewChild('stepActionsSection') stepActionsSectionRef?: ElementRef<HTMLDivElement>;
+    @ViewChild('progressSection') progressSectionRef?: ElementRef<HTMLDivElement>;
     projectInfoForm!: FormGroup;
     bspSelectionForm!: FormGroup;
     exampleSelectionForm!: FormGroup;
-
     isLoading = false;
     isDarkTheme = true; // Default to dark theme
     projectCreated = false;
@@ -56,7 +57,6 @@ export class CreateProject implements OnInit, OnDestroy {
     exampleCategories: string[] = [];
     examples: CodeExampleIdentifier[] = [];
     allBSPs: BSPIdentifier[] = [];
-
     selectedCategory: string = '';
     selectedBSP: BSPIdentifier | null = null;
     selectedExampleCategory: string = '';
@@ -305,6 +305,13 @@ export class CreateProject implements OnInit, OnDestroy {
         try {
             this.isLoading = true;
             this.startProgressSimulation();
+
+            // Scroll to the progress bar after a short delay to ensure it is rendered
+            setTimeout(() => {
+                if (this.progressSectionRef && this.progressSectionRef.nativeElement) {
+                    this.progressSectionRef.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+            }, 100);
             
             const success = await this.backendService.createProject(projectData);
             
@@ -315,6 +322,12 @@ export class CreateProject implements OnInit, OnDestroy {
                     duration: 5000,
                     panelClass: ['success-snackbar']
                 });
+                // Scroll to the step actions (Load Project button) after project is created
+                setTimeout(() => {
+                    if (this.stepActionsSectionRef && this.stepActionsSectionRef.nativeElement) {
+                        this.stepActionsSectionRef.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }
+                }, 100);
                 // Don't reset form anymore, keep the data for reference
             } else {
                 throw new Error('Project creation failed');

@@ -282,6 +282,7 @@ export class MTBAssistObject {
         this.cmdhandler_.set('refreshDevKits', this.refreshDevKits.bind(this)) ;
         this.cmdhandler_.set('updateFirmware', this.updateFirmware.bind(this)) ;
         this.cmdhandler_.set('recentlyOpened', this.recentlyOpened.bind(this)) ;
+        this.cmdhandler_.set('openRecent', this.openRecent.bind(this)) ;
     }   
 
     private tool(request: any) : Promise<BackEndToFrontEndResponse | null> {
@@ -710,7 +711,37 @@ export class MTBAssistObject {
         }
     }
 
-    private recentlyOpened() : Promise<BackEndToFrontEndResponse | null> {
+    private findCodeWorkspaceFiles(dir: string): string[] {
+        try {
+            const files = fs.readdirSync(dir);
+            return files
+                .filter(f => f.endsWith('.code-workspace'))
+                .map(f => path.join(dir, f));
+        } catch (err) {
+            this.logger_.error(`Error reading directory ${dir}: ${err}`);
+            return [];
+        }
+    }
+    
+    private openRecent(req: any) : Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            let dir = req as string ;
+            let files = this.findCodeWorkspaceFiles(dir);
+            if (files.length === 1) {
+                let wkspuri = vscode.Uri.file(files[0]);
+                vscode.commands.executeCommand("vscode.openFolder", wkspuri) ;                
+            } else if (files.length === 0) {
+                vscode.window.showErrorMessage(`No vscode workspace files (*.code-workspace) found in ${dir}.`);
+            }
+            else {
+                vscode.window.showErrorMessage(`Multiple vscode workspace files (*.code-workspace) found in ${dir}.`);
+            }
+            resolve(null);
+        });
+        return ret;
+    }
+
+    private recentlyOpened(req: any) : Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             this.pushRecentlyOpened() ;
             resolve(null) ;

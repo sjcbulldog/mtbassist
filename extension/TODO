@@ -1,11 +1,11 @@
 TODO
 -------------------------------------------------------------------------------------------
 o Getting Started Component
-  - add reference to recent project page
+  - add reference to recent project page                                                              done
 
 o Create Project Component
   - when EAP is enabled only show EAP valid BSPs
-  - when create is pressed, scroll to the bottom of the create project component
+  - when create is pressed, scroll to the bottom of the create project component                      done
 
 o Application Status Component
   - launch document view from application status page (apps & projects)                               done
@@ -15,13 +15,15 @@ o Application Status Component
   - make documents and tools collapsable on app                                                       done
   - make documents, tools, middleware collapsable on projects                                         done
   - change invalid to No ModusToolbox Project Loaded                                                  done
-  - hide the action bar if the appliation status is invalid
+  - hide the action bar if the appliation status is invalid                                           done
+  - hide the documents and tools on the app status when app is not valid                              done
+  - link to show readme.md
 
 o Memory usage
   - feasbility to work across all devices 
 
 o Recent Projects Component
-  - Divide into last day, last week, and per month after
+  - Divide into last day, last week, and per month after                                              done
   
 o Dev Kits Component
   - Basic component                                                                                   done
@@ -45,3 +47,6 @@ o Outside of main GUI
 o Help component
   - index on the left like a boot
   
+
+o Test
+  - be sure all tools come from the EAP if the EAP is enabled

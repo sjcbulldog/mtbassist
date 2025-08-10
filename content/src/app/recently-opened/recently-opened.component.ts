@@ -70,6 +70,6 @@ export class RecentlyOpenedComponent implements OnInit {
 	}
 
 	openRecent(entry: RecentEntry) {
-		this.be.platformSpecific('openRecent', entry);
+		this.be.platformSpecific('openRecent', entry.apppath);
 	}
 }

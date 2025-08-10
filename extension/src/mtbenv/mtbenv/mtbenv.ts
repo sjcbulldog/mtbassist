@@ -1,6 +1,6 @@
 import { MTBLoadFlags } from './loadflags' ;
 import { MTBManifestDB } from '../manifest/mtbmanifestdb';
-import { PackDB } from '../packdb/packdb';
+import { PackDB, PackManifest } from '../packdb/packdb';
 import { PackDBLoader } from '../packdb/packdbloader';
 import { MTBToolSource, ToolsDB } from '../toolsdb/toolsdb';
 import { MTBUtils } from '../misc/mtbutils';
@@ -13,6 +13,7 @@ import * as EventEmitter from 'events';
 import * as exec from 'child_process' ;
 import * as path from 'path';
 import * as fs from 'fs';
+import { URI } from 'vscode-uri';
 
 export class ModusToolboxEnvironment extends EventEmitter {
     // Static variables
@@ -451,6 +452,10 @@ export class ModusToolboxEnvironment extends EventEmitter {
                     }
                 }
                 this.logger_.debug('Loading Packs complete') ;
+                if (this.packDB.isEarlyAccessPackActive) {
+                    this.logger_.debug('Early Access Pack is active') ;
+                    this.manifestDB.eapPath = this.packDB.eap?.path() ;
+                }
                 resolve() ;
             }
             catch(err) {
@@ -595,7 +600,11 @@ export class ModusToolboxEnvironment extends EventEmitter {
     private loadManifest() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.logger_.debug('Loading Manifest') ;
-            this.manifestDb_.loadManifestData(this.logger_, [ModusToolboxEnvironment.mtbDefaultManifest, ...this.packDb_.getManifestFiles()])
+            let defman : PackManifest = { 
+                uripath: URI.parse(ModusToolboxEnvironment.mtbDefaultManifest),
+                iseap: false 
+            } ;
+            this.manifestDb_.loadManifestData(this.logger_, [defman, ...this.packDb_.getManifestFiles()])
                 .then(() => {
                     this.loading_ &= ~MTBLoadFlags.Manifest ;
                     this.has_ |= MTBLoadFlags.Manifest ;

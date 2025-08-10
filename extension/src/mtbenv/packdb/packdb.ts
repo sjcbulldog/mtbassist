@@ -5,6 +5,11 @@ import { MTBPack } from "./mtbpack";
 import { URI } from 'vscode-uri';
 import { MTBNames } from '../misc/mtbnames';
 
+export interface PackManifest {
+    uripath: URI,
+    iseap: boolean
+}
+
 export class PackDB {
     private packs_ : Map<string, MTBPack> = new Map() ;
 
@@ -53,12 +58,13 @@ export class PackDB {
         }
     }
 
-    public getManifestFiles() : string [] {
-        let ret = [] ;
+    public getManifestFiles() : PackManifest[] {
+        let ret : PackManifest[] = [];
         for(let pack of this.getActivePacks()) {
             let file = path.join(pack.path(), 'manifest.xml') ;
             if (fs.existsSync(file) && fs.statSync(file).isFile()) {
-                ret.push(URI.file(file).toString()) ;
+                let uri = URI.file(file) ;
+                ret.push({ uripath: uri, iseap: pack.packType() === 'early-access-pack' }) ;
             }
         }
         return ret ;

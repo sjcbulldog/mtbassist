@@ -64,7 +64,7 @@ export class ToolsDB {
                 //
                 this.active_tools_.set(tool.id, tool) ;
             }
-            else if (tool.source == MTBToolSource.Eap) {
+            else if (tool.source === MTBToolSource.Eap) {
                 //
                 // There is a tool from the EAP pack.  It always takes precedence
                 //
@@ -74,6 +74,7 @@ export class ToolsDB {
                 //
                 // We found a tool with a newer version, and the existing tool is not from the EAP pack.  We
                 // will use it
+                //
                 this.active_tools_.set(tool.id, tool) ;
             }
         }

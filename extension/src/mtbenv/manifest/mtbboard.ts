@@ -18,6 +18,7 @@ import { URI } from 'vscode-uri';
 import { MTBItem } from './mtbitem';
 import { MTBItemVersion } from './mtbitemversion';
 import * as winston from 'winston';
+import { PackManifest } from '../packdb/packdb';
 
 export class MTBBoard extends MTBItem {
     public readonly category: string;
@@ -29,7 +30,7 @@ export class MTBBoard extends MTBItem {
 
     //id, name, category, desc, summary, boardUri, documentationUri, provs, chips, versions) ;
 
-    constructor(src: URI, id: string, name: string, category: string, desc: string, 
+    constructor(src: PackManifest, id: string, name: string, category: string, desc: string, 
                     summary: string, boardUri: URI,docUri: URI, provs: string[], 
                     chips: Map<string, string>, versions: MTBItemVersion[]) {
         super(src, id, name, versions) ;
@@ -80,31 +81,31 @@ export class MTBBoard extends MTBItem {
         let ret: MTBBoard | undefined = board1 ;
 
         if (board1.name !== board2.name) {
-            MTBItem.mergeMsg(logger, board1.id, "board", "name", board1.name, board2.name, board1.source, board2.source) ;
+            MTBItem.mergeMsg(logger, board1.id, "board", "name", board1.name, board2.name, board1.source.uripath, board2.source.uripath) ;
         }
 
         if (board1.category !== board2.category) {
-            MTBItem.mergeMsg(logger, board1.id, "board", "category", board1.category.toString(), board2.category.toString(), board1.source, board2.source) ;
+            MTBItem.mergeMsg(logger, board1.id, "board", "category", board1.category.toString(), board2.category.toString(), board1.source.uripath, board2.source.uripath) ;
         }
 
         if (board1.summary !== board2.summary) {
-            MTBItem.mergeMsg(logger, board1.id, "board", "summary", board1.summary.toString(), board2.summary.toString(), board1.source, board2.source) ;
+            MTBItem.mergeMsg(logger, board1.id, "board", "summary", board1.summary.toString(), board2.summary.toString(), board1.source.uripath, board2.source.uripath) ;
         }
 
         if (board1.boardUri !== board2.boardUri) {
-            MTBItem.mergeMsg(logger, board1.id, "board", "boardUri", board1.boardUri.toString(), board2.boardUri.toString(), board1.source, board2.source) ;
+            MTBItem.mergeMsg(logger, board1.id, "board", "boardUri", board1.boardUri.toString(), board2.boardUri.toString(), board1.source.uripath, board2.source.uripath) ;
         }
 
         if (board1.documentationUri !== board2.documentationUri) {
-            MTBItem.mergeMsg(logger, board1.id, "board", "documentationUri", board1.documentationUri.toString(), board2.documentationUri.toString(), board1.source, board2.source) ;
+            MTBItem.mergeMsg(logger, board1.id, "board", "documentationUri", board1.documentationUri.toString(), board2.documentationUri.toString(), board1.source.uripath, board2.source.uripath) ;
         }
 
         if (!this.compareStringArrays(board1.provides, board2.provides)) {
-            MTBItem.mergeMsg(logger, board1.id, "board", "requirements", board1.provides.join(','), board2.provides.join(','), board1.source, board2.source) ;
+            MTBItem.mergeMsg(logger, board1.id, "board", "requirements", board1.provides.join(','), board2.provides.join(','), board1.source.uripath, board2.source.uripath) ;
         }
 
         if (!this.compareChips(board1.chips, board2.chips)) {
-            MTBItem.mergeMsg(logger, board1.id, "board", "chips", board1.chipString(), board2.chipString(), board1.source, board2.source) ;
+            MTBItem.mergeMsg(logger, board1.id, "board", "chips", board1.chipString(), board2.chipString(), board1.source.uripath, board2.source.uripath) ;
         }
 
         for(let ver of board2.versions) {

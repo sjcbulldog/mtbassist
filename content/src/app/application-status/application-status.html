@@ -41,83 +41,94 @@
               </div>
               
               <!-- Application Build & Tool Actions -->
-              <div class="app-build-actions">
-                <button mat-raised-button class="app-build-btn build-btn" (click)="buildApplication()">
-                  <mat-icon>build</mat-icon>
-                  Build
-                </button>
-                <button mat-raised-button class="app-build-btn rebuild-btn" (click)="rebuildApplication()">
-                  <mat-icon>refresh</mat-icon>
-                  Rebuild
-                </button>
-                <button mat-raised-button class="app-build-btn clean-btn" (click)="cleanApplication()">
-                  <mat-icon>cleaning_services</mat-icon>
-                  Clean
-                </button>
-                <button mat-raised-button class="app-build-btn erase-btn" (click)="eraseApplication()">
-                  <mat-icon>delete</mat-icon>
-                  Erase
-                </button>
-                <button mat-raised-button class="app-build-btn program-btn" (click)="programApplication()">
-                  <mat-icon>download</mat-icon>
-                  Program
-                </button>
-                <button mat-raised-button class="app-build-btn device-configurator-btn" (click)="openDeviceConfigurator()">
-                  <mat-icon>settings_input_component</mat-icon>
-                  Device Configurator
-                </button>
-                <button mat-raised-button class="app-build-btn library-manager-btn" (click)="openLibraryManager()">
-                  <mat-icon>library_books</mat-icon>
-                  Library Manager
-                </button>
-              </div>
+              @if (applicationStatus.valid) {
+                <div class="app-build-actions app-build-actions-flex">
+                  <div class="app-build-actions-left">
+                    <button mat-raised-button class="app-build-btn build-btn" (click)="buildApplication()">
+                      <mat-icon>build</mat-icon>
+                      Build
+                    </button>
+                    <button mat-raised-button class="app-build-btn rebuild-btn" (click)="rebuildApplication()">
+                      <mat-icon>refresh</mat-icon>
+                      Rebuild
+                    </button>
+                    <button mat-raised-button class="app-build-btn clean-btn" (click)="cleanApplication()">
+                      <mat-icon>cleaning_services</mat-icon>
+                      Clean
+                    </button>
+                    <button mat-raised-button class="app-build-btn erase-btn" (click)="eraseApplication()">
+                      <mat-icon>delete</mat-icon>
+                      Erase
+                    </button>
+                    <button mat-raised-button class="app-build-btn program-btn" (click)="programApplication()">
+                      <mat-icon>download</mat-icon>
+                      Program
+                    </button>
+                  </div>
+                  <span class="app-build-actions-spacer"></span>
+                  <div class="app-build-actions-right">
+                    <button mat-raised-button class="app-build-btn device-configurator-btn" (click)="openDeviceConfigurator()">
+                      <mat-icon>settings_input_component</mat-icon>
+                      Device Configurator
+                    </button>
+                    <button mat-raised-button class="app-build-btn library-manager-btn" (click)="openLibraryManager()">
+                      <mat-icon>library_books</mat-icon>
+                      Library Manager
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           </div>
 
 
           <!-- Application Documentation Section -->
-          <div class="documentation-section">
-            <h3 class="collapsible-header" (click)="toggleSection('application', 'documentation')">
-              <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed('application', 'documentation')">
-                expand_more
-              </mat-icon>
-              Application Documentation
-            </h3>
-            <div class="doc-grid" [class.collapsed]="isSectionCollapsed('application', 'documentation')">
-              @for (doc of applicationStatus.documentation; track doc.name) {
-                <div class="doc-item" (click)="openDocument(doc)">
-                  <div class="doc-info">
-                    <h4>{{ doc.name }}</h4>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-
-          <div class="tools-section">
-            <h3 class="collapsible-header" (click)="toggleSection('application', 'tools')">
-              <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed('application', 'tools')">
-                expand_more
-              </mat-icon>
-              Application Tools
-            </h3>
-            <div class="tools-grid" [class.collapsed]="isSectionCollapsed('application', 'tools')">
-              @for (tool of applicationStatus.tools; track tool.name) {
-                <div class="tool-item"  (click)="onToolClick(null, tool)">
-                  <div class="tool-header">
-                    <div class="tool-info">
-                      <h4 style="color: black;">{{ tool.name }}</h4>
-                      @if (tool.version) {
-                        <div class="tool-meta">
-                          <span class="version">v{{ tool.version }}</span>
-                        </div>
-                      }
+          @if (applicationStatus.valid) {
+            <div class="documentation-section">
+              <h3 class="collapsible-header" (click)="toggleSection('application', 'documentation')">
+                <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed('application', 'documentation')">
+                  expand_more
+                </mat-icon>
+                Application Documentation
+              </h3>
+              <div class="doc-grid" [class.collapsed]="isSectionCollapsed('application', 'documentation')">
+                @for (doc of applicationStatus.documentation; track doc.name) {
+                  <div class="doc-item" (click)="openDocument(doc)">
+                    <div class="doc-info">
+                      <h4>{{ doc.name }}</h4>
                     </div>
                   </div>
-                </div>
-              }
+                }
+              </div>
             </div>
-          </div>
+          }
+
+          @if (applicationStatus.valid) {
+            <div class="tools-section">
+              <h3 class="collapsible-header" (click)="toggleSection('application', 'tools')">
+                <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed('application', 'tools')">
+                  expand_more
+                </mat-icon>
+                Application Tools
+              </h3>
+              <div class="tools-grid" [class.collapsed]="isSectionCollapsed('application', 'tools')">
+                @for (tool of applicationStatus.tools; track tool.name) {
+                  <div class="tool-item"  (click)="onToolClick(null, tool)">
+                    <div class="tool-header">
+                      <div class="tool-info">
+                        <h4 style="color: black;">{{ tool.name }}</h4>
+                        @if (tool.version) {
+                          <div class="tool-meta">
+                            <span class="version">v{{ tool.version }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
         </div>
       </mat-tab>
 
@@ -133,7 +144,7 @@
           <!-- Project Overview -->
           <div class="project-overview">
             <div class="project-info">
-              <h3>Proj{{ project.name }}</h3>
+              <h3>Project: {{ project.name }}</h3>
               <!-- Project details (version, type, status, last build) removed as requested -->
               
               <!-- Project Build Actions -->

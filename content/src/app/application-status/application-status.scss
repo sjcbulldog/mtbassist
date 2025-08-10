@@ -558,6 +558,24 @@
       padding-top: 1.5rem;
       border-top: 1px solid var(--border-color, #e0e0e0);
     }
+    .app-build-actions-flex {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+    .app-build-actions-left {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .app-build-actions-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .app-build-actions-spacer {
+      flex: 1 1 auto;
+    }
 
     .app-build-btn {
       display: flex;

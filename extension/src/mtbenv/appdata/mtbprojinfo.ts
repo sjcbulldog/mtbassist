@@ -75,12 +75,10 @@ export class MTBProjectInfo {
     }
 
     public get bspName() : string | undefined {
-        for(let asset of this.asset_requests_) {
-            if (asset.isBSP()) {
-                return asset.repoName() ;
-            }
+        if (this.bsp_instances_.length === 0 || this.bsp_instances_.length > 1) {
+            return undefined ;
         }
-        return undefined ;
+        return this.bsp_instances_[0].name ;
     }
 
     public get missingAssets() : MTBAssetRequest[] {

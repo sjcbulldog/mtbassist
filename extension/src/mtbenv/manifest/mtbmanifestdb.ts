@@ -21,6 +21,7 @@ import { MTBItem } from "./mtbitem";
 import { MTBItemVersion } from "./mtbitemversion";
 import { MtbManifestLoader } from "./mtbmanifestloader";
 import { MTBMiddleware } from "./mtbmiddleware";
+import { PackManifest } from '../packdb/packdb';
 
 export class MTBManifestDB {
     public isLoaded: boolean;
@@ -34,6 +35,8 @@ export class MTBManifestDB {
     private loadedCallbacks: (() => void)[];
     private manifestLoader?: MtbManifestLoader ;
 
+    private eapPath_ : string | undefined = undefined;
+
     constructor() {
         this.apps_ = new Map<string, MTBApp>();
         this.boards_ = new Map<string, MTBBoard>();
@@ -46,12 +49,27 @@ export class MTBManifestDB {
         this.hadError = false;
     }
 
+    public get eapPath() : string | undefined {
+        return this.eapPath_ ;
+    }
+
+    public set eapPath(path: string | undefined) {
+        this.eapPath_ = path;
+    }
+
     public get bspNames() : string[] {
-        return Array.from(this.boards_.keys()) ;
+        return this.bsps.map(b => b.name) ;
     }
 
     public get bsps() : MTBBoard[] {
-        return Array.from(this.boards_.values()) ;
+        let ret: MTBBoard[] = [];
+        for(let bsp of this.boards_.values()) {
+            if (!this.eapPath_ || bsp.source.iseap) {
+                ret.push(bsp);
+            }
+        }
+
+        return ret ;
     }
 
     private getLatestBSPFromId(id: string) : [MTBBoard, MTBItemVersion] | [] {
@@ -141,7 +159,7 @@ export class MTBManifestDB {
         return this.boards_.get(name);  
     }
 
-    public loadManifestData(logger: winston.Logger, paths: string[]) : Promise<void> {
+    public loadManifestData(logger: winston.Logger, paths: PackManifest[]) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.manifestLoader = new MtbManifestLoader(logger, this);
             this.manifestLoader.loadManifestData(paths)
