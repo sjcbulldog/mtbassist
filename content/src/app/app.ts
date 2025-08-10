@@ -32,6 +32,11 @@ export class App {
       icon: 'add_circle'
     },
     {
+      label: 'Recently Opened',
+      component: 'RecentlyOpenedComponent',
+      icon: 'history'
+    },
+    {
       label: 'Application Status',
       component: 'ApplicationStatus',
       icon: 'dashboard'

@@ -7,6 +7,7 @@ import { GettingStarted } from '../getting-started/getting-started';
 import { CreateProject } from '../create-project/create-project';
 import { ApplicationStatus } from '../application-status/application-status';
 import { DevkitListComponent } from "../devkit-list/devkit-list.component";
+import { RecentlyOpenedComponent } from "../recently-opened/recently-opened.component";
 
 export interface MtbNavTab {
   label: string;
@@ -24,8 +25,9 @@ export interface MtbNavTab {
     GettingStarted,
     CreateProject,
     ApplicationStatus,
-    DevkitListComponent
-  ],
+    DevkitListComponent,
+    RecentlyOpenedComponent
+],
   templateUrl: './mtb-nav.html',
   styleUrl: './mtb-nav.scss'
 })

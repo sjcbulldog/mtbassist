@@ -74,6 +74,19 @@ export class ModusToolboxEnvironment extends EventEmitter {
         ModusToolboxEnvironment.env_ = undefined ;
     }
 
+    public get bspName() : string | undefined {
+        let ret: string | undefined = undefined ;
+        for(let p of this.appInfo?.projects || []) {
+            if (!ret && p.bspName) {
+                ret = p.bspName ;
+            }
+            else if (ret && p.bspName !== ret) {
+                return undefined ;
+            }
+        }
+        return ret ;
+    }
+
     public get manifestDB() : MTBManifestDB {
         return this.manifestDb_ ;
     }

@@ -74,6 +74,15 @@ export class MTBProjectInfo {
         return path.basename(this.rootdir_) ;
     }
 
+    public get bspName() : string | undefined {
+        for(let asset of this.asset_requests_) {
+            if (asset.isBSP()) {
+                return asset.repoName() ;
+            }
+        }
+        return undefined ;
+    }
+
     public get missingAssets() : MTBAssetRequest[] {
         return this.missing_assets_ ;
     }

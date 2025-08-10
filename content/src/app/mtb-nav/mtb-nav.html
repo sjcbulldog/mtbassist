@@ -48,8 +48,22 @@
               }
             </div>
           }
-          
+
           @case (2) {
+            <div class="tab-panel">
+              @if (tab.component === 'RecentlyOpenedComponent') {
+                <app-recently-opened></app-recently-opened>
+              } @else {
+                <div class="placeholder-content">
+                  <h2>{{ tab.label }}</h2>
+                  <p>Content coming soon...</p>
+                  <mat-icon>construction</mat-icon>
+                </div>
+              }
+            </div>
+          }             
+          
+          @case (3) {
             <div class="tab-panel">
               @if (tab.component === 'ApplicationStatus') {
                 <app-application-status></app-application-status>
@@ -63,7 +77,7 @@
             </div>
           }
 
-          @case (3) {
+          @case (4) {
             <div class="tab-panel">
               @if (tab.component === 'DevkitListComponent') {
                 <app-devkit-list></app-devkit-list>

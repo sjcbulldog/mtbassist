@@ -166,4 +166,5 @@ export interface DevKitInfo {
 export interface RecentEntry {
     apppath: string ;
     lastopened: Date;
+    bspname: string ;
 } ;

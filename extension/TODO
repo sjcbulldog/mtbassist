@@ -4,7 +4,8 @@ o Getting Started Component
   - add reference to recent project page
 
 o Create Project Component
-  - when EAP is enabled
+  - when EAP is enabled only show EAP valid BSPs
+  - when create is pressed, scroll to the bottom of the create project component
 
 o Application Status Component
   - launch document view from application status page (apps & projects)                               done
@@ -17,6 +18,7 @@ o Application Status Component
   - hide the action bar if the appliation status is invalid
 
 o Memory usage
+  - feasbility to work across all devices 
 
 o Recent Projects Component
   - Divide into last day, last week, and per month after
@@ -36,6 +38,9 @@ o Outside of main GUI
   - Port over task generation support                                                                 done
   - Port over keyword based documentation
   - Port over, check run make vscode (generate launch configs)
+
+0 Install software component
+  - 
 
 o Help component
   - index on the left like a boot

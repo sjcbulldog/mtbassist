@@ -25,7 +25,9 @@ export class MTBAssistObject {
 
     private static readonly gettingStartedTab = 0 ;
     private static readonly createProjectTab = 1 ;
-    private static readonly applicationStatusTab = 2 ;
+    private static readonly recentlyOpenedTab = 2 ;
+    private static readonly applicationStatusTab = 3 ;
+    private static readonly devkitListTab = 4 ;
 
     private context_: vscode.ExtensionContext;
     private channel_ ;
@@ -153,7 +155,10 @@ export class MTBAssistObject {
                                     this.postInitializeManagers()
                                         .then(() => { 
                                             if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo) && this.env_.appInfo) {
-                                                this.recents_?.addToRecentProject(this.env_.appInfo!.appdir);
+                                                if (this.recents_) {
+                                                    this.recents_.addToRecentProject(this.env_.appInfo!.appdir, this.env_.bspName || '');
+                                                    this.pushRecentlyOpened() ;
+                                                }
                                                 let p = path.join(this.env_.appInfo!.appdir, '.vscode', 'tasks.json') ;
                                                 this.tasks_ = new MTBTasks(this.env_, this.logger_, p);
                                                 this.switchToTab(MTBAssistObject.applicationStatusTab) ;
@@ -690,20 +695,24 @@ export class MTBAssistObject {
         }
     }
 
+    private pushRecentlyOpened() {
+        if (this.panel_) {
+            let st = {
+                oobtype: 'recentlyOpened',
+                recents: this.recents_?.recentlyOpened || []
+            };
+            let oob: BackEndToFrontEndResponse = {
+                response: 'oob',
+                data: st
+            };
+            this.panel_.webview.postMessage(oob);
+        }
+    }
+
     private recentlyOpened() : Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
-            if (this.panel_) {
-                let st = {
-                    oobtype: 'recentlyOpened',
-                    recents: this.recents_?.recentlyOpened || []
-                } ;
-                let oob: BackEndToFrontEndResponse = {
-                    response: 'oob',
-                    data: st
-                } ;
-                this.panel_.webview.postMessage(oob) ;
-                resolve(null) ;
-            }
+            this.pushRecentlyOpened() ;
+            resolve(null) ;
         }) ;
         return ret;
     }

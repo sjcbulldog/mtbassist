@@ -103,15 +103,24 @@ export class RecentAppManager {
         else {
             let rarray: any[] = obj ;
             for(let one of rarray) {
+                let entry : RecentEntry ;
                 if (typeof one === "string") {
-                    let entry = {
+                    entry = {
                         apppath: one,
-                        lastopened: new Date(0)
+                        lastopened: new Date(0),
+                        bspname: '?'
                     } ;
-                    this.recentList.push(entry);
                 }
                 else {
-                    this.recentList.push(one as RecentEntry) ;
+                    entry = one ;
+                }
+
+                if (!entry.bspname) {
+                    entry.bspname = '?' ;
+                }
+
+                if (fs.existsSync(entry.apppath) && fs.statSync(entry.apppath).isDirectory()) {
+                    this.recentList.push(entry) ;
                 }
             }
         }
@@ -222,7 +231,7 @@ export class RecentAppManager {
         }
     }
 
-    public addToRecentProject(appdir: string) {
+    public addToRecentProject(appdir: string, bspname: string) {
         let removing: boolean = true ;
 
         appdir = path.normalize(appdir) ;
@@ -236,7 +245,7 @@ export class RecentAppManager {
         // Now add the new element at the end, which is the location
         // of the most recent project
         //
-        this.recentList.push({ apppath: appdir, lastopened: new Date() });
+        this.recentList.push({ apppath: appdir, lastopened: new Date(), bspname: bspname });
 
         //
         // If the most recent project list is too long, remove it

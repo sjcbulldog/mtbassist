@@ -1,0 +1,67 @@
+.recently-opened-container {
+  max-width: 700px;
+  margin: 2rem auto;
+  background: var(--card-background, #fff);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 2rem 2.5rem;
+}
+.recent-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 1.2rem 0 0.5rem 0;
+  color: var(--primary-color, #007bff);
+}
+.recent-group-header mat-icon {
+  font-size: 1.3rem;
+}
+.recent-group-list {
+  margin-bottom: 0.5rem;
+}
+.recent-entry {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.recent-entry:hover {
+  background: var(--hover-background, #e9ecef);
+}
+.recent-entry mat-icon {
+  color: var(--primary-color, #007bff);
+  font-size: 1.1rem;
+}
+.recent-path {
+  flex: 1;
+  font-family: monospace;
+  color: var(--text-color, #222);
+  font-size: 1.05rem;
+}
+.recent-bsp {
+  font-size: 0.98rem;
+  color: var(--primary-color, #007bff);
+  margin-left: 0.7rem;
+  font-family: monospace;
+  font-weight: 500;
+}
+.recent-date {
+  color: var(--text-secondary, #888);
+  font-size: 0.95rem;
+  margin-left: 1.2rem;
+}
+.no-recents {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--text-secondary, #888);
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  justify-content: center;
+}

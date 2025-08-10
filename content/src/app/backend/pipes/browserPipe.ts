@@ -1,5 +1,4 @@
 import { PipeInterface } from "./pipeInterface";
-import { Buffer } from "buffer";
 import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { inject, Injectable } from "@angular/core";
 import { BackEndToFrontEndResponse, FrontEndToBackEndRequest, PlatformType } from "../../../comms";
@@ -30,10 +29,10 @@ export class BrowserPipe implements PipeInterface {
 
     sendRequest(command: FrontEndToBackEndRequest): void {
         console.log(`Sending request: ${command.request}`);
-        let reqstr = JSON.stringify(command) ;
-        let reqbuffer = Buffer.from(reqstr, 'utf8');
-        let req64 = reqbuffer.toString('base64');
-        let req = '/request?data=' + encodeURIComponent(req64);
+    let reqstr = JSON.stringify(command);
+    // Use btoa for base64 encoding in browsers (handles ASCII only)
+    let req64 = btoa(unescape(encodeURIComponent(reqstr)));
+    let req = '/request?data=' + encodeURIComponent(req64);
 
         this.http_client_.get(req, { responseType: 'text' }).subscribe({
             next: (response: string) => {
