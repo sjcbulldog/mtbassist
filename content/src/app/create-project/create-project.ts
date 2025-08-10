@@ -109,6 +109,11 @@ export class CreateProject implements OnInit, OnDestroy {
 
         return kitname ;
     }
+
+    private findBSPById(id: string): BSPIdentifier | null {
+        return this.allBSPs.find(bsp => bsp.id === id) || null;
+    }
+
     // Called when a dev kit is selected from the UI
     onDevKitSelect(kit: DevKitInfo) {
         this.selectedDevKit = kit;
@@ -117,11 +122,9 @@ export class CreateProject implements OnInit, OnDestroy {
         let kname = this.mapDevKitName(kit.name);
         for(let bsp of this.allBSPs) {
             if (bsp.name === kname) {
-                this.bspSelectionForm.patchValue({ category: bsp.category , bsp: bsp.id });
+                this.bspSelectionForm.patchValue({ category: bsp.category});
                 this.selectedCategory = bsp.category;
-                this.selectedBSP = bsp;
                 this.onCategoryChange();
-                this.onBSPChange();
                 found = true ;
                 break;
             }
@@ -195,6 +198,17 @@ export class CreateProject implements OnInit, OnDestroy {
         try {
             this.isLoading = true;
             this.bsps = await this.backendService.manifestMgr.getBSPsForCategory(category);
+
+            if (this.selectedDevKit) {
+                let kname = this.mapDevKitName(this.selectedDevKit.name);
+                let bsp = this.findBSPById(kname) ;
+                if (bsp) {
+                    this.backendService.log(`Selected dev kit: ${this.selectedDevKit}`);
+                    this.selectedBSP = bsp;
+                    this.bspSelectionForm.patchValue({ category: this.selectedCategory, bsp: bsp.id });
+                    this.onBSPChange() ;
+                }
+            }
         } catch (error) {
             console.error('Failed to load BSPs:', error);
             this.snackBar.open('Failed to load BSPs for category', 'Close', { duration: 3000 });

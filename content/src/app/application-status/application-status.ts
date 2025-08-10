@@ -1,4 +1,3 @@
-// ...existing code...
 import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -329,6 +328,16 @@ export class ApplicationStatus implements OnInit {
       return false; // Default to expanded
     }
     return projectSections.get(sectionName) || false;
+  }
+
+  // Open Device Configurator
+  openDeviceConfigurator(): void {
+    this.be.platformSpecific('devcfg', null);
+  }
+
+  // Open Library Manager
+  openLibraryManager(): void {
+    this.be.platformSpecific('libmgr', null);
   }
 }
 

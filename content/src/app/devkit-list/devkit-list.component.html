@@ -9,7 +9,12 @@
     @for (kit of devkits; track kit.serial) {
       <div class="devkit-card">
         <div class="devkit-header">
-          <span class="devkit-name">{{ kit.name }}</span>
+          <span class="devkit-name">
+            {{ kit.name }}
+            @if (kit.name && kit.name.trim().toLowerCase() === 'unknown') {
+              <mat-icon class="unknown-icon" matTooltip="This development kit does  not support automatic kit identification." fontIcon="help_outline"></mat-icon>
+            }
+          </span>
           <span class="devkit-serial">SN: {{ kit.serial }}</span>
           <span class="devkit-fw" [ngClass]="{ 'outdated': kit.fwOutOfDate }">
             FW: {{ kit.firmwareVersion }}

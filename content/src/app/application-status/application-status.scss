@@ -1,3 +1,56 @@
+.app-dir {
+  font-family: monospace;
+  color: var(--primary-color, #007bff);
+}
+.app-status-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 1rem 0 0.5rem 0;
+}
+.status-label {
+  font-weight: 500;
+  color: var(--text-secondary, #888);
+  margin-right: 0.5rem;
+}
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.9rem 0.25rem 0.5rem;
+  border-radius: 1.2rem;
+  font-size: 1.08rem;
+  font-weight: 600;
+  background: #f5f5f5;
+  color: #333;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.status-valid {
+  background: var(--success-color, #28a745);
+  color: #fff;
+}
+.status-invalid {
+  background: var(--danger-color, #dc3545);
+  color: #fff;
+}
+.status-icon {
+  font-size: 1.3rem;
+  margin-right: 0.4rem;
+}
+.icon-valid {
+  color: #fff !important;
+}
+.icon-invalid {
+  color: #fff !important;
+}
+.status-text {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.status-date {
+  color: var(--text-secondary, #888);
+  font-size: 0.98rem;
+  margin-left: 1.2rem;
+}
 // Make middleware tiles indicate they are clickable
 .middleware-item {
   cursor: pointer;

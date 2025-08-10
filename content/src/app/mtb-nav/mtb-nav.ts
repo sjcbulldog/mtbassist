@@ -25,7 +25,7 @@ export interface MtbNavTab {
     CreateProject,
     ApplicationStatus,
     DevkitListComponent
-],
+  ],
   templateUrl: './mtb-nav.html',
   styleUrl: './mtb-nav.scss'
 })

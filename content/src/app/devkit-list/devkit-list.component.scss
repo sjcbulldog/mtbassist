@@ -61,6 +61,16 @@
   color: var(--primary-color, #007bff);
   font-size: 1.2rem;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+.unknown-icon {
+  font-size: 1.1rem !important;
+  color: #bdbdbd;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+  cursor: pointer;
 }
 .devkit-serial {
   color: var(--text-secondary, #888);

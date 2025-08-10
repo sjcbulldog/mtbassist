@@ -28,16 +28,19 @@
           <!-- Application Overview -->
           <div class="overview-section">
             <div class="app-info">
-              <h3>{{ applicationStatus.name }}</h3>
-              <div class="details">
-                <span class="version">Application Status</span>
-                <span class="status" [class]="applicationStatus.valid ? 'running' : 'error'">
-                  {{ applicationStatus.valid ? 'Valid' : 'Invalid' }}
+              <h3>Application Directory: <span class="app-dir">{{ applicationStatus.name }}</span></h3>
+              <div class="app-status-row">
+                <span class="status-label">Status:</span>
+                <span class="status-badge" [ngClass]="applicationStatus.valid ? 'status-valid' : 'status-invalid'">
+                  <mat-icon class="status-icon" [ngClass]="applicationStatus.valid ? 'icon-valid' : 'icon-invalid'">
+                    {{ applicationStatus.valid ? 'check_circle' : 'error' }}
+                  </mat-icon>
+                  <span class="status-text">{{ applicationStatus.valid ? 'ModusToolbox Project Loaded' : 'No ModusToolbox Project Loaded' }}</span>
                 </span>
+                <span class="status-date">Checked: {{ currentDate | date:'medium' }}</span>
               </div>
-              <p class="build-date">Status checked: {{ currentDate | date:'medium' }}</p>
               
-              <!-- Application Build Actions -->
+              <!-- Application Build & Tool Actions -->
               <div class="app-build-actions">
                 <button mat-raised-button class="app-build-btn build-btn" (click)="buildApplication()">
                   <mat-icon>build</mat-icon>
@@ -58,6 +61,14 @@
                 <button mat-raised-button class="app-build-btn program-btn" (click)="programApplication()">
                   <mat-icon>download</mat-icon>
                   Program
+                </button>
+                <button mat-raised-button class="app-build-btn device-configurator-btn" (click)="openDeviceConfigurator()">
+                  <mat-icon>settings_input_component</mat-icon>
+                  Device Configurator
+                </button>
+                <button mat-raised-button class="app-build-btn library-manager-btn" (click)="openLibraryManager()">
+                  <mat-icon>library_books</mat-icon>
+                  Library Manager
                 </button>
               </div>
             </div>
@@ -122,7 +133,7 @@
           <!-- Project Overview -->
           <div class="project-overview">
             <div class="project-info">
-              <h3>{{ project.name }}</h3>
+              <h3>Proj{{ project.name }}</h3>
               <!-- Project details (version, type, status, last build) removed as requested -->
               
               <!-- Project Build Actions -->

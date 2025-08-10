@@ -14,11 +14,14 @@ import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
 import { MTBTasks } from '../misc/mtbtasks';
 import { browseropen } from '../browseropen';
 import * as exec from 'child_process' ;
+import { RecentAppManager } from '../misc/mtbrecent';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49' ;
     private static readonly mtbLaunchToolName = 'mtblaunch' ;
     private static theInstance_: MTBAssistObject | undefined = undefined;
+    static readonly libmgrProgUUID: string = 'd5e53262-9571-4d51-85db-1b47f98a0ff6' ;
+    static readonly devcfgProgUUID: string = '45159e28-aab0-4fee-af1e-08dcb3a8c4fd' ;
 
     private static readonly gettingStartedTab = 0 ;
     private static readonly createProjectTab = 1 ;
@@ -37,6 +40,7 @@ export class MTBAssistObject {
     private projectInfo_ : Map<string, Project> = new Map() ;
     private meminfo_ : MemoryInfo[] = [] ;
     private tasks_ : MTBTasks | undefined = undefined ;
+    private recents_ : RecentAppManager | undefined = undefined;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -59,6 +63,7 @@ export class MTBAssistObject {
             ]
         }) ;
 
+        this.recents_ = new RecentAppManager(this);
         this.bindCommandHandlers() ;
     }
 
@@ -148,6 +153,7 @@ export class MTBAssistObject {
                                     this.postInitializeManagers()
                                         .then(() => { 
                                             if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo) && this.env_.appInfo) {
+                                                this.recents_?.addToRecentProject(this.env_.appInfo!.appdir);
                                                 let p = path.join(this.env_.appInfo!.appdir, '.vscode', 'tasks.json') ;
                                                 this.tasks_ = new MTBTasks(this.env_, this.logger_, p);
                                                 this.switchToTab(MTBAssistObject.applicationStatusTab) ;
@@ -265,9 +271,11 @@ export class MTBAssistObject {
         this.cmdhandler_.set('getAppStatus', this.getAppStatus.bind(this));
         this.cmdhandler_.set('open', this.open.bind(this)) ;
         this.cmdhandler_.set('libmgr', this.launchLibraryManager.bind(this)) ;
+        this.cmdhandler_.set('devcfg', this.launchDeviceConfigurator.bind(this)) ;        
         this.cmdhandler_.set('tool', this.tool.bind(this)) ;
         this.cmdhandler_.set('refreshDevKits', this.refreshDevKits.bind(this)) ;
         this.cmdhandler_.set('updateFirmware', this.updateFirmware.bind(this)) ;
+        this.cmdhandler_.set('recentlyOpened', this.recentlyOpened.bind(this)) ;
     }   
 
     private tool(request: any) : Promise<BackEndToFrontEndResponse | null> {
@@ -281,7 +289,6 @@ export class MTBAssistObject {
         return ret;
     }
 
-    static readonly libmgrProgUUID: string = 'd5e53262-9571-4d51-85db-1b47f98a0ff6' ;
     private getLaunchConfig(project: string, uuid: string) : Tool | undefined {
         let ret : Tool | undefined = undefined ;
             let pinfo = this.projectInfo_.get(project) ;
@@ -334,6 +341,17 @@ export class MTBAssistObject {
         });
         return ret;
     }
+
+    private launchDeviceConfigurator(request: any) : Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            let tool = this.getLaunchConfig('', MTBAssistObject.devcfgProgUUID);
+            if (tool) {
+                this.launch(tool) ;
+            }
+            resolve(null) ;
+        });
+        return ret;
+    }    
 
     private open(request: any) : Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
@@ -672,6 +690,24 @@ export class MTBAssistObject {
         }
     }
 
+    private recentlyOpened() : Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            if (this.panel_) {
+                let st = {
+                    oobtype: 'recentlyOpened',
+                    recents: this.recents_?.recentlyOpened || []
+                } ;
+                let oob: BackEndToFrontEndResponse = {
+                    response: 'oob',
+                    data: st
+                } ;
+                this.panel_.webview.postMessage(oob) ;
+                resolve(null) ;
+            }
+        }) ;
+        return ret;
+    }
+
     private getBSPIdentifiers() : BSPIdentifier[] {
         let bsps: BSPIdentifier[] = [];
         if (this.env_ && this.env_.manifestDB) {
@@ -683,7 +719,7 @@ export class MTBAssistObject {
                     device: '', 
                     connectivity: '',
                     description: board.description || ''
-                }
+                } ;
                 bsps.push(id) ;
             }
         }
@@ -756,6 +792,10 @@ export class MTBAssistObject {
             }
             
             this.logger_.debug(`Found ${projects.length} projects in the application.`) ;
+            let tools: Tool[] = [] ;
+            if (pinfo && pinfo.tools) {
+                tools = pinfo.tools.filter((tool) => (tool.id !== MTBAssistObject.libmgrProgUUID && tool.id !== MTBAssistObject.devcfgProgUUID));
+            }
             appst = {
                 valid: true,
                 name: this.env_.appInfo?.appdir || '',
@@ -763,7 +803,7 @@ export class MTBAssistObject {
                 documentation: pinfo?.documentation || [],
                 middleware: [],
                 projects: projects,
-                tools: pinfo?.tools || [],
+                tools: tools
             } ;
         } else {
             appst = {

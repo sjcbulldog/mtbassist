@@ -13,6 +13,8 @@ o Application Status Component
   - flag middleware that may have a newer version - click launches library manager                    done
   - make documents and tools collapsable on app                                                       done
   - make documents, tools, middleware collapsable on projects                                         done
+  - change invalid to No ModusToolbox Project Loaded
+  - hide the action bar if the appliation status is invalid
 
 o Memory usage
 
@@ -20,6 +22,9 @@ o Recent Projects Component
   - Divide into last day, last week, and per month after
   
 o Dev Kits Component
+  - Basic component                                                                                   done
+  - Add info button if kit is unknown
+  - If dev kit is unknown, allow the user to select the associated bsp and remember it
 
 o Settings component
 

@@ -4,7 +4,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo } from '../../comms';
+import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry } from '../../comms';
 import { ManifestManager } from './manifestmgr';
 import { ProjectManager } from './projectmgr';
 import { AppStatusBackend } from './appmgrbe';
@@ -30,6 +30,7 @@ export class BackendService {
     loadedAsset: Subject<string> = new Subject<string>();
     devKitStatus: Subject<DevKitInfo[]> = new Subject<DevKitInfo[]>();
     allBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();
+    recentlyOpened: Subject<RecentEntry[]> = new Subject<RecentEntry[]>();
 
     progressMessage: Subject<string> = new Subject<string>();
     progressPercent: Subject<number> = new Subject<number>();
@@ -183,6 +184,10 @@ export class BackendService {
                     str += ' ' + proj.missingAssets ? 'true' : 'false';
                 }
                 this.appStatusData.next(appStatusData);
+            }
+            else if (cmd.data.oobtype && cmd.data.oobtype === 'recentlyOpened') {
+                this.recentlyOpened.next(cmd.data.recents || []);
+                this.log(`Recently opened projects: ${JSON.stringify(cmd.data.recents || [])}`);
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'selectTab') {
                 let index = cmd.data.index || 0;

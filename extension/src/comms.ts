@@ -162,3 +162,8 @@ export interface DevKitInfo {
   bridgingTypes : string[] ; 
   fwOutOfDate: boolean ;
 }
+
+export interface RecentEntry {
+    apppath: string ;
+    lastopened: Date;
+} ;
