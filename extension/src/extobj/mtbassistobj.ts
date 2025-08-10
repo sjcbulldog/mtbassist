@@ -15,6 +15,7 @@ import { MTBTasks } from '../misc/mtbtasks';
 import { browseropen } from '../browseropen';
 import * as exec from 'child_process' ;
 import { RecentAppManager } from '../misc/mtbrecent';
+import { IntelliSenseMgr } from './intellisense';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49' ;
@@ -43,6 +44,7 @@ export class MTBAssistObject {
     private meminfo_ : MemoryInfo[] = [] ;
     private tasks_ : MTBTasks | undefined = undefined ;
     private recents_ : RecentAppManager | undefined = undefined;
+    private intellisense_ : IntelliSenseMgr | undefined = undefined;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -66,6 +68,7 @@ export class MTBAssistObject {
         }) ;
 
         this.recents_ = new RecentAppManager(this);
+        this.intellisense_ = new IntelliSenseMgr(this);
         this.bindCommandHandlers() ;
     }
 
@@ -149,7 +152,7 @@ export class MTBAssistObject {
                         .then(() => {
                             this.logger_.info('All managers initialized successfully.');
                             this.initializeCommands();
-                            vscode.commands.executeCommand('mtbassist.mtbMainPage')
+                            vscode.commands.executeCommand('mtbassist2.mtbMainPage')
                                 .then(() => {
                                     this.logger_.debug('Welcome page command executed successfully.');
                                     this.postInitializeManagers()
@@ -177,7 +180,15 @@ export class MTBAssistObject {
                                                             this.pushAppStatus() ;
                                                             this.pushAllBSPs() ;
                                                             this.updateAllTasks() ;
-                                                            resolve();
+                                                            this.intellisense_!.trySetupIntellisense()
+                                                            .then(() => {
+                                                                resolve() ;
+                                                            })
+                                                            .catch((err) => {
+                                                                this.logger_.error('Failed to setup intellisense:', err.message);
+                                                                resolve() ;
+                                                            })
+
                                                         })
                                                         .catch((error: Error) => {
                                                             this.logger_.error('Failed to load manifest files:', error.message);
@@ -283,6 +294,7 @@ export class MTBAssistObject {
         this.cmdhandler_.set('updateFirmware', this.updateFirmware.bind(this)) ;
         this.cmdhandler_.set('recentlyOpened', this.recentlyOpened.bind(this)) ;
         this.cmdhandler_.set('openRecent', this.openRecent.bind(this)) ;
+        this.cmdhandler_.set('openReadme', this.openReadme.bind(this)) ;
     }   
 
     private tool(request: any) : Promise<BackEndToFrontEndResponse | null> {
@@ -374,11 +386,11 @@ export class MTBAssistObject {
         this.logger_.info('ModusToolbox is not installed or not found in the expected location.');
         this.env_ = null ;
 
-	    disposable = vscode.commands.registerCommand('mtbassist.mtbMainPage', this.noMTBFoundDisplay.bind(this));
+	    disposable = vscode.commands.registerCommand('mtbassist2.mtbMainPage', this.noMTBFoundDisplay.bind(this));
         this.context_.subscriptions.push(disposable);
 
         if (this.context_.globalState.get('noModusPage', true)) {
-            vscode.commands.executeCommand('mtbassist.mtbMainPage') ;
+            vscode.commands.executeCommand('mtbassist2.mtbMainPage') ;
         }
     }
 
@@ -411,7 +423,10 @@ export class MTBAssistObject {
     private initializeCommands() {
         let disposable: vscode.Disposable;
 
-	    disposable = vscode.commands.registerCommand('mtbassist.mtbMainPage', this.mtbMainPage.bind(this));
+	    disposable = vscode.commands.registerCommand('mtbassist2.mtbMainPage', this.mtbMainPage.bind(this));
+        this.context_.subscriptions.push(disposable);
+
+        disposable = vscode.commands.registerCommand('mtbassist2.mtbSetIntellisenseProject', this.intellisense_!.mtbSetIntellisenseProject.bind(this.intellisense_));
         this.context_.subscriptions.push(disposable);
     }
 
@@ -722,7 +737,21 @@ export class MTBAssistObject {
             return [];
         }
     }
-    
+
+    private openReadme(req: any) : Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            let readmePath = path.join(this.env_!.appInfo!.appdir, 'README.md');
+            if (fs.existsSync(readmePath)) {
+                let uri = vscode.Uri.file(readmePath);
+                vscode.commands.executeCommand("markdown.showPreview", uri);
+            } else {
+                vscode.window.showErrorMessage(`README.md not found in ${readmePath}.`);
+            }
+            resolve(null);
+        });
+        return ret;
+    }
+
     private openRecent(req: any) : Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             let dir = req as string ;

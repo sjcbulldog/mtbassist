@@ -18,6 +18,14 @@ import { BackendService } from '../backend/backend-service';
   encapsulation: ViewEncapsulation.None
 })
 export class ApplicationStatus implements OnInit {
+
+  viewReadme() {
+    if (this.applicationStatus && this.applicationStatus.name) {
+      // Assume the application directory is applicationStatus.name
+      // and README.md is in that directory
+      this.be.platformSpecific('openReadme', null);
+    }
+  }
   applicationStatus: ApplicationStatusData | null = null;
   isLoading = true;
   hasError = false;

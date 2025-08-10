@@ -1,13 +1,13 @@
 TODO
 -------------------------------------------------------------------------------------------
-o Getting Started Component
+o Getting Started Component                                                                       done
   - add reference to recent project page                                                              done
 
-o Create Project Component
-  - when EAP is enabled only show EAP valid BSPs
+o Create Project Component                                                                        done
+  - when EAP is enabled only show EAP valid BSPs                                                      done
   - when create is pressed, scroll to the bottom of the create project component                      done
 
-o Application Status Component
+o Application Status Component                                                                    done
   - launch document view from application status page (apps & projects)                               done
   - launch tool from application status page (apps & projects)                                        done
   - launch library manager when click on middleware tile                                              done
@@ -17,12 +17,12 @@ o Application Status Component
   - change invalid to No ModusToolbox Project Loaded                                                  done
   - hide the action bar if the appliation status is invalid                                           done
   - hide the documents and tools on the app status when app is not valid                              done
-  - link to show readme.md
+  - link to show readme.md                                                                            done
 
 o Memory usage
-  - feasbility to work across all devices 
+  - feasbility to work across all devices
 
-o Recent Projects Component
+o Recent Projects Component                                                                       done
   - Divide into last day, last week, and per month after                                              done
   
 o Dev Kits Component
@@ -30,7 +30,8 @@ o Dev Kits Component
   - Add info button if kit is unknown
   - If dev kit is unknown, allow the user to select the associated bsp and remember it
 
-o Settings component
+o Settings
+  - Use VSCode settings
 
 o Outside of main GUI
   - Intellisense

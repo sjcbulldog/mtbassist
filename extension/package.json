@@ -29,13 +29,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "mtbassist.mtbMainPage",
+        "command": "mtbassist2.mtbMainPage",
         "title": "ModusToolbox Assistant: Show Main Page"
+      },
+      {
+        "command": "mtbassist2.mtbSetIntellisenseProject",
+        "title": "ModusToolbox Assistant: Set Intellisense Project"
       }
     ]
   },
   "extensionDependencies": [
-    "vscode.git"
+    "vscode.git",
+    "llvm-vs-code-extensions.vscode-clangd"
   ],  
   "scripts": {
     "vscode:prepublish": "npm run package",
