@@ -14,7 +14,7 @@ o Application Status Component
   - flag middleware that may have a newer version - click launches library manager                    done
   - make documents and tools collapsable on app                                                       done
   - make documents, tools, middleware collapsable on projects                                         done
-  - change invalid to No ModusToolbox Project Loaded
+  - change invalid to No ModusToolbox Project Loaded                                                  done
   - hide the action bar if the appliation status is invalid
 
 o Memory usage

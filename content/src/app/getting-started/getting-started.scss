@@ -1,3 +1,18 @@
+.quickstart-links {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin: 1.5rem 0 0.5rem 0;
+}
+.quickstart-link {
+  font-size: 1.1rem;
+  padding: 0.8rem 2.2rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
 .getting-started-container {
   padding: 24px;
   max-width: 1200px;

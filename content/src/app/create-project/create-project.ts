@@ -117,11 +117,15 @@ export class CreateProject implements OnInit, OnDestroy {
     // Called when a dev kit is selected from the UI
     onDevKitSelect(kit: DevKitInfo) {
         this.selectedDevKit = kit;
+        this.backendService.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;
 
         let found = false;
         let kname = this.mapDevKitName(kit.name);
+        this.backendService.log(`Mapped Dev Kit Name: '${kname}'`, 'debug') ;             
         for(let bsp of this.allBSPs) {
-            if (bsp.name === kname) {
+            this.backendService.log(`    Checking BSP ${bsp.name} against mapped name ${kname}`, 'debug') ;
+            if (bsp.name === kname) {     
+                this.backendService.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;                
                 this.bspSelectionForm.patchValue({ category: bsp.category});
                 this.selectedCategory = bsp.category;
                 this.onCategoryChange();

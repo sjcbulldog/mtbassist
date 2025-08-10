@@ -43,30 +43,21 @@
     </div>
   </div>
 
-  <!-- Quick Start Guide -->
+  <!-- Quick Start Navigation -->
   <div class="quickstart-section">
-    <h2 class="section-title">Quick Start Guide</h2>
+    <h2 class="section-title">Quick Start</h2>
     <mat-card class="quickstart-card">
       <mat-card-content>
-        <mat-accordion>
-          @for (step of quickStartSteps; track step.step; let i = $index) {
-            <mat-expansion-panel [expanded]="i === 0">
-              <mat-expansion-panel-header>
-                <mat-panel-title>
-                  <span class="step-number">{{ step.step }}</span>
-                  {{ step.title }}
-                </mat-panel-title>
-              </mat-expansion-panel-header>
-              <div class="step-content">
-                <p>{{ step.description }}</p>
-                <button mat-button color="primary" (click)="onStepAction(step)">
-                  <mat-icon>arrow_forward</mat-icon>
-                  {{ step.action }}
-                </button>
-              </div>
-            </mat-expansion-panel>
-          }
-        </mat-accordion>
+        <div class="quickstart-links">
+          <button mat-raised-button color="primary" class="quickstart-link" (click)="goToCreateProject()">
+            <mat-icon>add_circle</mat-icon>
+            Create New Project
+          </button>
+          <button mat-raised-button color="accent" class="quickstart-link" (click)="goToRecentlyOpened()">
+            <mat-icon>history</mat-icon>
+            Recently Opened
+          </button>
+        </div>
       </mat-card-content>
     </mat-card>
   </div>
@@ -117,6 +108,11 @@
             <div matListItemTitle>Start with the "Create New Project" tab to set up your first project</div>
           </mat-list-item>
           <mat-divider></mat-divider>
+          <mat-list-item>
+            <mat-icon matListItemIcon>check_circle</mat-icon>
+            <div matListItemTitle>Use the "Recently Opened" tab to quickly access your previous projects</div>
+          </mat-list-item>
+          <mat-divider></mat-divider>          
           <mat-list-item>
             <mat-icon matListItemIcon>check_circle</mat-icon>
             <div matListItemTitle>Ensure your development kit is properly connected before debugging</div>

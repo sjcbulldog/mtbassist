@@ -1,3 +1,4 @@
+
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -26,6 +27,14 @@ import MtbNav from '../mtb-nav/mtb-nav';
 export class GettingStarted {
   constructor(private be: BackendService) {
     this.be.log('GettingStarted component initialized');
+  }
+
+  goToCreateProject() {
+    this.be.navTab?.next(1); // 1 = Create Project tab index
+  }
+
+  goToRecentlyOpened() {
+    this.be.navTab?.next(2); // 2 = Recently Opened tab index (adjust if needed)
   }
   features = [
     {
@@ -79,15 +88,5 @@ export class GettingStarted {
 
   onBrowseExamples() {
     this.be.platformSpecific('browseExamples', null);
-  }
-
-  onStepAction(step: any) {
-    this.be.log(`Executing action for step ${step.step}: ${step.action}`);
-    if (step.step === 1) {
-      this.be.setNavTab(1) ; // Navigate to Create New Project tab (index 2)
-    }
-    else if (step.step === 2) {
-      this.be.setNavTab(2) ; // Navigate to Application Explorer tab (index 1)
-    }
   }
 }
