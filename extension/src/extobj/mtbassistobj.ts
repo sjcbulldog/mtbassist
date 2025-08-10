@@ -8,7 +8,7 @@ import { ModusToolboxEnvironment } from '../mtbenv/mtbenv/mtbenv';
 import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import { BackendService } from '../backend/backend';
-import { ApplicationStatusData, BackEndToFrontEndResponse, Documentation, FrontEndToBackEndRequest, MemoryInfo, Middleware, Project, Tool } from '../comms';
+import { ApplicationStatusData, BackEndToFrontEndResponse, BSPIdentifier, Documentation, FrontEndToBackEndRequest, MemoryInfo, Middleware, Project, Tool } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
 import { MTBTasks } from '../misc/mtbtasks';
@@ -164,6 +164,7 @@ export class MTBAssistObject {
                                                             // is picked up by the UI.
                                                             //
                                                             this.pushAppStatus() ;
+                                                            this.pushAllBSPs() ;
                                                             this.updateAllTasks() ;
                                                             resolve();
                                                         })
@@ -670,6 +671,38 @@ export class MTBAssistObject {
             this.panel_.webview.postMessage(oob) ;
         }
     }
+
+    private getBSPIdentifiers() : BSPIdentifier[] {
+        let bsps: BSPIdentifier[] = [];
+        if (this.env_ && this.env_.manifestDB) {
+            for(let board of this.env_.manifestDB.bsps) {
+                let id: BSPIdentifier = {
+                    name: board.name, 
+                    id: board.id, 
+                    category: board.category, 
+                    device: '', 
+                    connectivity: '',
+                    description: board.description || ''
+                }
+                bsps.push(id) ;
+            }
+        }
+        return bsps;
+    }
+
+    private pushAllBSPs() {
+        if (this.panel_) {
+            let st = {
+                oobtype: 'allbsps',
+                bsps: this.getBSPIdentifiers()
+            };
+            let oob: BackEndToFrontEndResponse = {
+                response: 'oob',
+                data: st
+            };
+            this.panel_.webview.postMessage(oob);
+        }
+    }   
 
     private updateFirmware(request: any) : Promise<BackEndToFrontEndResponse> {
         let ret = new Promise<BackEndToFrontEndResponse>((resolve, reject) => {

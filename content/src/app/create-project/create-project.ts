@@ -55,6 +55,7 @@ export class CreateProject implements OnInit, OnDestroy {
     bsps: BSPIdentifier[] = [];
     exampleCategories: string[] = [];
     examples: CodeExampleIdentifier[] = [];
+    allBSPs: BSPIdentifier[] = [];
 
     selectedCategory: string = '';
     selectedBSP: BSPIdentifier | null = null;
@@ -76,76 +77,70 @@ export class CreateProject implements OnInit, OnDestroy {
         private formBuilder: FormBuilder,
         public backendService: BackendService,
         private snackBar: MatSnackBar) {
-                this.backendService.browserFolder.subscribe(folder => {
-                    if (folder) {
-                        this.projectInfoForm.patchValue({ projectLocation: folder });
-                        this.snackBar.open('Directory selected successfully', 'Close', { duration: 2000 });
-                    }
-                }) ;
-        // Subscribe to dev kit status
-        this.backendService.devKitStatus.subscribe(kits => {
-            this.devKits = kits;
-        });
+            this.backendService.browserFolder.subscribe(folder => {
+                if (folder) {
+                    this.projectInfoForm.patchValue({ projectLocation: folder });
+                    this.snackBar.open('Directory selected successfully', 'Close', { duration: 2000 });
+                }
+            }) ;
+
+            // Subscribe to dev kit status
+            this.backendService.devKitStatus.subscribe(kits => {
+                this.devKits = kits;
+            });
+
+            this.backendService.allBSPs.subscribe(bsps => {
+                this.allBSPs = bsps;
+            }); 
         }
 
     ngOnInit() {
         this.isDarkTheme = this.backendService.isDarkTheme;
         this.initializeForms();
         this.loadCategories();
-    // Initial dev kit fetch (if needed)
-    this.backendService.platformSpecific?.('refreshDevKits', null);
+        // Initial dev kit fetch (if needed)
+        this.backendService.platformSpecific?.('refreshDevKits', null);
+    }
+    
+    private mapDevKitName(kitname: string) : string {
+        if (kitname === 'KIT_PSOCE84_EVK') {
+            return 'KIT_PSE84_EVAL_EPC2' ;
+        }
+
+        return kitname ;
     }
     // Called when a dev kit is selected from the UI
     onDevKitSelect(kit: DevKitInfo) {
         this.selectedDevKit = kit;
-        // Try to find a BSP that matches this kit
-        // Match by name or serial, or by boardFeatures if needed
-        // Find the BSP whose name or device matches the kit name or a feature
-        let foundBSP: BSPIdentifier | undefined;
-        let foundCategory: string | undefined;
-        for (const bsp of this.bsps) {
-            if (
-                bsp.name === kit.name ||
-                bsp.device === kit.name ||
-                kit.boardFeatures.includes(bsp.name) ||
-                kit.boardFeatures.includes(bsp.device)
-            ) {
-                foundBSP = bsp;
-                foundCategory = bsp.category;
+
+        let found = false;
+        let kname = this.mapDevKitName(kit.name);
+        for(let bsp of this.allBSPs) {
+            if (bsp.name === kname) {
+                this.bspSelectionForm.patchValue({ category: bsp.category , bsp: bsp.id });
+                this.selectedCategory = bsp.category;
+                this.selectedBSP = bsp;
+                this.onCategoryChange();
+                this.onBSPChange();
+                found = true ;
                 break;
             }
         }
-        // If not found in loaded bsps, search all categories
-        if (!foundBSP) {
-            for (const category of this.categories) {
-                this.backendService.manifestMgr.getBSPsForCategory(category).then(bsps => {
-                    for (const bsp of bsps) {
-                        if (
-                            bsp.name === kit.name ||
-                            bsp.device === kit.name ||
-                            kit.boardFeatures.includes(bsp.name) ||
-                            kit.boardFeatures.includes(bsp.device)
-                        ) {
-                            foundBSP = bsp;
-                            foundCategory = bsp.category;
-                            // Patch forms and state
-                            this.bspSelectionForm.patchValue({ category: foundCategory, bsp: foundBSP.id });
-                            this.selectedCategory = foundCategory!;
-                            this.selectedBSP = foundBSP!;
-                            this.onCategoryChange();
-                            this.onBSPChange();
-                            return;
-                        }
-                    }
-                });
+
+        if (!found) {
+            let cats : string[] = [] ;
+            for(let bsp of this.allBSPs) {
+                this.backendService.log(`Checking BSP ${bsp.name} starts with dev kit ${kit.name}`) ;
+                if (bsp.name.startsWith(kit.name)) {
+                    cats.push(bsp.category);
+                }
             }
-        } else {
-            // Patch forms and state
-            this.bspSelectionForm.patchValue({ category: foundCategory, bsp: foundBSP.id });
-            this.selectedCategory = foundCategory!;
-            this.selectedBSP = foundBSP!;
-            this.onCategoryChange();
-            this.onBSPChange();
+            if (cats.length === 1) {
+                this.bspSelectionForm.patchValue({ category: cats[0], bsp: '' });
+                this.selectedCategory = cats[0];
+                this.selectedBSP = null;
+                this.onCategoryChange();    
+            }
         }
     }
 

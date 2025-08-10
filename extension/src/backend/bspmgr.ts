@@ -48,23 +48,6 @@ export class BSPMgr {
         return ret;
     }
 
-    private loadError(err: Error): void {
-        this.bsps_ = {
-            datatype: 'error',
-            bsps: [ {
-                name: err.message, 
-                id: '', category: '',
-                device: "",
-                connectivity: "",
-                description: "An error occurred while loading BSPs: " + err.message
-            } ]
-        } ;
-
-        for(let p of this.waiting_) {
-            p(this.bsps_) ;
-        }        
-    }
-
     private appLoaded(loaded: MTBLoadFlags) : void {
         if (loaded & MTBLoadFlags.Manifest) {
             this.bsps_.datatype = 'manifest';
