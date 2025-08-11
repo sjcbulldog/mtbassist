@@ -260,7 +260,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ret;
     }
 
-    public static async runCmdCaptureOutput(cwd: string, cmd: string, args: string[], cb?: (lines: string[]) => void) : Promise<[number, string[]]> {
+    public static async runCmdCaptureOutput(cwd: string, cmd: string, args: string[], cb?: (lines: string[], id?: any) => void, id?: any) : Promise<[number, string[]]> {
         let ret: Promise<[number, string[]]> = new Promise<[number, string[]]>((resolve, reject) => {
             let sofar = 0 ;
             let text: string = "" ;
@@ -284,19 +284,19 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 {
                     cwd: cwd,
                     env: penv,
-                    windowsHide: true
+                    windowsHide: true,
                 }) ;
 
             cp.stdout?.on('data', (data) => {
                 text += (data as Buffer).toString() ;
                 if (cb) {
-                    sofar = this.sendTextToCallback(text, sofar, cb) ;
+                    sofar = this.sendTextToCallback(text, sofar, cb, id) ;
                 }
             }) ;
             cp.stderr?.on('data', (data) => {
                 text += (data as Buffer).toString() ;      
                 if (cb) {
-                    sofar = this.sendTextToCallback(text, sofar, cb) ;                              
+                    sofar = this.sendTextToCallback(text, sofar, cb, id) ;
                 }
             }) ;
             cp.on('error', (err) => {
@@ -315,12 +315,12 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ret;
     }    
 
-    private static sendTextToCallback(text: string, sofar: number, cb: (lines: string[]) => void) : number {
+    private static sendTextToCallback(text: string, sofar: number, cb: (lines: string[], id: any) => void, id: any) : number {
         let lines = text.split('\n') ;
         if (lines.length > sofar + 1) {
             // If we have more than one line, we need to send the lines to the callback
             let newlines = lines.slice(sofar, lines.length - 2) ;
-            cb(newlines) ;
+            cb(newlines, id) ;
             sofar += newlines.length ;
         }
 

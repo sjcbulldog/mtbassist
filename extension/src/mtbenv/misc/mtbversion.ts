@@ -51,6 +51,10 @@ export class MTBVersion
         }
     }
 
+    public toString() : string {
+        return `${this.major}.${this.minor}.${this.patch}${this.build !== -1 ? '.' + this.build : ''}`;
+    }
+
     public isGreaterThen(v: MTBVersion) : boolean {
         let ret: boolean = false ;
         return MTBVersion.compare(this, v) > 0 ;

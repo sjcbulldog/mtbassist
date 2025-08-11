@@ -2,9 +2,11 @@ import * as winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path' ;
 import * as exec from 'child_process' ;
-import * as os from 'os'; ;
+import * as os from 'os';
+import EventEmitter = require("events");
+import { ModusToolboxEnvironment } from '../mtbenv';
 
-export class IDCLauncher {
+export class IDCLauncher extends EventEmitter{
     private static readonly launcherPartialPath = ['Infineon', 'LauncherService', 'idc-launcher-service'] ;
 
     private logger_ : winston.Logger ;
@@ -12,35 +14,41 @@ export class IDCLauncher {
     private foundLauncher_ : boolean = false ;
 
     constructor(logger: winston.Logger) {
+        super() ;
         this.logger_ = logger;
+        this.path_ = this.findLauncherExecutable();
     }
 
     public get found(): boolean {
         return this.foundLauncher_;
     }
 
-    public start() : Promise<string | undefined> {
-        let ret = new Promise<string | undefined>((resolve, reject) => {
-            this.path_ = this.findLauncherExecutable();
+    public start() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
             if (!this.path_) {
                 this.foundLauncher_ = false ;
                 this.logger_.error('Launcher executable not found - cannot start IDC service.');
-                resolve(undefined) ;
+                resolve() ;
             }
 
             this.foundLauncher_ = true;
-            this.run([])
-            .then((result) => {
-                resolve(result) ;
-            })
-            .catch((err) => {
-                reject(err) ;
-            }) ;
+            let ls = exec.spawn(this.path_!, [], 
+                {
+                    cwd: os.homedir(),
+                    detached: true,
+                }) ;
+
+            resolve() ;
+
         }) ;
         return ret ;
     }
 
-    public run(args: string[]) : Promise<string | undefined> {
+    public get isIDCServiceRunning(): boolean {
+        return false ;
+    }
+
+    public run(args: string[], cb? : (lines: string[]) => void, id?: any) : Promise<string | undefined> {
         let ret = new Promise<string | undefined>((resolve, reject) => {
             if (!this.path_) {
                 this.logger_.error('Cannot run IDC Launcher - launcher executable not found.');
@@ -48,15 +56,23 @@ export class IDCLauncher {
                 return;
             }
 
-            let result = 
-            exec.execFile(this.path_!, args, { cwd: os.homedir() }, (error, stdout, stderr) => {
-                if (error) {
-                    this.logger_.error(`Error running IDC Launcher: ${error.message}`);
-                    resolve(undefined) ;
+            ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), this.path_!, args, cb, id)
+            .then((result) => {
+                if (result[0] !== 0) {
+                    this.logger_.error(`IDC Launcher failed with exit code ${result[0]}`);
+                    resolve(undefined);
+                    return;
                 }
-
-                resolve(stdout) ;
-            }) ;
+                let output: string = '' ;
+                for(let line of result[1]) {
+                    output += line + '\n' ;
+                }
+                resolve(output) ;
+            })
+            .catch((error) => {
+                this.logger_.error(`Error running IDC Launcher: ${error.message}`);
+                resolve(undefined) ;
+            });
         }) ;
         return ret ;
     }

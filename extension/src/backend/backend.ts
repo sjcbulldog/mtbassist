@@ -7,10 +7,10 @@ import { BackEndToFrontEndResponse, CodeExampleIdentifier, FrontEndToBackEndRequ
 import { BSPMgr } from "./bspmgr";
 import { MTBApp } from "../mtbenv/manifest/mtbapp";
 import { PlatformAPI } from "./platform/platformapi";
-import { EventEmitter } from "stream";
 import * as winston from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
+import EventEmitter = require("events");
 
 
 export class BackendService extends EventEmitter {

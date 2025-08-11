@@ -138,22 +138,19 @@ export class MTBAssistObject {
                 this.initializeCommands();                
                 vscode.commands.executeCommand('mtbassist2.mtbMainPage')
                 .then(() => {
-                    this.setupMgr_!.initialize()
-                    .then(() => {
-                        if (this.panel_) {
-                            let st = {
-                                oobtype : 'isMTBInstalled',
-                                installed: false
-                            } ;
-                            let oob: BackEndToFrontEndResponse = {
-                                response: 'oob',
-                                data: st
-                            } ;
-                            this.panel_.webview.postMessage(oob) ;
-                        }                    
-                        resolve() ;
-                        return ;
-                    }) ;
+                    if (this.panel_) {
+                        let st = {
+                            oobtype : 'isMTBInstalled',
+                            installed: false
+                        } ;
+                        let oob: BackEndToFrontEndResponse = {
+                            response: 'oob',
+                            data: st
+                        } ;
+                        this.panel_.webview.postMessage(oob) ;
+                    }                    
+                    resolve() ;
+                    return ;
                 }) ;
             }
             else {

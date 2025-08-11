@@ -2,33 +2,56 @@ import { MTBAssistObject } from "../extobj/mtbassistobj";
 import { MtbManagerBase } from "../mgrbase/mgrbase";
 import { IDCLauncher } from "./launcher";
 import fetch, { Response } from 'node-fetch';
+import { ToolList } from "./toollist";
+import { MTBVersion } from "../mtbenv/misc/mtbversion";
+
+//
+// AppData/Local/Infineon_Technologies_AG/Infineon-Toolbox/Tools/ ...
+//
+// launcher 
+// 
 
 export interface AccessTokenResponse {
     accessToken: string;
-    expires_in: string ;
-    received_at: string ;
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    expires_in: string;
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    received_at: string;
     response: string;
 }
 
 export class SetupMgr extends MtbManagerBase {
+    private static readonly neededFeatures : string[] = [
+        'com.ifx.tb.tool.modustoolboxedgeprotectsecuritysuite',
+        'com.ifx.tb.tool.modustoolboxprogtools',
+        'com.ifx.tb.tool.modustoolbox',
+        'com.ifx.tb.tool.mtbgccpackage'
+    ] ;
+
     private launcher_ : IDCLauncher ;
+    private toollist_ : ToolList ;
     private port_? : number ;
     private accessToken_?: AccessTokenResponse;
 
     constructor(ext: MTBAssistObject) {
         super(ext);
         this.launcher_ = new IDCLauncher(this.logger);
+        this.toollist_ = new ToolList(this.logger) ;
     }
 
     public async initialize() : Promise<boolean> {
         let ret = new Promise<boolean>((resolve, reject) => {
-            this.launcher_.start()
+            this.logger.debug('Initializing Setup Manager...');
+            this.startIDCService()
             .then((result) => {
-                if (result === undefined) {
+                if (!result) {
                     resolve(false) ;
                     return ;
                 }
 
+                this.logger.debug('Getting service port...');
                 this.getServicePort()
                 .then((port) => {
                     if (!port) {
@@ -37,15 +60,26 @@ export class SetupMgr extends MtbManagerBase {
                     }
 
                     this.port_ = port;
+                    this.logger.debug(`Service port: ${port}`);
+                    this.logger.debug('Getting access token...');
                     this.getAccessToken()
                     .then((result) => {
                         if (!result) {
                             reject(new Error('Failed to retrieve access token'));
                             return;
                         }
-
                         this.accessToken_ = result as AccessTokenResponse;
-                        resolve(true);
+                        this.logger.debug(`Access token: ${this.accessToken_.accessToken}`);
+                        this.logger.debug('Initializing tool list...');
+                        this.toollist_.initialize()
+                            .then(() => {
+                                this.logger.debug('Tool list initialized successfully.');
+                                resolve(true) ;
+                            })
+                            .catch((err) => {
+                                this.logger.error('Error fetching tool manifest:', err);
+                                reject(err) ;
+                            });
                     })
                     .catch((err) => {
                         reject(err) ;
@@ -54,10 +88,118 @@ export class SetupMgr extends MtbManagerBase {
                 .catch((err) => {
                     reject(err) ;
                 }) ;
-            })
+            });
         });
 
         return ret ;
+    }
+
+    private startIDCService() : Promise<boolean> {
+        let ret = new Promise<boolean>((resolve, reject) => {
+            this.isServiceRunning()
+            .then((isRunning) => {
+                if (isRunning) {
+                    resolve(true);
+                } else {
+                    this.launcher_.start()
+                    .then(() => {
+                        resolve(true);
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+                }
+            })
+            .catch((err) => {
+                reject(err);
+            });
+        });
+        return ret;
+    }
+
+    private downloadTools() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let promises = [];
+            for(let f of SetupMgr.neededFeatures) {
+                let p = this.downloadFeature(f);
+                promises.push(p);
+            }
+
+            Promise.all(promises)
+            .then(() => {
+                resolve();
+            })
+            .catch((err) => {
+                reject(err);
+            });
+        });
+
+        return ret;
+    }
+
+    private findLatestVersion(tool: any) : MTBVersion | undefined {
+        let latest : MTBVersion | undefined = undefined;
+        for(let v of Object.keys(tool.versions)) {
+            let vobj = MTBVersion.fromVersionString(v) ;
+            if (!latest || (vobj && vobj.isGreaterThen(latest))) {
+                latest = vobj;
+            }
+        }
+
+        return latest ;
+    }
+
+    private downloadCallback(lines: string[], id?: any) {
+        console.log(`Download callback ${id || '???'}: ${lines.join('\n')}`);
+    }
+
+    private downloadFeature(id: string)  : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let tool = this.toollist_.getToolByFeature(id);
+            let version = this.findLatestVersion(tool) ;
+            if (!version) {
+                this.logger.error(`For feature ${id} no versions were detected}`);
+                resolve() ;
+            }
+            else {
+                if (!this.accessToken_) {
+                    this.logger.error('No access token available for downloading feature');
+                    resolve() ;
+                }
+                else {
+                    let cmdstr = 'downloadOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
+                    this.launcher_.run(['-accesstoken', this.accessToken_!.accessToken, '-idc.service', cmdstr], this.downloadCallback.bind(this), id)
+                    .then((result) => {
+                        if (!result) {
+                            reject(new Error('Failed to download feature'));
+                            return;
+                        }
+                        resolve();
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+                }
+            }
+        });
+        return ret;
+    }
+
+    private isServiceRunning() : Promise<boolean> {
+        let ret = new Promise<boolean>((resolve, reject) => {
+            this.getServicePort()
+            .then((result) => { 
+                if (!result || result === -1) {
+                    resolve(false) ;
+                }
+                resolve(true) ;
+            })
+            .catch((err) => { 
+                reject(err) ;
+            }) ;
+        });
+
+        return ret;
     }
 
     private getServicePort() : Promise<number | undefined> {
@@ -95,6 +237,7 @@ export class SetupMgr extends MtbManagerBase {
                     try {
                         let json = JSON.parse(result);
                         if (json) {
+                            console.log('access: ' + json.accessToken) ;
                             resolve(json as AccessTokenResponse);
                         } else {
                             resolve(undefined);
