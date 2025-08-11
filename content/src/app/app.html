@@ -1,5 +1,9 @@
-<mtb-nav #topMtbNav
-  [tabs]="navigationTabs"
-  backgroundColor="primary"
-  alignment="center">
-</mtb-nav>
+@if (isModusInstalled_) {
+  <mtb-nav #topMtbNav
+    [tabs]="navigationTabs"
+    backgroundColor="primary"
+    alignment="center">
+  </mtb-nav>
+} @else {
+  <app-software-installer></app-software-installer>
+}

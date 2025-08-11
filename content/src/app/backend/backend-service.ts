@@ -31,9 +31,9 @@ export class BackendService {
     devKitStatus: Subject<DevKitInfo[]> = new Subject<DevKitInfo[]>();
     allBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();
     recentlyOpened: Subject<RecentEntry[]> = new Subject<RecentEntry[]>();
-
     progressMessage: Subject<string> = new Subject<string>();
     progressPercent: Subject<number> = new Subject<number>();
+    isMTBInstalled: Subject<boolean> = new Subject<boolean>();
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -202,6 +202,10 @@ export class BackendService {
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'allbsps') {
                 this.allBSPs.next(cmd.data.bsps || []);
+            }
+            else if (cmd.data.oobtype && cmd.data.oobtype === 'isMTBInstalled') {
+                this.log(`Received isMTBInstalled status: ${cmd.data.installed}`);
+                this.isMTBInstalled.next(cmd.data.installed || false);
             }
         }
 

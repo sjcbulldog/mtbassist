@@ -17,6 +17,7 @@ import { browseropen } from '../browseropen';
 import * as exec from 'child_process' ;
 import { RecentAppManager } from '../misc/mtbrecent';
 import { IntelliSenseMgr } from './intellisense';
+import { SetupMgr } from '../setup/setupmgr';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49' ;
@@ -40,13 +41,13 @@ export class MTBAssistObject {
     private content_ : vscode.WebviewPanel | undefined = undefined;
     private postInitDone_ : boolean = false;
     private envLoaded_ : boolean = false;
-    private noMtbFound_ : boolean = false;
     private cmdhandler_ : Map<string, (data: any) => Promise<BackEndToFrontEndResponse | null>> = new Map();
     private projectInfo_ : Map<string, Project> = new Map() ;
     private meminfo_ : MemoryInfo[] = [] ;
     private tasks_ : MTBTasks | undefined = undefined ;
     private recents_ : RecentAppManager | undefined = undefined;
     private intellisense_ : IntelliSenseMgr | undefined = undefined;
+    private setupMgr_ : SetupMgr | undefined = undefined;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -71,15 +72,12 @@ export class MTBAssistObject {
 
         this.recents_ = new RecentAppManager(this);
         this.intellisense_ = new IntelliSenseMgr(this);
+        this.setupMgr_ = new SetupMgr(this);
         this.bindCommandHandlers() ;
     }
 
     public bringChannelToFront() {
         this.channel_.show(true);
-    }
-
-    public get noMTBFound() : boolean {
-        return this.noMtbFound_ ;
     }
 
     public get mgrsInitialized() : boolean {
@@ -137,11 +135,39 @@ export class MTBAssistObject {
 
             BackendService.initInstance(this.logger_, this.context_.extensionUri, this.env_) ;            
             if (this.env_.defaultToolsDir === undefined) {
-                this.noMtbFound_ = true ;
-                this.noMTBInstalled() ;
-                resolve() ;
+                this.initializeCommands();                
+                vscode.commands.executeCommand('mtbassist2.mtbMainPage')
+                .then(() => {
+                    this.setupMgr_!.initialize()
+                    .then(() => {
+                        if (this.panel_) {
+                            let st = {
+                                oobtype : 'isMTBInstalled',
+                                installed: false
+                            } ;
+                            let oob: BackEndToFrontEndResponse = {
+                                response: 'oob',
+                                data: st
+                            } ;
+                            this.panel_.webview.postMessage(oob) ;
+                        }                    
+                        resolve() ;
+                        return ;
+                    }) ;
+                }) ;
             }
             else {
+                if (this.panel_) {
+                    let st = {
+                        oobtype : 'isMTBInstalled',
+                        installed: true
+                    } ;
+                    let oob: BackEndToFrontEndResponse = {
+                        response: 'oob',
+                        data: st
+                    } ;
+                    this.panel_.webview.postMessage(oob) ;
+                }                
                 BackendService.getInstance().on('progress', this.reportProgress.bind(this));
                 BackendService.getInstance().on('updateAppStatus', this.pushAppStatus.bind(this));
                 BackendService.getInstance().on('loadedAsset', this.loadedAsset.bind(this));
@@ -383,20 +409,6 @@ export class MTBAssistObject {
         return ret;
     }
 
-    private noMTBInstalled() {
-        let disposable: vscode.Disposable;
-
-        this.logger_.info('ModusToolbox is not installed or not found in the expected location.');
-        this.env_ = null ;
-
-	    disposable = vscode.commands.registerCommand('mtbassist2.mtbMainPage', this.noMTBFoundDisplay.bind(this));
-        this.context_.subscriptions.push(disposable);
-
-        if (this.context_.globalState.get('noModusPage', true)) {
-            vscode.commands.executeCommand('mtbassist2.mtbMainPage') ;
-        }
-    }
-
     private preInitializeManagers() : Promise<void> {    
         let promise = new Promise<void>((resolve, reject) => {
             resolve() ;
@@ -501,16 +513,6 @@ export class MTBAssistObject {
     private mtbMainPage(args: any[]) {
         this.logger_.info('Showing ModusToolbox main page.');
         this.showLocalContent('single-dist/index.html') ;
-    }
-
-    private noMTBFoundDisplay(args: any[]) {
-        this.logger_.info('No ModusToolbox installation found.');
-        this.showLocalContent('nomtb.html');
-        let state = this.context_.globalState.get('noModusPage', true);
-        this.panel_!.webview.postMessage({
-            command: 'noModusPage',
-            showNoModusPage: state
-        });
     }
 
     private showWebContentEmbedded(uri: vscode.Uri) {
