@@ -333,6 +333,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         let elems = paths.filter((p) => { return p.indexOf('cygwin') < 0 ; }) ;
         elems.push('/usr/bin') ;    // Ensure /usr/bin is always included
         elems.push('/bin') ;        // Ensure /bin is always included
+        elems.push('C:/windows/System32') ;
         return elems.join(';') ;
     }
 

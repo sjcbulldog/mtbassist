@@ -177,3 +177,14 @@ export interface MTBSetting {
     choices? : string[] ;
     description: string ;
 }
+
+
+export interface SetupProgram {
+    guid: string;
+    featureId: string;
+    title: string;
+    version: string ;
+    required: boolean ;
+    upgradable: boolean ;
+    path?: string ;
+}

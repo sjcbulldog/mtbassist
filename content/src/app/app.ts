@@ -1,7 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { SoftwareInstallerComponent } from './software-installer/software-installer.component';
 import { MtbNav, MtbNavTab } from './mtb-nav/mtb-nav';
-import { Subject } from 'rxjs';
 import { BackendService } from './backend/backend-service';
 
 @Component({
@@ -14,6 +13,7 @@ import { BackendService } from './backend/backend-service';
 export class App {
   public isModusInstalled_ : boolean = true ;
   @ViewChild('topMtbNav') topMtbNav!: MtbNav;
+  @ViewChild('softwareInstaller') softwareInstaller!: SoftwareInstallerComponent;
 
   constructor(private be: BackendService) {
     // Subscribe to navigation tab changes
@@ -24,6 +24,10 @@ export class App {
     this.be.isMTBInstalled.subscribe(isInstalled => {
       this.isModusInstalled_ = isInstalled;
     });
+
+    this.be.setupTab.subscribe(index => { 
+      this.softwareInstaller.step = index ;
+    }) ;
   }
 
   // Define the tabs for the navigation

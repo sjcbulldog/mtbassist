@@ -24,6 +24,7 @@ export class BackendService {
     private handlers_ : Map<string, (cmd: BackEndToFrontEndResponse) => void> = new Map<string, (cmd: BackEndToFrontEndResponse) => void>();
 
     navTab: Subject<number> = new Subject<number>() ;
+    setupTab: Subject<number> = new Subject<number>() ;
     browserFolder: Subject<string | null> = new Subject<string | null>();
     memoryStats = new BehaviorSubject<MemoryStats | null>(null);  
     appStatusData: BehaviorSubject<ApplicationStatusData | null> = new BehaviorSubject<ApplicationStatusData | null>(null);
@@ -117,8 +118,11 @@ export class BackendService {
     }
 
     public setNavTab(index: number) {
-        this.log(`Setting navigation tab to index: ${index}`);
         this.navTab.next(index);
+    }
+
+    public setSetupTab(index: number) {
+        this.setupTab.next(index);
     }
 
     public browseForFolder(): void{
@@ -206,6 +210,11 @@ export class BackendService {
             else if (cmd.data.oobtype && cmd.data.oobtype === 'isMTBInstalled') {
                 this.log(`Received isMTBInstalled status: ${cmd.data.installed}`);
                 this.isMTBInstalled.next(cmd.data.installed || false);
+            }
+            else if (cmd.data.oobtype && cmd.data.oobtype === 'setupTab') {
+                let index = cmd.data.index || 0;
+                this.setupTab.next(index);
+                this.log(`Received setupTab index: ${index}`) ;
             }
         }
 

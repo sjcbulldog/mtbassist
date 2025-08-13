@@ -1,0 +1,40 @@
+<div class="software-installer-container">
+    <h2>Software Installer</h2>
+    <div class="step-indicator">Step {{ step + 1 }} of 3</div>
+    @switch (step) {
+      @case (0) {
+        <div class="tile-row">
+          <div class="install-tile no-account" (click)="onNoAccountClick()">
+            <div class="tile-content">
+              <span class="tile-icon">&#9888;</span>
+              <h3>No Infineon Account?</h3>
+              <p>Click here if you do not have an Infineon account.  Return to this page after your account is created.</p>
+            </div>
+          </div>
+          <div class="install-tile has-account" (click)="onHasAccountClick()">
+            <div class="tile-content">
+              <span class="tile-icon">&#128274;</span>
+              <h3>Have an Infineon Account?</h3>
+              <p>Click here to log in and manage your software. A browser will open for authentication.</p>
+            </div>
+          </div>
+        </div>
+      }
+      @case (1) {
+        <div class="confirm-tools">
+          <h3>Confirm Tools to Download & Install</h3>
+          <ul class="tool-list">
+          </ul>
+          <button class="next-btn" (click)="onConfirmTools()">Download & Install</button>
+          <button class="back-btn" (click)="step = 0">Back</button>
+        </div>
+      }
+      @case (2) {
+        <div class="install-complete">
+          <h3>Installation Complete!</h3>
+          <p>All selected tools have been downloaded and installed.</p>
+          <button class="reinit-btn" (click)="onReinit()">Reinitialize Extension</button>
+        </div>
+      }
+    }
+</div>

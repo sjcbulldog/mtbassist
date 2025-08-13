@@ -4,6 +4,7 @@ import { IDCLauncher } from "./launcher";
 import fetch, { Response } from 'node-fetch';
 import { ToolList } from "./toollist";
 import { MTBVersion } from "../mtbenv/misc/mtbversion";
+import { IDCRegistry } from "./idcreg";
 
 //
 // AppData/Local/Infineon_Technologies_AG/Infineon-Toolbox/Tools/ ...
@@ -23,15 +24,19 @@ export interface AccessTokenResponse {
 }
 
 export class SetupMgr extends MtbManagerBase {
-    private static readonly neededFeatures : string[] = [
+    private static readonly requiredFeatures : string[] = [
         'com.ifx.tb.tool.modustoolboxedgeprotectsecuritysuite',
         'com.ifx.tb.tool.modustoolboxprogtools',
         'com.ifx.tb.tool.modustoolbox',
         'com.ifx.tb.tool.mtbgccpackage'
     ] ;
 
+    private static readonly optionalFeatures : string[] = [
+    ] ;
+
     private launcher_ : IDCLauncher ;
     private toollist_ : ToolList ;
+    private registry_ : IDCRegistry ;
     private port_? : number ;
     private accessToken_?: AccessTokenResponse;
 
@@ -39,6 +44,31 @@ export class SetupMgr extends MtbManagerBase {
         super(ext);
         this.launcher_ = new IDCLauncher(this.logger);
         this.toollist_ = new ToolList(this.logger) ;
+        this.registry_ = new IDCRegistry(this.logger);
+    }
+
+    public async initializeLocal() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            this.registry_.initialize()
+            .then(() => {
+                resolve();
+            })
+            .catch((err) => {
+                reject(err);
+            });
+        });
+
+        return ret;
+    }
+
+    public doWeNeedTools() : boolean {
+        for(let f of SetupMgr.requiredFeatures) {
+            if (!this.registry_.hasTool(f)) {
+                this.logger.warn(`Missing required feature: ${f}`);
+                return true;
+            }
+        }
+        return false;
     }
 
     public async initialize() : Promise<boolean> {
@@ -55,6 +85,7 @@ export class SetupMgr extends MtbManagerBase {
                 this.getServicePort()
                 .then((port) => {
                     if (!port) {
+                        this.emit('setupError', 'Could not launch IDC service');
                         resolve(false);
                         return;
                     }
@@ -74,7 +105,14 @@ export class SetupMgr extends MtbManagerBase {
                         this.toollist_.initialize()
                             .then(() => {
                                 this.logger.debug('Tool list initialized successfully.');
-                                resolve(true) ;
+                                this.registry_.initialize()
+                                .then(() => {
+                                    this.logger.debug('IDC registry initialized successfully.');
+                                    resolve(true) ;
+                                })
+                                .catch((err) => {
+                                    reject(err) ;
+                                }) ;
                             })
                             .catch((err) => {
                                 this.logger.error('Error fetching tool manifest:', err);
@@ -120,7 +158,7 @@ export class SetupMgr extends MtbManagerBase {
     private downloadTools() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             let promises = [];
-            for(let f of SetupMgr.neededFeatures) {
+            for(let f of SetupMgr.requiredFeatures) {
                 let p = this.downloadFeature(f);
                 promises.push(p);
             }
