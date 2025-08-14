@@ -100,7 +100,7 @@ export class MTBAssistObject {
                 response: 'oob',
                 data: data
             };
-            this.panel_.webview.postMessage(oob);
+            this.postWebViewMessage(oob);
         }
     }
 
@@ -113,7 +113,7 @@ export class MTBAssistObject {
                     asset: asset
                 }
             };
-            this.panel_.webview.postMessage(oob);
+            this.postWebViewMessage(oob);
         }
     }
 
@@ -126,7 +126,7 @@ export class MTBAssistObject {
                     index: index
                 }
             };
-            this.panel_.webview.postMessage(oob);
+            this.postWebViewMessage(oob);
         }
     }
 
@@ -135,22 +135,31 @@ export class MTBAssistObject {
             this.initializeCommands();
             vscode.commands.executeCommand('mtbassist2.mtbMainPage')
                 .then(() => {
-                    if (this.panel_) {
-                        let st = {
-                            oobtype: 'isMTBInstalled',
-                            installed: false
-                        };
-                        let oob: BackEndToFrontEndResponse = {
-                            response: 'oob',
-                            data: st
-                        };
-                        this.panel_.webview.postMessage(oob);
-                    }
+                    this.pushOOB('isMTBInstalled', { installed: false });
                     resolve();
                     return;
                 });            
         });
         return ret;
+    }
+
+    private sentinelCount: number = 0 ;
+    private postWebViewMessage(msg: any) {
+        msg.sentinel = this.sentinelCount++ ;
+        if (this.panel_) {
+            this.panel_.webview.postMessage(msg);
+        }
+    }
+
+    private pushOOB(oobtype: string, oobdata: any) {
+        let oob: BackEndToFrontEndResponse = {
+            response: 'oob',
+            data: {
+                oobtype: oobtype,
+                data: oobdata
+            }
+        };
+        this.postWebViewMessage(oob);
     }
 
     private initWithTools() : Promise<void> {
@@ -172,7 +181,7 @@ export class MTBAssistObject {
                     response: 'oob',
                     data: st
                 };
-                this.panel_.webview.postMessage(oob);
+                this.postWebViewMessage(oob);
             }
             this.worker_.on('progress', this.reportProgress.bind(this));
             this.worker_.on('runtask', this.runTask.bind(this));
@@ -376,13 +385,13 @@ export class MTBAssistObject {
                     this.pushNeededTools() ;
                     let st = {
                         oobtype: 'setupTab',
-                        index: 2
+                        index: 1
                     };
                     let oob: BackEndToFrontEndResponse = {
                         response: 'oob',
                         data: st
                     };
-                    this.panel_.webview.postMessage(oob);
+                    this.postWebViewMessage(oob);
                 }
                 resolve(null);
             }).catch((error) => {
@@ -778,20 +787,12 @@ export class MTBAssistObject {
                 response: 'oob',
                 data: st
             };
-            this.panel_.webview.postMessage(oob);
+            this.postWebViewMessage(oob);
         }
     }
 
     private pushNeededTools() {
-        if (this.panel_) {
-            let st = this.getAppStatusFromEnv() as any;
-            st.oobtype = 'neededTools';
-            let oob: BackEndToFrontEndResponse = {
-                response: 'oob',
-                data: this.setupMgr_!.neededTools
-            };
-            this.panel_.webview.postMessage(oob);
-        }
+        this.pushOOB('neededTools', this.setupMgr_!.neededTools);
     }    
 
     private pushRecentlyOpened() {
@@ -804,7 +805,7 @@ export class MTBAssistObject {
                 response: 'oob',
                 data: st
             };
-            this.panel_.webview.postMessage(oob);
+            this.postWebViewMessage(oob);
         }
     }
 
@@ -888,7 +889,7 @@ export class MTBAssistObject {
                 response: 'oob',
                 data: st
             };
-            this.panel_.webview.postMessage(oob);
+            this.postWebViewMessage(oob);
         }
     }
 
@@ -924,7 +925,7 @@ export class MTBAssistObject {
                 response: 'oob',
                 data: st
             };
-            this.panel_.webview.postMessage(oob);
+            this.postWebViewMessage(oob);
         }
     }
 
@@ -1025,7 +1026,7 @@ export class MTBAssistObject {
                         }
                     })
                     .catch((error: Error) => {
-                        this.logger_.error(`Error handling command ${message.data.command}: ${error.message}`);
+                        this.logger_.error(`Error handling command ${message.request}: ${error.message}`);
                     });
             } else {
                 this.logger_.error(`No handler found for vscode command: ${message.request}`);
@@ -1201,6 +1202,13 @@ export class MTBAssistObject {
 
     private getBSPs(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null>  {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            if (!this.env_) {
+                resolve({
+                    response: 'error',
+                    data: 'Environment not initialized'
+                });
+                return;
+            }
             this.bsps_!.getDevKits()
                 .then((kits) => {
                     resolve({

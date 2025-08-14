@@ -116,6 +116,7 @@ export class SetupMgr extends MtbManagerBase {
                             .then(() => {
                                 this.logger.debug('Tool list initialized successfully.');
                                 this.neededTools_ = this.findNeededTools();
+                                resolve(true) ;
                             })
                             .catch((err) => {
                                 this.logger.error('Error fetching tool manifest:', err);

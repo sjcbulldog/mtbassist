@@ -207,8 +207,8 @@ export class BackendService {
                 this.log(`Received setupTab index: ${index}`) ;
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'neededTools') {
-                this.neededTools.next(cmd.data.tools || []);
-                this.log(`Received needed tools: ${JSON.stringify(cmd.data.tools || [])}`);
+                this.log(`Received needed tools: ${JSON.stringify(cmd.data.data || [])}`);
+                this.neededTools.next(cmd.data.data || []);
             }
             else {
                 this.log(`Unhandled OOB type: ${cmd.data.oobtype}`);
