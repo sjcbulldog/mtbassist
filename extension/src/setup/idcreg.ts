@@ -57,7 +57,7 @@ export class IDCRegistry {
                 return ;
             }
 
-            this.logger_.debug(`packdbloader: scanning directory '${dir}'`) ;
+            this.logger_.debug(`idcreg: scanning directory '${dir}'`) ;
             for(let file of fs.readdirSync(dir)) {
                 let fullpath = path.join(dir, file) ;
                 if (path.extname(file) === '.json') {
@@ -74,19 +74,22 @@ export class IDCRegistry {
         this.logger_.debug(`packdbloader: checking JSON file '${file}'`) ;
         let content = fs.readFileSync(file, 'utf-8');
         try {
+            content = content.replace(/^\uFEFF/, ''); // Remove BOM if present
             let obj = JSON.parse(content);
-            if (obj.guid && obj.featureId && obj.title && obj.version) {
+            if (obj.guid && obj.featureId && obj.title && obj.version && obj.path) {
                 this.entries_.set(obj.featureId, {
                     guid: obj.guid,
                     featureId: obj.featureId,
                     title: obj.title,
                     version: obj.version,
                     required: obj.required,
-                    upgradable: obj.upgradable
+                    upgradable: obj.upgradable,
+                    path: obj.path
                 });
             }
         }
         catch(err) {
+            this.logger_.error(`idcreg: error parsing JSON file '${file}': ${(err as Error).message}`);
         }
     }
 }

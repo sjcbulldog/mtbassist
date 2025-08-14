@@ -19,6 +19,12 @@
             </div>
           </div>
         </div>
+        @if (loadingTools) {
+          <div class="gather-tools-message">
+            <h3>Gather information on required tools ...</h3>
+            <div class="spinner"></div>
+          </div>
+        }
       }
       @case (1) {
         <div class="confirm-tools">

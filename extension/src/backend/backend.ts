@@ -12,7 +12,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import EventEmitter = require("events");
 
-
 export class BackendService extends EventEmitter {
     private static instance: BackendService | null = null;
 
