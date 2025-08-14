@@ -24,6 +24,10 @@ export class IDCRegistry {
         return ret;
     }
 
+    public getToolByFeatureId(featureId: string) : SetupProgram | undefined {
+        return this.entries_.get(featureId);
+    }
+
     public initialize() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {  
             let parray : Promise<void>[] = [] ;
@@ -71,20 +75,20 @@ export class IDCRegistry {
     }
 
     private checkOneJSONFile(file: string) {
-        this.logger_.debug(`packdbloader: checking JSON file '${file}'`) ;
+        this.logger_.debug(`idcreg: checking JSON file '${file}'`) ;
         let content = fs.readFileSync(file, 'utf-8');
         try {
             content = content.replace(/^\uFEFF/, ''); // Remove BOM if present
             let obj = JSON.parse(content);
             if (obj.guid && obj.featureId && obj.title && obj.version && obj.path) {
                 this.entries_.set(obj.featureId, {
-                    guid: obj.guid,
                     featureId: obj.featureId,
-                    title: obj.title,
+                    name: obj.name,
                     version: obj.version,
                     required: obj.required,
                     upgradable: obj.upgradable,
-                    path: obj.path
+                    path: obj.path,
+                    installed: true
                 });
             }
         }

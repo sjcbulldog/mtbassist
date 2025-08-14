@@ -25,11 +25,11 @@ export class DevkitListComponent {
   }
 
   refreshDevKits() {
-    this.be.platformSpecific('refreshDevKits', null) ;
+    this.be.sendRequestWithArgs('refreshDevKits', null) ;
   }
 
   updateFirmware(kit: DevKitInfo) {
     this.be.log(`Requesting firmware update for ${kit.name} (${kit.serial})`);
-    this.be.platformSpecific('updateFirmware', kit);
+    this.be.sendRequestWithArgs('updateFirmware', kit);
   }
 }

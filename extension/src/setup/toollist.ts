@@ -1,11 +1,12 @@
 import * as winston from 'winston';
 import fetch, { Response } from 'node-fetch';
+import { SetupProgram } from '../comms';
 
 export class ToolList {
     private static readonly onlineToolURL = 'https://softwaretools.infineon.com/api/v1/tools/' ;
 
     private logger_ : winston.Logger;
-    private list_ : any[] = [] ;
+    private tools_ : Map<string, SetupProgram> = new Map();
 
     constructor(logger: winston.Logger) {
         this.logger_ = logger;
@@ -15,7 +16,13 @@ export class ToolList {
         let ret = new Promise<void>((resolve, reject) => {
             this.fetchToolManifest()
                 .then((manifest) => {
-                    this.list_ = manifest;
+                    if (Array.isArray(manifest)) {
+                        for (let tool of manifest) {
+                            if (tool.featureId) {
+                                this.tools_.set(tool.featureId, tool);
+                            }
+                        }
+                    }
                     resolve();
                 })
                 .catch((err) => {
@@ -25,8 +32,12 @@ export class ToolList {
         return ret;
     }
 
-    public getToolByFeature(feature: string): any | undefined {
-        return this.list_.find(tool => tool.featureId === feature);
+    public hasTool(feature: string): boolean {
+        return this.tools_.has(feature);
+    }
+
+    public getToolByFeature(feature: string): SetupProgram | undefined {
+        return this.tools_.get(feature);
     }
 
     private fetchToolManifest() : Promise<any> {

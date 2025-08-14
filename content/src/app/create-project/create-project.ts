@@ -99,7 +99,7 @@ export class CreateProject implements OnInit, OnDestroy {
         this.initializeForms();
         this.loadCategories();
         // Initial dev kit fetch (if needed)
-        this.backendService.platformSpecific?.('refreshDevKits', null);
+        this.backendService.sendRequestWithArgs?.('refreshDevKits', null);
     }
     
     private mapDevKitName(kitname: string) : string {

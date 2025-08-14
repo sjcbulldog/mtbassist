@@ -4,7 +4,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry } from '../../comms';
+import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry, FrontEndToBackEndRequestType, SetupProgram } from '../../comms';
 import { ManifestManager } from './manifestmgr';
 import { ProjectManager } from './projectmgr';
 import { AppStatusBackend } from './appmgrbe';
@@ -35,6 +35,7 @@ export class BackendService {
     progressMessage: Subject<string> = new Subject<string>();
     progressPercent: Subject<number> = new Subject<number>();
     isMTBInstalled: Subject<boolean> = new Subject<boolean>();
+    neededTools: Subject<SetupProgram[]> = new Subject<SetupProgram[]>();
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -48,12 +49,6 @@ export class BackendService {
         this.appStatusManager_ = new AppStatusBackend(this);
 
         this.setupHandlers();
-
-        this.sendRequest({
-            request: 'setPlatform',
-            data: {
-                platform: this.pipe_ ? this.pipe_.platform : 'unknown'
-            }}) ;
     }
 
     public registerHandler(cmd: BackEndToFrontEndResponseType, handler: (cmd: BackEndToFrontEndResponse) => void): void {  
@@ -105,14 +100,11 @@ export class BackendService {
         }
     }
 
-    public platformSpecific(cmd: string, data: any) {
+    public sendRequestWithArgs(cmd: FrontEndToBackEndRequestType, data: any) {
         if (this.pipe_) {
             this.pipe_!.sendRequest({
-                request: 'platformSpecific',
-                data: {
-                    command: cmd,
-                    data: data
-                }
+                request: cmd,
+                data: data
             });
         }
     }
@@ -129,10 +121,8 @@ export class BackendService {
         this.log('Requesting browser for folder');
             if (this.pipe_) {
                 this.pipe_.sendRequest({
-                    request: 'platformSpecific',
-                    data: {
-                        command: 'browseForFolder'
-                    }
+                    request: 'browseForFolder',
+                    data: null
                 });
             }
     }
@@ -215,6 +205,13 @@ export class BackendService {
                 let index = cmd.data.index || 0;
                 this.setupTab.next(index);
                 this.log(`Received setupTab index: ${index}`) ;
+            }
+            else if (cmd.data.oobtype && cmd.data.oobtype === 'neededTools') {
+                this.neededTools.next(cmd.data.tools || []);
+                this.log(`Received needed tools: ${JSON.stringify(cmd.data.tools || [])}`);
+            }
+            else {
+                this.log(`Unhandled OOB type: ${cmd.data.oobtype}`);
             }
         }
 

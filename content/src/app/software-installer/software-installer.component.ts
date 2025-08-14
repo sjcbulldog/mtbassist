@@ -26,12 +26,13 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   }
 
   onNoAccountClick() {
-    this.be.platformSpecific('open', { location: SoftwareInstallerComponent.urlStr} );
+    this.be.sendRequestWithArgs('open', { location: SoftwareInstallerComponent.urlStr} );
   }
 
   onHasAccountClick() {
+    this.be.log('User has an account, initializing setup...');
     this.loadingTools = true;
-    this.be.platformSpecific('initSetup', null);
+    this.be.sendRequestWithArgs('initSetup', null);
   }
 
   onConfirmTools() {

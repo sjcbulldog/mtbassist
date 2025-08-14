@@ -75,18 +75,18 @@ export class GettingStarted {
   ];
 
   onGetStarted() {
-    this.be.platformSpecific('gettingStarted', null);
+    this.be.sendRequestWithArgs('gettingStarted', null);
   }
 
   onViewDocumentation() {
-    this.be.platformSpecific('documentation', null);
+    this.be.sendRequestWithArgs('documentation', null);
   }
 
   onCommunity() {
-    this.be.platformSpecific('community', null);
+    this.be.sendRequestWithArgs('community', null);
   }
 
   onBrowseExamples() {
-    this.be.platformSpecific('browseExamples', null);
+    this.be.sendRequestWithArgs('browseExamples', null);
   }
 }

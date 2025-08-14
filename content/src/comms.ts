@@ -3,17 +3,30 @@ export type PlatformType = 'browser' | 'electron' | 'vscode' ;
 
 export type FrontEndToBackEndRequestType = 
     'logMessage' | 
-    'setPlatform' |
     'getBSPs' |
     'getCodeExamples' |
     'getStarted' |
     'createProject' |
     'loadWorkspace' |
     'getAppStatus' |
-    'platformSpecific' |
     'browseForFolder' |
     'fixMissingAssets' |
-    'buildAction' ;
+    'buildAction' |
+    'gettingStarted' |
+    'documentation' | 
+    'browseExamples' |
+    'community' |
+    'open' |
+    'libmgr' |
+    'devcfg' |
+    'tool' |
+    'refreshDevKits' |
+    'updateFirmware' |
+    'recentlyOpened' |
+    'openRecent' |
+    'openReadme' |
+    'initSetup'
+    ;
 
 export type BackEndToFrontEndResponseType =
     'setBSPs' |
@@ -180,11 +193,11 @@ export interface MTBSetting {
 
 
 export interface SetupProgram {
-    guid: string;
     featureId: string;
-    title: string;
+    name: string;
     version: string ;
     required: boolean ;
+    installed: boolean ;
     upgradable: boolean ;
     path?: string ;
 }

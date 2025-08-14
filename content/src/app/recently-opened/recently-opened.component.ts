@@ -21,7 +21,7 @@ export class RecentlyOpenedComponent implements OnInit {
 	groupedRecents: GroupedRecents[] = [];
 
 	constructor(private be: BackendService) {
-		this.be.platformSpecific('recentlyOpened', this.groupedRecents);
+		this.be.sendRequestWithArgs('recentlyOpened', this.groupedRecents);
 	}
 
 	ngOnInit() {
@@ -70,6 +70,6 @@ export class RecentlyOpenedComponent implements OnInit {
 	}
 
 	openRecent(entry: RecentEntry) {
-		this.be.platformSpecific('openRecent', entry.apppath);
+		this.be.sendRequestWithArgs('openRecent', entry.apppath);
 	}
 }

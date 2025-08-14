@@ -1,13 +1,12 @@
-import { PlatformType } from "../../comms";
-import { ModusToolboxEnvironment } from "../../mtbenv/mtbenv/mtbenv";
-import { PlatformAPI } from "./platformapi";
+import { PlatformType } from "../comms";
+import { ModusToolboxEnvironment } from "../mtbenv/mtbenv/mtbenv";
 import * as path from 'path';
 import * as fs from 'fs';
 import * as winston from 'winston';
 import * as vscode from 'vscode';
 import * as vscodeuri from 'vscode-uri';
 import * as EventEmitter from 'events' ;
-import { MTBLoadFlags } from "../../mtbenv/mtbenv/loadflags";
+import { MTBLoadFlags } from "../mtbenv/mtbenv/loadflags";
 
 interface OutputPercentMap {
     match: RegExp ;
@@ -17,7 +16,7 @@ interface OutputPercentMap {
     maximum: number ;
 }
 
-export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
+export class VSCodeWorker extends EventEmitter  {
     private static readonly projectCreatorToolUuid = '9aac89d2-e375-474f-a1cd-79caefed2f9c' ;
     private static readonly projectCreatorCLIName = 'project-creator-cli' ;
     private static readonly modusShellToolUuid = '0afffb32-ea89-4f58-9ee8-6950d44cb004' ;
@@ -91,32 +90,32 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
     private createProjectCallback(lines: string[]) {
         for(let line of lines) {
             this.logger_.info(line) ;
-            let m = VSCodeAPI.createProjectMessages[this.createProjectIndex_].match.exec(line);
+            let m = VSCodeWorker.createProjectMessages[this.createProjectIndex_].match.exec(line);
             if (m) {
                 //
                 // Matches the current line
                 //
-                let str = VSCodeAPI.createProjectMessages[this.createProjectIndex_].message ;
+                let str = VSCodeWorker.createProjectMessages[this.createProjectIndex_].message ;
                 if (str.includes('$1') && m.length > 1) {
                     str = str.replace('$1', m[1]);
                 }
-                this.createProjectPercent_ += VSCodeAPI.createProjectMessages[this.createProjectIndex_].adder ;
-                if (this.createProjectPercent_ > VSCodeAPI.createProjectMessages[this.createProjectIndex_].maximum) {
-                    this.createProjectPercent_ = VSCodeAPI.createProjectMessages[this.createProjectIndex_].maximum;
+                this.createProjectPercent_ += VSCodeWorker.createProjectMessages[this.createProjectIndex_].adder ;
+                if (this.createProjectPercent_ > VSCodeWorker.createProjectMessages[this.createProjectIndex_].maximum) {
+                    this.createProjectPercent_ = VSCodeWorker.createProjectMessages[this.createProjectIndex_].maximum;
                 }
                 this.sendProgress(str, this.createProjectPercent_);
             }
 
-            if (this.createProjectIndex_ < VSCodeAPI.createProjectMessages.length - 1) {
-                m = VSCodeAPI.createProjectMessages[this.createProjectIndex_ + 1].match.exec(line);
+            if (this.createProjectIndex_ < VSCodeWorker.createProjectMessages.length - 1) {
+                m = VSCodeWorker.createProjectMessages[this.createProjectIndex_ + 1].match.exec(line);
                 if (m) {
                     this.createProjectIndex_++;
-                    let str = VSCodeAPI.createProjectMessages[this.createProjectIndex_].message ;
+                    let str = VSCodeWorker.createProjectMessages[this.createProjectIndex_].message ;
                     if (str.includes('$1') && m.length > 1) {
                         str = str.replace('$1', m[1]);
                     }
-                    this.createProjectPercent_ = VSCodeAPI.createProjectMessages[this.createProjectIndex_].start ;
-                    this.sendProgress(str, this.createProjectPercent_);                                        
+                    this.createProjectPercent_ = VSCodeWorker.createProjectMessages[this.createProjectIndex_].start ;
+                    this.sendProgress(str, this.createProjectPercent_);
                 }
             }
         }
@@ -132,7 +131,7 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
             try {
                 let config = await vscode.workspace.getConfiguration() ;
                 if (config) {
-                    let arg = config.get(VSCodeAPI.gitAutoDetectSettingName) ;
+                    let arg = config.get(VSCodeWorker.gitAutoDetectSettingName) ;
                     if (arg && typeof arg === 'boolean') {
                         v = arg as boolean ;
                         this.logger_.info(`Auto repo detect setting is ${v}`) ;
@@ -154,7 +153,7 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
             try {
                 let config = await vscode.workspace.getConfiguration() ;
                 if (config) {
-                    config.update(VSCodeAPI.gitAutoDetectSettingName, value, vscode.ConfigurationTarget.Global)
+                    config.update(VSCodeWorker.gitAutoDetectSettingName, value, vscode.ConfigurationTarget.Global)
                     .then(() => {
                         this.logger_.info(`Auto repo detect setting updated to ${value}`) ;
                         resolve() ;
@@ -253,7 +252,7 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
     }
 
     private makeVSCodeCallback(lines: string[]) {
-        let laststep = VSCodeAPI.createProjectMessages[VSCodeAPI.createProjectMessages.length - 1].maximum ;
+        let laststep = VSCodeWorker.createProjectMessages[VSCodeWorker.createProjectMessages.length - 1].maximum ;
         this.makeLines_ += lines.length ;
         this.createProjectPercent_ = Math.round((this.makeLines_ / 168) * (100 - laststep)) + laststep ;
         this.sendProgress('Preparing VS Code workspace', this.createProjectPercent_);
@@ -337,20 +336,20 @@ export class VSCodeAPI extends EventEmitter implements PlatformAPI  {
     }       
 
     private findMakePath() : string | undefined {
-        let tool = this.env_.toolsDB.findToolByGUID(VSCodeAPI.modusShellToolUuid);
+        let tool = this.env_.toolsDB.findToolByGUID(VSCodeWorker.modusShellToolUuid);
         if (tool === undefined) {
             return undefined;
         }
 
-        return path.join(tool.path, VSCodeAPI.modusShellMakePath);
+        return path.join(tool.path, VSCodeWorker.modusShellMakePath);
     }    
 
     private findProjectCreatorCLIPath() : string | undefined {
-        let tool = this.env_.toolsDB.findToolByGUID(VSCodeAPI.projectCreatorToolUuid);
+        let tool = this.env_.toolsDB.findToolByGUID(VSCodeWorker.projectCreatorToolUuid);
         if (tool === undefined) {
             return undefined;
         }
 
-        return path.join(tool.path, VSCodeAPI.projectCreatorCLIName);
+        return path.join(tool.path, VSCodeWorker.projectCreatorCLIName);
     }
 }

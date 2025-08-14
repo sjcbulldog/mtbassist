@@ -5,6 +5,7 @@ import fetch, { Response } from 'node-fetch';
 import { ToolList } from "./toollist";
 import { MTBVersion } from "../mtbenv/misc/mtbversion";
 import { IDCRegistry } from "./idcreg";
+import { SetupProgram } from "../comms";
 
 //
 // AppData/Local/Infineon_Technologies_AG/Infineon-Toolbox/Tools/ ...
@@ -32,6 +33,10 @@ export class SetupMgr extends MtbManagerBase {
     ] ;
 
     private static readonly optionalFeatures : string[] = [
+        'com.ifx.tb.tool.modustoolboxpackmachinelearning',
+        'com.ifx.tb.tool.modustoolboxpackmultisense',
+        'com.ifx.tb.tool.ifxmotorsolutions',
+        'com.ifx.tb.tool.modustoolboxpacksmartinductioncooktop'
     ] ;
 
     private launcher_ : IDCLauncher ;
@@ -39,12 +44,17 @@ export class SetupMgr extends MtbManagerBase {
     private registry_ : IDCRegistry ;
     private port_? : number ;
     private accessToken_?: AccessTokenResponse;
+    private neededTools_ : SetupProgram[] = [] ;
 
     constructor(ext: MTBAssistObject) {
         super(ext);
         this.launcher_ = new IDCLauncher(this.logger);
         this.toollist_ = new ToolList(this.logger) ;
         this.registry_ = new IDCRegistry(this.logger);
+    }
+
+    public get neededTools() : SetupProgram[] {
+        return this.neededTools_ ;
     }
 
     public async initializeLocal() : Promise<void> {
@@ -105,14 +115,7 @@ export class SetupMgr extends MtbManagerBase {
                         this.toollist_.initialize()
                             .then(() => {
                                 this.logger.debug('Tool list initialized successfully.');
-                                this.registry_.initialize()
-                                .then(() => {
-                                    this.logger.debug('IDC registry initialized successfully.');
-                                    resolve(true) ;
-                                })
-                                .catch((err) => {
-                                    reject(err) ;
-                                }) ;
+                                this.neededTools_ = this.findNeededTools();
                             })
                             .catch((err) => {
                                 this.logger.error('Error fetching tool manifest:', err);
@@ -129,6 +132,67 @@ export class SetupMgr extends MtbManagerBase {
             });
         });
 
+        return ret ;
+    }
+
+    public findNeededTools() : SetupProgram[] {
+        return [...this.checkNeededTools(SetupMgr.requiredFeatures, true), ...this.checkNeededTools(SetupMgr.optionalFeatures, false)] ;
+    }
+
+    private checkNeededTools(flist: string[], required: boolean) : SetupProgram[] {
+        let ret : SetupProgram[] = [] ;
+        for(let f of flist) {
+            let pgm = this.toollist_.getToolByFeature(f);
+            if (pgm === undefined) {
+                this.logger.error(`No IDC tool entry found for feature: ${f} which is a ${required ? 'required' : 'optional'} feature`);
+                continue ;
+            }
+
+            if (this.registry_.hasTool(f)) {
+                //
+                // We have this required tool, see if there is a newer version
+                //
+                let latest = this.findLatestVersion(pgm);
+                let inst = this.registry_.getToolByFeatureId(f) ;
+                if (latest && latest.isGreaterThen(MTBVersion.fromVersionString(inst!.version))) {
+                    ret.push({
+                        featureId: f,
+                        name: pgm.name,
+                        version: latest.toString(),
+                        required: required,
+                        upgradable: true,
+                        installed: true,
+                    });
+                }
+                else {
+                    ret.push({
+                        featureId: f,
+                        name: pgm.name,
+                        version: '',
+                        required: required,
+                        upgradable: false,
+                        installed: true,
+                    });
+                }
+            }
+            else { 
+                if (pgm) {
+                    let latest = this.findLatestVersion(pgm);
+                    if (!latest) {
+                        this.logger.error(`No valid version found for feature: ${f}`);
+                    } else {
+                        ret.push({
+                            featureId: f,
+                            name: pgm.name,
+                            version: latest.toString(),
+                            required: required,
+                            upgradable: false,
+                            installed: false
+                        });
+                    }
+                }
+            }
+        }
         return ret ;
     }
 

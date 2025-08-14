@@ -23,7 +23,7 @@ export class ApplicationStatus implements OnInit {
     if (this.applicationStatus && this.applicationStatus.name) {
       // Assume the application directory is applicationStatus.name
       // and README.md is in that directory
-      this.be.platformSpecific('openReadme', null);
+      this.be.sendRequestWithArgs('openReadme', null);
     }
   }
   applicationStatus: ApplicationStatusData | null = null;
@@ -66,11 +66,11 @@ export class ApplicationStatus implements OnInit {
 
   // Called when a middleware tile is clicked in the project tab
   onMiddlewareClick(project: any, middleware: any): void {
-    this.be.platformSpecific('libmgr', null) ;
+    this.be.sendRequestWithArgs('libmgr', null) ;
   }
 
   onToolClick(project: any, tool: any): void {
-    this.be.platformSpecific('tool', { tool: tool, project: project }) ;
+    this.be.sendRequestWithArgs('tool', { tool: tool, project: project }) ;
   }
 
   ngOnInit(): void {
@@ -263,7 +263,7 @@ export class ApplicationStatus implements OnInit {
   }
 
   openDocument(doc: Documentation): void {
-    this.be.platformSpecific('open', doc) ;
+    this.be.sendRequestWithArgs('open', doc) ;
   }
 
   refresh(): void {
@@ -340,12 +340,12 @@ export class ApplicationStatus implements OnInit {
 
   // Open Device Configurator
   openDeviceConfigurator(): void {
-    this.be.platformSpecific('devcfg', null);
+    this.be.sendRequestWithArgs('devcfg', null);
   }
 
   // Open Library Manager
   openLibraryManager(): void {
-    this.be.platformSpecific('libmgr', null);
+    this.be.sendRequestWithArgs('libmgr', null);
   }
 }
 
