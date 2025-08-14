@@ -31,18 +31,12 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
 
   ngOnInit() : void {
     this.neededToolsSub = this.be.neededTools.subscribe(tools => {
-      this.be.log('RECEIVED NEEDED TOOLS MESSAGE') ;
-
       this.neededTools = tools || [];
 
       this.installSelections = {};
       this.upgradeSelections = {};
       this.progress = {};
-      this.be.log('STARTING LOOPING') ;
-      this.be.log(`Needed tools: ${JSON.stringify(this.neededTools)}`) ;      
       for (let tool of this.neededTools) {
-        this.be.log('    IN LOOP') ;
-        this.be.log(`    LOOPING TOOL: ${JSON.stringify(tool)}`);
         if (!tool.installed && !tool.required) {
           this.installSelections[tool.featureId] = false;
         }
@@ -51,7 +45,6 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
         }
         this.progress[tool.featureId] = { message: '', percent: 0 };
       }
-      this.be.log('LOOPING DONE') ;
       this.cdr.detectChanges();
     });
   }

@@ -4,7 +4,7 @@
     @switch (step) {
       @case (0) {
         <div class="tile-row">
-          <div class="install-tile no-account" (click)="onNoAccountClick()">
+          <div class="install-tile no-account" (click)="onNoAccountClick()" [class.disabled]="loadingTools" [attr.aria-disabled]="loadingTools ? true : null" [style.pointer-events]="loadingTools ? 'none' : 'auto'">
             <div class="tile-content">
               <span class="tile-icon">&#9888;</span>
               <h3>No Infineon Account?</h3>
@@ -40,10 +40,12 @@
                       @if (tool.installed) {
                         <span class="tool-status installed">Already installed</span>
                         @if (tool.upgradable) {
-                          <label><input type="checkbox" [(ngModel)]="upgradeSelections[tool.featureId]"> Upgrade</label>
+                          <label>
+                            <input type="checkbox" [(ngModel)]="upgradeSelections[tool.featureId]"> Upgrade v{{ tool.version || 'latest' }}
+                          </label>
                         }
                       } @else {
-                        <span class="tool-status will-install">Will be installed</span>
+                        <span class="tool-status will-install">Install v{{ tool.version }}</span>
                       }
                     </div>
                     @if (progress[tool.featureId]?.message) {

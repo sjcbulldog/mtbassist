@@ -1,3 +1,8 @@
+.install-tile.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(0.7);
+}
 .tool-section {
   margin-bottom: 2rem;
   text-align: left;
