@@ -26,7 +26,8 @@ export type FrontEndToBackEndRequestType =
     'openRecent' |
     'openReadme' |
     'initSetup' |
-    'installTools' ;
+    'installTools' |
+    'restartExtension'
     ;
 
 export type BackEndToFrontEndResponseType =

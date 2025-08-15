@@ -79,7 +79,6 @@ export class MTBAssistObject {
         this.intellisense_ = new IntelliSenseMgr(this);
         this.setupMgr_ = new SetupMgr(this);     
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this)) ;
-
         this.bindCommandHandlers();
     }
 
@@ -379,6 +378,25 @@ export class MTBAssistObject {
         this.cmdhandler_.set('fixMissingAssets', this.fixMissingAssets.bind(this)); 
         this.cmdhandler_.set('buildAction', this.runAction.bind(this)) ;        
         this.cmdhandler_.set('installTools', this.installTools.bind(this)) ;
+        this.cmdhandler_.set('restartExtension', this.restartExtension.bind(this)) ;
+    }
+
+    private restartExtension(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            this.logger_.info('Restarting the extension...');
+
+            this.setupMgr_ = new SetupMgr(this);
+            this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
+            this.initialize()
+            .then(() => { 
+                resolve(null) ;
+            })
+            .catch((error: Error) => {
+                this.logger_.error('Failed to restart the extension:', error.message);
+                reject(error);
+            });
+        });
+        return ret;
     }
 
     private reportInstallProgress(featureId: string, message: string, percent: number) {
@@ -404,6 +422,15 @@ export class MTBAssistObject {
             if (this.setupMgr_) {
                 this.setupMgr_.installTools(request.data)
                     .then(() => {
+                        let st = {
+                            oobtype: 'setupTab',
+                            index: 2
+                        };
+                        let oob: BackEndToFrontEndResponse = {
+                            response: 'oob',
+                            data: st
+                        };
+                        this.postWebViewMessage(oob);                        
                         resolve(null);
                     })
                     .catch((error: Error) => {

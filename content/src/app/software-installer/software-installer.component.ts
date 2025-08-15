@@ -13,6 +13,7 @@ import type { SetupProgram } from '../../comms';
 })
 
 export class SoftwareInstallerComponent implements OnInit, OnDestroy {
+  activeInstallSet: Set<string> = new Set();
   private static readonly urlStr = 'https://www.infineon.com/';
 
   step = 0;
@@ -74,11 +75,13 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   onConfirmTools() {
     // Collect tools to install/upgrade
     const selected: SetupProgram[] = [];
+    this.activeInstallSet.clear();
     for (const tool of this.neededTools) {
       if ((!tool.installed && tool.required) ||
           (tool.installed && tool.upgradable && this.upgradeSelections[tool.featureId]) ||
           (!tool.installed && !tool.required && this.installSelections[tool.featureId])) {
         selected.push(tool);
+        this.activeInstallSet.add(tool.featureId);
       }
     }
     // Call the callback if set
@@ -98,6 +101,7 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   }
 
   onReinit() {
+    this.be.sendRequestWithArgs('restartExtension', null);    
   }
 
   onReportProgress(featureId: string, message: string, percent: number) {

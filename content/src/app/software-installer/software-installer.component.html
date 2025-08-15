@@ -33,7 +33,7 @@
             <h4>Required Software</h4>
             <ul class="tool-list">
               @for (tool of neededTools; track tool.featureId) {
-                @if (tool.required) {
+                @if (tool.required && (!downloading || activeInstallSet.has(tool.featureId))) {
                   <li>
                     <div class="tool-info">
                       <span class="tool-name">{{ tool.name }}
@@ -55,7 +55,7 @@
                         <span class="tool-status will-install">Install v{{ tool.version }}</span>
                       }
                     </div>
-                    @if (progress[tool.featureId]?.message) {
+                    @if (progress[tool.featureId].message) {
                       <div class="progress-message">{{ progress[tool.featureId].message }}</div>
                       <div class="progress-bar">
                         <div class="progress-fill" [style.width.%]="progress[tool.featureId].percent"></div>
@@ -70,7 +70,7 @@
             <h4>Optional Software</h4>
             <ul class="tool-list">
               @for (tool of neededTools; track tool.featureId) {
-                @if (!tool.required) {
+                @if (!tool.required && (!downloading || activeInstallSet.has(tool.featureId))) {
                   <li>
                     <div class="tool-info">
                       <span class="tool-name">{{ tool.name }} (v{{ tool.version }})</span>
@@ -80,7 +80,7 @@
                         <label><input type="checkbox" [(ngModel)]="installSelections[tool.featureId]"> Install</label>
                       }
                     </div>
-                    @if (progress[tool.featureId]?.message) {
+                    @if (progress[tool.featureId].message) {
                       <div class="progress-message">{{ progress[tool.featureId].message }}</div>
                       <div class="progress-bar">
                         <div class="progress-fill" [style.width.%]="progress[tool.featureId].percent"></div>
@@ -91,7 +91,13 @@
               }
             </ul>
           </div>
-          <button class="next-btn" (click)="onConfirmTools()">Install Now</button>
+          <button class="next-btn" (click)="onConfirmTools()" [disabled]="downloading">
+            @if (downloading) {
+              Installing...
+            } @else {
+              Install Now
+            }
+          </button>
           @if (downloading) {
             <div class="downloading-message">
               <h3>Downloading and Installing Requested Software ...</h3>

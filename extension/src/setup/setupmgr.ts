@@ -290,7 +290,7 @@ export class SetupMgr extends MtbManagerBase {
             if (m) {
                 let percent = parseFloat(m[1]);
                 this.logger.debug(`Download progress for ${id}: ${percent}%`);
-                this.emit('downloadProgress', id, 'Downloading... ', percent );
+                this.emit('downloadProgress', id, `Downloading ... ${percent}%`, percent );
             }
         }
     }
@@ -301,7 +301,7 @@ export class SetupMgr extends MtbManagerBase {
             this.launcher_.run(['-accesstoken', this.accessToken_!.accessToken, '-idc.service', cmdstr], this.downloadCallback.bind(this), id)
             .then((result) => {
                 if (!result) {
-                    reject(new Error('Failed to download feature'));
+                    reject(new Error(`Failed to install feature ${id} - ${version}`));
                     return;
                 }
                 resolve();
@@ -331,7 +331,7 @@ export class SetupMgr extends MtbManagerBase {
                     this.launcher_.run(['-accesstoken', this.accessToken_!.accessToken, '-idc.service', cmdstr], this.downloadCallback.bind(this), id)
                     .then((result) => {
                         if (!result) {
-                            reject(new Error('Failed to download feature'));
+                            reject(new Error(`Failed to download feature ${id} - ${version}`));
                         }
                         else {
                             this.logger.debug(`Feature ${id} version ${version} downloaded successfully.`);
