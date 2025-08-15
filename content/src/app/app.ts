@@ -2,6 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { SoftwareInstallerComponent } from './software-installer/software-installer.component';
 import { MtbNav, MtbNavTab } from './mtb-nav/mtb-nav';
 import { BackendService } from './backend/backend-service';
+import { MTBInstallType } from '../comms';
 
 @Component({
   selector: 'app-root',
@@ -11,7 +12,7 @@ import { BackendService } from './backend/backend-service';
 })
 
 export class App {
-  public isModusInstalled_ : boolean = true ;
+  public isModusInstalled_ : MTBInstallType = 'none';
   @ViewChild('topMtbNav') topMtbNav!: MtbNav;
   @ViewChild('softwareInstaller') softwareInstaller!: SoftwareInstallerComponent;
 

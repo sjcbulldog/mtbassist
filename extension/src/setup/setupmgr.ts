@@ -55,6 +55,10 @@ export class SetupMgr extends MtbManagerBase {
         this.registry_ = new IDCRegistry(this.logger);
     }
 
+    public get isLauncherAvailable() : boolean {
+        return this.launcher_.found ;
+    }
+
     public get neededTools() : SetupProgram[] {
         return this.neededTools_ ;
     }

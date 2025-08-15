@@ -40,6 +40,11 @@ export type BackEndToFrontEndResponseType =
     'success' |
     'error' ;
 
+export type MTBInstallType = 
+    'none' |
+    'launcher' |
+    'mtb' ;
+
 export interface BSPIdentifier {
     name : string ;
     id: string ;

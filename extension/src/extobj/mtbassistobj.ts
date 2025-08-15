@@ -37,8 +37,9 @@ export class MTBAssistObject {
     private static readonly devkitListTab = 4;
 
     private context_: vscode.ExtensionContext;
-    private channel_;
+    private channel_: vscode.OutputChannel;
     private logger_: winston.Logger;
+    private commandsInited_ : boolean = false ;
     private env_: ModusToolboxEnvironment | null = null;
     private panel_: vscode.WebviewPanel | undefined = undefined;
     private content_: vscode.WebviewPanel | undefined = undefined;
@@ -136,7 +137,7 @@ export class MTBAssistObject {
             this.initializeCommands();
             vscode.commands.executeCommand('mtbassist2.mtbMainPage')
                 .then(() => {
-                    this.pushOOB('isMTBInstalled', { installed: false });
+                    this.pushOOB('isMTBInstalled', { installed: this.setupMgr_.isLauncherAvailable? 'launcher' : 'none' }) ;
                     resolve();
                     return;
                 });            
@@ -176,7 +177,7 @@ export class MTBAssistObject {
             if (this.panel_) {
                 let st = {
                     oobtype: 'isMTBInstalled',
-                    installed: true
+                    installed: 'mtb'
                 };
                 let oob: BackEndToFrontEndResponse = {
                     response: 'oob',
@@ -271,13 +272,18 @@ export class MTBAssistObject {
             this.setupMgr_?.initializeLocal()
             .then(() => { 
                 if (this.setupMgr_!.doWeNeedTools()) {
-                    this.initNoTools()
-                    .then(() => {
-                        resolve() ;
-                    })
-                    .catch((err) => {
-                        reject(err) ;
-                    }) ;
+                    if (!this.setupMgr_.isLauncherAvailable) {
+                        this.logger_.error('Launcher is not available');
+                    }
+                    else {
+                        this.initNoTools()
+                        .then(() => {
+                            resolve() ;
+                        })
+                        .catch((err) => {
+                            reject(err) ;
+                        }) ;
+                    }
                 }
                 else {
                     this.initWithTools()
@@ -497,7 +503,7 @@ export class MTBAssistObject {
                 args.push(cfg.cmdline[i]);
             }
         }
-        vscode.window.showInformationMessage("Starting program '" + cfg.shortName);
+        vscode.window.showInformationMessage("Starting program '" + cfg['short-name']);
 
         let envobj: any = {};
         for (let key of Object.keys(process.env)) {
@@ -579,11 +585,15 @@ export class MTBAssistObject {
     private initializeCommands() {
         let disposable: vscode.Disposable;
 
-        disposable = vscode.commands.registerCommand('mtbassist2.mtbMainPage', this.mtbMainPage.bind(this));
-        this.context_.subscriptions.push(disposable);
+        if (!this.commandsInited_) {
+            disposable = vscode.commands.registerCommand('mtbassist2.mtbMainPage', this.mtbMainPage.bind(this));
+            this.context_.subscriptions.push(disposable);
 
-        disposable = vscode.commands.registerCommand('mtbassist2.mtbSetIntellisenseProject', this.intellisense_!.mtbSetIntellisenseProject.bind(this.intellisense_));
-        this.context_.subscriptions.push(disposable);
+            disposable = vscode.commands.registerCommand('mtbassist2.mtbSetIntellisenseProject', this.intellisense_!.mtbSetIntellisenseProject.bind(this.intellisense_));
+            this.context_.subscriptions.push(disposable);
+
+            this.commandsInited_ = true ;
+        }
     }
 
     private isPossibleMTBApplication(): boolean {
@@ -1084,10 +1094,11 @@ export class MTBAssistObject {
 
         this.panel_.webview.onDidReceiveMessage((message) => {
             this.logger_.silly(`Received message from webview: ${JSON.stringify(message)}`);
-            if (this.cmdhandler_.has(message.request)) {
-                this.cmdhandler_.get(message.request)!(message)
+            let handler = this.cmdhandler_.get(message.request);
+            if (handler) {
+                handler(message)
                     .then((response: BackEndToFrontEndResponse | null) => {
-                        this.logger_.silly(`Response for platform specific command ${message.data.command}: ${JSON.stringify(response)}`);
+                        this.logger_.silly(`Response for platform specific command ${message.request}: ${JSON.stringify(response)}`);
                         if (response) {
                             this.panel_!.webview.postMessage(response);
                         }

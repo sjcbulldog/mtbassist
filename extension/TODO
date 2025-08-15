@@ -39,10 +39,14 @@ o Outside of main GUI
   - Port over keyword based documentation
   - Port over, check run make vscode (generate launch configs)
 
-0 Install software component
+0 Install software component                                                                      done
+  - List of required software                                                                         done
+  - List of optional software                                                                         done
+  - Download/Install via IDC Launcher showing progress in extension                                   done
+  - Alert users if launcher is not installed and take them to the right page
 
 o Help component
-  - index on the left like a boot
+  - index on the left like a book
 
 o Test
   - be sure all tools come from the EAP if the EAP is enabled

@@ -4,7 +4,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry, FrontEndToBackEndRequestType, SetupProgram, InstallProgress } from '../../comms';
+import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry, FrontEndToBackEndRequestType, SetupProgram, InstallProgress, MTBInstallType } from '../../comms';
 import { ManifestManager } from './manifestmgr';
 import { ProjectManager } from './projectmgr';
 import { AppStatusBackend } from './appmgrbe';
@@ -34,7 +34,7 @@ export class BackendService {
     recentlyOpened: Subject<RecentEntry[]> = new Subject<RecentEntry[]>();
     progressMessage: Subject<string> = new Subject<string>();
     progressPercent: Subject<number> = new Subject<number>();
-    isMTBInstalled: Subject<boolean> = new Subject<boolean>();
+    isMTBInstalled: Subject<MTBInstallType> = new Subject<MTBInstallType>();
     neededTools: Subject<SetupProgram[]> = new Subject<SetupProgram[]>();
     installProgress: Subject<InstallProgress> = new Subject<InstallProgress>();
 
@@ -183,7 +183,6 @@ export class BackendService {
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'recentlyOpened') {
                 this.recentlyOpened.next(cmd.data.recents || []);
-                this.log(`Recently opened projects: ${JSON.stringify(cmd.data.recents || [])}`);
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'selectTab') {
                 let index = cmd.data.index || 0;
@@ -206,14 +205,11 @@ export class BackendService {
             else if (cmd.data.oobtype && cmd.data.oobtype === 'setupTab') {
                 let index = cmd.data.index || 0;
                 this.setupTab.next(index);
-                this.log(`Received setupTab index: ${index}`) ;
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'neededTools') {
-                this.log(`Received needed tools: ${JSON.stringify(cmd.data.data || [])}`);
                 this.neededTools.next(cmd.data.data || []);
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'installProgress') {
-                this.log(`Install progress for ${cmd.data.data}`) ;
                 this.installProgress.next(cmd.data.data) ;
             }
             else {

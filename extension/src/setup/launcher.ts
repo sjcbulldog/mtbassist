@@ -6,6 +6,19 @@ import * as os from 'os';
 import EventEmitter = require("events");
 import { ModusToolboxEnvironment } from '../mtbenv';
 
+//
+// For windows
+//   C:\Infineon\LauncherService\idc-launcher-service.exe
+//   C:\Users\USERNAME\Infineon\LauncherService\idc-launcher-service.exe
+//
+// For linux
+//   /opt/LauncherService/idc-launcher-service
+//
+// For macos
+//  /Library/Infineon/LauncherService/idc-launcher-service.app/Contents/MacOS/idc-launcher-service
+//  /Users/USERNAME/Library/Infineon/LauncherService/idc-launcher-service.app/Contents/MacOS/idc-launcher-service
+//
+
 export class IDCLauncher extends EventEmitter{
     private static readonly launcherPartialPath = ['Infineon', 'LauncherService', 'idc-launcher-service'] ;
 
@@ -96,17 +109,24 @@ export class IDCLauncher extends EventEmitter{
     private findLauncherExecutable() : string | undefined {
         let launcherPath : string | undefined = undefined;
         let homedir = os.homedir();
-        launcherPath = this.checkPossiblePath(path.join(homedir, ...IDCLauncher.launcherPartialPath)) ;
-        if (!launcherPath) {
-            if (process.platform === 'win32') {
+
+        if (process.platform === 'win32') {
+            launcherPath = this.checkPossiblePath(path.join(homedir, ...IDCLauncher.launcherPartialPath)) ;
+            if (!launcherPath) {
                 launcherPath = this.checkPossiblePath(path.join(this.getSystemDriveWindow(), ...IDCLauncher.launcherPartialPath)) ;
             }
-            else if (process.platform === 'linux') {
-                launcherPath = this.checkPossiblePath(path.join('/opt', 'Infineon', 'LauncherService', 'idc-launcher-service')) ;
+        }
+        else if (process.platform === 'linux') {
+            launcherPath = this.checkPossiblePath(path.join('/', 'opt', 'LauncherService', 'idc-launcher-service')) ;
+        }
+        else if (process.platform === 'darwin') {
+            launcherPath = this.checkPossiblePath(path.join(homedir, 'Library', 'Infineon', 'LauncherService', 'idc-launcher-service.app')) ;
+            if (!launcherPath) {
+                launcherPath = this.checkPossiblePath(path.join('/', 'Library', 'Infineon', 'LauncherService', 'idc-launcher-service.app')) ;
             }
-            else {
-                launcherPath = this.checkPossiblePath(path.join('/usr', 'local', 'Infineon', 'LauncherService', 'idc-launcher-service')) ;
-            }
+        }
+        else {
+            throw new Error(`Unsupported platform: ${process.platform}`);
         }
 
         return launcherPath;
