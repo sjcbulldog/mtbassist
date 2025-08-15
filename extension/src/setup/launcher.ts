@@ -24,27 +24,26 @@ export class IDCLauncher extends EventEmitter{
 
     private logger_ : winston.Logger ;
     private path_? : string ;
-    private foundLauncher_ : boolean = false ;
 
     constructor(logger: winston.Logger) {
         super() ;
         this.logger_ = logger;
-        this.path_ = this.findLauncherExecutable();
     }
 
     public get found(): boolean {
-        return this.foundLauncher_;
+        if (!this.path_) {
+            this.path_ = this.findLauncherExecutable() ;
+        }
+        return !!this.path_ ;
     }
 
     public start() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             if (!this.path_) {
-                this.foundLauncher_ = false ;
                 this.logger_.error('Launcher executable not found - cannot start IDC service.');
                 resolve() ;
             }
 
-            this.foundLauncher_ = true;
             let ls = exec.spawn(this.path_!, [], 
                 {
                     cwd: os.homedir(),

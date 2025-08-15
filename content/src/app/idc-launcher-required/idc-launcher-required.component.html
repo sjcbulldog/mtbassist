@@ -1,0 +1,25 @@
+    <div class="idc-launcher-required-container">
+      <h2>Infineon Developer Center Launcher Not Installed</h2>
+      <div class="idc-info-text">
+        <p>
+          The Infineon Developer Center (IDC) Launcher service is not currently installed on your system.<br>
+          To install it, please download and install the Launcher Service using the button below.
+          This installation is required to allow this vscode extension to download and install the software tools you need to develop with ModusToolbox.
+          <br>
+          <br>
+          While you are there, please create an Infineon account if you do not already have one. An account is required to download and manage software.
+        </p>
+        <button class="download-btn" (click)="onDownload()">
+          <span class="download-icon">⬇</span>
+          Download IDC Launcher Service
+        </button>
+      </div>
+      <button class="idc-retry-btn" (click)="onRetry()" [disabled]="isRetrying">
+        @if (isRetrying) {
+          Reinitializing...
+        } @else {
+          IDC Launcher Service Installed - Restart Extension
+        }
+      </button>
+    </div>
+    

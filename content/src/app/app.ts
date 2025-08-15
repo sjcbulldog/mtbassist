@@ -3,10 +3,11 @@ import { SoftwareInstallerComponent } from './software-installer/software-instal
 import { MtbNav, MtbNavTab } from './mtb-nav/mtb-nav';
 import { BackendService } from './backend/backend-service';
 import { MTBInstallType } from '../comms';
+import { IdcLauncherRequiredComponent } from "./idc-launcher-required/idc-launcher-required.component";
 
 @Component({
   selector: 'app-root',
-  imports: [MtbNav, SoftwareInstallerComponent],
+  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

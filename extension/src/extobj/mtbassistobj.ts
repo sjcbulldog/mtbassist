@@ -54,6 +54,7 @@ export class MTBAssistObject {
     private setupMgr_: SetupMgr ;
     private bsps_ : BSPMgr | undefined ;
     private worker_ : VSCodeWorker | undefined ;
+    private launchTimer: NodeJS.Timer | undefined = undefined;
     
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -175,15 +176,7 @@ export class MTBAssistObject {
             this.bsps_ = new BSPMgr(this.context_.extensionUri.fsPath, this.env_!) ;   
             this.worker_ = new VSCodeWorker(this.logger_, this.env_);
             if (this.panel_) {
-                let st = {
-                    oobtype: 'isMTBInstalled',
-                    installed: 'mtb'
-                };
-                let oob: BackEndToFrontEndResponse = {
-                    response: 'oob',
-                    data: st
-                };
-                this.postWebViewMessage(oob);
+                this.pushOOB('isMTBInstalled', { installed: 'mtb'}) ;
             }
             this.worker_.on('progress', this.reportProgress.bind(this));
             this.worker_.on('runtask', this.runTask.bind(this));
@@ -267,23 +260,29 @@ export class MTBAssistObject {
         return ret;
     }
 
+    private waitForLauncherTimer() {
+        if (this.setupMgr_ && this.setupMgr_.isLauncherAvailable) {
+            clearInterval(this.launchTimer);
+            this.launchTimer = undefined;
+            this.doRestartExtension() ;
+        }
+    }
+
     public async initialize(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.setupMgr_?.initializeLocal()
             .then(() => { 
                 if (this.setupMgr_!.doWeNeedTools()) {
-                    if (!this.setupMgr_.isLauncherAvailable) {
-                        this.logger_.error('Launcher is not available');
-                    }
-                    else {
-                        this.initNoTools()
-                        .then(() => {
-                            resolve() ;
-                        })
-                        .catch((err) => {
-                            reject(err) ;
-                        }) ;
-                    }
+                    this.initNoTools()
+                    .then(() => {
+                        if (!this.setupMgr_!.isLauncherAvailable) {
+                            this.launchTimer = setInterval(this.waitForLauncherTimer.bind(this), 1000);
+                        }
+                        resolve() ;
+                    })
+                    .catch((err) => {
+                        reject(err) ;
+                    }) ;
                 }
                 else {
                     this.initWithTools()
@@ -389,19 +388,32 @@ export class MTBAssistObject {
 
     private restartExtension(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            this.doRestartExtension()
+            .then(() => {
+                resolve(null);
+            })
+            .catch((error: Error) => {
+                reject(error);
+            });
+        });
+        return ret;
+    }
+
+    private doRestartExtension() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
             this.logger_.info('Restarting the extension...');
 
             this.setupMgr_ = new SetupMgr(this);
             this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
             this.initialize()
             .then(() => { 
-                resolve(null) ;
+                resolve() ;
             })
             .catch((error: Error) => {
                 this.logger_.error('Failed to restart the extension:', error.message);
                 reject(error);
             });
-        });
+        }) ;
         return ret;
     }
 

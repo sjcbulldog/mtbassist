@@ -199,8 +199,8 @@ export class BackendService {
                 this.allBSPs.next(cmd.data.bsps || []);
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'isMTBInstalled') {
-                this.log(`Received isMTBInstalled status: ${cmd.data.installed}`);
-                this.isMTBInstalled.next(cmd.data.installed || false);
+                this.log(`Received isMTBInstalled status: ${cmd.data.data.installed}`);
+                this.isMTBInstalled.next(cmd.data.data.installed || 'none');
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'setupTab') {
                 let index = cmd.data.index || 0;

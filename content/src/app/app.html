@@ -1,9 +1,11 @@
-@if (isModusInstalled_) {
+@if (isModusInstalled_ === 'mtb') {
   <mtb-nav #topMtbNav
     [tabs]="navigationTabs"
     backgroundColor="primary"
     alignment="center">
   </mtb-nav>
-} @else {
+} @else if (isModusInstalled_ === 'launcher') {
   <app-software-installer></app-software-installer>
+} @else {
+  <idc-launcher-required></idc-launcher-required>
 }
