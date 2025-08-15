@@ -39,6 +39,8 @@ export class SetupMgr extends MtbManagerBase {
         'com.ifx.tb.tool.modustoolboxpacksmartinductioncooktop'
     ] ;
 
+    private static readonly progressRegEx = /(\d+(?:\.\d+)?)% completed/;
+
     private launcher_ : IDCLauncher ;
     private toollist_ : ToolList ;
     private registry_ : IDCRegistry ;
@@ -140,6 +142,34 @@ export class SetupMgr extends MtbManagerBase {
         return [...this.checkNeededTools(SetupMgr.requiredFeatures, true), ...this.checkNeededTools(SetupMgr.optionalFeatures, false)] ;
     }
 
+    public installTools(tools: SetupProgram[]) : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            if (!this.port_) {
+                this.logger.error('No service port available for installing tools');
+                reject(new Error('No service port available'));
+                return;
+            }
+
+            if (!this.accessToken_) {
+                this.logger.error('No access token available for installing tools');
+                reject(new Error('No access token available'));
+                return;
+            }
+
+            this.downloadTools(tools)
+            .then(() => {
+                this.logger.debug('All tools downloaded successfully.');
+                resolve();
+            })
+            .catch((err) => {
+                this.logger.error('Error downloading tools:', err);
+                reject(err);
+            });
+        });
+
+        return ret ;
+    }
+
     private checkNeededTools(flist: string[], required: boolean) : SetupProgram[] {
         let ret : SetupProgram[] = [] ;
         for(let f of flist) {
@@ -163,6 +193,7 @@ export class SetupMgr extends MtbManagerBase {
                         required: required,
                         upgradable: true,
                         installed: true,
+                        current: inst!.version
                     });
                 }
                 else {
@@ -173,6 +204,7 @@ export class SetupMgr extends MtbManagerBase {
                         required: required,
                         upgradable: false,
                         installed: true,
+                        current: inst!.version                        
                     });
                 }
             }
@@ -220,10 +252,10 @@ export class SetupMgr extends MtbManagerBase {
         return ret;
     }
 
-    private downloadTools() : Promise<void> {
+    private downloadTools(tools: SetupProgram[]) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             let promises = [];
-            for(let f of SetupMgr.requiredFeatures) {
+            for(let f of tools.map(t => t.featureId)) {
                 let p = this.downloadFeature(f);
                 promises.push(p);
             }
@@ -253,7 +285,32 @@ export class SetupMgr extends MtbManagerBase {
     }
 
     private downloadCallback(lines: string[], id?: any) {
-        console.log(`Download callback ${id || '???'}: ${lines.join('\n')}`);
+        for(let line of lines) {
+            let m = SetupMgr.progressRegEx.exec(line);
+            if (m) {
+                let percent = parseFloat(m[1]);
+                this.logger.debug(`Download progress for ${id}: ${percent}%`);
+                this.emit('downloadProgress', id, 'Downloading... ', percent );
+            }
+        }
+    }
+
+    private installFeature(id: string, version: string) : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let cmdstr = 'installOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
+            this.launcher_.run(['-accesstoken', this.accessToken_!.accessToken, '-idc.service', cmdstr], this.downloadCallback.bind(this), id)
+            .then((result) => {
+                if (!result) {
+                    reject(new Error('Failed to download feature'));
+                    return;
+                }
+                resolve();
+            })
+            .catch((err) => {
+                reject(err);
+            });  
+        }) ;
+        return ret;      
     }
 
     private downloadFeature(id: string)  : Promise<void> {
@@ -275,9 +332,22 @@ export class SetupMgr extends MtbManagerBase {
                     .then((result) => {
                         if (!result) {
                             reject(new Error('Failed to download feature'));
-                            return;
                         }
-                        resolve();
+                        else {
+                            this.logger.debug(`Feature ${id} version ${version} downloaded successfully.`);
+                            this.logger.debug(`Installing feature ${id} version ${version}...`);
+                            this.emit('downloadProgress', id, 'Installing...', -1 );
+                            this.installFeature(id, version!.toString())
+                            .then(() => {
+                                this.emit('downloadProgress', id, 'Installing Complete!', -1 );                                
+                                this.logger.debug(`Feature ${id} version ${version} installed successfully.`);
+                                resolve();
+                            })
+                            .catch((err) => {
+                                this.logger.error(`Error installing feature ${id} version ${version}:`, err);
+                                reject(err);
+                            });
+                        }
                     })
                     .catch((err) => {
                         reject(err);

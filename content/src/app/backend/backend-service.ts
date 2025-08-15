@@ -4,7 +4,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry, FrontEndToBackEndRequestType, SetupProgram } from '../../comms';
+import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry, FrontEndToBackEndRequestType, SetupProgram, InstallProgress } from '../../comms';
 import { ManifestManager } from './manifestmgr';
 import { ProjectManager } from './projectmgr';
 import { AppStatusBackend } from './appmgrbe';
@@ -36,6 +36,8 @@ export class BackendService {
     progressPercent: Subject<number> = new Subject<number>();
     isMTBInstalled: Subject<boolean> = new Subject<boolean>();
     neededTools: Subject<SetupProgram[]> = new Subject<SetupProgram[]>();
+    installProgress: Subject<InstallProgress> = new Subject<InstallProgress>();
+
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -209,6 +211,10 @@ export class BackendService {
             else if (cmd.data.oobtype && cmd.data.oobtype === 'neededTools') {
                 this.log(`Received needed tools: ${JSON.stringify(cmd.data.data || [])}`);
                 this.neededTools.next(cmd.data.data || []);
+            }
+            else if (cmd.data.oobtype && cmd.data.oobtype === 'installProgress') {
+                this.log(`Install progress for ${cmd.data.data}`) ;
+                this.installProgress.next(cmd.data.data) ;
             }
             else {
                 this.log(`Unhandled OOB type: ${cmd.data.oobtype}`);

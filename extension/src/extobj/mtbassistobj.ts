@@ -9,7 +9,7 @@ import { ModusToolboxEnvironment } from '../mtbenv/mtbenv/mtbenv';
 import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import { ApplicationStatusData, BackEndToFrontEndResponse, BSPIdentifier, CodeExampleIdentifier, Documentation, 
-         FrontEndToBackEndRequest, FrontEndToBackEndRequestType, MemoryInfo, Middleware, Project, Tool } from '../comms';
+         FrontEndToBackEndRequest, FrontEndToBackEndRequestType, InstallProgress, MemoryInfo, Middleware, Project, Tool } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
 import { MTBTasks } from '../misc/mtbtasks';
@@ -78,6 +78,8 @@ export class MTBAssistObject {
         this.recents_ = new RecentAppManager(this);
         this.intellisense_ = new IntelliSenseMgr(this);
         this.setupMgr_ = new SetupMgr(this);     
+        this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this)) ;
+
         this.bindCommandHandlers();
     }
 
@@ -376,6 +378,44 @@ export class MTBAssistObject {
         this.cmdhandler_.set('loadWorkspace', this.loadWorkspace.bind(this));
         this.cmdhandler_.set('fixMissingAssets', this.fixMissingAssets.bind(this)); 
         this.cmdhandler_.set('buildAction', this.runAction.bind(this)) ;        
+        this.cmdhandler_.set('installTools', this.installTools.bind(this)) ;
+    }
+
+    private reportInstallProgress(featureId: string, message: string, percent: number) {
+        if (this.panel_) {
+            let iprog : InstallProgress = { 
+                featureId: featureId,
+                message: message,
+                percent: percent
+            };
+            let oob: BackEndToFrontEndResponse = {
+                response: 'oob',
+                data: {
+                    oobtype: 'installProgress',
+                    data: iprog
+                }
+            };
+            this.postWebViewMessage(oob);
+        }
+    }
+
+    private installTools(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            if (this.setupMgr_) {
+                this.setupMgr_.installTools(request.data)
+                    .then(() => {
+                        resolve(null);
+                    })
+                    .catch((error: Error) => {
+                        this.logger_.error('Failed to install tools:', error.message);
+                        reject(error);
+                    });
+            } else {
+                this.logger_.error('Setup manager is not initialized.');
+                reject(new Error('Setup manager is not initialized.'));
+            }
+        });
+        return ret;
     }
 
     private initSetup(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {

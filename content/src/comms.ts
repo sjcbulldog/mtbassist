@@ -25,7 +25,8 @@ export type FrontEndToBackEndRequestType =
     'recentlyOpened' |
     'openRecent' |
     'openReadme' |
-    'initSetup'
+    'initSetup' |
+    'installTools' ;
     ;
 
 export type BackEndToFrontEndResponseType =
@@ -191,13 +192,19 @@ export interface MTBSetting {
     description: string ;
 }
 
-
 export interface SetupProgram {
     featureId: string;
     name: string;
     version: string ;
+    current?: string ;
     required: boolean ;
     installed: boolean ;
     upgradable: boolean ;
     path?: string ;
+}
+
+export interface InstallProgress {
+  featureId: string ;
+  message: string ;
+  percent: number ;
 }

@@ -36,7 +36,14 @@
                 @if (tool.required) {
                   <li>
                     <div class="tool-info">
-                      <span class="tool-name">{{ tool.name }} (v{{ tool.version }})</span>
+                      <span class="tool-name">{{ tool.name }}
+                      @if (tool.current) {
+                         (v{{ tool.current }})
+                      }
+                      @else {
+                        (none)
+                      }
+                      </span>
                       @if (tool.installed) {
                         <span class="tool-status installed">Already installed</span>
                         @if (tool.upgradable) {
@@ -85,7 +92,12 @@
             </ul>
           </div>
           <button class="next-btn" (click)="onConfirmTools()">Install Now</button>
-          <button class="back-btn" (click)="step = 0">Back</button>
+          @if (downloading) {
+            <div class="downloading-message">
+              <h3>Downloading and Installing Requested Software ...</h3>
+              <div class="spinner"></div>
+            </div>
+          }
         </div>
       }
       @case (2) {

@@ -3,11 +3,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as winston from 'winston';
 import { SetupProgram } from "../comms";
-
+import { MTBVersion } from "../mtbenv/misc/mtbversion";
 
 export class IDCRegistry {
     private logger_: winston.Logger;
-    private entries_: Map<string, SetupProgram> = new Map<string, SetupProgram>();
+    private entries_: Map<string, SetupProgram[]> = new Map<string, SetupProgram[]>();
 
     constructor(logger: winston.Logger) {
         this.logger_ = logger;
@@ -15,17 +15,25 @@ export class IDCRegistry {
 
     public hasTool(featureId: string) : boolean {
         let ret = false ;
-        let entry = this.entries_.get(featureId) ;
-        if (entry && entry.path) {
-            if (fs.existsSync(entry.path)) {
-                ret = true ;
+        let list = this.entries_.get(featureId) ;
+        if (list) {
+            for(let entry of list) {
+                if (entry && entry.path) {
+                    if (fs.existsSync(entry.path)) {
+                        ret = true ;
+                    }
+                }
             }
         }
         return ret;
     }
 
     public getToolByFeatureId(featureId: string) : SetupProgram | undefined {
-        return this.entries_.get(featureId);
+        let list = this.entries_.get(featureId) ;
+        if (!list) {
+            return undefined ;
+        }
+        return list[0] ;
     }
 
     public initialize() : Promise<void> {
@@ -74,6 +82,12 @@ export class IDCRegistry {
         return ret ;
     }
 
+    private compareTwoTools(a: SetupProgram, b: SetupProgram) : number {
+        let aver = MTBVersion.fromVersionString(a.version) ;
+        let bver = MTBVersion.fromVersionString(b.version) ;
+        return MTBVersion.compare(bver, aver) ;
+    }
+
     private checkOneJSONFile(file: string) {
         this.logger_.debug(`idcreg: checking JSON file '${file}'`) ;
         let content = fs.readFileSync(file, 'utf-8');
@@ -81,7 +95,11 @@ export class IDCRegistry {
             content = content.replace(/^\uFEFF/, ''); // Remove BOM if present
             let obj = JSON.parse(content);
             if (obj.guid && obj.featureId && obj.title && obj.version && obj.path) {
-                this.entries_.set(obj.featureId, {
+                if (!this.entries_.has(obj.featureId)) {
+                    this.entries_.set(obj.featureId, []);
+                }
+                let set = this.entries_.get(obj.featureId)!;
+                set.push({
                     featureId: obj.featureId,
                     name: obj.name,
                     version: obj.version,
@@ -89,6 +107,9 @@ export class IDCRegistry {
                     upgradable: obj.upgradable,
                     path: obj.path,
                     installed: true
+                });
+                set.sort((a, b) => {
+                    return this.compareTwoTools(a, b);
                 });
             }
         }

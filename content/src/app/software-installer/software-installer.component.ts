@@ -13,9 +13,11 @@ import type { SetupProgram } from '../../comms';
 })
 
 export class SoftwareInstallerComponent implements OnInit, OnDestroy {
-  private static readonly urlStr = 'https://sso.infineon.com/as/authorization.oauth2?scope=email+openid+profile+address+ifxScope&response_type=code&redirect_uri=https%3A%2F%2Fwww.infineon.com%2Fauth%2Fcallback&state=7SM9NWvQ-Hg13oLWcPKKmIx2Y7GFPP61Pi5j1bTyDN8%3AoriginURL%3D%2F%26action%3Drg_rg%26ui_locales%3Den&code_challenge_method=S256&nonce=6kSDF5Kqqrew-Ltti4MEAroH3NHmSmtxtbVJeD5DK8I&client_id=ifxWebUser&code_challenge=i-ENApZ5PQDsBz0buurl7zEmcX3DkbOuJ1qnmOGkrCg&ui_locales=EN&pf.registration=true&cancel.identifier.selection=true'
+  private static readonly urlStr = 'https://www.infineon.com/';
+
   step = 0;
   loadingTools = false;
+  downloading: boolean = false;
   neededTools: SetupProgram[] = [];
   installSelections: { [featureId: string]: boolean } = {};
   upgradeSelections: { [featureId: string]: boolean } = {};
@@ -27,6 +29,10 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
       this.step = index;
       this.cdr.detectChanges();
     }) ;
+
+    this.be.installProgress.subscribe(progress => {
+      this.onReportProgress(progress.featureId, progress.message, progress.percent);
+    });
   }
 
   ngOnInit() : void {
@@ -66,30 +72,37 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   }
 
   onConfirmTools() {
-    // Start install/upgrade for selected tools
+    // Collect tools to install/upgrade
+    const selected: SetupProgram[] = [];
     for (const tool of this.neededTools) {
-      if ((!tool.installed && tool.required) || (tool.installed && tool.upgradable && this.upgradeSelections[tool.featureId]) || (!tool.installed && !tool.required && this.installSelections[tool.featureId])) {
-        this.progress[tool.featureId].message = 'Installing...';
-        this.progress[tool.featureId].percent = 0;
-        // Simulate progress
-        this.simulateInstall(tool.featureId);
+      if ((!tool.installed && tool.required) ||
+          (tool.installed && tool.upgradable && this.upgradeSelections[tool.featureId]) ||
+          (!tool.installed && !tool.required && this.installSelections[tool.featureId])) {
+        selected.push(tool);
       }
+    }
+    // Call the callback if set
+    if (this.onInstallTools) {
+      this.onInstallTools(selected);
+    }
+    // Show downloading message and spinner
+    this.downloading = true;
+    for (const tool of selected) {
+      this.progress[tool.featureId].message = 'Installing...';
+      this.progress[tool.featureId].percent = 0;
     }
   }
 
-  simulateInstall(featureId: string) {
-    let percent = 0;
-    const interval = setInterval(() => {
-      percent += 10;
-      this.progress[featureId].percent = percent;
-      this.progress[featureId].message = percent < 100 ? 'Installing...' : 'Installed!';
-      this.cdr.detectChanges();
-      if (percent >= 100) {
-        clearInterval(interval);
-      }
-    }, 200);
+  onInstallTools(tools: SetupProgram[]) {
+    this.be.sendRequestWithArgs('installTools', tools);
   }
 
   onReinit() {
+  }
+
+  onReportProgress(featureId: string, message: string, percent: number) {
+    this.progress[featureId].message = message;
+    this.progress[featureId].percent = percent;
+    this.cdr.detectChanges();
   }
 }
