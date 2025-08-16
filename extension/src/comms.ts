@@ -215,3 +215,9 @@ export interface InstallProgress {
   message: string ;
   percent: number ;
 }
+
+export interface GlossaryEntry {
+  term: string;
+  definition: string;
+  category?: string;
+}

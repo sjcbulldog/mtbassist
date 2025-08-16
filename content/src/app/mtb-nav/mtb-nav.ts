@@ -1,5 +1,5 @@
 
-import { Component, Input } from '@angular/core';
+import { Component, Input, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,6 +8,7 @@ import { CreateProject } from '../create-project/create-project';
 import { ApplicationStatus } from '../application-status/application-status';
 import { DevkitListComponent } from "../devkit-list/devkit-list.component";
 import { RecentlyOpenedComponent } from "../recently-opened/recently-opened.component";
+import { GlossaryComponent } from "../glossary/glossary.component";
 
 export interface MtbNavTab {
   label: string;
@@ -26,7 +27,8 @@ export interface MtbNavTab {
     CreateProject,
     ApplicationStatus,
     DevkitListComponent,
-    RecentlyOpenedComponent
+    RecentlyOpenedComponent,
+    GlossaryComponent
 ],
   templateUrl: './mtb-nav.html',
   styleUrl: './mtb-nav.scss'
@@ -36,8 +38,10 @@ export class MtbNav {
   @Input() backgroundColor: 'primary' | 'accent' | 'warn' = 'primary';
   @Input() alignment: 'start' | 'center' | 'end' = 'center';
   @Input() selectedIndex: number = 0;
+  @ViewChild('glossary') glossary!: GlossaryComponent;
 
-  constructor() {}
+  constructor() {
+  }
 
   onTabChange(index: number) {
     this.selectedIndex = index;

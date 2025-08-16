@@ -89,7 +89,20 @@
                 </div>
               }
             </div>
-          }          
+          }  
+          
+          @case (5) {
+            <div class="tab-panel">
+              @if (tab.component === 'GlossaryComponent') {
+                <app-glossary #glossary></app-glossary>
+              } @else {
+                <div class="placeholder-content">
+                  <h2>{{ tab.label }}</h2>
+                  <h2>Component: {{ tab.component.toString() }}</h2>
+                </div>
+              }
+            </div>
+          }            
         }
       </div>
     </mat-tab>

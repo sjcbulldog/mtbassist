@@ -4,6 +4,7 @@ import { MtbNav, MtbNavTab } from './mtb-nav/mtb-nav';
 import { BackendService } from './backend/backend-service';
 import { MTBInstallType } from '../comms';
 import { IdcLauncherRequiredComponent } from "./idc-launcher-required/idc-launcher-required.component";
+import { GlossaryComponent } from './glossary/glossary.component';
 
 @Component({
   selector: 'app-root',
@@ -58,6 +59,11 @@ export class App {
       label: 'Development Kits',
       component: 'DevkitListComponent',
       icon: 'dashboard'
-    }    
+    },
+    {
+      label: 'Help',
+      component: 'GlossaryComponent',
+      icon: 'help'
+    }
   ];
 }

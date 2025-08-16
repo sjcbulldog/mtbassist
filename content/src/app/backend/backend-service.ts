@@ -4,7 +4,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry, FrontEndToBackEndRequestType, SetupProgram, InstallProgress, MTBInstallType } from '../../comms';
+import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry, FrontEndToBackEndRequestType, SetupProgram, InstallProgress, MTBInstallType, GlossaryEntry } from '../../comms';
 import { ManifestManager } from './manifestmgr';
 import { ProjectManager } from './projectmgr';
 import { AppStatusBackend } from './appmgrbe';
@@ -37,7 +37,7 @@ export class BackendService {
     isMTBInstalled: Subject<MTBInstallType> = new Subject<MTBInstallType>();
     neededTools: Subject<SetupProgram[]> = new Subject<SetupProgram[]>();
     installProgress: Subject<InstallProgress> = new Subject<InstallProgress>();
-
+    glossaryEntries: Subject<GlossaryEntry[]> = new Subject<GlossaryEntry[]>();
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -212,6 +212,10 @@ export class BackendService {
             else if (cmd.data.oobtype && cmd.data.oobtype === 'installProgress') {
                 this.installProgress.next(cmd.data.data) ;
             }
+            else if (cmd.data.oobtype && cmd.data.oobtype === 'glossaryEntries') {
+                this.log(`Received glossary entries: ${JSON.stringify(cmd.data.data)}`);
+                this.glossaryEntries.next(cmd.data.data || []) ;
+            }
             else {
                 this.log(`Unhandled OOB type: ${cmd.data.oobtype}`);
             }
@@ -223,7 +227,6 @@ export class BackendService {
         if (str.length > maxstr) {
             str = str.substring(0, maxstr) + '...';
         }
-        this.log(`Received response from backend: ${str}`) ;
 
         const handler = this.handlers_.get(cmd.response);
         if (!handler) {

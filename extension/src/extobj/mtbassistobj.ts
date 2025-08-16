@@ -10,7 +10,7 @@ import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
     ApplicationStatusData, BackEndToFrontEndResponse, BSPIdentifier, CodeExampleIdentifier, Documentation,
-    FrontEndToBackEndRequest, FrontEndToBackEndRequestType, InstallProgress, MemoryInfo, Middleware, Project, Tool
+    FrontEndToBackEndRequest, FrontEndToBackEndRequestType, GlossaryEntry, InstallProgress, MemoryInfo, Middleware, Project, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
@@ -209,28 +209,26 @@ export class MTBAssistObject {
                                             this.getLaunchData()
                                                 .then(() => {
                                                     this.logger_.info('Post-initialization of managers completed successfully.');
-                                                    this.env?.load(MTBLoadFlags.Manifest)
-                                                        .then(async () => {
-                                                            this.logger_.info('ModusToolbox manifests loaded successfully.');
+                                                    let parray : any[] = [] ;
 
-                                                            //
-                                                            // Now, we have have updated the application status so we do an OOB push
-                                                            // of the application status so that the new information from MTBLaunch
-                                                            // is picked up by the UI.
-                                                            //
-                                                            await this.createModusShellTerminal();
+                                                    let p = this.env?.load(MTBLoadFlags.Manifest) ;
+                                                    parray.push(p) ;
+
+                                                    p = this.createModusShellTerminal() ;
+                                                    parray.push(p) ;
+
+                                                    p = this.intellisense_!.trySetupIntellisense() ;
+                                                    parray.push(p) ;
+
+                                                    p = this.sendGlossary() ;
+                                                    parray.push(p) ;
+
+                                                    Promise.all(parray)
+                                                        .then(() => {
                                                             this.pushAppStatus();
                                                             this.pushAllBSPs();
                                                             this.updateAllTasks();
-                                                            this.intellisense_!.trySetupIntellisense()
-                                                                .then(() => {
-                                                                    resolve();
-                                                                })
-                                                                .catch((err) => {
-                                                                    this.logger_.error('Failed to setup intellisense:', err.message);
-                                                                    resolve();
-                                                                });
-
+                                                            resolve() ;
                                                         })
                                                         .catch((error: Error) => {
                                                             this.logger_.error('Failed to load manifest files:', error.message);
@@ -260,6 +258,30 @@ export class MTBAssistObject {
                     });
 
             });
+        });
+        return ret;
+    }
+
+    private readGlossaryEntries() : GlossaryEntry[] {
+        let ret: GlossaryEntry[] = [] ;
+        let p = path.join(__dirname, '..', 'content', 'glossary.json') ;
+        if (fs.existsSync(p)) {
+            let data = fs.readFileSync(p, 'utf8') ;
+            try {
+                ret = JSON.parse(data) ;
+            }
+            catch (err) {
+                this.logger_.error('Failed to parse glossary JSON:', (err as Error).message);
+            }
+        }
+
+        return ret;
+    }
+
+    private sendGlossary() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let entries = this.readGlossaryEntries() ;
+            this.pushOOB('glossaryEntries', entries) ;
         });
         return ret;
     }
@@ -333,9 +355,6 @@ export class MTBAssistObject {
             return null;
         }
 
-        if (this.env_.isLoading) {
-            return null;
-        }
         return this.env_;
     }
 

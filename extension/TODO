@@ -32,7 +32,8 @@ o Dev Kits Component
 
 o Settings
   - Use VSCode settings
-  - Control what the environment sees based on settings TOOL_PATH and EAP
+  - Control what the environment sees based on settings TOOL_PATH, EAP, etc.
+  - Sync settings from VS Code extension and the external settings file
 
 o Outside of main GUI                                                                             
   - Intellisense: port over current intellisense support                                              done
@@ -44,7 +45,7 @@ o Outside of main GUI
   - List of required software                                                                         done
   - List of optional software                                                                         done
   - Download/Install via IDC Launcher showing progress in extension                                   done
-  - Alert users if launcher is not installed and take them to the right page
+  - Alert users if launcher is not installed and take them to the right page                          done
 
 o Help component
   - index on the left like a book
