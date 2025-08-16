@@ -199,46 +199,49 @@ export class MTBAssistObject {
                                 this.postInitializeManagers()
                                     .then(() => {
                                         if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo) && this.env_.appInfo) {
-                                            if (this.recents_) {
-                                                this.recents_.addToRecentProject(this.env_.appInfo!.appdir, this.env_.bspName || '');
-                                                this.pushRecentlyOpened();
-                                            }
-                                            let p = path.join(this.env_.appInfo!.appdir, '.vscode', 'tasks.json');
-                                            this.tasks_ = new MTBTasks(this.env_, this.logger_, p);
-                                            this.switchToTab(MTBAssistObject.applicationStatusTab);
-                                            this.getLaunchData()
-                                                .then(() => {
-                                                    this.pushAppStatus() ;
-                                                    this.updateAllTasks();
-                                                    this.logger_.info('Post-initialization of managers completed successfully.');
-                                                    let parray : any[] = [] ;
+                                            this.optionallyShowPage()
+                                            .then(() => { 
+                                                if (this.recents_) {
+                                                    this.recents_.addToRecentProject(this.env_!.appInfo!.appdir, this.env_!.bspName || '');
+                                                    this.pushRecentlyOpened();
+                                                }
+                                                let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'tasks.json');
+                                                this.tasks_ = new MTBTasks(this.env_!, this.logger_, p);
+                                                this.switchToTab(MTBAssistObject.applicationStatusTab);
+                                                this.getLaunchData()
+                                                    .then(() => {
+                                                        this.pushAppStatus() ;
+                                                        this.updateAllTasks();
+                                                        this.logger_.info('Post-initialization of managers completed successfully.');
+                                                        let parray : any[] = [] ;
 
-                                                    let p = this.env?.load(MTBLoadFlags.Manifest) ;
-                                                    parray.push(p) ;
+                                                        let p = this.env?.load(MTBLoadFlags.Manifest) ;
+                                                        parray.push(p) ;
 
-                                                    p = this.createModusShellTerminal() ;
-                                                    parray.push(p) ;
+                                                        p = this.createModusShellTerminal() ;
+                                                        parray.push(p) ;
 
-                                                    p = this.intellisense_!.trySetupIntellisense() ;
-                                                    parray.push(p) ;
+                                                        p = this.intellisense_!.trySetupIntellisense() ;
+                                                        parray.push(p) ;
 
-                                                    p = this.sendGlossary() ;
-                                                    parray.push(p) ;
+                                                        p = this.sendGlossary() ;
+                                                        parray.push(p) ;
 
-                                                    Promise.all(parray)
-                                                        .then(() => {
-                                                            this.pushAppStatus();
-                                                            this.pushAllBSPs();
-                                                            resolve() ;
-                                                        })
-                                                        .catch((error: Error) => {
-                                                            this.logger_.error('Failed to load manifest files:', error.message);
-                                                            resolve();
-                                                        });
-                                                })
-                                                .catch((error: Error) => {
-                                                    this.logger_.error('Error during post-initialization of managers:', error.message);
-                                                });
+                                                        Promise.all(parray)
+                                                            .then(() => {
+                                                                this.pushAppStatus();
+                                                                this.pushAllBSPs();
+                                                                resolve() ;
+                                                            })
+                                                            .catch((error: Error) => {
+                                                                this.logger_.error('Failed to load manifest files:', error.message);
+                                                                resolve();
+                                                            });
+                                                    })
+                                                    .catch((error: Error) => {
+                                                        this.logger_.error('Error during post-initialization of managers:', error.message);
+                                                    });
+                                            }) ;
                                         }
                                         else {
                                             this.env?.load(MTBLoadFlags.Manifest)
@@ -304,6 +307,17 @@ export class MTBAssistObject {
                     .then(() => {
                         resolve();
                     });
+            }
+            else if (autodisp !== 'Never') {
+                if (this.env_ && this.env_.appInfo) {
+                    vscode.commands.executeCommand('mtbassist2.mtbMainPage')
+                        .then(() => {
+                            resolve();
+                        });
+                }
+                else {
+                    resolve() ;
+                }
             }
             else {
                 resolve();

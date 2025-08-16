@@ -1,6 +1,7 @@
 Priorities
 ----------
 - Settings inside VSCode, honor in all operations
+- Display COMPONENTS for each project
 - Keyword based help support
 - Light, Dark, and High Contrast theme support
 - Unknown development kit support
