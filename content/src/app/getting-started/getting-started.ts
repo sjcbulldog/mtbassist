@@ -89,4 +89,8 @@ export class GettingStarted {
   onBrowseExamples() {
     this.be.sendRequestWithArgs('browseExamples', null);
   }
+
+  onAddSoftware() {
+    this.be.sendRequestWithArgs('runSetupProgram', null);
+  }
 }

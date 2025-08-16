@@ -8,8 +8,10 @@ import { ConsoleTransport } from './consoletransport';
 import { ModusToolboxEnvironment } from '../mtbenv/mtbenv/mtbenv';
 import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
-import { ApplicationStatusData, BackEndToFrontEndResponse, BSPIdentifier, CodeExampleIdentifier, Documentation, 
-         FrontEndToBackEndRequest, FrontEndToBackEndRequestType, InstallProgress, MemoryInfo, Middleware, Project, Tool } from '../comms';
+import {
+    ApplicationStatusData, BackEndToFrontEndResponse, BSPIdentifier, CodeExampleIdentifier, Documentation,
+    FrontEndToBackEndRequest, FrontEndToBackEndRequestType, InstallProgress, MemoryInfo, Middleware, Project, Tool
+} from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
 import { MTBTasks } from '../misc/mtbtasks';
@@ -29,6 +31,7 @@ export class MTBAssistObject {
     private static readonly libmgrProgUUID: string = 'd5e53262-9571-4d51-85db-1b47f98a0ff6';
     private static readonly devcfgProgUUID: string = '45159e28-aab0-4fee-af1e-08dcb3a8c4fd';
     private static readonly modusShellUUID: string = '0afffb32-ea89-4f58-9ee8-6950d44cb004';
+    private static readonly setupPgmUUID: string = '14ca45f3-863f-4a4c-8e55-9a14bd1e1ee5' ;
 
     private static readonly gettingStartedTab = 0;
     private static readonly createProjectTab = 1;
@@ -39,7 +42,7 @@ export class MTBAssistObject {
     private context_: vscode.ExtensionContext;
     private channel_: vscode.OutputChannel;
     private logger_: winston.Logger;
-    private commandsInited_ : boolean = false ;
+    private commandsInited_: boolean = false;
     private env_: ModusToolboxEnvironment | null = null;
     private panel_: vscode.WebviewPanel | undefined = undefined;
     private content_: vscode.WebviewPanel | undefined = undefined;
@@ -51,11 +54,12 @@ export class MTBAssistObject {
     private tasks_: MTBTasks | undefined = undefined;
     private recents_: RecentAppManager | undefined = undefined;
     private intellisense_: IntelliSenseMgr | undefined = undefined;
-    private setupMgr_: SetupMgr ;
-    private bsps_ : BSPMgr | undefined ;
-    private worker_ : VSCodeWorker | undefined ;
+    private setupMgr_: SetupMgr;
+    private bsps_: BSPMgr | undefined;
+    private worker_: VSCodeWorker | undefined;
     private launchTimer: NodeJS.Timer | undefined = undefined;
-    
+    private oobmode_: string = 'none';
+
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
 
@@ -79,8 +83,8 @@ export class MTBAssistObject {
 
         this.recents_ = new RecentAppManager(this);
         this.intellisense_ = new IntelliSenseMgr(this);
-        this.setupMgr_ = new SetupMgr(this);     
-        this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this)) ;
+        this.setupMgr_ = new SetupMgr(this);
+        this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
         this.bindCommandHandlers();
     }
 
@@ -133,22 +137,23 @@ export class MTBAssistObject {
         }
     }
 
-    private initNoTools() : Promise<void> {
+    private initNoTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.initializeCommands();
-            vscode.commands.executeCommand('mtbassist2.mtbMainPage')
+            this.optionallyShowPage()
                 .then(() => {
-                    this.pushOOB('isMTBInstalled', { installed: this.setupMgr_.isLauncherAvailable? 'launcher' : 'none' }) ;
+                    this.oobmode_ = this.setupMgr_.isLauncherAvailable ? 'launcher' : 'none';
+                    this.pushOOB('isMTBInstalled', { installed: this.oobmode_ });
                     resolve();
                     return;
-                });            
+                });
         });
         return ret;
     }
 
-    private sentinelCount: number = 0 ;
+    private sentinelCount: number = 0;
     private postWebViewMessage(msg: any) {
-        msg.sentinel = this.sentinelCount++ ;
+        msg.sentinel = this.sentinelCount++;
         if (this.panel_) {
             this.panel_.webview.postMessage(msg);
         }
@@ -165,7 +170,7 @@ export class MTBAssistObject {
         this.postWebViewMessage(oob);
     }
 
-    private initWithTools() : Promise<void> {
+    private initWithTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_);
             if (!this.env_) {
@@ -173,11 +178,8 @@ export class MTBAssistObject {
                 return;
             }
 
-            this.bsps_ = new BSPMgr(this.context_.extensionUri.fsPath, this.env_!) ;   
+            this.bsps_ = new BSPMgr(this.context_.extensionUri.fsPath, this.env_!);
             this.worker_ = new VSCodeWorker(this.logger_, this.env_);
-            if (this.panel_) {
-                this.pushOOB('isMTBInstalled', { installed: 'mtb'}) ;
-            }
             this.worker_.on('progress', this.reportProgress.bind(this));
             this.worker_.on('runtask', this.runTask.bind(this));
             this.worker_.on('loadedAsset', this.loadedAsset.bind(this));
@@ -189,8 +191,10 @@ export class MTBAssistObject {
                     .then(() => {
                         this.logger_.info('All managers initialized successfully.');
                         this.initializeCommands();
-                        vscode.commands.executeCommand('mtbassist2.mtbMainPage')
+                        this.optionallyShowPage()
                             .then(() => {
+                                this.oobmode_ = 'mtb';
+                                this.pushOOB('isMTBInstalled', { installed: this.oobmode_ });
                                 this.logger_.debug('Welcome page command executed successfully.');
                                 this.postInitializeManagers()
                                     .then(() => {
@@ -225,7 +229,7 @@ export class MTBAssistObject {
                                                                 .catch((err) => {
                                                                     this.logger_.error('Failed to setup intellisense:', err.message);
                                                                     resolve();
-                                                                }) ;
+                                                                });
 
                                                         })
                                                         .catch((error: Error) => {
@@ -255,7 +259,7 @@ export class MTBAssistObject {
                         this.logger_.error('Failed to initialize MTBDevKitMgr:', error.message);
                     });
 
-            });            
+            });
         });
         return ret;
     }
@@ -264,39 +268,56 @@ export class MTBAssistObject {
         if (this.setupMgr_ && this.setupMgr_.isLauncherAvailable) {
             clearInterval(this.launchTimer);
             this.launchTimer = undefined;
-            this.doRestartExtension() ;
+            this.doRestartExtension();
         }
+    }
+
+    private async optionallyShowPage(): Promise<void> {
+        let ret = new Promise<void>(async (resolve, reject) => {
+            let config = await vscode.workspace.getConfiguration();
+            let autodisp = config.get('mtbassist2.autodisplay') as string;
+            if (autodisp === 'Always') {
+                vscode.commands.executeCommand('mtbassist2.mtbMainPage')
+                    .then(() => {
+                        resolve();
+                    });
+            }
+            else {
+                resolve();
+            }
+        });
+        return ret;
     }
 
     public async initialize(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.setupMgr_?.initializeLocal()
-            .then(() => { 
-                if (this.setupMgr_!.doWeNeedTools()) {
-                    this.initNoTools()
-                    .then(() => {
-                        if (!this.setupMgr_!.isLauncherAvailable) {
-                            this.launchTimer = setInterval(this.waitForLauncherTimer.bind(this), 1000);
-                        }
-                        resolve() ;
-                    })
-                    .catch((err) => {
-                        reject(err) ;
-                    }) ;
-                }
-                else {
-                    this.initWithTools()
-                    .then(() => {
-                        resolve() ;
-                    })
-                    .catch((err) => {
-                        reject(err) ;
-                    }) ;
-                }
-            })
-            .catch((err) => { 
-                reject(err) ;
-            }) ;
+                .then(() => {
+                    if (this.setupMgr_!.doWeNeedTools()) {
+                        this.initNoTools()
+                            .then(() => {
+                                if (!this.setupMgr_!.isLauncherAvailable) {
+                                    this.launchTimer = setInterval(this.waitForLauncherTimer.bind(this), 1000);
+                                }
+                                resolve();
+                            })
+                            .catch((err) => {
+                                reject(err);
+                            });
+                    }
+                    else {
+                        this.initWithTools()
+                            .then(() => {
+                                resolve();
+                            })
+                            .catch((err) => {
+                                reject(err);
+                            });
+                    }
+                })
+                .catch((err) => {
+                    reject(err);
+                });
 
         });
 
@@ -376,50 +397,51 @@ export class MTBAssistObject {
         this.cmdhandler_.set('openReadme', this.openReadme.bind(this));
         this.cmdhandler_.set('initSetup', this.initSetup.bind(this));
         this.cmdhandler_.set('logMessage', this.logMessage.bind(this));
-        this.cmdhandler_.set('getBSPs', this.getBSPs.bind(this)) ;
+        this.cmdhandler_.set('getBSPs', this.getBSPs.bind(this));
         this.cmdhandler_.set('getCodeExamples', this.getCodeExamples.bind(this));
         this.cmdhandler_.set('createProject', this.createProject.bind(this));
         this.cmdhandler_.set('loadWorkspace', this.loadWorkspace.bind(this));
-        this.cmdhandler_.set('fixMissingAssets', this.fixMissingAssets.bind(this)); 
-        this.cmdhandler_.set('buildAction', this.runAction.bind(this)) ;        
-        this.cmdhandler_.set('installTools', this.installTools.bind(this)) ;
-        this.cmdhandler_.set('restartExtension', this.restartExtension.bind(this)) ;
+        this.cmdhandler_.set('fixMissingAssets', this.fixMissingAssets.bind(this));
+        this.cmdhandler_.set('buildAction', this.runAction.bind(this));
+        this.cmdhandler_.set('installTools', this.installTools.bind(this));
+        this.cmdhandler_.set('restartExtension', this.restartExtension.bind(this));
+        this.cmdhandler_.set('runSetupProgram', this.runSetupProgram.bind(this));   
     }
 
     private restartExtension(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
             this.doRestartExtension()
-            .then(() => {
-                resolve(null);
-            })
-            .catch((error: Error) => {
-                reject(error);
-            });
+                .then(() => {
+                    resolve(null);
+                })
+                .catch((error: Error) => {
+                    reject(error);
+                });
         });
         return ret;
     }
 
-    private doRestartExtension() : Promise<void> {
+    private doRestartExtension(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.logger_.info('Restarting the extension...');
 
             this.setupMgr_ = new SetupMgr(this);
             this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
             this.initialize()
-            .then(() => { 
-                resolve() ;
-            })
-            .catch((error: Error) => {
-                this.logger_.error('Failed to restart the extension:', error.message);
-                reject(error);
-            });
-        }) ;
+                .then(() => {
+                    resolve();
+                })
+                .catch((error: Error) => {
+                    this.logger_.error('Failed to restart the extension:', error.message);
+                    reject(error);
+                });
+        });
         return ret;
     }
 
     private reportInstallProgress(featureId: string, message: string, percent: number) {
         if (this.panel_) {
-            let iprog : InstallProgress = { 
+            let iprog: InstallProgress = {
                 featureId: featureId,
                 message: message,
                 percent: percent
@@ -448,7 +470,7 @@ export class MTBAssistObject {
                             response: 'oob',
                             data: st
                         };
-                        this.postWebViewMessage(oob);                        
+                        this.postWebViewMessage(oob);
                         resolve(null);
                     })
                     .catch((error: Error) => {
@@ -467,7 +489,7 @@ export class MTBAssistObject {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
             this.setupMgr_?.initialize().then(() => {
                 if (this.panel_) {
-                    this.pushNeededTools() ;
+                    this.pushNeededTools();
                     let st = {
                         oobtype: 'setupTab',
                         index: 1
@@ -530,11 +552,11 @@ export class MTBAssistObject {
                 cwd: this.env_?.appInfo?.appdir,
                 env: envobj
             }, (error, stdout, stderr) => {
-            if (error) {
-                vscode.window.showErrorMessage(error.message);
+                if (error) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+                this.pushAppStatus();
             }
-            this.pushAppStatus();
-        }
         );
     }
 
@@ -559,6 +581,17 @@ export class MTBAssistObject {
         });
         return ret;
     }
+
+    private runSetupProgram(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            let tool = this.getLaunchConfig('', MTBAssistObject.setupPgmUUID);
+            if (tool) {
+                this.launch(tool);
+            }
+            resolve(null);
+        });
+        return ret;
+    }    
 
     private open(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
@@ -604,7 +637,7 @@ export class MTBAssistObject {
             disposable = vscode.commands.registerCommand('mtbassist2.mtbSetIntellisenseProject', this.intellisense_!.mtbSetIntellisenseProject.bind(this.intellisense_));
             this.context_.subscriptions.push(disposable);
 
-            this.commandsInited_ = true ;
+            this.commandsInited_ = true;
         }
     }
 
@@ -882,7 +915,7 @@ export class MTBAssistObject {
 
     private pushNeededTools() {
         this.pushOOB('neededTools', this.setupMgr_!.neededTools);
-    }    
+    }
 
     private pushRecentlyOpened() {
         if (this.panel_) {
@@ -1095,33 +1128,38 @@ export class MTBAssistObject {
                     retainContextWhenHidden: true,
                 }
             );
+
+            let data = fs.readFileSync(fullpath.fsPath, 'utf8');
+            this.panel_.webview.html = data;
+
+            this.pushOOB('isMTBInstalled', { installed: this.oobmode_ });
+
+            this.panel_.onDidDispose(() => {
+                this.panel_ = undefined;
+            }, null, this.context_.subscriptions);
+
+            this.panel_.webview.onDidReceiveMessage((message) => {
+                this.logger_.silly(`Received message from webview: ${JSON.stringify(message)}`);
+                let handler = this.cmdhandler_.get(message.request);
+                if (handler) {
+                    handler(message)
+                        .then((response: BackEndToFrontEndResponse | null) => {
+                            this.logger_.silly(`Response for platform specific command ${message.request}: ${JSON.stringify(response)}`);
+                            if (response) {
+                                this.panel_!.webview.postMessage(response);
+                            }
+                        })
+                        .catch((error: Error) => {
+                            this.logger_.error(`Error handling command ${message.request}: ${error.message}`);
+                        });
+                } else {
+                    this.logger_.error(`No handler found for vscode command: ${message.request}`);
+                }
+            });
         }
-
-        let data = fs.readFileSync(fullpath.fsPath, 'utf8');
-        this.panel_.webview.html = data;
-
-        this.panel_.onDidDispose(() => {
-            this.panel_ = undefined;
-        }, null, this.context_.subscriptions);
-
-        this.panel_.webview.onDidReceiveMessage((message) => {
-            this.logger_.silly(`Received message from webview: ${JSON.stringify(message)}`);
-            let handler = this.cmdhandler_.get(message.request);
-            if (handler) {
-                handler(message)
-                    .then((response: BackEndToFrontEndResponse | null) => {
-                        this.logger_.silly(`Response for platform specific command ${message.request}: ${JSON.stringify(response)}`);
-                        if (response) {
-                            this.panel_!.webview.postMessage(response);
-                        }
-                    })
-                    .catch((error: Error) => {
-                        this.logger_.error(`Error handling command ${message.request}: ${error.message}`);
-                    });
-            } else {
-                this.logger_.error(`No handler found for vscode command: ${message.request}`);
-            }
-        });
+        else {
+            this.panel_.reveal() ;
+        }
     }
 
     private gettingStarted(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
@@ -1258,19 +1296,19 @@ export class MTBAssistObject {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             let resp: BackEndToFrontEndResponse | null = null;
 
-            let str = '' ;
+            let str = '';
             if (request.data && request.data.message) {
                 if (typeof request.data.message === 'string') {
                     str = request.data.message;
                 }
-                else { 
+                else {
                     str = JSON.stringify(request.data.message);
                 }
             }
 
             if (str.length > 0) {
                 let type = request.data.type || 'debug';
-                switch(type) {
+                switch (type) {
                     case 'info':
                         this.logger_.info('client:' + str);
                         break;
@@ -1285,12 +1323,12 @@ export class MTBAssistObject {
                         break;
                 }
             }
-            resolve(resp) ;
-        }) ;
+            resolve(resp);
+        });
         return ret;
-    }    
+    }
 
-    private getBSPs(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null>  {
+    private getBSPs(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             if (!this.env_) {
                 resolve({
@@ -1303,18 +1341,19 @@ export class MTBAssistObject {
                 .then((kits) => {
                     resolve({
                         response: 'setBSPs',
-                        data: kits}) ;
+                        data: kits
+                    });
                 })
                 .catch((error) => {
                     this.logger_.error(`Error retrieving development kits: ${error.message}`);
                 });
-        }) ;
-        return ret ;
-    }    
+        });
+        return ret;
+    }
 
     private convertCodeExamples(examples: MTBApp[]): CodeExampleIdentifier[] {
         let codeExamples: CodeExampleIdentifier[] = [];
-        for(let example of examples) {
+        for (let example of examples) {
             if (!example.id || !example.name || !example.category) {
                 this.logger_.warn(`Code example ${example.name} is missing required fields.`);
                 continue;
@@ -1327,7 +1366,7 @@ export class MTBAssistObject {
             });
         }
         return codeExamples;
-    }    
+    }
 
     private getCodeExamples(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
@@ -1346,55 +1385,55 @@ export class MTBAssistObject {
                             data: `Error retrieving code examples: ${error.message}`
                         });
                     });
-                }
+            }
         });
         return ret;
-    }        
+    }
 
     private createProject(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
-            this.bringChannelToFront() ;
-            let fpath = path.join(request.data.location, request.data.name) ;
+            this.bringChannelToFront();
+            let fpath = path.join(request.data.location, request.data.name);
             if (!fs.existsSync(fpath)) {
                 fs.mkdirSync(fpath, { recursive: true });
             }
             this.worker_!.createProject(request.data.location, request.data.name, request.data.bsp.id, request.data.example.id)
-            .then(([status, messages]) => { 
-                if (status === 0) {
+                .then(([status, messages]) => {
+                    if (status === 0) {
+                        resolve({
+                            response: 'createProjectResult',
+                            data: {
+                                uuid: request.data.uuid,
+                                success: true
+                            }
+                        });
+                    } else {
+                        resolve({
+                            response: 'createProjectResult',
+                            data: {
+                                uuid: request.data.uuid,
+                                success: false,
+                                message: messages.join('\n')
+                            }
+                        });
+                    }
+                })
+                .catch((error) => {
+                    this.logger_.error(`Error creating project: ${error.message}`);
                     resolve({
-                        response: 'createProjectResult',
-                        data: {
-                            uuid: request.data.uuid,
-                            success: true
-                        }
+                        response: 'error',
+                        data: `Error creating project: ${error.message}`
                     });
-                } else {
-                    resolve({
-                        response: 'createProjectResult',
-                        data: {
-                            uuid: request.data.uuid,
-                            success: false,
-                            message: messages.join('\n')
-                        }
-                    });
-                }
-            })
-            .catch((error) => {
-                this.logger_.error(`Error creating project: ${error.message}`);
-                resolve({
-                    response: 'error',
-                    data: `Error creating project: ${error.message}`
                 });
-            });
-        }) ;
+        });
         return ret;
-    }    
+    }
 
 
     private loadWorkspace(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             if (this.worker_) {
-                let projpath = path.join(request.data.path, request.data.project) ;
+                let projpath = path.join(request.data.path, request.data.project);
                 this.worker_.loadWorkspace(projpath, request.data.project, request.data.example)
                     .then(() => {
                         resolve({
@@ -1412,7 +1451,7 @@ export class MTBAssistObject {
             }
         });
         return ret;
-    }    
+    }
 
     private fixMissingAssets(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
@@ -1420,20 +1459,20 @@ export class MTBAssistObject {
                 this.worker_.fixMissingAssets(request.data as string)
                     .then(() => {
                         this.env_?.reloadAppInfo()
-                        .then(() => {
-                            this.pushAppStatus() ;
-                            resolve({
-                                response: 'success',
-                                data: null
+                            .then(() => {
+                                this.pushAppStatus();
+                                resolve({
+                                    response: 'success',
+                                    data: null
+                                });
+                            })
+                            .catch((error) => {
+                                this.logger_.error(`Error reloading app info after fixing assets: ${error.message}`);
+                                resolve({
+                                    response: 'error',
+                                    data: `Error reloading app info after fixing assets: ${error.message}`
+                                });
                             });
-                        })
-                        .catch((error) => {
-                            this.logger_.error(`Error reloading app info after fixing assets: ${error.message}`);
-                            resolve({
-                                response: 'error',
-                                data: `Error reloading app info after fixing assets: ${error.message}`
-                            });
-                        }) ;
                     })
                     .catch((error) => {
                         this.logger_.error(`Error fixing missing assets: ${error.message}`);
@@ -1448,19 +1487,19 @@ export class MTBAssistObject {
                     data: 'Platform API is not initialized.'
                 });
             }
-        }) ;
-        return ret ;
-    }    
+        });
+        return ret;
+    }
 
     private runAction(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             this.worker_?.runAction(request.data.action, request.data.project)
-            .then(() => {   
-                resolve({
-                    response: 'success',
-                    data: null
+                .then(() => {
+                    resolve({
+                        response: 'success',
+                        data: null
+                    });
                 });
-            }) ;
         });
         return ret;
     }

@@ -55,7 +55,7 @@ export class App {
       icon: 'dashboard'
     },
     {
-      label: 'Attached Development Kits',
+      label: 'Development Kits',
       component: 'DevkitListComponent',
       icon: 'dashboard'
     }    

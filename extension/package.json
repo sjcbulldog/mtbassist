@@ -44,7 +44,18 @@
           "title": "ModusToolbox Shell"
         }
       ]
-    }    
+    },
+    "configuration": {
+      "title": "ModusToolbox Assistant",
+      "properties": {
+        "mtbassist2.autodisplay": {
+          "type": "string",
+          "enum" : ["Always", "When ModusToolbox Project Loaded", "Never"],
+          "default": "Always",
+          "description": "Automatically display the ModusToolbox Assistant when VSCode is opened."
+        }
+      }
+    }
   },
   "extensionDependencies": [
     "vscode.git",
