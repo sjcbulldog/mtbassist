@@ -1,6 +1,122 @@
 [
-        { "term": "API", "definition": "Application Programming Interface" },
-        { "term": "SDK", "definition": "Software Development Kit" },
-        { "term": "UI", "definition": "User Interface" },
-        { "term": "UX", "definition": "User Experience" }
+  {
+    "term": "API",
+    "definition": "Application Programming Interface - A set of functions and procedures that allow applications to access features or data from an operating system, application, or other service.",
+    "category": "Software"
+  },
+  {
+    "term": "BSP",
+    "definition": "Board Support Package - A collection of low-level software, drivers, and configuration files that enable ModusToolbox to work with specific hardware boards and microcontrollers.",
+    "category": "Hardware"
+  },
+  {
+    "term": "Build System",
+    "definition": "The integrated compilation and linking system in ModusToolbox that transforms source code into executable firmware for target devices.",
+    "category": "Development"
+  },
+  {
+    "term": "Code Examples",
+    "definition": "Pre-written sample applications and projects provided by Infineon to demonstrate specific features, peripherals, or use cases for ModusToolbox development.",
+    "category": "Resources"
+  },
+  {
+    "term": "Debugger",
+    "definition": "An integrated tool that allows developers to step through code, set breakpoints, inspect variables, and diagnose issues in their embedded applications.",
+    "category": "Development"
+  },
+  {
+    "term": "Development Kit",
+    "definition": "A hardware board containing a microcontroller, sensors, and other components designed for prototyping and developing embedded applications with ModusToolbox.",
+    "category": "Hardware"
+  },
+  {
+    "term": "Extension",
+    "definition": "The ModusToolbox Assistant VS Code extension that provides integrated development tools, project management, and debugging capabilities within the VS Code environment.",
+    "category": "Tools"
+  },
+  {
+    "term": "Firmware",
+    "definition": "Low-level software that runs directly on microcontroller hardware, providing basic operational control and interfacing with hardware components.",
+    "category": "Software"
+  },
+  {
+    "term": "HAL",
+    "definition": "Hardware Abstraction Layer - A software layer that provides a consistent API for accessing hardware features across different microcontroller families.",
+    "category": "Software"
+  },
+  {
+    "term": "IDC Launcher",
+    "definition": "Infineon Developer Center Launcher - A service that manages software downloads, installations, and updates for ModusToolbox tools and components.",
+    "category": "Tools"
+  },
+  {
+    "term": "Library Manager",
+    "definition": "A tool within ModusToolbox that allows developers to browse, add, and manage software libraries and middleware components in their projects.",
+    "category": "Tools"
+  },
+  {
+    "term": "MCU",
+    "definition": "Microcontroller Unit - A compact integrated circuit designed to govern specific operations in an embedded system, containing a processor core, memory, and programmable input/output peripherals.",
+    "category": "Hardware"
+  },
+  {
+    "term": "Middleware",
+    "definition": "Software libraries that provide additional functionality beyond the basic HAL, such as communication protocols, file systems, or graphics libraries.",
+    "category": "Software"
+  },
+  {
+    "term": "ModusToolbox",
+    "definition": "Infineon's comprehensive software development framework for embedded applications, providing tools, libraries, and code examples for PSoC, Wi-Fi, Bluetooth, and other Infineon devices.",
+    "category": "Platform"
+  },
+  {
+    "term": "Project Template",
+    "definition": "Pre-configured project structures that provide a starting point for specific types of applications or target hardware configurations.",
+    "category": "Development"
+  },
+  {
+    "term": "PSoC",
+    "definition": "Programmable System-on-Chip - Infineon's family of microcontrollers that combine a CPU core with configurable analog and digital blocks.",
+    "category": "Hardware"
+  },
+  {
+    "term": "Quick Start",
+    "definition": "A guided workflow within the ModusToolbox Assistant that helps new users create their first project and understand basic development steps.",
+    "category": "Getting Started"
+  },
+  {
+    "term": "Recently Opened",
+    "definition": "A feature in the ModusToolbox Assistant that displays a list of previously accessed projects for quick navigation and project management.",
+    "category": "Navigation"
+  },
+  {
+    "term": "Software Installer",
+    "definition": "A component of the ModusToolbox Assistant that manages the installation and updating of development tools, compilers, and software packages.",
+    "category": "Tools"
+  },
+  {
+    "term": "Target Device",
+    "definition": "The specific microcontroller or system-on-chip that your embedded application is designed to run on.",
+    "category": "Hardware"
+  },
+  {
+    "term": "Toolchain",
+    "definition": "A collection of software development tools including compilers, linkers, debuggers, and other utilities needed to build embedded applications.",
+    "category": "Development"
+  },
+  {
+    "term": "USB-KitProg",
+    "definition": "A USB-based programming and debugging interface commonly found on Infineon development kits, providing connectivity between the host computer and target device.",
+    "category": "Hardware"
+  },
+  {
+    "term": "VS Code",
+    "definition": "Visual Studio Code - A popular, extensible source code editor that serves as the host environment for the ModusToolbox Assistant extension.",
+    "category": "Platform"
+  },
+  {
+    "term": "Workspace",
+    "definition": "A VS Code concept that represents a collection of folders and files that make up your development environment, including project files, settings, and configurations.",
+    "category": "Development"
+  }
 ]

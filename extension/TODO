@@ -50,5 +50,7 @@ o Outside of main GUI
 o Help component
   - index on the left like a book
 
+o Dark vs Light vs High Contrast theme support
+
 o Test
   - be sure all tools come from the EAP if the EAP is enabled

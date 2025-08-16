@@ -208,6 +208,8 @@ export class MTBAssistObject {
                                             this.switchToTab(MTBAssistObject.applicationStatusTab);
                                             this.getLaunchData()
                                                 .then(() => {
+                                                    this.pushAppStatus() ;
+                                                    this.updateAllTasks();
                                                     this.logger_.info('Post-initialization of managers completed successfully.');
                                                     let parray : any[] = [] ;
 
@@ -227,7 +229,6 @@ export class MTBAssistObject {
                                                         .then(() => {
                                                             this.pushAppStatus();
                                                             this.pushAllBSPs();
-                                                            this.updateAllTasks();
                                                             resolve() ;
                                                         })
                                                         .catch((error: Error) => {
