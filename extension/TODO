@@ -1,3 +1,11 @@
+Priorities
+----------
+- Settings inside VSCode, honor in all operations
+- Keyword based help support
+- Light, Dark, and High Contrast theme support
+- Unknown development kit support
+- Lots of testing
+
 TODO
 -------------------------------------------------------------------------------------------
 o Getting Started Component                                                                       done
@@ -47,8 +55,8 @@ o Outside of main GUI
   - Download/Install via IDC Launcher showing progress in extension                                   done
   - Alert users if launcher is not installed and take them to the right page                          done
 
-o Help component
-  - index on the left like a book
+o Help component                                                                                  done
+  - index on the left like a book                                                                     done
 
 o Dark vs Light vs High Contrast theme support
 
