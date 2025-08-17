@@ -20,6 +20,11 @@
     "category": "Resources"
   },
   {
+    "term" : "Component",
+    "definition" : "A configurable option that encapsulates specific functionality or behavior within a middleware library.",
+    "category" : "Development"
+  },
+  {
     "term": "Debugger",
     "definition": "An integrated tool that allows developers to step through code, set breakpoints, inspect variables, and diagnose issues in their embedded applications.",
     "category": "Development"

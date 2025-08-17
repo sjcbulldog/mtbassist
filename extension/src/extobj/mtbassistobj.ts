@@ -9,7 +9,7 @@ import { ModusToolboxEnvironment } from '../mtbenv/mtbenv/mtbenv';
 import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
-    ApplicationStatusData, BackEndToFrontEndResponse, BSPIdentifier, CodeExampleIdentifier, Documentation,
+    ApplicationStatusData, BackEndToFrontEndResponse, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
     FrontEndToBackEndRequest, FrontEndToBackEndRequestType, GlossaryEntry, InstallProgress, MemoryInfo, Middleware, Project, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
@@ -59,6 +59,7 @@ export class MTBAssistObject {
     private worker_: VSCodeWorker | undefined;
     private launchTimer: NodeJS.Timer | undefined = undefined;
     private oobmode_: string = 'none';
+    private compDescMap_: Map<string, string> = new Map() ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -907,6 +908,18 @@ export class MTBAssistObject {
         return ret;
     }
 
+    private getComponentInfo(envp: MTBProjectInfo) : ComponentInfo[] {
+        let ret : ComponentInfo[] = [] ;
+        for (let comp of envp.components) {
+            let cinfo: ComponentInfo = {
+                name: comp,
+                description: this.compDescMap_.get(comp) || '',
+            };
+            ret.push(cinfo);
+        }
+        return ret ;
+    }
+
     private createAppStructure() {
         if (!this.env_ || !this.env_.has(MTBLoadFlags.AppInfo)) {
             this.logger_.debug('No ModusToolbox application info found - cannot create app structure.');
@@ -920,7 +933,8 @@ export class MTBAssistObject {
                 middleware: this.getMiddlewareFromEnv(proj),
                 tools: [],
                 missingAssets: proj.missingAssets.length > 0,
-                missingAssetDetails: proj.missingAssets.map((asset) => asset.name())
+                missingAssetDetails: proj.missingAssets.map((asset) => asset.name()),
+                components: this.getComponentInfo(proj)
             };
             this.projectInfo_.set(proj.name, project);
         }
@@ -932,6 +946,7 @@ export class MTBAssistObject {
             tools: [],
             missingAssets: false,
             missingAssetDetails: [],
+            components: []
         });
     }
 
@@ -1097,6 +1112,7 @@ export class MTBAssistObject {
                     p.missingAssets = envp.missingAssets.length > 0;
                     p.missingAssetDetails = envp.missingAssets.map((asset) => asset.name());
                     p.middleware = this.getMiddlewareFromEnv(envp);
+                    p.components = this.getComponentInfo(envp) ;
                 }
             }
 

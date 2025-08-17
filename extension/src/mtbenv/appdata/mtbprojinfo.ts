@@ -10,41 +10,41 @@ import { MTBDirectoryList } from './mtbdirlist';
 import { MTBAssetInstStore } from './mtbassetinststore';
 import * as winston from 'winston';
 
-interface mtbAssetFile {
+interface MTBAssetFile {
     name: string,
     direct: boolean
 }
 
 export class MTBProjectInfo {
-    static readonly ExpandIngorePathPrefix = '$(SEARCH_' ;
+    static readonly expandIngorePathPrefix = '$(SEARCH_' ;
 
     private rootdir_ : string ;
     private vars_ : Map<string, string> ;
     private components_? : string[] ;
-    private asset_search_path_ : string[] = [] ;
-    private user_search_path_ : string[] = [] ;
-    private ignore_path_ : string[] = [] ;
+    private assetSearchPath_ : string[] = [] ;
+    private userSearchPath_ : string[] = [] ;
+    private ignorePath_ : string[] = [] ;
 
     private appinfo_ : MTBAppInfo ;
 
-    private add_back_path2_ : string[] = [] ;
-    private asset_requests_ : MTBAssetRequest[] = [] ;
-    private bsp_instances_ : MTBBspInstance[] = [] ;
-    private asset_instances_ : MTBAssetInstStore = new MTBAssetInstStore() ;
-    private missing_assets_ : MTBAssetRequest[] = [] ;
+    private addBackPath2_ : string[] = [] ;
+    private assetRequests_ : MTBAssetRequest[] = [] ;
+    private bspInstances_ : MTBBspInstance[] = [] ;
+    private assetInstances_ : MTBAssetInstStore = new MTBAssetInstStore() ;
+    private missingAssets_ : MTBAssetRequest[] = [] ;
 
-    private dir_list_? : MTBDirectoryList ;
+    private dirList_? : MTBDirectoryList ;
 
-    private static required_vars_: string[] = [
+    private static requiredVars_: string[] = [
         MTBNames.MTB_TYPE, MTBNames.MTB_DEVICE, MTBNames.MTB_ADDITIONAL_DEVICES, MTBNames.MTB_SEARCH, MTBNames.MTB_TARGET,
         MTBNames.MTB_APP_NAME, MTBNames.MTB_LIBS, MTBNames.MTB_DEPS, MTBNames.MTB_WKS_SHARED_NAME,
         MTBNames.MTB_WKS_SHARED_DIR, MTBNames.MTB_FLOW_VERSION, MTBNames.MTB_TOOLS_DIR, MTBNames.MTB_IGNORE_EARLY_ACCESS_PACKS,
         MTBNames.MTB_CORE_TYPE, MTBNames.MTB_CORE_NAME, MTBNames.MTB_CORE_CONFIG, MTBNames.MTB_BUILD_SUPPORT, 
         MTBNames.MTB_GLOBAL_DIR, MTBNames.MTB_APP_PATH, MTBNames.MTB_DEVICE_PROGRAM_IDS, MTBNames.MTB_TOOLCHAIN, 
         MTBNames.MTB_CONFIG
-    ]
+    ];
 
-    private static default_vars_ : Map<string, string> = new Map([
+    private static defaultVars_ : Map<string, string> = new Map([
         [MTBNames.MTB_IGNORE_EARLY_ACCESS_PACKS, 'FALSE'],
         [MTBNames.MTB_TOOLS_MAKE, ''],
         [MTBNames.MTB_FLOW_VERSION, '1'],
@@ -67,7 +67,7 @@ export class MTBProjectInfo {
     }
 
     public get assetsRequests() : MTBAssetRequest[] {
-        return this.asset_requests_ ;   
+        return this.assetRequests_ ;   
     }
 
     public get name() : string {
@@ -75,32 +75,32 @@ export class MTBProjectInfo {
     }
 
     public get bspName() : string | undefined {
-        if (this.bsp_instances_.length === 0 || this.bsp_instances_.length > 1) {
+        if (this.bspInstances_.length === 0 || this.bspInstances_.length > 1) {
             return undefined ;
         }
-        return this.bsp_instances_[0].name ;
+        return this.bspInstances_[0].name ;
     }
 
     public get missingAssets() : MTBAssetRequest[] {
-        return this.missing_assets_ ;
+        return this.missingAssets_ ;
     }
 
     public get dirList() : MTBDirectoryList {
-        if (!this.dir_list_) {
+        if (!this.dirList_) {
             let localdir = this.rootdir_ ;
             let shareddir = this.shareddir() ;
             let globaldir = this.globaldir() ;
-            this.dir_list_ = new MTBDirectoryList(this.rootdir_, localdir, shareddir, globaldir) ;
+            this.dirList_ = new MTBDirectoryList(this.rootdir_, localdir, shareddir, globaldir) ;
         }
-        return this.dir_list_ ;
+        return this.dirList_ ;
     }
 
     public searchPath() : string[] {
-        return [ ... this.user_search_path_, ...this.asset_search_path_ ] ;
+        return [ ... this.userSearchPath_, ...this.assetSearchPath_ ] ;
     }
 
     public ignorePath() : string[] {
-        return this.ignore_path_ ;
+        return this.ignorePath_ ;
     }
 
     public get target() : string {
@@ -182,7 +182,7 @@ export class MTBProjectInfo {
         return ret;
     }
 
-    public components() : string[] {
+    public get components() : string[] {
         if (!this.components_) {
             let comps : string[] = [] ;
             if (this.vars_.has(MTBNames.MTB_COMPONENTS)) {
@@ -192,12 +192,12 @@ export class MTBProjectInfo {
             //
             // Remove duplicate values from the components array and then remove the disabled values
             //
-            this.components_ = MTBUtils.removeValuesFromArray([...new Set(comps)], this.disabledComponents()) ;
+            this.components_ = MTBUtils.removeValuesFromArray([...new Set(comps)], this.disabledComponents) ;
         }
         return this.components_! ;
     }
 
-    public disabledComponents() : string[] {
+    public get disabledComponents() : string[] {
         let ret : string [] = [] ;
 
         if (this.vars_.has(MTBNames.MTB_DISABLED_COMPONENTS)) {
@@ -225,13 +225,13 @@ export class MTBProjectInfo {
         let msg = '' ;
         let ret = undefined ;
 
-        for(let v of MTBProjectInfo.default_vars_.keys()) {
+        for(let v of MTBProjectInfo.defaultVars_.keys()) {
             if (!this.vars_.has(v)) {
-                this.vars_.set(v, MTBProjectInfo.default_vars_.get(v)!) ;
+                this.vars_.set(v, MTBProjectInfo.defaultVars_.get(v)!) ;
             }
         }
 
-        for(let v of MTBProjectInfo.required_vars_) {
+        for(let v of MTBProjectInfo.requiredVars_) {
             if (!this.vars_.has(v)) {
                 if (msg.length > 0) {
                     msg += '\n' ;
@@ -267,7 +267,7 @@ export class MTBProjectInfo {
                 })
                 .catch((err) => {
                     reject(err) ;
-                })
+                });
         }) ;
         return ret;
     }
@@ -275,7 +275,7 @@ export class MTBProjectInfo {
     private addMtbFileToSearch() {
         let target = MTBNames.TARGET_PREFIX + this.target ;
 
-        for(let req of this.asset_requests_) {
+        for(let req of this.assetRequests_) {
             if (req.locationType() !== MTBAssetRequestLocation.LOCAL) {
                 continue ;
             }
@@ -285,10 +285,10 @@ export class MTBProjectInfo {
             }
 
             let clonedir = req.cloneDir(this.dirList) ;
-            this.asset_search_path_.push(clonedir) ;
+            this.assetSearchPath_.push(clonedir) ;
         }
 
-        for(let req of this.asset_requests_) {
+        for(let req of this.assetRequests_) {
             if (req.locationType() === MTBAssetRequestLocation.LOCAL) {
                 continue ;
             }
@@ -298,7 +298,7 @@ export class MTBProjectInfo {
             }
 
             let dir = req.fullPath(this.dirList) ;
-            this.asset_search_path_.push(dir) ;
+            this.assetSearchPath_.push(dir) ;
         }
     }
 
@@ -316,30 +316,30 @@ export class MTBProjectInfo {
     }
 
     private setupSearchPaths(logger: winston.Logger) {
-        this.asset_search_path_ = [] ;
-        this.user_search_path_ = [] ;
+        this.assetSearchPath_ = [] ;
+        this.userSearchPath_ = [] ;
 
         if (this.rootdir_ !== this.appinfo_.appdir) {
             let bspdir = path.join(this.appinfo_.appdir, MTBNames.BSPsDir) ;
-            this.user_search_path_.push(bspdir) ;
+            this.userSearchPath_.push(bspdir) ;
         }
 
         let apppath = this.vars_.get(MTBNames.MTB_APP_PATH) ;
-        if (!apppath || apppath.length == 0) {
-            this.user_search_path_.push(this.rootdir_) ;
+        if (!apppath || apppath.length === 0) {
+            this.userSearchPath_.push(this.rootdir_) ;
         }
         else {
             if (fs.existsSync(apppath)) {
-                this.user_search_path_.push(apppath) ;
+                this.userSearchPath_.push(apppath) ;
             }   
         }
 
-        this.user_search_path_ = this.createAbsoluteList(this.userSuppliedSearchPath()) ;
+        this.userSearchPath_ = this.createAbsoluteList(this.userSuppliedSearchPath()) ;
         this.addMtbFileToSearch() ;
 
-        this.ignore_path_ = this.createAbsoluteList(this.userSuppliedIgnorePath()) ;
+        this.ignorePath_ = this.createAbsoluteList(this.userSuppliedIgnorePath()) ;
 
-        this.findCyIgnoreFiles(logger, this.searchPath(), this.ignore_path_) ;
+        this.findCyIgnoreFiles(logger, this.searchPath(), this.ignorePath_) ;
         this.findBSPInstances(logger) ;
         this.findAssetInstances(logger) ;
         this.processCurrentBSP(logger) ;
@@ -351,10 +351,10 @@ export class MTBProjectInfo {
      * are not found under an ignore path, they are removed from the list.
      */
     private filterAddBackPaths() {
-        for(let p of this.add_back_path2_) {
-            for(let ignore of this.ignore_path_) {
+        for(let p of this.addBackPath2_) {
+            for(let ignore of this.ignorePath_) {
                 if (p.startsWith(ignore)) {
-                    this.add_back_path2_.splice(this.add_back_path2_.indexOf(p), 1);
+                    this.addBackPath2_.splice(this.addBackPath2_.indexOf(p), 1);
                     break;
                 }
             }
@@ -364,7 +364,7 @@ export class MTBProjectInfo {
     private expandPath(line: string) : string | Error | null {
         let ret = line ;
 
-        let start = line.indexOf(MTBProjectInfo.ExpandIngorePathPrefix) ;
+        let start = line.indexOf(MTBProjectInfo.expandIngorePathPrefix) ;
         if (start === -1) {
             return ret ;
         }
@@ -374,8 +374,8 @@ export class MTBProjectInfo {
             return new Error(`invalid ignore path '${line}'`) ;
         }
 
-        let varname = line.substring(start + MTBProjectInfo.ExpandIngorePathPrefix.length, end) ;
-        let asset = this.asset_requests_.find((req) => { return req.name() === varname ;}) ;
+        let varname = line.substring(start + MTBProjectInfo.expandIngorePathPrefix.length, end) ;
+        let asset = this.assetRequests_.find((req) => { return req.name() === varname ;}) ;
         if (!asset) {
             return null ;
         }
@@ -398,7 +398,7 @@ export class MTBProjectInfo {
             }
 
             let dirpath = path.dirname(fpath) ;
-            if (line.indexOf(MTBProjectInfo.ExpandIngorePathPrefix) === 0) {
+            if (line.indexOf(MTBProjectInfo.expandIngorePathPrefix) === 0) {
                 let result = this.expandPath(line) ;
                 if (result instanceof Error) {
                     let err = result as Error ;
@@ -442,14 +442,14 @@ export class MTBProjectInfo {
     }
 
     private addBspInstance(logger: winston.Logger, bsppath: string) {
-        let bsp = this.bsp_instances_.find((b) => { return b.rootdir === bsppath ;}) ;
+        let bsp = this.bspInstances_.find((b) => { return b.rootdir === bsppath ;}) ;
 
         if (!bsp) {
             try {
                 let mkpath = path.join(bsppath, MTBNames.BSP_MK_FILE) ;
                 if (fs.existsSync(mkpath) && fs.statSync(mkpath).isFile()) {
                     let inst = MTBBspInstance.createFromPath(bsppath) ;
-                    this.bsp_instances_.push(inst) ;
+                    this.bspInstances_.push(inst) ;
                 }
             }
             catch (err) {
@@ -497,19 +497,19 @@ export class MTBProjectInfo {
     }
 
     private findAssetInstances(logger: winston.Logger) : void {
-        for(let req of this.asset_requests_) {
+        for(let req of this.assetRequests_) {
             let found = false ;
-            let fpath = req.fullPath(this.dir_list_!) ;
+            let fpath = req.fullPath(this.dirList_!) ;
             if (fs.existsSync(fpath)) {
-                let inst = this.asset_instances_.getAssetInstance(fpath) ;
+                let inst = this.assetInstances_.getAssetInstance(fpath) ;
                 if (!inst) {
-                    this.asset_instances_.addAssetInstance(new MTBAssetInstance(fpath)) ;
+                    this.assetInstances_.addAssetInstance(new MTBAssetInstance(fpath)) ;
                     found = true ;
                 }
             }
 
             if (!found) {
-                this.missing_assets_.push(req) ;
+                this.missingAssets_.push(req) ;
                 let msg = `loadapp: asset '${req.name()}' not found in search path` ;
                 logger.debug(msg) ;
             }
@@ -520,7 +520,7 @@ export class MTBProjectInfo {
         let ret : MTBBspInstance | undefined = undefined ;
         let tname = MTBNames.TARGET_PREFIX + this.target ;
 
-        for(let inst of this.bsp_instances_) {
+        for(let inst of this.bspInstances_) {
             if (inst.name === tname) {
                 return inst ;
             }
@@ -534,13 +534,13 @@ export class MTBProjectInfo {
             // Process the .cyignore file is one exists
             let ignfile = path.join(bspinst.rootdir, MTBNames.CY_IGNORE_FILE) ;
             if (fs.existsSync(ignfile)) {
-                this.readCyIgnoreFile(logger, ignfile, this.ignore_path_) ;
+                this.readCyIgnoreFile(logger, ignfile, this.ignorePath_) ;
             }
         }
     }
 
-    private findMTBFiles() : mtbAssetFile[] {
-        let ret : mtbAssetFile[] = [] ;
+    private findMTBFiles() : MTBAssetFile[] {
+        let ret : MTBAssetFile[] = [] ;
 
         for(let dir of fs.readdirSync(this.depsdir())) {
             if (path.extname(dir) === '.mtb') {
@@ -570,7 +570,7 @@ export class MTBProjectInfo {
             for(let file of files) {
                 try {
                     let req = MTBAssetRequest.createFromFile(file.name, MTBAssetStorageFormat.MTB, file.direct) ;
-                    this.asset_requests_.push(req) ;
+                    this.assetRequests_.push(req) ;
                 }
                 catch(err) {
                     let errobj = err as Error ;
@@ -593,12 +593,12 @@ export class MTBProjectInfo {
     }
 
     private clearState() {
-        this.asset_search_path_ = [] ;
-        this.user_search_path_ = [] ;
-        this.add_back_path2_ = [] ;
-        this.asset_requests_ = [] ;
-        this.asset_instances_.clear() ;
-        this.bsp_instances_ = [] ;
-        this.missing_assets_ = [] ;
+        this.assetSearchPath_ = [] ;
+        this.userSearchPath_ = [] ;
+        this.addBackPath2_ = [] ;
+        this.assetRequests_ = [] ;
+        this.assetInstances_.clear() ;
+        this.bspInstances_ = [] ;
+        this.missingAssets_ = [] ;
     }
 }

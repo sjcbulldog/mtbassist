@@ -1,4 +1,3 @@
-
 export type PlatformType = 'browser' | 'electron' | 'vscode' ;
 
 export type FrontEndToBackEndRequestType = 
@@ -154,6 +153,11 @@ export interface Tool {
   id: string;
 }
 
+export interface ComponentInfo {
+  name: string ;
+  description : string ;
+}
+
 export interface Project {
   name: string;
   documentation: Documentation[];
@@ -161,6 +165,7 @@ export interface Project {
   tools: Tool[];
   missingAssets: boolean;
   missingAssetDetails: string[];
+  components: ComponentInfo[];
 }
 
 export interface ApplicationStatusData {
