@@ -342,7 +342,7 @@ export class MtbFunIndex
 
     private async initAsset(proj: MTBProjectInfo, asset: MTBAssetRequest) : Promise<number> {
         let ret: Promise<number> = new Promise<number>((resolve, reject) => {
-            this.logger_.debug("    looking in asset '" + asset.name + "' for symbols") ;
+            this.logger_.silly("    looking in asset '" + asset.name() + "' for symbols") ;
             let count = 0 ;
             let loc = asset.fullPath(proj.dirList) ;
             if (loc && fs.existsSync(loc)) {

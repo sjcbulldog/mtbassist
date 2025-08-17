@@ -1,3 +1,4 @@
+
 import * as vscode from 'vscode';
 import * as winston from 'winston';
 import * as fs from 'fs';
@@ -65,6 +66,17 @@ export class MTBAssistObject {
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
+
+    /**
+     * Sets the current intellisense project by sending an 'oob' request.
+     * @param projectName The name of the project to set as the intellisense project.
+     */
+    public setIntellisenseProject(projectName?: string): void {
+        if (!projectName) {
+            projectName = 'proj_cm33_ns' ;
+        }
+        this.pushOOB('setIntellisenseProject', { project: projectName });
+    }
 
     private constructor(context: vscode.ExtensionContext) {
         this.context_ = context;
@@ -216,6 +228,7 @@ export class MTBAssistObject {
                                                     .then(() => {
                                                         this.pushAppStatus() ;
                                                         this.updateAllTasks();
+                                                        this.setIntellisenseProject();                                                        
                                                         this.logger_.info('Post-initialization of managers completed successfully.');
                                                         let parray : any[] = [] ;
 
@@ -238,7 +251,8 @@ export class MTBAssistObject {
                                                             .then(() => {
                                                                 this.pushAppStatus();
                                                                 this.pushAllBSPs();
-                                                                resolve() ;
+
+                                                                resolve();
                                                             })
                                                             .catch((error: Error) => {
                                                                 this.logger_.error('Failed to load manifest files:', error.message);

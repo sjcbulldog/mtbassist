@@ -38,6 +38,7 @@ export class BackendService {
     neededTools: Subject<SetupProgram[]> = new Subject<SetupProgram[]>();
     installProgress: Subject<InstallProgress> = new Subject<InstallProgress>();
     glossaryEntries: Subject<GlossaryEntry[]> = new Subject<GlossaryEntry[]>();
+    intellisenseProject: Subject<string> = new Subject<string>();
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -214,6 +215,9 @@ export class BackendService {
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'glossaryEntries') {
                 this.glossaryEntries.next(cmd.data.data || []) ;
+            }
+            else if (cmd.data.oobtype && cmd.data.oobtype === 'setIntellisenseProject') {
+                this.intellisenseProject.next(cmd.data.data || '');
             }
             else {
                 this.log(`Unhandled OOB type: ${cmd.data.oobtype}`);
