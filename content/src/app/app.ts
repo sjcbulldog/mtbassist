@@ -51,7 +51,7 @@ export class App {
       icon: 'history'
     },
     {
-      label: 'Application Status',
+      label: 'Application',
       component: 'ApplicationStatus',
       icon: 'dashboard'
     },

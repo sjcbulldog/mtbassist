@@ -156,6 +156,8 @@ export interface Tool {
 export interface ComponentInfo {
   name: string ;
   description : string ;
+  version?: string ;
+  type?: string ;
 }
 
 export interface Project {
@@ -166,6 +168,7 @@ export interface Project {
   missingAssets: boolean;
   missingAssetDetails: string[];
   components: ComponentInfo[];
+  enabledComponents?: ComponentInfo[];
 }
 
 export interface ApplicationStatusData {

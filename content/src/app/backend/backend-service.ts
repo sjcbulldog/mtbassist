@@ -213,7 +213,6 @@ export class BackendService {
                 this.installProgress.next(cmd.data.data) ;
             }
             else if (cmd.data.oobtype && cmd.data.oobtype === 'glossaryEntries') {
-                this.log(`Received glossary entries: ${JSON.stringify(cmd.data.data)}`);
                 this.glossaryEntries.next(cmd.data.data || []) ;
             }
             else {

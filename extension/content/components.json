@@ -1,0 +1,30 @@
+[
+    {
+        "name": "FREERTOS",
+        "description": "Indicates that FREERTOS is enabled and being used."
+    },
+    {
+        "name": "CM33",
+        "description" : "Indicates this is code running on the CM33 processor"
+    },
+    {
+        "name" : "CM33_0",
+        "description" : "Indicates this is code running on the first CM33 processor"
+    },
+    {
+        "name" : "CAT1",
+        "description" : "Indicates this device is a category 1 device. The categories are defined by Infineon and are used to group similiar devices together."
+    },
+    {
+        "name" : "CAT1D",
+        "description" : "Indicates this device is a category 1 device from the PSOC Edge family."
+    },
+    {
+        "name" : "LWIP",
+        "description" : "Indicates this is code using the Lightweight IP (LWIP) stack."
+    },
+    {
+        "name" : "MBEDTLS",
+        "description": "Indicates this codeis using the MBEDTLS library from Arm"
+    }
+]

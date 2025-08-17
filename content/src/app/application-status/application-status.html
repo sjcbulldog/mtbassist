@@ -200,6 +200,23 @@
                   </div>
                 </div>
               }
+
+                <!-- Components Section -->
+                <div class="components-section">
+                  <h4 class="components-label">Enabled Components</h4>
+                  <div class="enabled-components-tags">
+                    @if (project.components && project.components.length > 0) {
+                      @for (component of project.components; track component.name) {
+                        <span class="component-tag" [title]="component.description || 'No Description Found'">
+                          <mat-icon class="component-icon">extension</mat-icon>
+                          <span class="component-name">{{ component.name }}</span>
+                        </span>
+                      }
+                    } @else {
+                      <span class="no-enabled-components">No enabled components found.</span>
+                    }
+                  </div>
+                </div>
             </div>
           </div>
 

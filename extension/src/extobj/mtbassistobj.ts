@@ -267,6 +267,22 @@ export class MTBAssistObject {
         return ret;
     }
 
+    private readComponentDefinitions() : void {
+        let p = path.join(__dirname, '..', 'content', 'components.json') ;
+        if (fs.existsSync(p)) {
+            let data = fs.readFileSync(p, 'utf8') ;
+            try {
+                let components = JSON.parse(data) ;
+                for (let comp of components) {
+                    this.compDescMap_.set(comp.name, comp.description) ;
+                }
+            }
+            catch (err) {
+                this.logger_.error('Failed to parse components JSON:', (err as Error).message);
+            }
+        }
+    }
+
     private readGlossaryEntries() : GlossaryEntry[] {
         let ret: GlossaryEntry[] = [] ;
         let p = path.join(__dirname, '..', 'content', 'glossary.json') ;
@@ -329,6 +345,7 @@ export class MTBAssistObject {
 
     public async initialize(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
+            this.readComponentDefinitions() ;
             this.setupMgr_?.initializeLocal()
                 .then(() => {
                     if (this.setupMgr_!.doWeNeedTools()) {
@@ -911,11 +928,13 @@ export class MTBAssistObject {
     private getComponentInfo(envp: MTBProjectInfo) : ComponentInfo[] {
         let ret : ComponentInfo[] = [] ;
         for (let comp of envp.components) {
-            let cinfo: ComponentInfo = {
-                name: comp,
-                description: this.compDescMap_.get(comp) || '',
-            };
-            ret.push(cinfo);
+            if (!envp.disabledComponents.includes(comp)) {
+                let cinfo: ComponentInfo = {
+                    name: comp,
+                    description: this.compDescMap_.get(comp) || '',
+                };
+                ret.push(cinfo);
+            }
         }
         return ret ;
     }
