@@ -27,7 +27,8 @@ export type FrontEndToBackEndRequestType =
     'initSetup' |
     'installTools' |
     'restartExtension' |
-    'runSetupProgram'
+    'runSetupProgram'|
+    'setIntellisenseProject'
     ;
 
 export type BackEndToFrontEndResponseType =

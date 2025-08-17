@@ -21,8 +21,13 @@ export class ApplicationStatus implements OnInit {
   intellisenseProject: string | null = null;
   // Called when Intellisense Project checkbox is changed
   onIntellisenseProjectChange(projectName: string): void {
-    this.intellisenseProject = projectName;
+    this.setIntellisenseProject(projectName);
     this.handleIntellisenseProjectChange(projectName);
+  }
+
+  // Public method to set the Intellisense Project checkbox for a given project name
+  setIntellisenseProject(projectName: string): void {
+    this.intellisenseProject = projectName;
   }
 
   // Method to be called when Intellisense Project is set
