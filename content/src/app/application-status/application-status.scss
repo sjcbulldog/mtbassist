@@ -1014,6 +1014,9 @@
       flex-wrap: wrap;
       gap: 0.5rem;
     }
+    .enabled-components-tags.collapsed {
+      display: none !important;
+    }
     .component-tag {
       display: inline-flex;
       align-items: center;

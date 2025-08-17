@@ -46,6 +46,17 @@ export class ApplicationStatus implements OnInit {
         this.isLoading = false;
         this.hasError = false;
         this.fixingAssetsProjects.clear() ;
+
+        // Start components section collapsed for each project
+        if (data && data.projects) {
+          for (const project of data.projects) {
+            if (!this.collapsedSections.has(project.name)) {
+              this.collapsedSections.set(project.name, new Map());
+            }
+            this.collapsedSections.get(project.name)!.set('components', true);
+          }
+        }
+
         this.cdr.detectChanges();
       },
       error: (error) => {
