@@ -18,6 +18,19 @@ import { BackendService } from '../backend/backend-service';
   encapsulation: ViewEncapsulation.None
 })
 export class ApplicationStatus implements OnInit {
+  intellisenseProject: string | null = null;
+  // Called when Intellisense Project checkbox is changed
+  onIntellisenseProjectChange(projectName: string): void {
+    this.intellisenseProject = projectName;
+    this.handleIntellisenseProjectChange(projectName);
+  }
+
+  // Method to be called when Intellisense Project is set
+  handleIntellisenseProjectChange(projectName: string): void {
+    // Implement your logic here (e.g., notify backend, update state)
+    // Example:
+    this.be.sendRequestWithArgs('setIntellisenseProject', { project: projectName });
+  }
 
   viewReadme() {
     if (this.applicationStatus && this.applicationStatus.name) {

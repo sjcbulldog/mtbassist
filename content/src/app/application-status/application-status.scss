@@ -987,10 +987,37 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   .project-info {
+    .project-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.2rem;
+    }
     h3 {
-      margin: 0 0 1.5rem 0;
+      margin: 0;
       font-size: 1.5rem;
       color: var(--text-color, #333);
+    }
+    .intellisense-checkbox-row {
+      display: flex;
+      align-items: center;
+      margin-left: auto;
+    }
+    .intellisense-checkbox-label {
+      display: flex;
+      align-items: center;
+      font-size: 0.98rem;
+      color: var(--text-secondary, #888);
+      font-weight: 400;
+      gap: 0.4em;
+      user-select: none;
+    }
+    .intellisense-checkbox-label input[type="checkbox"] {
+      accent-color: var(--primary-color, #007bff);
+      margin-right: 0.3em;
+      width: 1.1em;
+      height: 1.1em;
+      vertical-align: middle;
     }
 
     // Components Section Styling

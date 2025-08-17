@@ -1,8 +1,8 @@
 Priorities
 ----------
 - Settings inside VSCode, honor in all operations
-- Display COMPONENTS for each project
 - Keyword based help support
+- Provide interface to change the intellisense project
 - Light, Dark, and High Contrast theme support
 - Unknown development kit support
 - Lots of testing
@@ -27,6 +27,7 @@ o Application Status Component                                                  
   - hide the action bar if the appliation status is invalid                                           done
   - hide the documents and tools on the app status when app is not valid                              done
   - link to show readme.md                                                                            done
+  - display components associated with each projecdt                                                  done
 
 o Memory usage
   - feasbility to work across all devices

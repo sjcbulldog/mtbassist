@@ -148,7 +148,18 @@
           <!-- Project Overview -->
           <div class="project-overview">
             <div class="project-info">
-              <h3>Project: {{ project.name }}</h3>
+              <div class="project-title-row">
+                <h3>Project: {{ project.name }}</h3>
+                <div class="intellisense-checkbox-row">
+                  <label class="intellisense-checkbox-label">
+                    <input type="checkbox"
+                      [checked]="intellisenseProject === project.name"
+                      (change)="onIntellisenseProjectChange(project.name)"
+                    />
+                    <span>Intellisense Project</span>
+                  </label>
+                </div>
+              </div>
               <!-- Project details (version, type, status, last build) removed as requested -->
               
               <!-- Project Build Actions -->

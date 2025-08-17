@@ -23,6 +23,7 @@ import { SetupMgr } from '../setup/setupmgr';
 import { BSPMgr } from './bspmgr';
 import { MTBApp } from '../mtbenv/manifest/mtbapp';
 import { VSCodeWorker } from './vscodeworker';
+import { MtbFunIndex } from '../keywords/mtbfunindex';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -60,6 +61,7 @@ export class MTBAssistObject {
     private launchTimer: NodeJS.Timer | undefined = undefined;
     private oobmode_: string = 'none';
     private compDescMap_: Map<string, string> = new Map() ;
+    private keywords_ : MtbFunIndex ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -86,6 +88,7 @@ export class MTBAssistObject {
         this.intellisense_ = new IntelliSenseMgr(this);
         this.setupMgr_ = new SetupMgr(this);
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
+        this.keywords_ = new MtbFunIndex(this.logger_);
         this.bindCommandHandlers();
     }
 
@@ -226,6 +229,9 @@ export class MTBAssistObject {
                                                         parray.push(p) ;
 
                                                         p = this.sendGlossary() ;
+                                                        parray.push(p) ;
+
+                                                        p = this.keywords_.init(this.env_!.appInfo!) ;
                                                         parray.push(p) ;
 
                                                         Promise.all(parray)
@@ -689,7 +695,66 @@ export class MTBAssistObject {
             disposable = vscode.commands.registerCommand('mtbassist2.mtbSetIntellisenseProject', this.intellisense_!.mtbSetIntellisenseProject.bind(this.intellisense_));
             this.context_.subscriptions.push(disposable);
 
+            disposable = vscode.commands.registerTextEditorCommand('mtbassist2.mtbSymbolDoc',
+                (editor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
+                    this.mtbSymbolDoc(editor, edit, this.context_);
+                });
+            this.context.subscriptions.push(disposable);            
+
             this.commandsInited_ = true;
+        }
+    }
+
+    private displayAssetDocs(asset: MTBAssetRequest, symbol: String) {
+    }
+
+    private findAssetByPath(p: string) : MTBAssetRequest | undefined {
+        let ret : MTBAssetRequest | undefined = undefined ;
+
+        for(let proj of this.env_!.appInfo!.projects) {
+        }
+
+        return ret;
+    }
+
+    private mtbSymbolDoc(editor: vscode.TextEditor, edit: vscode.TextEditorEdit, context: vscode.ExtensionContext) {
+        if (vscode.window.activeTextEditor) {
+            let uri: vscode.Uri = editor.document.uri ;
+            let pos: vscode.Position = editor.selection.active ;
+
+            //
+            // First try to look up in our symbol index
+            //
+            let range = editor.document.getWordRangeAtPosition(pos) ;
+            let symbol = editor.document.getText(range) ;
+
+            if (this.keywords_.contains(symbol)) {
+                let url: string | undefined = this.keywords_.getUrl(symbol) ;
+                if (url) {
+                    browseropen(decodeURIComponent(url)) ;            
+                }
+            }
+            else {
+                vscode.commands.executeCommand("vscode.executeDefinitionProvider", uri, pos)
+                    .then(value => {
+                        let locs : vscode.Location[] = value as vscode.Location[] ;
+                        if (locs.length > 0) {
+                            for(let loc of locs) {
+                                this.logger_.debug("Found symbol '" + symbol + "' at " + loc.uri.fsPath) ;
+                                let asset: MTBAssetRequest | undefined = this.findAssetByPath(loc.uri.fsPath) ;
+                                if (asset) {
+                                    this.displayAssetDocs(asset, symbol) ;
+                                    return ;
+                                }
+                            }
+                            let msg: string = "Symbol under cursors is not part of an asset." ;
+                            vscode.window.showInformationMessage(msg) ;
+                        }
+                        else {
+                            vscode.window.showInformationMessage("Text under cursor is not a 'C' symbol") ;
+                        }
+                    }) ;
+            }
         }
     }
 

@@ -35,8 +35,27 @@
       {
         "command": "mtbassist2.mtbSetIntellisenseProject",
         "title": "ModusToolbox Assistant: Set Intellisense Project"
+      },
+      {
+        "command": "mtbassist2.mtbSymbolDoc",
+        "title": "ModusToolbox Assistant: Display documentation for symbol"
       }
     ],
+    "keybindings": [
+      {
+        "command": "mtbassist2.mtbSymbolDoc",
+        "key": "ctrl+shift+f1"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "resourceLangId == c",
+          "command": "mtbassist2.mtbSymbolDoc",
+          "group": "navigation"
+        }
+      ]
+    },        
     "terminal": {
       "profiles": [
         {

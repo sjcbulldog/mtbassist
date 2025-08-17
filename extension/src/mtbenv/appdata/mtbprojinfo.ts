@@ -111,6 +111,10 @@ export class MTBProjectInfo {
         return this.vars_.get(MTBNames.MTB_TOOLCHAIN)! ;
     }
 
+    public get path() : string {
+        return this.rootdir_ ;
+    }
+
     public libdir() : string {
         let ret = this.vars_.get(MTBNames.MTB_LIBS)! ;
         if (!path.isAbsolute(ret)) {
