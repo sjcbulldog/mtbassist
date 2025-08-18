@@ -26,5 +26,25 @@
     {
         "name" : "MBEDTLS",
         "description": "Indicates this codeis using the MBEDTLS library from Arm"
+    },
+    {
+        "name" : "Debug",
+        "description": "Indicates this code is being built for debugging.  This will include debug symbols and other information to assist in debugging the code."  
+    },
+    {
+        "name" : "Release",
+        "description": "Indicates this code is being built for release.  This will include optimizations and other changes to improve performance and reduce size."
+    },
+    {
+        "name" : "GCC_ARM",
+        "description": "Indicates this code is being built using the GCC ARM toolchain."
+    },
+    {
+        "name" : "55500",
+        "description": "Indicates this code is being built to work with a 55500 wireless device."
+    },
+    {
+        "name": "55500A1",
+        "description": "Indicates this code is being built to work with a 55500A1 wireless device."
     }
 ]

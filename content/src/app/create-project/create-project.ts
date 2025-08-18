@@ -84,6 +84,10 @@ export class CreateProject implements OnInit, OnDestroy {
                 }
             }) ;
 
+            this.backendService.theme.subscribe(theme => {
+                this.isDarkTheme = theme === 'dark';
+            });
+
             // Subscribe to dev kit status
             this.backendService.devKitStatus.subscribe(kits => {
                 this.devKits = kits;
@@ -95,10 +99,9 @@ export class CreateProject implements OnInit, OnDestroy {
         }
 
     ngOnInit() {
-        this.isDarkTheme = this.backendService.isDarkTheme;
+        this.isDarkTheme = true ;
         this.initializeForms();
         this.loadCategories();
-        // Initial dev kit fetch (if needed)
         this.backendService.sendRequestWithArgs?.('refreshDevKits', null);
     }
     

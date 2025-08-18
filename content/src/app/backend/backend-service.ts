@@ -16,13 +16,13 @@ declare var acquireVsCodeApi: any | undefined ;
 })
 export class BackendService {
     private pipe_?: PipeInterface ;
-    private isDarkTheme_ : boolean = true ;
     private manifestManager_: ManifestManager;
     private projectManager_ : ProjectManager ;
     private appStatusManager_ : AppStatusBackend;
 
     private handlers_ : Map<string, (cmd: BackEndToFrontEndResponse) => void> = new Map<string, (cmd: BackEndToFrontEndResponse) => void>();
 
+    theme: Subject<string> = new Subject<string>();
     navTab: Subject<number> = new Subject<number>() ;
     setupTab: Subject<number> = new Subject<number>() ;
     browserFolder: Subject<string | null> = new Subject<string | null>();
@@ -67,10 +67,6 @@ export class BackendService {
 
     public get appStatusMgr() : AppStatusBackend {
         return new AppStatusBackend(this);
-    }
-
-    public get isDarkTheme(): boolean {
-        return this.isDarkTheme_;
     }
 
     public log(message: string, type?: string) {
@@ -170,59 +166,62 @@ export class BackendService {
     }
 
     private oobResult(cmd: BackEndToFrontEndResponse) {
-            if (cmd.data.oobtype && cmd.data.oobtype === 'progress') {
-                this.progressMessage.next(cmd.data.message || '');
-                this.progressPercent.next(cmd.data.percent || 0);
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'appStatus') {
-                let appStatusData: ApplicationStatusData = cmd.data;
-                let str = '' ;
-                for(let proj of appStatusData.projects) {
-                    str += ' ' + proj.missingAssets ? 'true' : 'false';
-                }
-                this.appStatusData.next(appStatusData);
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'recentlyOpened') {
-                this.recentlyOpened.next(cmd.data.recents || []);
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'selectTab') {
-                let index = cmd.data.index || 0;
-                this.navTab.next(index);
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'loadedAsset') {
-                let asset = cmd.data.asset || '';
-                this.loadedAsset.next(asset);
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'devKitStatus') {
-                this.devKitStatus.next(cmd.data.kits) ;
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'allbsps') {
-                this.allBSPs.next(cmd.data.bsps || []);
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'isMTBInstalled') {
-                this.log(`Received isMTBInstalled status: ${cmd.data.data.installed}`);
-                this.isMTBInstalled.next(cmd.data.data.installed || 'none');
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'setupTab') {
-                let index = cmd.data.index || 0;
-                this.setupTab.next(index);
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'neededTools') {
-                this.neededTools.next(cmd.data.data || []);
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'installProgress') {
-                this.installProgress.next(cmd.data.data) ;
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'glossaryEntries') {
-                this.glossaryEntries.next(cmd.data.data || []) ;
-            }
-            else if (cmd.data.oobtype && cmd.data.oobtype === 'setIntellisenseProject') {
-                this.intellisenseProject.next(cmd.data.data || '');
-            }
-            else {
-                this.log(`Unhandled OOB type: ${cmd.data.oobtype}`);
-            }
+        if (cmd.data.oobtype && cmd.data.oobtype === 'progress') {
+            this.progressMessage.next(cmd.data.message || '');
+            this.progressPercent.next(cmd.data.percent || 0);
         }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'appStatus') {
+            let appStatusData: ApplicationStatusData = cmd.data;
+            let str = '' ;
+            for(let proj of appStatusData.projects) {
+                str += ' ' + proj.missingAssets ? 'true' : 'false';
+            }
+            this.appStatusData.next(appStatusData);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'recentlyOpened') {
+            this.recentlyOpened.next(cmd.data.recents || []);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'selectTab') {
+            let index = cmd.data.index || 0;
+            this.navTab.next(index);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'loadedAsset') {
+            let asset = cmd.data.asset || '';
+            this.loadedAsset.next(asset);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'devKitStatus') {
+            this.devKitStatus.next(cmd.data.kits) ;
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'allbsps') {
+            this.allBSPs.next(cmd.data.bsps || []);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'isMTBInstalled') {
+            this.log(`Received isMTBInstalled status: ${cmd.data.data.installed}`);
+            this.isMTBInstalled.next(cmd.data.data.installed || 'none');
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'setupTab') {
+            let index = cmd.data.index || 0;
+            this.setupTab.next(index);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'neededTools') {
+            this.neededTools.next(cmd.data.data || []);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'installProgress') {
+            this.installProgress.next(cmd.data.data) ;
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'glossaryEntries') {
+            this.glossaryEntries.next(cmd.data.data || []) ;
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'setIntellisenseProject') {
+            this.intellisenseProject.next(cmd.data.data || '');
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'setTheme') {
+            this.theme.next(cmd.data.theme || 'light');
+        }
+        else {
+            this.log(`Unhandled OOB type: ${cmd.data.oobtype}`);
+        }
+    }
 
     private messageProc(cmd: BackEndToFrontEndResponse) {
         let maxstr = 128 ;

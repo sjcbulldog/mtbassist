@@ -67,16 +67,6 @@ export class MTBAssistObject {
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
 
-    /**
-     * Sets the current intellisense project by sending an 'oob' request.
-     * @param projectName The name of the project to set as the intellisense project.
-     */
-    public setIntellisenseProject(projectName?: string): void {
-        if (!projectName) {
-            projectName = 'proj_cm33_ns' ;
-        }
-        this.pushOOB('setIntellisenseProject', { project: projectName });
-    }
 
     private constructor(context: vscode.ExtensionContext) {
         this.context_ = context;
@@ -102,6 +92,19 @@ export class MTBAssistObject {
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
         this.keywords_ = new MtbFunIndex(this.logger_);
         this.bindCommandHandlers();
+    }
+
+    /**
+     * Sets the current intellisense project by sending an 'oob' request.
+     * @param projectName The name of the project to set as the intellisense project.
+     */
+    public setIntellisenseProject(projectName?: string): void {
+        if (!projectName) {
+            projectName = this.context_.globalState.get('mtbintellisense', this.env_!.appInfo!.projects[0].name) ;
+        }
+
+        this.context_.globalState.update('mtbintellisense', projectName);
+        this.pushOOB('setIntellisenseProject', projectName );
     }
 
     public bringChannelToFront() {
@@ -211,7 +214,6 @@ export class MTBAssistObject {
                             .then(() => {
                                 this.oobmode_ = 'mtb';
                                 this.pushOOB('isMTBInstalled', { installed: this.oobmode_ });
-                                this.logger_.debug('Welcome page command executed successfully.');
                                 this.postInitializeManagers()
                                     .then(() => {
                                         if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo) && this.env_.appInfo) {
@@ -231,9 +233,7 @@ export class MTBAssistObject {
                                                         this.setIntellisenseProject();                                                        
                                                         this.logger_.info('Post-initialization of managers completed successfully.');
                                                         let parray : any[] = [] ;
-
-                                                        let p = this.env?.load(MTBLoadFlags.Manifest) ;
-                                                        parray.push(p) ;
+                                                        let p : Promise<void> ;
 
                                                         p = this.createModusShellTerminal() ;
                                                         parray.push(p) ;
@@ -250,9 +250,17 @@ export class MTBAssistObject {
                                                         Promise.all(parray)
                                                             .then(() => {
                                                                 this.pushAppStatus();
+                                                                this.setIntellisenseProject();
                                                                 this.pushAllBSPs();
-
-                                                                resolve();
+                                                                this.logger_.debug('All managers post-initialization completed successfully.');
+                                                                                        
+                                                                this.env?.load(MTBLoadFlags.Manifest)
+                                                                .then(() => {
+                                                                    resolve() ;
+                                                                })
+                                                                .catch((err) => {
+                                                                    reject(err) ;
+                                                                }) ;
                                                             })
                                                             .catch((error: Error) => {
                                                                 this.logger_.error('Failed to load manifest files:', error.message);
@@ -323,6 +331,7 @@ export class MTBAssistObject {
         let ret = new Promise<void>((resolve, reject) => {
             let entries = this.readGlossaryEntries() ;
             this.pushOOB('glossaryEntries', entries) ;
+            resolve() ;
         });
         return ret;
     }
@@ -478,6 +487,16 @@ export class MTBAssistObject {
         this.cmdhandler_.set('installTools', this.installTools.bind(this));
         this.cmdhandler_.set('restartExtension', this.restartExtension.bind(this));
         this.cmdhandler_.set('runSetupProgram', this.runSetupProgram.bind(this));   
+        this.cmdhandler_.set('setIntellisenseProject', this.setIntellisenseProjectFromGUI.bind(this));
+    }
+
+    private setIntellisenseProjectFromGUI(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            this.intellisense_?.setIntellisenseProject(request.data.project);
+            this.context_.globalState.update('mtbintellisense', request.data.project);
+            resolve(null);
+        });
+        return ret;
     }
 
     private restartExtension(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
@@ -704,9 +723,6 @@ export class MTBAssistObject {
 
         if (!this.commandsInited_) {
             disposable = vscode.commands.registerCommand('mtbassist2.mtbMainPage', this.mtbMainPage.bind(this));
-            this.context_.subscriptions.push(disposable);
-
-            disposable = vscode.commands.registerCommand('mtbassist2.mtbSetIntellisenseProject', this.intellisense_!.mtbSetIntellisenseProject.bind(this.intellisense_));
             this.context_.subscriptions.push(disposable);
 
             disposable = vscode.commands.registerTextEditorCommand('mtbassist2.mtbSymbolDoc',

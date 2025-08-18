@@ -23,12 +23,24 @@
           <mat-icon>dashboard</mat-icon>
           Application
         </ng-template>
-        
+
+        <!-- Application Tab Title Row with Right-Aligned Help Icon -->
+        <div class="application-title-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <span class="application-title" style="font-size: 1.5em; font-weight: bold;">Application Status</span>
+        </div>
+
         <div class="tab-content">
           <!-- Application Overview -->
           <div class="overview-section">
             <div class="app-info">
-              <h3>Application Directory: <span class="app-dir">{{ applicationStatus.name }}</span></h3>
+              <div class="app-dir-row" style="display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="margin: 0;">Application Directory: <span class="app-dir">{{ applicationStatus.name }}</span></h3>
+                <mat-icon
+                  matTooltip="This is a ModusToolboxc Application.  A ModusToolbox box consists of multiple projects, each of which builds to an indepenent ELF file.  These ELF files are then combined into a single HEX file to program into the device.  Each project is represented by a project view which can be selected via the navigation bar above."
+                  class="application-help-icon"
+                  style="vertical-align: middle; cursor: pointer; margin-left: 8px;"
+                >help_outline</mat-icon>
+              </div>
               <div class="app-status-row">
                 <span class="status-label">Status:</span>
                 <span class="status-badge" [ngClass]="applicationStatus.valid ? 'status-valid' : 'status-invalid'">
@@ -158,6 +170,11 @@
                     />
                     <span>Intellisense Project</span>
                   </label>
+            <mat-icon
+              matTooltip="In ModusToolbox, VS Code intellisense works best when the CLANGD backend is used and intellisense is focused on one of the many projects that make up a ModusToolbox application.  Checking this box makes this project the focus of intellisense."
+              class="intellisense-help-icon"
+              style="vertical-align: middle; cursor: pointer; margin-left: 4px;"
+            >help_outline</mat-icon>
                 </div>
               </div>
               <!-- Project details (version, type, status, last build) removed as requested -->

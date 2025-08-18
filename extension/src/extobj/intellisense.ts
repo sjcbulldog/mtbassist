@@ -55,32 +55,8 @@ export class IntelliSenseMgr extends MtbManagerBase {
             if (this.hasClangD) {
                 await this.checkBasicClangdConfig();
             }
-
-            if (this.hasClangD) {
-                if (this.ext.env && this.ext.env.appInfo) {
-                    if (this.ext.env.appInfo.projects.length > 1) {
-                        //
-                        // More than one project, ask the user to choose the intellisense project.
-                        //
-                        vscode.window.showInformationMessage("This ModusToolbox project has more than one project.  " +
-                            "Only one project at a time can be active for intellisense.  " +
-                            "This can be changed at any time by clicking the MTB status item in the right of the status bar. " +
-                            "Do you want to select the active Intellisense project?",
-                            "Yes", "No")
-                            .then((answer) => {
-                                if (answer === "Yes") {
-                                    vscode.commands.executeCommand('mtbassist2.mtbSetIntellisenseProject');
-                                }
-                            });
-                    }
-                    else if (this.ext.env.appInfo.projects.length === 1) {
-                        //
-                        // Just one project, set it to be the intellisense project
-                        //
-                        this.setIntellisenseProject(this.ext.env.appInfo.projects[0].name);
-                    }
-                }
-            }
+            
+            resolve() ;
         });
 
         return ret;

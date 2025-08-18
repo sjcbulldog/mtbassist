@@ -1,8 +1,7 @@
 Priorities
 ----------
 - Settings inside VSCode, honor in all operations
-- Keyword based help support
-- Provide interface to change the intellisense project
+- LLVM installation
 - Light, Dark, and High Contrast theme support
 - Unknown development kit support
 - Lots of testing

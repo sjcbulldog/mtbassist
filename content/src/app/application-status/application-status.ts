@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angula
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApplicationStatusData, Documentation } from '../../comms';
 import { BackendService } from '../backend/backend-service';
 
@@ -11,7 +12,8 @@ import { BackendService } from '../backend/backend-service';
     imports: [
         CommonModule,
         MatTabsModule,
-        MatIconModule
+        MatIconModule,
+        MatTooltipModule
     ],
     templateUrl: './application-status.html',
     styleUrls: ['./application-status.scss'],
@@ -28,6 +30,7 @@ export class ApplicationStatus implements OnInit {
     // Public method to set the Intellisense Project checkbox for a given project name
     setIntellisenseProject(projectName: string): void {
         this.intellisenseProject = projectName;
+        this.cdr.detectChanges() ;        
     }
 
     // Method to be called when Intellisense Project is set
@@ -92,8 +95,8 @@ export class ApplicationStatus implements OnInit {
 
         this.be.intellisenseProject.subscribe({
             next: (projectName) => {
+                this.be.log(`ApplicationStatus: intellisense = ${projectName}`);
                 this.setIntellisenseProject(projectName) ;
-                this.cdr.detectChanges();                
             }
         });
     }
