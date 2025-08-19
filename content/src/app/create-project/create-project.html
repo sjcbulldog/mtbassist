@@ -113,17 +113,18 @@
             <div class="devkit-bsp-list">
               @for (kit of filteredDevKits; track kit.serial) {
                 <div class="devkit-bsp-card" [class.selected]="selectedDevKit?.serial === kit.serial" (click)="onDevKitSelect(kit)">
-                  <div class="devkit-bsp-main">
-                    <div class="devkit-name-section">
-                      <span class="devkit-label">Kit:</span>
-                      <span class="devkit-bsp-name">{{ kit.name }}</span>
+                  <div class="devkit-bsp-main" style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
+                    <div class="devkit-name-section" style="display: flex; align-items: center; margin-bottom: 4px;">
+                      <span class="devkit-label" style="display: inline-block; min-width: 60px;">Kit:</span>
+                      <span class="devkit-bsp-name" style="text-decoration: none;">{{ kit.name }}</span>
                     </div>
-                    <div class="devkit-bsp-section">
-                      <span class="bsp-label">BSP:</span>
-                      <span class="devkit-bsp-value" style="text-decoration: none;">{{ kit.bsp || 'Not set' }}</span>
+                    <div class="devkit-bsp-section" style="display: flex; align-items: center; margin-bottom: 4px;">
+                      <span class="devkit-label" style="display: inline-block; min-width: 60px;">BSP:</span>
+                      <span class="devkit-bsp-value" style="text-decoration: none !important; border-bottom: none !important; text-decoration-line: none !important;">{{ kit.bsp || 'Not set' }}</span>
                     </div>
-                    <div class="devkit-serial-section">
-                      <span class="devkit-bsp-serial">SN: {{ kit.serial }}</span>
+                    <div class="devkit-serial-section" style="display: flex; align-items: center;">
+                      <span class="devkit-label" style="display: inline-block; min-width: 60px;">Serial:</span>
+                      <span class="devkit-bsp-serial">{{ kit.serial }}</span>
                     </div>
                   </div>
                 </div>
