@@ -35,6 +35,7 @@
             <div class="app-info">
               <div class="app-dir-row" style="display: flex; align-items: center; justify-content: space-between;">
                 <h3 style="margin: 0;">Application Directory: <span class="app-dir">{{ applicationStatus.name }}</span></h3>
+                <span class="toolsdir-display" style="margin-left: 24px; font-size: 1rem; color: #1976d2;">Tools Directory: <strong>{{ applicationStatus.toolsdir }}</strong></span>
                 <mat-icon
                   matTooltip="This is a ModusToolboxc Application.  A ModusToolbox application consists of multiple projects, each of which builds to an indepenent ELF file.  These ELF files are then combined into a single HEX file to program into the device.  Each project is represented by a project view which can be selected via the navigation bar above."
                   class="application-help-icon"

@@ -41,12 +41,12 @@ export class App {
       icon: 'home'
     },
     {
-      label: 'Create New Project',
+      label: 'New Project',
       component: 'CreateProject',
       icon: 'add_circle'
     },
     {
-      label: 'Recently Opened',
+      label: 'Recent',
       component: 'RecentlyOpenedComponent',
       icon: 'history'
     },
@@ -56,7 +56,7 @@ export class App {
       icon: 'dashboard'
     },
     {
-      label: 'Development Kits',
+      label: 'Dev Kits',
       component: 'DevkitListComponent',
       icon: 'dashboard'
     },
