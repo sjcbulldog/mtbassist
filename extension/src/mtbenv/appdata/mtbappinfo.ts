@@ -6,19 +6,19 @@ import { MTBProjectInfo } from "./mtbprojinfo";
 import * as winston from 'winston';
 
 export enum ApplicationType {
-    Unknown,
-    Combined,
-    Application
+    unknown,
+    combined,
+    application
 }
 
 export class MTBAppInfo {
-    private static app_required_vars_ : string[] = [
+    private static appRequiredVars : string[] = [
         MTBNames.MTB_TYPE,
         MTBNames.MTB_PROJECTS,
         MTBNames.MTB_QUERY,
         MTBNames.MTB_TOOLS_DIR,
         MTBNames.MTB_BUILD_SUPPORT,
-    ]
+    ];
 
     private type_ : ApplicationType ;
     private appdir_ : string ;
@@ -27,7 +27,7 @@ export class MTBAppInfo {
     private vars_? : Map<string, string> ;
 
     constructor(env: ModusToolboxEnvironment, appdir: string) {
-        this.type_ = ApplicationType.Unknown ;
+        this.type_ = ApplicationType.unknown ;
         this.appdir_ = appdir ;
         this.env_ = env ;
     }
@@ -97,7 +97,7 @@ export class MTBAppInfo {
         }
 
         if (type === 'APPLICATION') {
-            for(let v of MTBAppInfo.app_required_vars_) {
+            for(let v of MTBAppInfo.appRequiredVars) {
                 if (!this.vars_.has(v)) {
                     if (msg.length > 0) {
                         msg += '\n' ;

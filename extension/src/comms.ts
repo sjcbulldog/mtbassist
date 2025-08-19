@@ -176,6 +176,7 @@ export interface Project {
 export interface ApplicationStatusData {
   valid: boolean ;
   name: string;
+  toolsdir: string;
   memory: MemoryInfo[];
   documentation: Documentation[];
   middleware: Middleware[];

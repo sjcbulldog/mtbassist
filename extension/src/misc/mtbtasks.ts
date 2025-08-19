@@ -96,7 +96,7 @@ export class MTBTasks
             this.addTask(taskname) ;
         }        
 
-        if (this.env_.appInfo.type() === ApplicationType.Application) {
+        if (this.env_.appInfo.type() === ApplicationType.application) {
             for(let project of this.env_.appInfo.projects) {
                 for(let taskname of MTBTasks.appTaskNames) {                
                     if (taskname.indexOf("ninja") !== -1 && !ninja) {
@@ -148,7 +148,7 @@ export class MTBTasks
             }
         }
 
-        if (this.env_.appInfo?.type() === ApplicationType.Application) {
+        if (this.env_.appInfo?.type() === ApplicationType.application) {
             for(let project of this.env_.appInfo.projects) {
                 for(let taskname of MTBTasks.appTaskNames) {
                     if (taskname.indexOf("ninja") !== -1 && !ninja) {
@@ -428,7 +428,7 @@ export class MTBTasks
             task = this.generateMakeTask(false, MTBTasks.taskNameClean, "clean", "", false, project, false, false) ;
         }
         else if (taskname === MTBTasks.taskNameBuild) {
-            if (project === undefined && this.env_.appInfo?.type() === ApplicationType.Application) {
+            if (project === undefined && this.env_.appInfo?.type() === ApplicationType.application) {
                 task = this.generateMakeTask(true, MTBTasks.taskNameBuild, "-j build", "", true, project, false, false) ;
             }
             else {
@@ -448,7 +448,7 @@ export class MTBTasks
             task = this.generateRebuildNinja(project) ;
         }
         else if (taskname === MTBTasks.taskNameBuildNinja) {
-            if (project === undefined && this.env_.appInfo?.type() === ApplicationType.Application) {
+            if (project === undefined && this.env_.appInfo?.type() === ApplicationType.application) {
                 task = this.generateMakeTask(true, MTBTasks.taskNameBuildNinja, "build", "NINJA=1", true, project, false, false) ;
                 // task = this.generateBuildNinja() ;
             }

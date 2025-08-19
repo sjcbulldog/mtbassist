@@ -105,7 +105,7 @@ export class MTBAppLoader {
 
     private loadCombined(vars: Map<string, string>) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            this.app_.setType(ApplicationType.Combined) ;
+            this.app_.setType(ApplicationType.combined) ;
             let projinfo = new MTBProjectInfo(this.app_, this.app_.appdir, vars) ;
             this.processProject(projinfo)
                 .then(() => {
@@ -154,7 +154,7 @@ export class MTBAppLoader {
                 reject(new Error(msg)) ;
             }
             else {
-                this.app_.setType(ApplicationType.Application) ;
+                this.app_.setType(ApplicationType.application) ;
                 let pall = [] ;
                 for(let proj of vars.get(MTBNames.MTB_PROJECTS)!.split(' ')) {
                     let projpath = path.join(this.app_.appdir, proj) ;

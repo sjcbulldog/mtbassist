@@ -1307,6 +1307,7 @@ export class MTBAssistObject {
             appst = {
                 valid: true,
                 name: this.env_.appInfo?.appdir || '',
+                toolsdir: this.env_.toolsDir!,
                 memory: this.meminfo_,
                 documentation: pinfo?.documentation || [],
                 middleware: [],
@@ -1317,6 +1318,7 @@ export class MTBAssistObject {
             appst = {
                 valid: false,
                 name: '',
+                toolsdir: '',
                 memory: [],
                 documentation: [],
                 middleware: [],

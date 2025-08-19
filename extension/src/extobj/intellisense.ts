@@ -73,7 +73,7 @@ export class IntelliSenseMgr extends MtbManagerBase {
             //
             let compilecmds: string;
 
-            if (this.ext.env!.appInfo!.type() === ApplicationType.Application) {
+            if (this.ext.env!.appInfo!.type() === ApplicationType.application) {
                 compilecmds = "${workspaceFolder}/" + proj.name + "/build";
             }
             else {
