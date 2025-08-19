@@ -1,4 +1,3 @@
-
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -25,8 +24,17 @@ import MtbNav from '../mtb-nav/mtb-nav';
   styleUrl: './getting-started.scss'
 })
 export class GettingStarted {
+  themeType: 'dark' | 'light' = 'dark'; // Default to light theme
+
   constructor(private be: BackendService) {
-    this.be.log('GettingStarted component initialized');
+    this.be.theme.subscribe(theme => {
+      if (theme === 'dark' || theme === 'light') {
+        this.themeType = theme;
+      }
+      else {
+        this.themeType = 'dark' ;
+      }
+    }) ;
   }
 
   goToCreateProject() {

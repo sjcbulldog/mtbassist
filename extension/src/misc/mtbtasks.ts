@@ -35,13 +35,15 @@ export class MTBTasks
     private valid_: boolean = false ;
     private env_ : ModusToolboxEnvironment ;
     private logger_ : winston.Logger ;
+    private toolsdir_ : string | undefined ;
 
     private static validVersion = "2.0.0" ;
 
-    constructor(env: ModusToolboxEnvironment, logger: winston.Logger, filename: string) {
+    constructor(env: ModusToolboxEnvironment, logger: winston.Logger, filename: string, toolspath: string | undefined) {
         this.filename_ = filename ;
         this.env_ = env ;
         this.logger_ = logger ;
+        this.toolsdir_ = toolspath ;
 
         if (fs.existsSync(filename)) {
             this.initFromFile() ;
@@ -298,7 +300,13 @@ export class MTBTasks
 
         return task ;
     }
-  
+
+    private genToolsPath() : string {
+        if (this.toolsdir_) {
+            return `export CY_TOOLS_PATHS=${this.toolsdir_} ; ` ;
+        }
+        return '' ;
+    }
 
     //
     // If hide is true, override the logic assocaited with projects and hide the task regardless
@@ -320,17 +328,17 @@ export class MTBTasks
         }
 
         if (project) {
-            winarg = "export PATH=/bin:/usr/bin:$PATH ; cd " + project + "; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe " + targetstr ;
+            winarg = `export PATH=/bin:/usr/bin:$PATH ; ${this.genToolsPath()} cd ${project} ; \${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe ${targetstr} `;
         }
         else {
-            winarg = "export PATH=/bin:/usr/bin:$PATH ; ${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe " + targetstr ;
+            winarg = `export PATH=/bin:/usr/bin:$PATH ; ${this.genToolsPath()} \${config:modustoolbox.toolsPath}/modus-shell/bin/make.exe ${targetstr} `;
         }
 
         if (project) {
-            unixarg = "cd " + project + " ; make " + targetstr ;
+            unixarg = `export ${this.genToolsPath() } cd ${project} ; make ${targetstr} `;
         }
         else {
-            unixarg = "make " + targetstr ;
+            unixarg = `export ${this.genToolsPath() } make ${targetstr} `;
         }
 
         let task =  {

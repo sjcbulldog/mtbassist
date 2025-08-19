@@ -63,6 +63,7 @@ export class MTBAssistObject {
     private oobmode_: string = 'none';
     private compDescMap_: Map<string, string> = new Map() ;
     private keywords_ : MtbFunIndex ;
+    private toolspath_ : string | undefined = 'C:/users/butch/ModusToolbox/tools_3.4' ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -96,6 +97,10 @@ export class MTBAssistObject {
         vscode.window.onDidChangeActiveColorTheme(e => {
             this.pushTheme() ;
         });
+    }
+
+    public get toolsDir() : string | undefined {
+        return this.toolspath_;
     }
 
     /**
@@ -202,7 +207,7 @@ export class MTBAssistObject {
             }
 
             this.bsps_ = new BSPMgr(this.context_.extensionUri.fsPath, this.env_!);
-            this.worker_ = new VSCodeWorker(this.logger_, this.env_);
+            this.worker_ = new VSCodeWorker(this.logger_, this);
             this.worker_.on('progress', this.reportProgress.bind(this));
             this.worker_.on('runtask', this.runTask.bind(this));
             this.worker_.on('loadedAsset', this.loadedAsset.bind(this));
@@ -228,7 +233,7 @@ export class MTBAssistObject {
                                                     this.pushRecentlyOpened();
                                                 }
                                                 let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'tasks.json');
-                                                this.tasks_ = new MTBTasks(this.env_!, this.logger_, p);
+                                                this.tasks_ = new MTBTasks(this.env_!, this.logger_, p, this.toolspath_);
                                                 this.switchToTab(MTBAssistObject.applicationStatusTab);
                                                 this.getLaunchData()
                                                     .then(() => {
@@ -657,10 +662,19 @@ export class MTBAssistObject {
         }
 
         let envobj: any = {};
+        let found = false ;
         for (let key of Object.keys(process.env)) {
             if (key.indexOf("ELECTRON") === -1) {
                 envobj[key] = process.env[key];
             }
+            else if (key === 'CY_TOOLS_PATHS' && this.toolspath_) {
+                envobj[key] = this.toolspath_;
+                found = true ;
+            }
+        }
+
+        if (!found) {
+            envobj['CY_TOOLS_PATHS'] = this.toolspath_;
         }
 
         exec.execFile(cfg.cmdline[0],
@@ -874,11 +888,12 @@ export class MTBAssistObject {
                 }
 
                 this.logger_.debug('ModusToolbox application detected - loading...');
+
                 //
                 // Load the ModusToolbox application w/ packs and tools
                 //
                 let flags: MTBLoadFlags = MTBLoadFlags.appInfo | MTBLoadFlags.packs | MTBLoadFlags.tools;
-                this.env_!.load(flags, appDir).then(() => {
+                this.env_!.load(flags, appDir, this.toolspath_).then(() => {
                     this.envLoaded_ = true;
                     this.logger_.info('ModusToolbox application loaded successfully.');
                     resolve();
@@ -1010,7 +1025,7 @@ export class MTBAssistObject {
                 return;
             }
 
-            ModusToolboxEnvironment.runCmdCaptureOutput(cwd, cmd, ['--quick', '--docs', '--app', this.env_!.appInfo!.appdir])
+            ModusToolboxEnvironment.runCmdCaptureOutput(cwd, cmd, this.toolspath_, ['--quick', '--docs', '--app', this.env_!.appInfo!.appdir])
                 .then((result) => {
                     if (result[0] !== 0) {
                         this.logger_.debug(`mtblaunch output: ${result[1].join('\n')}`);

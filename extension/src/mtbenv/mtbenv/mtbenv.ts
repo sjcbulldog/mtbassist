@@ -14,6 +14,7 @@ import * as exec from 'child_process' ;
 import * as path from 'path';
 import * as fs from 'fs';
 import { URI } from 'vscode-uri';
+import { platform } from 'process';
 
 export class ModusToolboxEnvironment extends EventEmitter {
     // Static variables
@@ -148,7 +149,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ret ;
     }
 
-    public load(flags: MTBLoadFlags, appdir?: string) : Promise<void> {
+    public load(flags: MTBLoadFlags, appdir?: string, toolsPath?: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             if (this.isLoading_) {
                 reject('ModusToolboxEnvironment is already loading') ;
@@ -158,6 +159,10 @@ export class ModusToolboxEnvironment extends EventEmitter {
             this.isLoading_ = true ;
             if (appdir !== undefined) {
                 this.appdir_ = appdir ;
+            }
+
+            if (toolsPath !== undefined) {
+                this.requestedToolsDir_ = toolsPath ;
             }
             this.wants_ = flags ;
 
@@ -260,7 +265,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ret;
     }
 
-    public static async runCmdCaptureOutput(cwd: string, cmd: string, args: string[], cb?: (lines: string[], id?: any) => void, id?: any) : Promise<[number, string[]]> {
+    public static async runCmdCaptureOutput(cwd: string, cmd: string, toolspath: string | undefined, args: string[], cb?: (lines: string[], id?: any) => void, id?: any) : Promise<[number, string[]]> {
         let ret: Promise<[number, string[]]> = new Promise<[number, string[]]>((resolve, reject) => {
             let sofar = 0 ;
             let text: string = "" ;
@@ -270,6 +275,9 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 if (key === 'PATH') {
                     penv['PATH'] = ModusToolboxEnvironment.filterPath(process.env[key]!) ;
                     found = true ;
+                }
+                else if (toolspath && key === 'CY_TOOLS_PATHS') {
+                    penv[key] = toolspath ;
                 }
                 else {
                     penv[key] = process.env[key] ;
@@ -331,9 +339,14 @@ export class ModusToolboxEnvironment extends EventEmitter {
     private static filterPath(path: string) : string {
         let paths = path.split(';') ;
         let elems = paths.filter((p) => { return p.indexOf('cygwin') < 0 ; }) ;
-        elems.push('/usr/bin') ;    // Ensure /usr/bin is always included
-        elems.push('/bin') ;        // Ensure /bin is always included
-        elems.push('C:/windows/System32') ;
+
+        elems.push('/usr/bin') ;                // Ensure /usr/bin is always included
+        elems.push('/bin') ;                    // Ensure /bin is always included
+
+        if (process.platform === 'win32') {
+            // On windows platform, must have the system directory in the path
+            elems.push('C:/windows/System32') ;
+        }
         return elems.join(';') ;
     }
 

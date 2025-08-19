@@ -68,7 +68,7 @@ export class IDCLauncher extends EventEmitter{
                 return;
             }
 
-            ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), this.path_!, args, cb, id)
+            ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), this.path_!, undefined, args, cb, id)
             .then((result) => {
                 if (result[0] !== 0) {
                     this.logger_.error(`IDC Launcher failed with exit code ${result[0]}`);

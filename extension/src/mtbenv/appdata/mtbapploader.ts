@@ -6,6 +6,7 @@ import { MTBUtils } from "../misc/mtbutils";
 import { MTBNames } from "../misc/mtbnames";
 import { MTBProjectInfo } from "./mtbprojinfo";
 import * as winston from 'winston';
+import { ModusToolboxEnvironment } from "../mtbenv/mtbenv";
 
 export class MTBAppLoader {
     private app_ : MTBAppInfo ;
@@ -39,7 +40,7 @@ export class MTBAppLoader {
                         reject(new Error(msg)) ;
                     }
                     else {
-                        MTBUtils.callGetAppInfo(this.logger_, this.modusShellDir_!, this.app_.appdir)
+                        MTBUtils.callGetAppInfo(this.logger_, this.toolsdir_, this.modusShellDir_!, this.app_.appdir)
                             .then((vars) => {
                                 this.app_.setVars(vars) ;
                                 let err = this.app_.isValid() ;
@@ -126,7 +127,7 @@ export class MTBAppLoader {
                 reject(new Error(msg)) ;                
             }
 
-            MTBUtils.callGetAppInfo(this.logger_, this.modusShellDir_!, projdir)
+            MTBUtils.callGetAppInfo(this.logger_, this.toolsdir_, this.modusShellDir_!, projdir)
                 .then((vars) => {
                     let projinfo = new MTBProjectInfo(this.app_, projdir, vars) ;
                     this.processProject(projinfo)

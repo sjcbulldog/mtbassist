@@ -166,7 +166,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                     }
 
                     args.push(serial) ;
-                    ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, args)
+                    ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, this.ext.toolsDir, args)
                         .then((result) => {
                             this.scanForDevKits()
                             .then((st: boolean) => {
@@ -213,7 +213,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                 let opts = {
                     modal: true
                 } ;
-                ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, args)
+                ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, this.ext.toolsDir, args)
                 .then((result) => {
                     this.scanForDevKits()
                     .then((st: boolean) => {
@@ -265,7 +265,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
 
                 let args: string[] = ["--device-list"] ;
 
-                ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, args)
+                ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, this.ext.toolsDir, args)
                     .then((result) => { (async() => { 
                             let res: [number, string[]] = result as [number, string[]] ;
                             if (res[0] !== 0 && !this.isNotConnected(res)) {
@@ -433,7 +433,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
             }
             let args: string[] = [ "--info", kit.serial] ;
 
-            ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, args)
+            ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), fwload, this.ext.toolsDir, args)
             .then((result) => {
                 let res: [number, string[]] = result as [number, string[]] ;
                 if (res[0] !== 0) {

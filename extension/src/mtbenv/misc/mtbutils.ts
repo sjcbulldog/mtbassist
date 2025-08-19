@@ -130,14 +130,40 @@ export class MTBUtils {
         return obj ;
     }
 
-    public static async runProg(logger: winston.Logger, cmd: string, cwd: string, args: string[]) : Promise<[number, string[]]> {
+    private static createEnv(toolspath: string | undefined) : NodeJS.ProcessEnv {
+        let env: NodeJS.ProcessEnv = { } ;
+
+        if (toolspath) {
+            let found = false ;
+            for(let key in process.env) {
+                if (key === 'CY_TOOLS_PATHS') {
+                    env[key] = toolspath ;
+                    found = true ;
+                    break ;
+                }
+            }
+
+            if (!found) {
+                env['CY_TOOLS_PATHS'] = toolspath ;
+            }
+        }
+        else {
+            env = { ...process.env };
+        }
+
+        return env;
+    }
+
+    public static async runProg(logger: winston.Logger, toolsdir: string | undefined, cmd: string, cwd: string, args: string[]) : Promise<[number, string[]]> {
         let ret = new Promise<[number, string[]]>((resolve, reject) => {
             let text: string = "" ;
+            let envdata = this.createEnv(toolsdir) ;
             let cp: exec.ChildProcess = exec.spawn(cmd, args, 
                 {
                     cwd: cwd,
                     windowsHide: true,
-                    shell: false
+                    shell: false,
+                    env: envdata
                 }) ;
 
             cp.stdout?.on('data', (data) => {
@@ -162,7 +188,7 @@ export class MTBUtils {
         return ret ;
     }
 
-    public static async callMake(logger: winston.Logger, shtools: string, cwd: string, makeargs: string[]) : Promise<[number, string[]]> {
+    public static async callMake(logger: winston.Logger, toolsdir: string | undefined, shtools: string, cwd: string, makeargs: string[]) : Promise<[number, string[]]> {
         let ret = new Promise<[number, string[]]>((resolve, reject) => {
             let makepath = path.join(shtools, 'bin', 'make') ;
             let bashpath = path.join(shtools, 'bin', 'bash') ;
@@ -179,7 +205,7 @@ export class MTBUtils {
 
             let args = ['--norc', '--noprofile', '-c', pgm] ;
 
-            MTBUtils.runProg(logger, bashpath, cwd, args)
+            MTBUtils.runProg(logger, toolsdir, bashpath, cwd, args)
             .then((result) => {
                 resolve(result) ;
             })
@@ -191,9 +217,9 @@ export class MTBUtils {
         return ret ;
     }
 
-    public static async callGetAppInfo(logger: winston.Logger, shtools: string, cwd: string) : Promise<Map<string, string>> {
+    public static async callGetAppInfo(logger: winston.Logger, toolspath: string | undefined, shtools: string, cwd: string) : Promise<Map<string, string>> {
         let ret = new Promise<Map<string, string>>((resolve, reject) => { 
-            this.callMake(logger, shtools, cwd, ['get_app_info', 'CY_PROTOCOL=2', 'MTB_QUERY=1'])
+            this.callMake(logger, toolspath, shtools, cwd, ['get_app_info', 'CY_PROTOCOL=2', 'MTB_QUERY=1'])
                 .then((result) => {
                     if (result[0] !== 0) {
                         reject(new Error(`the call to 'make get_app_info' returns status code ${result[0]}`)) ;

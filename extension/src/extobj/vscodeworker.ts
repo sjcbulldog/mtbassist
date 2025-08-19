@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import * as vscodeuri from 'vscode-uri';
 import * as EventEmitter from 'events' ;
 import { MTBLoadFlags } from "../mtbenv/mtbenv/loadflags";
+import { MTBAssistObject } from "./mtbassistobj";
 
 interface OutputPercentMap {
     match: RegExp ;
@@ -47,18 +48,18 @@ export class VSCodeWorker extends EventEmitter  {
         },
     ] ;
 
-    private env_: ModusToolboxEnvironment;
     private logger_: winston.Logger;
     private createProjectIndex_ : number = 0 ;
     private createProjectPercent_ : number = 0 ;
     private makeLines_ : number = 0 ;
+    private ext_ : MTBAssistObject;
 
-    public constructor(logger: winston.Logger, env: ModusToolboxEnvironment) {
+    public constructor(logger: winston.Logger, ext: MTBAssistObject) {
         super() ;
-        this.env_ = env;
         this.logger_ = logger;
+        this.ext_ = ext;
 
-        this.env_.on('loaded', this.dataLoaded.bind(this)) ;
+        this.ext_.env!.on('loaded', this.dataLoaded.bind(this)) ;
     }
 
     public getPlatform(): PlatformType {
@@ -184,7 +185,7 @@ export class VSCodeWorker extends EventEmitter  {
                 this.sendProgress(`Creating project '${bspid} - ${ceid}'`, 0);
                 this.createProjectIndex_ = 0 ;
                 this.createProjectPercent_ = 0 ;
-                ModusToolboxEnvironment.runCmdCaptureOutput(projdir, cliPath, ['--use-modus-shell', '-b', bspid, '-a', ceid , '-d', projdir, '-n', appdir], this.createProjectCallback.bind(this))
+                ModusToolboxEnvironment.runCmdCaptureOutput(projdir, cliPath, this.ext_.toolsDir, ['--use-modus-shell', '-b', bspid, '-a', ceid , '-d', projdir, '-n', appdir], this.createProjectCallback.bind(this))
                 .then(async (result) => {
                     if (gitAutoRepoDetect) {
                         await this.setAutoRepoDetect(true) ;
@@ -271,7 +272,7 @@ export class VSCodeWorker extends EventEmitter  {
             }
             else {
                 this.makeLines_ = 0 ;
-                ModusToolboxEnvironment.runCmdCaptureOutput(p, cliPath, ['vscode'], this.makeVSCodeCallback.bind(this))
+                ModusToolboxEnvironment.runCmdCaptureOutput(p, cliPath, this.ext_.toolsDir, ['vscode'], this.makeVSCodeCallback.bind(this))
                 .then((result) => {
                     resolve([0, [``]]);
                 })
@@ -284,14 +285,14 @@ export class VSCodeWorker extends EventEmitter  {
 
     public fixMissingAssets(projname: string): Promise<void> {
         let ret = new Promise<void>((resolve) => {
-            let proj = this.env_.appInfo?.projects.find((p) => p.name === projname);
+            let proj = this.ext_.env!.appInfo?.projects.find((p) => p.name === projname);
             if (!proj) {
                 this.logger_.error(`Project '${projname}' not found.`) ;
                 resolve() ;
                 return;
             }
 
-            this.runMakeGetLibs(this.env_.appInfo!.appdir, proj.name)
+            this.runMakeGetLibs(this.ext_.env!.appInfo!.appdir, proj.name)
             .then((result) => {
                 if (result[0] !== 0) {
                     this.logger_.error(`Failed to fix missing assets for project '${projname}': ${result[1].join('\n')}`) ;
@@ -324,7 +325,7 @@ export class VSCodeWorker extends EventEmitter  {
             }
             else {
                 this.makeLines_ = 0 ;
-                ModusToolboxEnvironment.runCmdCaptureOutput(p, cliPath, ['getlibs'], this.dumpMakeOutput.bind(this))
+                ModusToolboxEnvironment.runCmdCaptureOutput(p, cliPath, this.ext_.toolsDir, ['getlibs'], this.dumpMakeOutput.bind(this))
                 .then((result) => {
                     resolve([0, [``]]);
                 })
@@ -336,7 +337,7 @@ export class VSCodeWorker extends EventEmitter  {
     }       
 
     private findMakePath() : string | undefined {
-        let tool = this.env_.toolsDB.findToolByGUID(VSCodeWorker.modusShellToolUuid);
+        let tool = this.ext_.env!.toolsDB.findToolByGUID(VSCodeWorker.modusShellToolUuid);
         if (tool === undefined) {
             return undefined;
         }
@@ -345,7 +346,7 @@ export class VSCodeWorker extends EventEmitter  {
     }    
 
     private findProjectCreatorCLIPath() : string | undefined {
-        let tool = this.env_.toolsDB.findToolByGUID(VSCodeWorker.projectCreatorToolUuid);
+        let tool = this.ext_.env!.toolsDB.findToolByGUID(VSCodeWorker.projectCreatorToolUuid);
         if (tool === undefined) {
             return undefined;
         }

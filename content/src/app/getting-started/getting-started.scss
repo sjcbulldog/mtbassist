@@ -323,3 +323,101 @@
   border-radius: 8px;
   font-weight: 500;
 }
+
+.getting-started-container.dark-theme {
+  background: #181a20;
+  color: #e0e0e0;
+
+  .section-title {
+    color: #90caf9;
+  }
+
+  .hero-card {
+    background: linear-gradient(135deg, #23272f 0%, #1a202c 100%);
+    color: #e0e0e0;
+    .hero-content {
+      .hero-title {
+        color: #90caf9;
+      }
+      .hero-subtitle {
+        color: #b0b0b0;
+      }
+      .hero-actions {
+        .primary-button {
+          background-color: #23272f;
+          color: #90caf9;
+        }
+        .secondary-button {
+          border: 2px solid #23272f;
+          color: #e0e0e0;
+        }
+      }
+    }
+  }
+
+  .features-section {
+    .feature-card {
+      background: #23272f;
+      .feature-title {
+        color: #90caf9;
+      }
+      .feature-description {
+        color: #b0b0b0;
+      }
+    }
+  }
+
+  .quickstart-section {
+    .quickstart-card {
+      background: #23272f;
+      .step-number {
+        background-color: #90caf9;
+        color: #23272f;
+      }
+      .step-content {
+        color: #b0b0b0;
+      }
+    }
+  }
+
+  .resources-section {
+    .resource-card {
+      background: #23272f;
+      color: #e0e0e0;
+      .resource-icon {
+        color: #90caf9;
+      }
+      h3 {
+        color: #90caf9;
+      }
+      p {
+        color: #b0b0b0;
+      }
+    }
+  }
+
+  .tips-section {
+    .tips-card {
+      background: #23272f;
+      color: #e0e0e0;
+      mat-card-header .mat-mdc-card-title {
+        color: #90caf9;
+      }
+      mat-icon {
+        color: #ffb300;
+      }
+      mat-list-item mat-icon {
+        color: #4caf50;
+      }
+    }
+  }
+}
+
+.getting-started-container.light-theme {
+  background: #f5f7fa;
+  color: #222;
+  .section-title {
+    color: #1976d2;
+  }
+  // All other styles use default (existing) colors
+}
