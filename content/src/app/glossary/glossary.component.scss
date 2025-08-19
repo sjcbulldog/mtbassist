@@ -68,16 +68,40 @@
 
 .glossary-content {
   display: flex;
-  min-height: 600px;
+  height: 600px; /* Fixed height to enable independent scrolling */
 }
 
 .alphabet-tabs {
   background: #f8fafc;
   width: 64px;
+  border-right: 1px solid #e5e7eb;
+  overflow: hidden; /* Hide overflow on container */
+}
+
+.alphabet-tabs-scroll {
+  height: 100%;
+  overflow-y: auto; /* Enable vertical scrolling for tabs */
   display: flex;
   flex-direction: column;
   padding: 1rem 0;
-  border-right: 1px solid #e5e7eb;
+}
+
+/* Custom scrollbar for alphabet tabs */
+.alphabet-tabs-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.alphabet-tabs-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.alphabet-tabs-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.alphabet-tabs-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .tab-button {
@@ -116,11 +140,35 @@
   flex: 1;
   background: #ffffff;
   position: relative;
+  overflow: hidden; /* Hide overflow on container */
+}
+
+.dictionary-content-scroll {
+  height: 100%;
+  overflow-y: auto; /* Enable vertical scrolling for content */
+}
+
+/* Custom scrollbar for dictionary content */
+.dictionary-content-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dictionary-content-scroll::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.dictionary-content-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dictionary-content-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .dictionary-page {
   padding: 2.5rem;
-  min-height: 100%;
+  min-height: auto; /* Remove min-height to allow natural content height */
 }
 
 .search-results-header h3,

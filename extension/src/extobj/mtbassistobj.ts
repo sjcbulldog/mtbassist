@@ -92,6 +92,10 @@ export class MTBAssistObject {
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
         this.keywords_ = new MtbFunIndex(this.logger_);
         this.bindCommandHandlers();
+
+        vscode.window.onDidChangeActiveColorTheme(e => {
+            this.pushTheme() ;
+        });
     }
 
     /**
@@ -352,6 +356,7 @@ export class MTBAssistObject {
             if (autodisp === 'Always') {
                 vscode.commands.executeCommand('mtbassist2.mtbMainPage')
                     .then(() => {
+                        this.pushTheme() ;
                         resolve();
                     });
             }
@@ -359,6 +364,7 @@ export class MTBAssistObject {
                 if (this.env_ && this.env_.appInfo) {
                     vscode.commands.executeCommand('mtbassist2.mtbMainPage')
                         .then(() => {
+                            this.pushTheme() ;
                             resolve();
                         });
                 }
@@ -1107,6 +1113,23 @@ export class MTBAssistObject {
         }
     }
 
+    private pushTheme() : void {
+        let t = vscode.window.activeColorTheme ;
+        let theme: string = 'dark' ;
+        switch(t.kind) {
+            case vscode.ColorThemeKind.Light:
+                theme = 'light' ;
+                break ;
+            case vscode.ColorThemeKind.Dark:
+                theme = 'dark' ;
+                break ;
+            default:
+                theme = 'contrast' ;
+                break ;
+        }
+        this.pushOOB('setTheme', theme);
+    }
+
     private pushNeededTools() {
         this.pushOOB('neededTools', this.setupMgr_!.neededTools);
     }
@@ -1199,7 +1222,7 @@ export class MTBAssistObject {
         if (this.panel_) {
             let st = {
                 oobtype: 'allbsps',
-                bsps: this.getBSPIdentifiers()
+                bsps: this.getBSPIdentifiers().sort((a, b) => a.name.localeCompare(b.name))
             };
             let oob: BackEndToFrontEndResponse = {
                 response: 'oob',

@@ -17,53 +17,57 @@
   <div class="glossary-content">
     <!-- Alphabet Tabs -->
     <div class="alphabet-tabs">
-      @for (letter of alphabet; track letter) {
-        <button 
-          class="tab-button"
-          [class.active]="selectedLetter === letter"
-          [class.has-entries]="hasEntriesForLetter(letter)"
-          [class.no-entries]="!hasEntriesForLetter(letter)"
-          (click)="selectLetter(letter)"
-        >
-          {{ letter }}
-        </button>
-      }
+      <div class="alphabet-tabs-scroll">
+        @for (letter of alphabet; track letter) {
+          <button 
+            class="tab-button"
+            [class.active]="selectedLetter === letter"
+            [class.has-entries]="hasEntriesForLetter(letter)"
+            [class.no-entries]="!hasEntriesForLetter(letter)"
+            (click)="selectLetter(letter)"
+          >
+            {{ letter }}
+          </button>
+        }
+      </div>
     </div>
 
     <!-- Dictionary Content -->
     <div class="dictionary-content">
-      <div class="dictionary-page">
-        @if (searchTerm) {
-          <div class="search-results-header">
-            <h3>Search Results for "{{ searchTerm }}"</h3>
-            <p class="results-count">{{ filteredEntries.length }} result(s) found</p>
-          </div>
-        } @else {
-          <div class="letter-header">
-            <h3>{{ selectedLetter }}</h3>
-          </div>
-        }
-
-        <div class="entries-container">
-          @if (filteredEntries.length === 0) {
-            <div class="no-entries">
-              @if (searchTerm) {
-                <p>No entries found matching "{{ searchTerm }}"</p>
-              } @else {
-                <p>No entries found for letter "{{ selectedLetter }}"</p>
-              }
+      <div class="dictionary-content-scroll">
+        <div class="dictionary-page">
+          @if (searchTerm) {
+            <div class="search-results-header">
+              <h3>Search Results for "{{ searchTerm }}"</h3>
+              <p class="results-count">{{ filteredEntries.length }} result(s) found</p>
             </div>
           } @else {
-            @for (entry of filteredEntries; track entry.term) {
-              <div class="glossary-entry">
-                <h4 class="entry-term">{{ entry.term }}</h4>
-                <p class="entry-definition">{{ entry.definition }}</p>
-                @if (entry.category) {
-                  <span class="entry-category">{{ entry.category }}</span>
+            <div class="letter-header">
+              <h3>{{ selectedLetter }}</h3>
+            </div>
+          }
+
+          <div class="entries-container">
+            @if (filteredEntries.length === 0) {
+              <div class="no-entries">
+                @if (searchTerm) {
+                  <p>No entries found matching "{{ searchTerm }}"</p>
+                } @else {
+                  <p>No entries found for letter "{{ selectedLetter }}"</p>
                 }
               </div>
+            } @else {
+              @for (entry of filteredEntries; track entry.term) {
+                <div class="glossary-entry">
+                  <h4 class="entry-term">{{ entry.term }}</h4>
+                  <p class="entry-definition">{{ entry.definition }}</p>
+                  @if (entry.category) {
+                    <span class="entry-category">{{ entry.category }}</span>
+                  }
+                </div>
+              }
             }
-          }
+          </div>
         </div>
       </div>
     </div>

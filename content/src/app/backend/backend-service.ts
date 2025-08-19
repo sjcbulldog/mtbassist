@@ -193,7 +193,6 @@ export class BackendService {
             this.devKitStatus.next(cmd.data.kits) ;
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'allbsps') {
-            this.log(`Received all BSPs: ${JSON.stringify(cmd.data.bsps)}`);
             this.allBSPs.next(cmd.data.bsps || []);
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'isMTBInstalled') {

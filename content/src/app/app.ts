@@ -61,7 +61,7 @@ export class App {
       icon: 'dashboard'
     },
     {
-      label: 'Help',
+      label: 'Glossary',
       component: 'GlossaryComponent',
       icon: 'help'
     }

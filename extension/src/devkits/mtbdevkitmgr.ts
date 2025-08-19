@@ -356,9 +356,9 @@ export class MTBDevKitMgr extends MtbManagerBase {
                     let kit: MTBDevKit | undefined = this.getKitBySerial(serial) ;
                     if (kit === undefined) {
                         kit = new MTBDevKit(kptype, serial, mode, version, outdated) ;
-                        kit.bsp = this.getBSPForSerial(serial) ;
                         try {
                             await this.getKitDetails(kit) ;
+                            kit.bsp = this.getBSPForSerial(kit) ;
                             this.kits.push(kit);
                             resolve() ;
                         }
@@ -546,14 +546,21 @@ export class MTBDevKitMgr extends MtbManagerBase {
         }
     }
 
-    private getBSPForSerial(serial: string) : string | undefined {
+    private getBSPForSerial(kit: MTBDevKit) : string | undefined {
+        //
+        // If this kit already has a BSP associated with the serial number
+        // it gets first priority.
+        //
         for(let pair of this.devkitBsp) {
-            if (pair[0] === serial) {
+            if (pair[0] === kit.serial) {
                 return pair[1] ;
             }
         }
 
-        return undefined ;
+        //
+        // If the kit name matches a BSP name
+        //
+        return kit.name ;
     }
 
     private loadBSPMapping() : DevKitName2BSPMapping[] {
@@ -577,21 +584,21 @@ export class MTBDevKitMgr extends MtbManagerBase {
         
         kit = new MTBDevKit('kp3', '8765309', 'HID', '1.0.0', false) ;
         kit.name = "KIT_PSOCE84_EVK",
-        kit.bsp = this.getBSPForSerial(kit.serial) ;
+        kit.bsp = this.getBSPForSerial(kit) ;
         this.kits.push(kit) ;
 
         kit = new MTBDevKit('kp3', '12345678', 'HID', '2.0.0', false) ;
         kit.name = "KIT_PSOCE84_EVK",
-        kit.bsp = this.getBSPForSerial(kit.serial) ;
+        kit.bsp = this.getBSPForSerial(kit) ;
         this.kits.push(kit) ;
 
         kit = new MTBDevKit('kp3', '98765432', 'HID', '3.0.0', false) ;
-        kit.bsp = this.getBSPForSerial(kit.serial) ;
+        kit.bsp = this.getBSPForSerial(kit) ;
         kit.outdated = true ;
         this.kits.push(kit) ;
         
         kit = new MTBDevKit('kp3', '12123434', 'HID', '4.0.0', false) ;
-        kit.bsp = this.getBSPForSerial(kit.serial) ;
+        kit.bsp = this.getBSPForSerial(kit) ;
         kit.outdated = true ;
         this.kits.push(kit) ;
     }
