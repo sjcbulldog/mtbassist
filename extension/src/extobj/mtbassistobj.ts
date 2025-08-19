@@ -216,7 +216,7 @@ export class MTBAssistObject {
                                 this.pushOOB('isMTBInstalled', { installed: this.oobmode_ });
                                 this.postInitializeManagers()
                                     .then(() => {
-                                        if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo) && this.env_.appInfo) {
+                                        if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
                                             this.optionallyShowPage()
                                             .then(() => { 
                                                 if (this.recents_) {
@@ -253,7 +253,7 @@ export class MTBAssistObject {
                                                                 this.setIntellisenseProject();
                                                                 this.logger_.debug('All managers post-initialization completed successfully.');
                                                                                         
-                                                                this.env?.load(MTBLoadFlags.Manifest)
+                                                                this.env?.load(MTBLoadFlags.manifestData)
                                                                 .then(() => {
                                                                     this.pushDevKitStatus() ;
                                                                     this.pushAllBSPs();
@@ -274,7 +274,7 @@ export class MTBAssistObject {
                                             }) ;
                                         }
                                         else {
-                                            this.env?.load(MTBLoadFlags.Manifest)
+                                            this.env?.load(MTBLoadFlags.manifestData)
                                                 .then(() => {
                                                     this.pushAllBSPs();
                                                     this.logger_.debug('ModusToolbox manifests loaded successfully.');
@@ -640,7 +640,7 @@ export class MTBAssistObject {
         return ret;
     }
 
-    private launch(tool: Tool) {
+    private launch(tool: Tool, reloadApp: boolean = false) {
         let cfg = tool.launchData;
 
         let args: string[] = [];
@@ -649,7 +649,6 @@ export class MTBAssistObject {
                 args.push(cfg.cmdline[i]);
             }
         }
-        vscode.window.showInformationMessage("Starting program '" + cfg['short-name']);
 
         let envobj: any = {};
         for (let key of Object.keys(process.env)) {
@@ -667,7 +666,18 @@ export class MTBAssistObject {
                 if (error) {
                     vscode.window.showErrorMessage(error.message);
                 }
-                this.pushAppStatus();
+                if (reloadApp) {
+                    this.env_?.reloadAppInfo()
+                    .then(() => { 
+                        this.pushAppStatus() ;
+                    }) 
+                    .catch((err) => { 
+                        this.logger_.error('Error reloading app info:', err);   
+                    });
+                }
+                else {
+                    this.pushAppStatus();
+                }
             }
         );
     }
@@ -676,7 +686,7 @@ export class MTBAssistObject {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
             let tool = this.getLaunchConfig('', MTBAssistObject.libmgrProgUUID);
             if (tool) {
-                this.launch(tool);
+                this.launch(tool, true);
             }
             resolve(null);
         });
@@ -839,7 +849,7 @@ export class MTBAssistObject {
         return new Promise((resolve, reject) => {
             if (!this.isPossibleMTBApplication()) {
                 this.logger_.debug('Not a ModusToolbox application - skipping loading app.');
-                let flags: MTBLoadFlags = MTBLoadFlags.Packs | MTBLoadFlags.Tools;
+                let flags: MTBLoadFlags = MTBLoadFlags.packs | MTBLoadFlags.tools;
                 this.env_!.load(flags).then(() => {
                     this.envLoaded_ = true;
                     this.logger_.info('ModusToolbox environment with no application loaded successfully.');
@@ -861,7 +871,7 @@ export class MTBAssistObject {
                 //
                 // Load the ModusToolbox application w/ packs and tools
                 //
-                let flags: MTBLoadFlags = MTBLoadFlags.AppInfo | MTBLoadFlags.Packs | MTBLoadFlags.Tools;
+                let flags: MTBLoadFlags = MTBLoadFlags.appInfo | MTBLoadFlags.packs | MTBLoadFlags.tools;
                 this.env_!.load(flags, appDir).then(() => {
                     this.envLoaded_ = true;
                     this.logger_.info('ModusToolbox application loaded successfully.');
@@ -1056,7 +1066,7 @@ export class MTBAssistObject {
     }
 
     private createAppStructure() {
-        if (!this.env_ || !this.env_.has(MTBLoadFlags.AppInfo)) {
+        if (!this.env_ || !this.env_.has(MTBLoadFlags.appInfo)) {
             this.logger_.debug('No ModusToolbox application info found - cannot create app structure.');
             return;
         }
@@ -1237,7 +1247,7 @@ export class MTBAssistObject {
 
     private getAppStatusFromEnv(): ApplicationStatusData {
         let appst: ApplicationStatusData;
-        if (this.env_ && this.env_.has(MTBLoadFlags.AppInfo)) {
+        if (this.env_ && this.env_.has(MTBLoadFlags.appInfo)) {
             let pinfo = this.projectInfo_.get('');
 
             let projects = [...this.projectInfo_.values()].filter((proj) => proj.name !== '').sort((a, b) => a.name.localeCompare(b.name));

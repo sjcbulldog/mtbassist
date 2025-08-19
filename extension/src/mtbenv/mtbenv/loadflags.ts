@@ -1,10 +1,9 @@
 
 export enum MTBLoadFlags {
-    None = 0,
-    AppInfo = (1 << 1),
-    Manifest = (1 << 2),
-    Packs = (1 << 3),
-    Tools = (1 << 4),
-    DeviceDB = (1 << 5),
-    ReloadAppInfo = (1 << 6)
+    none = 0,
+    appInfo = (1 << 1),
+    manifestData = (1 << 2),
+    packs = (1 << 3),
+    tools = (1 << 4),
+    deviceDB = (1 << 5)
 }

@@ -49,7 +49,7 @@ export class BSPMgr {
     }
 
     private appLoaded(loaded: MTBLoadFlags) : void {
-        if (loaded & MTBLoadFlags.Manifest) {
+        if (loaded & MTBLoadFlags.manifestData) {
             this.bsps_.datatype = 'manifest';
             this.bsps_.bsps = [] ;
             for(let board of this.env_.manifestDB.bsps.values()) {

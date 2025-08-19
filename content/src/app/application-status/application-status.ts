@@ -21,30 +21,7 @@ import { BackendService } from '../backend/backend-service';
 })
 export class ApplicationStatus implements OnInit {
     intellisenseProject: string | null = null;
-    // Called when Intellisense Project checkbox is changed
-    onIntellisenseProjectChange(projectName: string): void {
-        this.setIntellisenseProject(projectName);
-        this.handleIntellisenseProjectChange(projectName);
-    }
 
-    // Public method to set the Intellisense Project checkbox for a given project name
-    setIntellisenseProject(projectName: string): void {
-        this.intellisenseProject = projectName;
-        this.cdr.detectChanges() ;        
-    }
-
-    // Method to be called when Intellisense Project is set
-    handleIntellisenseProjectChange(projectName: string): void {
-        this.be.sendRequestWithArgs('setIntellisenseProject', { project: projectName });
-    }
-
-    viewReadme() {
-        if (this.applicationStatus && this.applicationStatus.name) {
-            // Assume the application directory is applicationStatus.name
-            // and README.md is in that directory
-            this.be.sendRequestWithArgs('openReadme', null);
-        }
-    }
     applicationStatus: ApplicationStatusData | null = null;
     isLoading = true;
     hasError = false;
@@ -100,6 +77,31 @@ export class ApplicationStatus implements OnInit {
             }
         });
     }
+
+    // Called when Intellisense Project checkbox is changed
+    onIntellisenseProjectChange(projectName: string): void {
+        this.setIntellisenseProject(projectName);
+        this.handleIntellisenseProjectChange(projectName);
+    }
+
+    // Public method to set the Intellisense Project checkbox for a given project name
+    setIntellisenseProject(projectName: string): void {
+        this.intellisenseProject = projectName;
+        this.cdr.detectChanges() ;        
+    }
+
+    // Method to be called when Intellisense Project is set
+    handleIntellisenseProjectChange(projectName: string): void {
+        this.be.sendRequestWithArgs('setIntellisenseProject', { project: projectName });
+    }
+
+    viewReadme() {
+        if (this.applicationStatus && this.applicationStatus.name) {
+            // Assume the application directory is applicationStatus.name
+            // and README.md is in that directory
+            this.be.sendRequestWithArgs('openReadme', null);
+        }
+    }    
 
     // Called when a middleware tile is clicked in the project tab
     onMiddlewareClick(project: any, middleware: any): void {

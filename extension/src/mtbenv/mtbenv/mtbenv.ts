@@ -23,9 +23,9 @@ export class ModusToolboxEnvironment extends EventEmitter {
     // Instance variables
     private isLoading_: boolean = false ;
     private appdir_? : string ;
-    private wants_ : MTBLoadFlags = MTBLoadFlags.None ;
-    private has_ : MTBLoadFlags = MTBLoadFlags.None ;
-    private loading_ : MTBLoadFlags = MTBLoadFlags.None ;
+    private wants_ : MTBLoadFlags = MTBLoadFlags.none ;
+    private has_ : MTBLoadFlags = MTBLoadFlags.none ;
+    private loading_ : MTBLoadFlags = MTBLoadFlags.none ;
 
     private manifestDb_ : MTBManifestDB ;
     private toolsDb_ : ToolsDB ;
@@ -126,18 +126,18 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 reject('AppInfo was requested via the load flags, but the appdir argument was not provided') ;
             }
             else {
-                this.loading_ |= MTBLoadFlags.AppInfo ;
+                this.loading_ |= MTBLoadFlags.appInfo ;
                 this.loadAppInfo()
                 .then(() => {
                     this.isLoading_ = false ;
-                    this.has_ |= MTBLoadFlags.AppInfo ;
+                    this.has_ |= MTBLoadFlags.appInfo ;
                     this.emit('loaded', this.has_) ;
                     resolve() ;
                 })
                 .catch((err) => {
                     this.isLoading_ = false ;
-                    this.has_ &= ~MTBLoadFlags.AppInfo ;
-                    this.wants_ &= ~MTBLoadFlags.AppInfo ;
+                    this.has_ &= ~MTBLoadFlags.appInfo ;
+                    this.wants_ &= ~MTBLoadFlags.appInfo ;
                     this.logger_.error('Error reloading AppInfo:', err) ;
                     this.emit('error', err) ;
                     reject(err) ;
@@ -176,14 +176,14 @@ export class ModusToolboxEnvironment extends EventEmitter {
                         .then(() => {
                             this.isLoading_ = false ;
                             this.has_ = this.has_ | this.wants_ ;
-                            this.wants_ = MTBLoadFlags.None ;
+                            this.wants_ = MTBLoadFlags.none ;
                             this.emit('loaded', this.has_) ;
                             resolve() ;
                         })
                         .catch((err) => {
                             this.isLoading_ = false ;
-                            this.has_ = MTBLoadFlags.None ;
-                            this.wants_ = MTBLoadFlags.None ;                            
+                            this.has_ = MTBLoadFlags.none ;
+                            this.wants_ = MTBLoadFlags.none ;                            
                             this.logger_.error('Error loading ModusToolbox environment:', err) ;
                             this.emit('error', err) ;
 
@@ -365,27 +365,27 @@ export class ModusToolboxEnvironment extends EventEmitter {
     private nextStep() : Promise<void> | undefined {
         let ret : Promise<void> | undefined = undefined ;
 
-        if (this.wants(MTBLoadFlags.AppInfo) && !this.has(MTBLoadFlags.AppInfo) && !this.loading(MTBLoadFlags.AppInfo)) {
+        if (this.wants(MTBLoadFlags.appInfo) && !this.has(MTBLoadFlags.appInfo) && !this.loading(MTBLoadFlags.appInfo)) {
             if (this.appdir_ === undefined) {
                 ret = new Promise<void>((resolve, reject) => {
                     reject('AppInfo was requested via the load flags, but the appdir argument was not provided') ;
                 }) ;
             }
             else {
-                this.loading_ |= MTBLoadFlags.AppInfo ;
+                this.loading_ |= MTBLoadFlags.appInfo ;
                 ret = this.loadAppInfo() ;
             }
         }
-        else if (this.wants(MTBLoadFlags.Tools) && !this.has(MTBLoadFlags.Tools) && !this.loading(MTBLoadFlags.Tools)) {
-            this.loading_ |= MTBLoadFlags.Tools ;
+        else if (this.wants(MTBLoadFlags.tools) && !this.has(MTBLoadFlags.tools) && !this.loading(MTBLoadFlags.tools)) {
+            this.loading_ |= MTBLoadFlags.tools ;
             ret = this.loadTools() ;
         } 
-        else if (this.wants(MTBLoadFlags.Manifest) && !this.has(MTBLoadFlags.Manifest) && !this.loading(MTBLoadFlags.Manifest)) {
-            this.loading_ |= MTBLoadFlags.Manifest ;
+        else if (this.wants(MTBLoadFlags.manifestData) && !this.has(MTBLoadFlags.manifestData) && !this.loading(MTBLoadFlags.manifestData)) {
+            this.loading_ |= MTBLoadFlags.manifestData ;
             ret = this.loadManifest() ;
         } 
-        else if (this.wants(MTBLoadFlags.DeviceDB) && !this.has(MTBLoadFlags.DeviceDB) && !this.loading(MTBLoadFlags.DeviceDB)) {
-            this.loading_ |= MTBLoadFlags.DeviceDB ;
+        else if (this.wants(MTBLoadFlags.deviceDB) && !this.has(MTBLoadFlags.deviceDB) && !this.loading(MTBLoadFlags.deviceDB)) {
+            this.loading_ |= MTBLoadFlags.deviceDB ;
             ret = this.loadDeviceDB() ;
         } 
 
@@ -495,13 +495,13 @@ export class ModusToolboxEnvironment extends EventEmitter {
             this.toolsDb_.scanAll(this.logger_)
                 .then(() => {
                     this.toolsDb_.setActiveToolSet(this.packDb_.eap) ;
-                    this.loading_ &= ~MTBLoadFlags.Tools ;
-                    this.has_ |= MTBLoadFlags.Tools ;
+                    this.loading_ &= ~MTBLoadFlags.tools ;
+                    this.has_ |= MTBLoadFlags.tools ;
                     this.logger_.debug('Loading Tools complete') ;
                     resolve() ;
                 })
                 .catch((err) => {   
-                    this.loading_ &= ~MTBLoadFlags.Tools ;
+                    this.loading_ &= ~MTBLoadFlags.tools ;
                     reject(err) ;
                 }) ;
         });
@@ -607,12 +607,12 @@ export class ModusToolboxEnvironment extends EventEmitter {
             } ;
             this.manifestDb_.loadManifestData(this.logger_, [defman, ...this.packDb_.getManifestFiles()])
                 .then(() => {
-                    this.loading_ &= ~MTBLoadFlags.Manifest ;
-                    this.has_ |= MTBLoadFlags.Manifest ;
+                    this.loading_ &= ~MTBLoadFlags.manifestData ;
+                    this.has_ |= MTBLoadFlags.manifestData ;
                     resolve() ;
                 })
                 .catch((err) => {
-                    this.loading_ &= ~MTBLoadFlags.Manifest ;
+                    this.loading_ &= ~MTBLoadFlags.manifestData ;
                     reject(err) ;
                 }) ;
         }) ;
