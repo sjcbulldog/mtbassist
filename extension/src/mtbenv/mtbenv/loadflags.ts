@@ -6,5 +6,5 @@ export enum MTBLoadFlags {
     Packs = (1 << 3),
     Tools = (1 << 4),
     DeviceDB = (1 << 5),
-    All = AppInfo | Manifest | Packs | Tools | DeviceDB,
+    ReloadAppInfo = (1 << 6)
 }

@@ -49,8 +49,19 @@ export class MTBDevKitMgr extends MtbManagerBase {
     }
 
     private devKitBspChoices(kit: MTBDevKit) {
+        let ret: string[] = [] ;
         let mapentry = this.devKitMapping.find(entry => entry.name === kit.name) ;
-        return mapentry ? mapentry.validBSPs : this.ext.env!.manifestDB.allBspNames ;
+        if (mapentry) {
+            for(let bsp of mapentry.validBSPs) {
+                if (this.ext.env!.manifestDB.allBspNames.includes(bsp)) {
+                    ret.push(bsp) ;
+                }
+            }
+        }
+        else {
+            ret = this.ext.env!.manifestDB.allBspNames ;
+        }
+        return ret ;
     }
 
     public init() : Promise<void> {

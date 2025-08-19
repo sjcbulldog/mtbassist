@@ -1,9 +1,10 @@
 Priorities
 ----------
 - Settings inside VSCode, honor in all operations
+- If you run library manager, reload the application info
+- Automatically run the 'make vscode' if the .vscode directory is not present
 - LLVM installation
 - Light, Dark, and High Contrast theme support
-- Unknown development kit support
 - Lots of testing
 
 TODO
@@ -34,10 +35,10 @@ o Memory usage
 o Recent Projects Component                                                                       done
   - Divide into last day, last week, and per month after                                              done
   
-o Dev Kits Component
+o Dev Kits Component                                                                              done
   - Basic component                                                                                   done
-  - Add info button if kit is unknown
-  - If dev kit is unknown, allow the user to select the associated bsp and remember it
+  - Add info button if kit is unknown                                                                 done
+  - If dev kit is unknown, allow the user to select the associated bsp and remember it                done
 
 o Settings
   - Use VSCode settings
@@ -47,7 +48,7 @@ o Settings
 o Outside of main GUI                                                                             
   - Intellisense: port over current intellisense support                                              done
   - Port over task generation support                                                                 done
-  - Port over keyword based documentation
+  - Port over keyword based documentation                                                             done
   - Port over, check run make vscode (generate launch configs)
 
 0 Install software component                                                                      done

@@ -112,7 +112,12 @@
           @if (filteredDevKits.length > 0) {
             <div class="devkit-bsp-list">
               @for (kit of filteredDevKits; track kit.serial) {
-                <div class="devkit-bsp-card" [class.selected]="selectedDevKit?.serial === kit.serial" (click)="onDevKitSelect(kit)">
+                <div class="devkit-bsp-card" 
+                     [class.selected]="selectedDevKit?.serial === kit.serial" 
+                     [class.disabled]="kit.status !== 'Available'"
+                     (click)="kit.status === 'Available' ? onDevKitSelect(kit) : null"
+                     [style.opacity]="kit.status === 'Available' ? '1' : '0.5'"
+                     [style.cursor]="kit.status === 'Available' ? 'pointer' : 'not-allowed'">
                   <div class="devkit-bsp-main" style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
                     <div class="devkit-name-section" style="display: flex; align-items: center; margin-bottom: 4px;">
                       <span class="devkit-label" style="display: inline-block; min-width: 60px;">Kit:</span>
@@ -121,6 +126,10 @@
                     <div class="devkit-bsp-section" style="display: flex; align-items: center; margin-bottom: 4px;">
                       <span class="devkit-label" style="display: inline-block; min-width: 60px;">BSP:</span>
                       <span class="devkit-bsp-value" style="text-decoration: none !important; border-bottom: none !important; text-decoration-line: none !important;">{{ kit.bsp || 'Not set' }}</span>
+                    </div>
+                    <div class="devkit-status-section" style="display: flex; align-items: center; margin-bottom: 4px;">
+                      <span class="devkit-label" style="display: inline-block; min-width: 60px;">Status:</span>
+                      <span class="devkit-status" [style.color]="kit.status === 'Available' ? 'green' : 'red'">{{ kit.status }}</span>
                     </div>
                     <div class="devkit-serial-section" style="display: flex; align-items: center;">
                       <span class="devkit-label" style="display: inline-block; min-width: 60px;">Serial:</span>

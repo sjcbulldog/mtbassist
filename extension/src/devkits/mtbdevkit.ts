@@ -39,7 +39,13 @@ export class MTBDevKit {
             bridgingTypes: this.bridgingProperties ? this.bridgingProperties.split(',') : [],
             fwOutOfDate: this.outdated,
             bsp: this.bsp || '',
-            bspChoices: bspChoices
-        }
+            bspChoices: bspChoices,
+            status: this.getStatus(bspChoices)
+        } ;
+    }
+
+    private getStatus(bspChoices: string[]) : string {
+        let index = bspChoices.findIndex(choice => choice === this.bsp);
+        return index !== -1 ? 'Available' : 'BSP Not Available';
     }
 } ;

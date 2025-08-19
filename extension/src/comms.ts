@@ -194,6 +194,7 @@ export interface DevKitInfo {
   fwOutOfDate: boolean ;
   bsp: string ;
   bspChoices: string[] ;
+  status: string ;
 }
 
 export interface RecentEntry {

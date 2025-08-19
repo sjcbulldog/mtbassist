@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DevKitInfo } from '../../comms';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { BackendService } from '../backend/backend-service';
 
 @Component({
   selector: 'app-devkit-list',
   standalone: true,
-  imports: [CommonModule, MatIconModule, FormsModule],
+  imports: [CommonModule, MatIconModule, FormsModule, MatTooltipModule],
   templateUrl: './devkit-list.component.html',
   styleUrls: ['./devkit-list.component.scss']
 })
