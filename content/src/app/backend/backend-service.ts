@@ -193,10 +193,10 @@ export class BackendService {
             this.devKitStatus.next(cmd.data.kits) ;
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'allbsps') {
+            this.log(`Received all BSPs: ${JSON.stringify(cmd.data.bsps)}`);
             this.allBSPs.next(cmd.data.bsps || []);
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'isMTBInstalled') {
-            this.log(`Received isMTBInstalled status: ${cmd.data.data.installed}`);
             this.isMTBInstalled.next(cmd.data.data.installed || 'none');
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'setupTab') {

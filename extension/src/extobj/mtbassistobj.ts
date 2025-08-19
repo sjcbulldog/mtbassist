@@ -251,11 +251,12 @@ export class MTBAssistObject {
                                                             .then(() => {
                                                                 this.pushAppStatus();
                                                                 this.setIntellisenseProject();
-                                                                this.pushAllBSPs();
                                                                 this.logger_.debug('All managers post-initialization completed successfully.');
                                                                                         
                                                                 this.env?.load(MTBLoadFlags.Manifest)
                                                                 .then(() => {
+                                                                    this.pushDevKitStatus() ;
+                                                                    this.pushAllBSPs();
                                                                     resolve() ;
                                                                 })
                                                                 .catch((err) => {
@@ -488,6 +489,26 @@ export class MTBAssistObject {
         this.cmdhandler_.set('restartExtension', this.restartExtension.bind(this));
         this.cmdhandler_.set('runSetupProgram', this.runSetupProgram.bind(this));   
         this.cmdhandler_.set('setIntellisenseProject', this.setIntellisenseProjectFromGUI.bind(this));
+        this.cmdhandler_.set('updateDevKitBsp', this.updateDevKitBsp.bind(this));
+    }
+
+    private updateDevKitBsp(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            if (this.devkitMgr_) {
+                this.devkitMgr_.updateDevKitBsp(request.data.kit, request.data.bsp)
+                    .then(() => {
+                        resolve(null);
+                    })
+                    .catch((error: Error) => {
+                        this.logger_.error('Failed to update DevKit BSP:', error.message);
+                        reject(error);
+                    });
+            } else {
+                this.logger_.error('DevKit manager is not initialized.');
+                reject(new Error('DevKit manager is not initialized.'));
+            }
+        });
+        return ret;
     }
 
     private setIntellisenseProjectFromGUI(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {

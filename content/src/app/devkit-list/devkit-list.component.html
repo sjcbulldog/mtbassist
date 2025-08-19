@@ -31,6 +31,15 @@
           <div><strong>KitProg Type:</strong> {{ kit.kitProgType }}</div>
           <div><strong>USB Mode:</strong> {{ kit.usbMode }}</div>
           <div><strong>Bridging:</strong> {{ kit.bridgingTypes.join(', ') }}</div>
+          <!-- BSP Selection Pulldown -->
+          <div class="bsp-select-row">
+            <label for="bsp-select-{{kit.serial}}"><strong>BSP:</strong></label>
+            <select id="bsp-select-{{kit.serial}}" [(ngModel)]="kit.bsp" (change)="onBspChange(kit, $event)">
+              @for (bspChoice of kit.bspChoices; track bspChoice) {
+                <option [value]="bspChoice">{{ bspChoice }}</option>
+              }
+            </select>
+          </div>
         </div>
       </div>
     }

@@ -23,8 +23,8 @@ export class VSCodePipe implements PipeInterface {
         this.responseHandler = handler;
         window.addEventListener('message', (event) => {
             let str = JSON.stringify(event.data);
-            if (str.length > 128) {
-                str = str.substring(0, 128) + '...';
+            if (str.length > 1024) {
+                str = str.substring(0, 1024) + '...';
             }
             this.sendRequest({request: 'logMessage', data: { level : 'silly' , message : `received message: ${str}`}});
             if (event.data && event.data.response && this.responseHandler) {

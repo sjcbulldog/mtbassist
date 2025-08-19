@@ -26,7 +26,6 @@ export class RecentlyOpenedComponent implements OnInit {
 
 	ngOnInit() {
 		this.be.recentlyOpened.subscribe(entries => {
-			this.be.log(`Recently opened entries received: ${JSON.stringify(entries)}`);
 			this.groupedRecents = this.groupRecents(entries);
 		});
 	}

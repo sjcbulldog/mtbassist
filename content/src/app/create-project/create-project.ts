@@ -46,7 +46,7 @@ export class CreateProject implements OnInit, OnDestroy {
     bspSelectionForm!: FormGroup;
     exampleSelectionForm!: FormGroup;
     isLoading = false;
-    isDarkTheme = true; // Default to dark theme
+    themeType: 'dark' | 'light' | 'high-contrast' = 'light'; // Default to dark theme
     projectCreated = false;
     projectPath = '';
     progressValue = 0;
@@ -68,11 +68,6 @@ export class CreateProject implements OnInit, OnDestroy {
     devKits: DevKitInfo[] = [];
     selectedDevKit: DevKitInfo | null = null;
 
-    // Only show dev kits with a non-empty, non-'unknown' name
-    public get filteredDevKits(): DevKitInfo[] {
-        return this.devKits.filter(kit => kit.name && kit.name.trim() !== '' && kit.name.toLowerCase() !== 'unknown');
-    }
-
     constructor(
         private formBuilder: FormBuilder,
         public backendService: BackendService,
@@ -85,7 +80,11 @@ export class CreateProject implements OnInit, OnDestroy {
             }) ;
 
             this.backendService.theme.subscribe(theme => {
-                this.isDarkTheme = theme === 'dark';
+                if (theme === 'dark' || theme === 'light' || theme === 'high-contrast') {
+                    this.themeType = theme;
+                } else {
+                    this.themeType = 'dark';
+                }
             });
 
             // Subscribe to dev kit status
@@ -94,23 +93,21 @@ export class CreateProject implements OnInit, OnDestroy {
             });
 
             this.backendService.allBSPs.subscribe(bsps => {
+                this.backendService.log('All BSPs Updated: ' + JSON.stringify(bsps), 'debug');
                 this.allBSPs = bsps;
             }); 
         }
 
     ngOnInit() {
-        this.isDarkTheme = true ;
+        this.themeType = 'dark';
         this.initializeForms();
         this.loadCategories();
         this.backendService.sendRequestWithArgs?.('refreshDevKits', null);
     }
     
-    private mapDevKitName(kitname: string) : string {
-        if (kitname === 'KIT_PSOCE84_EVK') {
-            return 'KIT_PSE84_EVAL_EPC2' ;
-        }
-
-        return kitname ;
+    // Only show dev kits with a non-empty, non-'unknown' name
+    public get filteredDevKits(): DevKitInfo[] {
+        return this.devKits.filter(kit => kit.bsp);
     }
 
     private findBSPById(id: string): BSPIdentifier | null {
@@ -123,12 +120,9 @@ export class CreateProject implements OnInit, OnDestroy {
         this.backendService.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;
 
         let found = false;
-        let kname = this.mapDevKitName(kit.name);
-        this.backendService.log(`Mapped Dev Kit Name: '${kname}'`, 'debug') ;             
         for(let bsp of this.allBSPs) {
-            this.backendService.log(`    Checking BSP ${bsp.name} against mapped name ${kname}`, 'debug') ;
-            if (bsp.name === kname) {     
-                this.backendService.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;                
+            if (bsp.name === kit.bsp) {
+                this.backendService.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;
                 this.bspSelectionForm.patchValue({ category: bsp.category});
                 this.selectedCategory = bsp.category;
                 this.onCategoryChange();
@@ -207,8 +201,7 @@ export class CreateProject implements OnInit, OnDestroy {
             this.bsps = await this.backendService.manifestMgr.getBSPsForCategory(category);
 
             if (this.selectedDevKit) {
-                let kname = this.mapDevKitName(this.selectedDevKit.name);
-                let bsp = this.findBSPById(kname) ;
+                let bsp = this.findBSPById(this.selectedDevKit.bsp) ;
                 if (bsp) {
                     this.backendService.log(`Selected dev kit: ${this.selectedDevKit}`);
                     this.selectedBSP = bsp;

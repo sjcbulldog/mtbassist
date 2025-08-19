@@ -69,7 +69,7 @@ export class IDCRegistry {
                 return ;
             }
 
-            this.logger_.debug(`idcreg: scanning directory '${dir}'`) ;
+            this.logger_.silly(`idcreg: scanning directory '${dir}'`) ;
             for(let file of fs.readdirSync(dir)) {
                 let fullpath = path.join(dir, file) ;
                 if (path.extname(file) === '.json') {

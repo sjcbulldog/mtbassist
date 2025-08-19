@@ -1,4 +1,4 @@
-<div class="create-project-container" [class.dark-theme]="isDarkTheme" [class.light-theme]="!isDarkTheme">
+<div class="create-project-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   <!-- Header -->
   <div class="header">
     <h1>
@@ -104,7 +104,7 @@
         <!-- Connected Dev Kits UI -->
         <div class="devkit-bsp-section">
           <div class="devkit-list-header">
-            <span class="devkit-list-title"><mat-icon>usb</mat-icon> Connected Kits</span>
+            <span class="devkit-list-title"><mat-icon>usb</mat-icon> Connected Kits ({{ filteredDevKits.length }})</span>
             <button mat-icon-button (click)="backendService.sendRequestWithArgs('refreshDevKits', null)" [disabled]="isLoading" matTooltip="Refresh connected kits">
               <mat-icon>refresh</mat-icon>
             </button>
@@ -114,8 +114,17 @@
               @for (kit of filteredDevKits; track kit.serial) {
                 <div class="devkit-bsp-card" [class.selected]="selectedDevKit?.serial === kit.serial" (click)="onDevKitSelect(kit)">
                   <div class="devkit-bsp-main">
-                    <span class="devkit-bsp-name">{{ kit.name }}</span>
-                    <span class="devkit-bsp-serial">SN: {{ kit.serial }}</span>
+                    <div class="devkit-name-section">
+                      <span class="devkit-label">Kit:</span>
+                      <span class="devkit-bsp-name">{{ kit.name }}</span>
+                    </div>
+                    <div class="devkit-bsp-section">
+                      <span class="bsp-label">BSP:</span>
+                      <span class="devkit-bsp-value" style="text-decoration: none;">{{ kit.bsp || 'Not set' }}</span>
+                    </div>
+                    <div class="devkit-serial-section">
+                      <span class="devkit-bsp-serial">SN: {{ kit.serial }}</span>
+                    </div>
                   </div>
                 </div>
               }

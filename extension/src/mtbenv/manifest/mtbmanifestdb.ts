@@ -72,6 +72,10 @@ export class MTBManifestDB {
         return ret ;
     }
 
+    public get allBspNames() : string[] {
+        return [...this.boards_.values()].map(b => b.name) ;
+    }
+
     private getLatestBSPFromId(id: string) : [MTBBoard, MTBItemVersion] | [] {
         let ret : [MTBBoard, MTBItemVersion] | [] = [] ;
         let bsp = this.boards_.get(id);

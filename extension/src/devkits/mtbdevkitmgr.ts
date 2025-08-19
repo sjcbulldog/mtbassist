@@ -1,20 +1,22 @@
 import * as path from 'path' ;
 import * as os from 'os' ;
 import * as vscode from 'vscode' ;
+import * as fs from 'fs' ;
 import { MTBDevKit } from './mtbdevkit';
 import { MtbManagerBase } from '../mgrbase/mgrbase';
 import { MTBAssistObject } from '../extobj/mtbassistobj';
-import { ModusToolboxEnvironment } from '../mtbenv';
+import { ModusToolboxEnvironment, MTBLoadFlags } from '../mtbenv';
 import { DevKitInfo } from '../comms';
+
+interface DevKitName2BSPMapping {
+    name: string ;
+    validBSPs: string[] ;
+}
 
 export class MTBDevKitMgr extends MtbManagerBase {
 
     private static fwloaderUUID: string = '1901ec91-2683-4ab4-8034-211b772c9a2b' ;
     private static fwloaderProgramUUID: string = 'e41750c7-ec03-45be-af76-60108f35e4d3' ;
-
-    public kits : MTBDevKit[] = [] ;
-    private changedCallbacks: (() => void)[] = [] ;
-    private scanning: boolean = false ;
 
     private static vmatch: RegExp = new RegExp("[0-9]+\\.[0-9]+\\.[0-9]+") ;
     private static tags: string[] = ['Bootloader-', 'CMSIS-DAP HID-', 'CMSIS-DAP BULK-'] ;
@@ -28,14 +30,27 @@ export class MTBDevKitMgr extends MtbManagerBase {
     private static theQSPIProperties = "QSPI Properties:" ;
     private static theConnectivityOptions = "Connectivity options:" ;
     private static theFRAM = "FRAM:" ;
-    private static theBoardFeatures = "Board Features:" ;    
+    private static theBoardFeatures = "Board Features:" ;        
+
+    public kits : MTBDevKit[] = [] ;
+    private changedCallbacks: (() => void)[] = [] ;
+    private scanning: boolean = false ;
+    private devkitBsp: Array<[string, string]> = [] ;
+    private devKitMapping: DevKitName2BSPMapping[] = [] ;
 
     public constructor(ext: MTBAssistObject) {
         super(ext);
+        this.loadBSPSKitData() ;
+        this.devKitMapping = this.loadBSPMapping() ;
     }
 
     public get devKitInfo() : DevKitInfo[] {
-        return this.kits.map(kit => kit.info) ;
+        return this.kits.map(kit => kit.info(this.devKitBspChoices(kit))) ;
+    }
+
+    private devKitBspChoices(kit: MTBDevKit) {
+        let mapentry = this.devKitMapping.find(entry => entry.name === kit.name) ;
+        return mapentry ? mapentry.validBSPs : this.ext.env!.manifestDB.allBspNames ;
     }
 
     public init() : Promise<void> {
@@ -52,6 +67,29 @@ export class MTBDevKitMgr extends MtbManagerBase {
         });
 
         return promise;
+    }
+
+    private updateBSPKitData(serial: string, bsp: string) {
+        let existingEntry = this.devkitBsp.find(entry => entry[0] === serial);
+        if (existingEntry) {
+            existingEntry[1] = bsp;
+        } else {
+            this.devkitBsp.push([serial, bsp]);
+        }
+        this.storeKitBSPData() ;
+    }
+
+    public updateDevKitBsp(kit: DevKitInfo, bsp: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            let existingKit = this.getKitBySerial(kit.serial);
+            if (existingKit) {
+                existingKit.bsp = bsp;
+                this.updateBSPKitData(existingKit.serial, bsp);
+                resolve();
+            } else {
+                reject(new Error(`Kit not found: ${kit.serial}`));
+            }
+        });
     }
 
     public needsUpgrade() : boolean {
@@ -229,6 +267,9 @@ export class MTBDevKitMgr extends MtbManagerBase {
                                 if (res[0] === 0) {
                                     await this.extractKits(res[1]);
                                 }
+                                if (this.kits.length === 0) {
+                                    this.injectMockData() ;
+                                }                                
                                 this.scanning = false ;
                                 this.emit('updated') ;
                                 resolve(true) ;
@@ -304,6 +345,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                     let kit: MTBDevKit | undefined = this.getKitBySerial(serial) ;
                     if (kit === undefined) {
                         kit = new MTBDevKit(kptype, serial, mode, version, outdated) ;
+                        kit.bsp = this.getBSPForSerial(serial) ;
                         try {
                             await this.getKitDetails(kit) ;
                             this.kits.push(kit);
@@ -438,21 +480,6 @@ export class MTBDevKitMgr extends MtbManagerBase {
         return ret ;
     }
 
-    private sendToLog(text: string) : string {
-        while (true) {
-            let index: number = text.indexOf('\n') ;
-            if (index === -1) {
-                break ;
-            }
-
-            let line: string = text.substring(0, index).trim() ;
-            this.logger.debug(line) ;
-            text = text.substring(index).trim() ;
-        }
-
-        return text ;
-    }
-
     private findFWLoader() : string | undefined {
         let ext = this.ext ;
         if (!ext) {
@@ -490,5 +517,71 @@ export class MTBDevKitMgr extends MtbManagerBase {
 
         this.ext.logger.error('ModusToolbox environment does not contain fw-loader tool - cannot find fw-loader.');
         return undefined ;        
+    }
+
+    private storeKitBSPData() : void {
+        let str = JSON.stringify(this.devkitBsp);
+        this.ext.context.globalState.update('mtbdevkitbsp', str);
+    }
+
+    private loadBSPSKitData() : void {
+        let str = this.ext.context.globalState.get('mtbdevkitbsp', '') ;
+        if (str) {
+            try {
+                this.devkitBsp = JSON.parse(str);
+            } catch (e) {
+                this.ext.logger.error('Failed to parse devkitBsp data: ' + e);
+            }
+        }
+    }
+
+    private getBSPForSerial(serial: string) : string | undefined {
+        for(let pair of this.devkitBsp) {
+            if (pair[0] === serial) {
+                return pair[1] ;
+            }
+        }
+
+        return undefined ;
+    }
+
+    private loadBSPMapping() : DevKitName2BSPMapping[] {
+        let ret: DevKitName2BSPMapping[] = [] ;
+        let p = path.join(__dirname, '..', 'content', 'bspmapping.json') ;
+        if (fs.existsSync(p)) {
+            let data = fs.readFileSync(p, 'utf8') ;
+            try {
+                ret = JSON.parse(data) ;
+            }
+            catch (err) {
+                this.ext.logger.error('Failed to parse bspmapping JSON:', (err as Error).message);
+            }
+        }
+
+        return ret;
+    }
+
+    private injectMockData() {
+        let kit : MTBDevKit ;
+        
+        kit = new MTBDevKit('kp3', '8765309', 'HID', '1.0.0', false) ;
+        kit.name = "KIT_PSOCE84_EVK",
+        kit.bsp = this.getBSPForSerial(kit.serial) ;
+        this.kits.push(kit) ;
+
+        kit = new MTBDevKit('kp3', '12345678', 'HID', '2.0.0', false) ;
+        kit.name = "KIT_PSOCE84_EVK",
+        kit.bsp = this.getBSPForSerial(kit.serial) ;
+        this.kits.push(kit) ;
+
+        kit = new MTBDevKit('kp3', '98765432', 'HID', '3.0.0', false) ;
+        kit.bsp = this.getBSPForSerial(kit.serial) ;
+        kit.outdated = true ;
+        this.kits.push(kit) ;
+        
+        kit = new MTBDevKit('kp3', '12123434', 'HID', '4.0.0', false) ;
+        kit.bsp = this.getBSPForSerial(kit.serial) ;
+        kit.outdated = true ;
+        this.kits.push(kit) ;
     }
 }

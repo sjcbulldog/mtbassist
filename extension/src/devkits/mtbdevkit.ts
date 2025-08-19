@@ -18,6 +18,7 @@ export class MTBDevKit {
     public fram: string | undefined ;
     public boardFeatures: string[] = [] ;
     public present: boolean = true ;
+    public bsp: string | undefined ;
 
     public constructor(kptype: string, serial: string, mode: string, version: string, outdated: boolean) {
         this.kptype = kptype ;
@@ -27,7 +28,7 @@ export class MTBDevKit {
         this.outdated = outdated;
     }
 
-    public get info() : DevKitInfo {
+    public info(bspChoices: string[]) : DevKitInfo {
         return {
             name: this.name || 'Unknown',
             serial: this.serial,
@@ -37,6 +38,8 @@ export class MTBDevKit {
             usbMode: this.mode,
             bridgingTypes: this.bridgingProperties ? this.bridgingProperties.split(',') : [],
             fwOutOfDate: this.outdated,
+            bsp: this.bsp || '',
+            bspChoices: bspChoices
         }
     }
 } ;

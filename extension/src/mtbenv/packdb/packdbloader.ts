@@ -51,7 +51,7 @@ export class PackDBLoader {
                 return ;
             }
 
-            this.logger_.debug(`packdbloader: scanning directory '${dir}'`) ;
+            this.logger_.silly(`packdbloader: scanning directory '${dir}'`) ;
             for(let file of fs.readdirSync(dir)) {
                 let fullpath = path.join(dir, file) ;
                 if (path.extname(file) === '.json') {

@@ -28,7 +28,8 @@ export type FrontEndToBackEndRequestType =
     'installTools' |
     'restartExtension' |
     'runSetupProgram'|
-    'setIntellisenseProject'
+    'setIntellisenseProject' |
+    'updateDevKitBsp'
     ;
 
 export type BackEndToFrontEndResponseType =
@@ -191,6 +192,8 @@ export interface DevKitInfo {
   usbMode: string ;
   bridgingTypes : string[] ; 
   fwOutOfDate: boolean ;
+  bsp: string ;
+  bspChoices: string[] ;
 }
 
 export interface RecentEntry {
