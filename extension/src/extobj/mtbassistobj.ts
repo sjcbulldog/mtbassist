@@ -1232,8 +1232,14 @@ export class MTBAssistObject {
             case vscode.ColorThemeKind.Dark:
                 theme = 'dark' ;
                 break ;
+            case vscode.ColorThemeKind.HighContrast:
+                theme = 'dark' ;
+                break ;
+            case vscode.ColorThemeKind.HighContrastLight:
+                theme = 'light' ;
+                break ;
             default:
-                theme = 'contrast' ;
+                theme = 'light' ;
                 break ;
         }
         this.pushOOB('setTheme', theme);

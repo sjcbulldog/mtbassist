@@ -19,9 +19,20 @@ interface GroupedRecents {
 })
 export class RecentlyOpenedComponent implements OnInit {
 	groupedRecents: GroupedRecents[] = [];
+	themeType: 'dark' | 'light' = 'light';
 
 	constructor(private be: BackendService) {
 		this.be.sendRequestWithArgs('recentlyOpened', this.groupedRecents);
+		
+		// Subscribe to theme changes
+		this.be.theme.subscribe(theme => {
+			if (theme === 'dark' || theme === 'light') {
+				this.themeType = theme;
+			}
+			else {
+				this.themeType = 'dark' ;
+			}
+		});
 	}
 
 	ngOnInit() {

@@ -1,4 +1,4 @@
-<div class="recently-opened-container">
+<div class="recently-opened-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   <h2>Recently Opened Applications</h2>
   <div *ngFor="let group of groupedRecents">
     <div class="recent-group-header" (click)="toggleCollapse(group)">

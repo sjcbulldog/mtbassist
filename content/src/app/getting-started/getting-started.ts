@@ -28,7 +28,6 @@ export class GettingStarted {
 
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
     this.be.theme.subscribe(theme => {
-      this.be.log(`GettingStarted: theme changed to ${theme}`);
       if (theme === 'dark' || theme === 'light') {
         this.themeType = theme;
       }
