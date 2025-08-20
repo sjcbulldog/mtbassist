@@ -16,7 +16,7 @@ export class MTBPack {
         return this.desc_.path ;
     }
 
-    public featureId() : string {
+    public get featureId() : string {
         return this.id_ ;
     }
 }

@@ -1,0 +1,61 @@
+.settings-editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+  background: #f8fafc;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.setting-label {
+  min-width: 180px;
+  font-weight: 500;
+  color: #1976d2;
+}
+
+.setting-label-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+}
+
+.setting-description {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.setting-field {
+  flex: 1;
+  width: 100%;
+}
+
+.browse-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-select {
+  width: 100%;
+}
+
+mat-checkbox {
+  margin-left: 0.5rem;
+}

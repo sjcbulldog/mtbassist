@@ -61,6 +61,11 @@ export class App {
       icon: 'dashboard'
     },
     {
+      label: 'Settings',
+      component: 'SettingsEditor',
+      icon: 'settings'
+    },
+    {
       label: 'Glossary',
       component: 'GlossaryComponent',
       icon: 'help'

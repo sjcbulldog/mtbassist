@@ -11,7 +11,7 @@ import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
     ApplicationStatusData, BackEndToFrontEndResponse, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
-    FrontEndToBackEndRequest, FrontEndToBackEndRequestType, GlossaryEntry, InstallProgress, MemoryInfo, Middleware, Project, Tool
+    FrontEndToBackEndRequest, FrontEndToBackEndRequestType, GlossaryEntry, InstallProgress, MemoryInfo, Middleware, MTBSetting, Project, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
@@ -25,6 +25,7 @@ import { BSPMgr } from './bspmgr';
 import { MTBApp } from '../mtbenv/manifest/mtbapp';
 import { VSCodeWorker } from './vscodeworker';
 import { MtbFunIndex } from '../keywords/mtbfunindex';
+import { MTBSettings } from '../settings/mtbsettings';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -64,10 +65,10 @@ export class MTBAssistObject {
     private compDescMap_: Map<string, string> = new Map() ;
     private keywords_ : MtbFunIndex ;
     private toolspath_ : string | undefined = 'C:/users/butch/ModusToolbox/tools_3.4' ;
+    private settings_ : MTBSettings ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
-
 
     private constructor(context: vscode.ExtensionContext) {
         this.context_ = context;
@@ -92,6 +93,7 @@ export class MTBAssistObject {
         this.setupMgr_ = new SetupMgr(this);
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
         this.keywords_ = new MtbFunIndex(this.logger_);
+        this.settings_ = new MTBSettings(this) ;
         this.bindCommandHandlers();
 
         vscode.window.onDidChangeActiveColorTheme(e => {
@@ -362,6 +364,7 @@ export class MTBAssistObject {
                 vscode.commands.executeCommand('mtbassist2.mtbMainPage')
                     .then(() => {
                         this.pushTheme() ;
+                        this.pushSettings() ;
                         resolve();
                     });
             }
@@ -370,6 +373,7 @@ export class MTBAssistObject {
                     vscode.commands.executeCommand('mtbassist2.mtbMainPage')
                         .then(() => {
                             this.pushTheme() ;
+                            this.pushSettings() ;
                             resolve();
                         });
                 }
@@ -477,7 +481,8 @@ export class MTBAssistObject {
         this.cmdhandler_.set('documentation', this.documentation.bind(this));
         this.cmdhandler_.set('browseExamples', this.browseExamples.bind(this));
         this.cmdhandler_.set('community', this.community.bind(this));
-        this.cmdhandler_.set('browseForFolder', this.browseFolder.bind(this));
+        this.cmdhandler_.set('browseForFolder', this.browseForFolder.bind(this));
+        this.cmdhandler_.set('browseForFile', this.browseForFile.bind(this));
         this.cmdhandler_.set('getAppStatus', this.getAppStatus.bind(this));
         this.cmdhandler_.set('open', this.open.bind(this));
         this.cmdhandler_.set('libmgr', this.launchLibraryManager.bind(this));
@@ -501,6 +506,15 @@ export class MTBAssistObject {
         this.cmdhandler_.set('runSetupProgram', this.runSetupProgram.bind(this));   
         this.cmdhandler_.set('setIntellisenseProject', this.setIntellisenseProjectFromGUI.bind(this));
         this.cmdhandler_.set('updateDevKitBsp', this.updateDevKitBsp.bind(this));
+        this.cmdhandler_.set('updateSetting', this.updateSetting.bind(this));   
+    }
+
+    private updateSetting(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            this.settings_.update(request.data);
+            resolve(null);
+        });
+        return ret;
     }
 
     private updateDevKitBsp(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
@@ -787,6 +801,7 @@ export class MTBAssistObject {
     }
 
     private displayAssetDocs(asset: MTBAssetRequest, symbol: String) {
+        // TODO: Implement the logic to display asset documentation
     }
 
     private findAssetByPath(p: string) : MTBAssetRequest | undefined {
@@ -1128,6 +1143,20 @@ export class MTBAssistObject {
         }
     }
 
+    private pushSettings() {
+        if (this.panel_) {
+            let st = {
+                oobtype: 'settings',
+                data: this.settings_.settings
+            };
+            let oob: BackEndToFrontEndResponse = {
+                response: 'oob',
+                data: st
+            };
+            this.postWebViewMessage(oob);
+        }
+    }
+
     private pushTheme() : void {
         let t = vscode.window.activeColorTheme ;
         let theme: string = 'dark' ;
@@ -1433,7 +1462,7 @@ export class MTBAssistObject {
         return ret;
     }
 
-    private browseFolder(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+    private browseForFolder(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
             vscode.window.showOpenDialog({
                 canSelectMany: false,
@@ -1447,7 +1476,29 @@ export class MTBAssistObject {
                     resp = { response: 'error', data: 'No folder selected.' };
                 }
                 else {
-                    resp = { response: 'browseForFolderResult', data: uri[0].fsPath };
+                    resp = { response: 'browseForFolderResult', data: { tag: request.data, path: uri[0].fsPath } };
+                }
+                resolve(resp);
+            });
+        });
+        return ret;
+    }
+
+    private browseForFile(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve) => {
+            vscode.window.showOpenDialog({
+                canSelectMany: false,
+                openLabel: 'Select File',
+                canSelectFiles: true,
+                canSelectFolders: false
+            }).then((uri) => {
+                let resp: BackEndToFrontEndResponse;
+                if (!uri || uri.length === 0) {
+                    this.logger_.debug('No file selected in browseFile dialog.');
+                    resp = { response: 'error', data: 'No file selected.' };
+                }
+                else {
+                    resp = { response: 'browseForFileResult', data: { tag: request.data, path: uri[0].fsPath } };
                 }
                 resolve(resp);
             });

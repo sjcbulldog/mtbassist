@@ -499,7 +499,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
 
             this.logger_.debug('Loading Tools') ;
             this.toolsDb_.addToolsDir({ dir: this.toolsDir_, source: MTBToolSource.ToolsDir}) ;
-            for(let packdir of this.packDb_.getTechPacks().map((pack) => pack.path())) {
+            for(let packdir of this.packDb_.techPacks.map((pack) => pack.path())) {
                 this.toolsDb_.addToolsDir({ dir: packdir, source: MTBToolSource.TechPack }) ;
             }
             if (this.packDb_.eap) {
@@ -541,7 +541,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ret ;
     }
 
-    private searchCommonDir() : string | undefined {
+    public static findToolsDirectories() : string[] {
         let choices = [] ;
         let dir = MTBUtils.getCommonInstallLocation() ;
         if (dir !== undefined) {
@@ -552,6 +552,11 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 }
             }
         }
+        return choices;
+    }
+
+    private searchCommonDir() : string | undefined {
+        let choices = ModusToolboxEnvironment.findToolsDirectories();
 
         let picked = undefined ;
         let curver: MTBVersion | undefined = undefined ;

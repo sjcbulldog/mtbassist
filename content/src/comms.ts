@@ -9,6 +9,8 @@ export type FrontEndToBackEndRequestType =
     'loadWorkspace' |
     'getAppStatus' |
     'browseForFolder' |
+    'browseForFile' |
+    'updateSetting' |
     'fixMissingAssets' |
     'buildAction' |
     'gettingStarted' |
@@ -37,6 +39,7 @@ export type BackEndToFrontEndResponseType =
     'setCodeExamples' |
     'createProjectResult' |
     'browseForFolderResult' |
+    'browseForFileResult' |
     'appStatusResult' |
     'oob' |
     'success' |
@@ -206,8 +209,9 @@ export interface RecentEntry {
 
 export interface MTBSetting {
     name: string ;
-    owner: 'modus' | 'extension' ;
-    type: 'string' | 'number' | 'boolean' | 'choice' | 'uri' | 'dirpath' | 'filepath' ;
+    displayName: string ;
+    owner: 'modus' | 'extension' | 'workspace' ;
+    type: 'string' | 'number' | 'boolean' | 'choice' | 'uri' | 'dirpath' | 'filepath' | 'toolspath' ;
     value: string | number | boolean ;
     choices? : string[] ;
     description: string ;
@@ -234,4 +238,9 @@ export interface GlossaryEntry {
   term: string;
   definition: string;
   category?: string;
+}
+
+export interface BrowseResult {
+  tag: string ;
+  path: string ;
 }

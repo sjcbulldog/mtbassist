@@ -4,7 +4,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry, FrontEndToBackEndRequestType, SetupProgram, InstallProgress, MTBInstallType, GlossaryEntry } from '../../comms';
+import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry, FrontEndToBackEndRequestType, SetupProgram, InstallProgress, MTBInstallType, GlossaryEntry, MTBSetting, BrowseResult } from '../../comms';
 import { ManifestManager } from './manifestmgr';
 import { ProjectManager } from './projectmgr';
 import { AppStatusBackend } from './appmgrbe';
@@ -25,7 +25,8 @@ export class BackendService {
     theme: Subject<string> = new Subject<string>();
     navTab: Subject<number> = new Subject<number>() ;
     setupTab: Subject<number> = new Subject<number>() ;
-    browserFolder: Subject<string | null> = new Subject<string | null>();
+    browserFolder: Subject<BrowseResult | null> = new Subject<BrowseResult | null>();
+    browserFile: Subject<BrowseResult | null> = new Subject<BrowseResult | null>();
     memoryStats = new BehaviorSubject<MemoryStats | null>(null);  
     appStatusData: BehaviorSubject<ApplicationStatusData | null> = new BehaviorSubject<ApplicationStatusData | null>(null);
     loadedAsset: Subject<string> = new Subject<string>();
@@ -39,6 +40,7 @@ export class BackendService {
     installProgress: Subject<InstallProgress> = new Subject<InstallProgress>();
     glossaryEntries: Subject<GlossaryEntry[]> = new Subject<GlossaryEntry[]>();
     intellisenseProject: Subject<string> = new Subject<string>();
+    settings: Subject<MTBSetting[]> = new Subject<MTBSetting[]>();
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -116,15 +118,25 @@ export class BackendService {
         this.setupTab.next(index);
     }
 
-    public browseForFolder(): void{
+    public browseForFolder(tag: string): void{
         this.log('Requesting browser for folder');
             if (this.pipe_) {
                 this.pipe_.sendRequest({
                     request: 'browseForFolder',
-                    data: null
+                    data: tag
                 });
             }
     }
+
+    public browseForFile(tag: string): void{
+        this.log('Requesting browser for file');
+            if (this.pipe_) {
+                this.pipe_.sendRequest({
+                    request: 'browseForFile',
+                    data: tag
+                });
+            }
+    }    
 
     public async createProject(projectData: any): Promise<boolean> {
         return this.projectManager_.createProject(projectData);
@@ -145,6 +157,7 @@ export class BackendService {
 
     private setupHandlers() {
         this.registerHandler('browseForFolderResult', this.browseForFolderResult.bind(this));
+        this.registerHandler('browseForFileResult', this.browseForFileResult.bind(this));
         this.registerHandler('oob', this.oobResult.bind(this));
     }
 
@@ -162,7 +175,11 @@ export class BackendService {
     }
 
     private browseForFolderResult(cmd: BackEndToFrontEndResponse) {
-            this.browserFolder.next(cmd.data as string | null);
+        this.browserFolder.next(cmd.data as BrowseResult | null);
+    }
+
+    private browseForFileResult(cmd: BackEndToFrontEndResponse) {
+        this.browserFile.next(cmd.data as BrowseResult | null);
     }
 
     private oobResult(cmd: BackEndToFrontEndResponse) {
@@ -216,6 +233,9 @@ export class BackendService {
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'setTheme') {
             this.theme.next(cmd.data.theme || 'light');
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'settings') {
+            this.settings.next(cmd.data.data || []);
         }
         else {
             this.log(`Unhandled OOB type: ${cmd.data.oobtype}`);

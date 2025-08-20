@@ -9,6 +9,7 @@ import { ApplicationStatus } from '../application-status/application-status';
 import { DevkitListComponent } from "../devkit-list/devkit-list.component";
 import { RecentlyOpenedComponent } from "../recently-opened/recently-opened.component";
 import { GlossaryComponent } from "../glossary/glossary.component";
+import { SettingsEditor } from "../settings-editor/settings-editor";
 
 export interface MtbNavTab {
   label: string;
@@ -28,7 +29,8 @@ export interface MtbNavTab {
     ApplicationStatus,
     DevkitListComponent,
     RecentlyOpenedComponent,
-    GlossaryComponent
+    GlossaryComponent,
+    SettingsEditor
 ],
   templateUrl: './mtb-nav.html',
   styleUrl: './mtb-nav.scss'

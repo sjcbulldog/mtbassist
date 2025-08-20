@@ -1,0 +1,60 @@
+<div class="settings-editor-container">
+  @for (setting of settings; track setting.name) {
+    <div class="setting-row">
+      <div class="setting-label-group" style="display: flex; align-items: center; min-width: 180px;">
+        <label class="setting-label" style="margin-right: 6px;">{{ setting.displayName }}</label>
+        <mat-icon class="setting-help-icon" matTooltip="{{ setting.description }}" style="vertical-align: middle; cursor: pointer; color: #1976d2;">help_outline</mat-icon>
+      </div>
+      @if (setting.type === 'string') {
+        <mat-form-field appearance="outline" class="setting-field">
+          <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" />
+        </mat-form-field>
+      } @else if (setting.type === 'number') {
+        <mat-form-field appearance="outline" class="setting-field">
+          <input matInput type="number" [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" />
+        </mat-form-field>
+      } @else if (setting.type === 'boolean') {
+        <mat-checkbox [(ngModel)]="setting.value" (change)="onValueChange(setting, $event.checked)"></mat-checkbox>
+      } @else if (setting.type === 'choice') {
+        <div class="browse-row" style="flex: 1;">
+          <mat-form-field class="setting-field" appearance="outline" style="flex: 1;">
+            <mat-label>{{ setting.displayName }}</mat-label>
+            <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)">
+              @for (choice of setting.choices; track choice) {
+                <mat-option [value]="choice">{{ choice }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button mat-icon-button matTooltip="{{ setting.description }}" aria-label="Help">
+            <mat-icon>help_outline</mat-icon>
+          </button>
+        </div>
+      } @else if (setting.type === 'uri') {
+        <mat-form-field appearance="outline" class="setting-field" [color]="isValidUri(setting.value) ? 'primary' : 'warn'">
+          <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" placeholder="Enter a valid URI" />
+          @if (!isValidUri(setting.value)) {
+            <mat-error>Invalid URI</mat-error>
+          }
+        </mat-form-field>
+      } @else if (setting.type === 'dirpath') {
+        <div class="browse-row" style="flex: 1;">
+          <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
+            <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" />
+          </mat-form-field>
+          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder">
+            <mat-icon>more_horiz</mat-icon>
+          </button>
+        </div>
+      } @else if (setting.type === 'filepath') {
+        <div class="browse-row" style="flex: 1;">
+          <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
+            <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" />
+          </mat-form-field>
+          <button mat-icon-button (click)="onBrowseForFile(setting)" matTooltip="Browse for file">
+            <mat-icon>more_horiz</mat-icon>
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

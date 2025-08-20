@@ -42,10 +42,20 @@ export class PackDB {
         return undefined ;
     }
 
-    public getTechPacks() : MTBPack[] {
+    public get techPacks() : MTBPack[] {
         let packs : MTBPack[] = [] ;
         this.packs_.forEach((pack) => {
             if (pack.packType() === 'tech-pack') {
+                packs.push(pack) ;
+            }
+        });
+        return packs ;
+    }
+
+    public get eaps() : MTBPack[] {
+        let packs : MTBPack[] = [] ;
+        this.packs_.forEach((pack) => {
+            if (pack.packType() === 'early-access-pack') {
                 packs.push(pack) ;
             }
         });

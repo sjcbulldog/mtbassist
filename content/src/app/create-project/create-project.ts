@@ -70,16 +70,16 @@ export class CreateProject implements OnInit, OnDestroy {
 
     constructor(
         private formBuilder: FormBuilder,
-        public backendService: BackendService,
+        public be: BackendService,
         private snackBar: MatSnackBar) {
-            this.backendService.browserFolder.subscribe(folder => {
-                if (folder) {
-                    this.projectInfoForm.patchValue({ projectLocation: folder });
+            this.be.browserFolder.subscribe(folder => {
+                if (folder && folder.tag === 'create-project') {
+                    this.projectInfoForm.patchValue({ projectLocation: folder.path });
                     this.snackBar.open('Directory selected successfully', 'Close', { duration: 2000 });
                 }
-            }) ;
+            });
 
-            this.backendService.theme.subscribe(theme => {
+            this.be.theme.subscribe(theme => {
                 if (theme === 'dark' || theme === 'light' || theme === 'high-contrast') {
                     this.themeType = theme;
                 } else {
@@ -88,12 +88,12 @@ export class CreateProject implements OnInit, OnDestroy {
             });
 
             // Subscribe to dev kit status
-            this.backendService.devKitStatus.subscribe(kits => {
+            this.be.devKitStatus.subscribe(kits => {
                 this.devKits = kits;
             });
 
-            this.backendService.allBSPs.subscribe(bsps => {
-                this.backendService.log('All BSPs Updated: ' + JSON.stringify(bsps), 'debug');
+            this.be.allBSPs.subscribe(bsps => {
+                this.be.log('All BSPs Updated: ' + JSON.stringify(bsps), 'debug');
                 this.allBSPs = bsps;
             }); 
         }
@@ -102,7 +102,7 @@ export class CreateProject implements OnInit, OnDestroy {
         this.themeType = 'dark';
         this.initializeForms();
         this.loadCategories();
-        this.backendService.sendRequestWithArgs?.('refreshDevKits', null);
+        this.be.sendRequestWithArgs?.('refreshDevKits', null);
     }
     
     // Only show dev kits with a non-empty, non-'unknown' name
@@ -117,12 +117,12 @@ export class CreateProject implements OnInit, OnDestroy {
     // Called when a dev kit is selected from the UI
     onDevKitSelect(kit: DevKitInfo) {
         this.selectedDevKit = kit;
-        this.backendService.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;
+        this.be.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;
 
         let found = false;
         for(let bsp of this.allBSPs) {
             if (bsp.name === kit.bsp) {
-                this.backendService.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;
+                this.be.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;
                 this.bspSelectionForm.patchValue({ category: bsp.category});
                 this.selectedCategory = bsp.category;
                 this.onCategoryChange();
@@ -134,7 +134,7 @@ export class CreateProject implements OnInit, OnDestroy {
         if (!found) {
             let cats : string[] = [] ;
             for(let bsp of this.allBSPs) {
-                this.backendService.log(`Checking BSP ${bsp.name} starts with dev kit ${kit.name}`) ;
+                this.be.log(`Checking BSP ${bsp.name} starts with dev kit ${kit.name}`) ;
                 if (bsp.name.startsWith(kit.name)) {
                     cats.push(bsp.category);
                 }
@@ -172,7 +172,7 @@ export class CreateProject implements OnInit, OnDestroy {
     private async loadCategories() {
         try {
             this.isLoading = true;
-            this.categories = await this.backendService.manifestMgr.getBSPCategories();
+            this.categories = await this.be.manifestMgr.getBSPCategories();
         } catch (error) {
             console.error('Failed to load categories:', error);
             this.snackBar.open('Failed to load BSP categories', 'Close', { duration: 3000 });
@@ -182,8 +182,8 @@ export class CreateProject implements OnInit, OnDestroy {
     }
 
     async browseForDirectory() {
-        this.backendService.log('Opening directory picker');
-        this.backendService.browseForFolder();
+        this.be.log('Opening directory picker');
+        this.be.browseForFolder('create-project');
     }
 
     async onCategoryChange() {
@@ -198,12 +198,12 @@ export class CreateProject implements OnInit, OnDestroy {
 
         try {
             this.isLoading = true;
-            this.bsps = await this.backendService.manifestMgr.getBSPsForCategory(category);
+            this.bsps = await this.be.manifestMgr.getBSPsForCategory(category);
 
             if (this.selectedDevKit) {
                 let bsp = this.findBSPById(this.selectedDevKit.bsp) ;
                 if (bsp) {
-                    this.backendService.log(`Selected dev kit: ${this.selectedDevKit}`);
+                    this.be.log(`Selected dev kit: ${this.selectedDevKit}`);
                     this.selectedBSP = bsp;
                     this.bspSelectionForm.patchValue({ category: this.selectedCategory, bsp: bsp.id });
                     this.onBSPChange() ;
@@ -231,7 +231,7 @@ export class CreateProject implements OnInit, OnDestroy {
         try {
             this.isLoading = true;
             // Load all examples for the BSP and extract unique categories
-            const allExamples = await this.backendService.manifestMgr.getExamplesForBSP(bspId);
+            const allExamples = await this.be.manifestMgr.getExamplesForBSP(bspId);
             this.exampleCategories = [...new Set(allExamples.map(example => example.category || 'General'))].sort();
         } catch (error) {
             console.error('Failed to load example categories:', error);
@@ -253,7 +253,7 @@ export class CreateProject implements OnInit, OnDestroy {
         try {
             this.isLoading = true;
             // Load examples for the selected BSP and category
-            const allExamples = await this.backendService.manifestMgr.getExamplesForBSP(this.selectedBSP.id);
+            const allExamples = await this.be.manifestMgr.getExamplesForBSP(this.selectedBSP.id);
             this.examples = allExamples
                 .filter(example => (example.category || 'General') === category);
         } catch (error) {
@@ -309,7 +309,7 @@ export class CreateProject implements OnInit, OnDestroy {
                 }
             }, 100);
             
-            const success = await this.backendService.createProject(projectData);
+            const success = await this.be.createProject(projectData);
             
             if (success) {
                 this.projectCreated = true;
@@ -341,11 +341,11 @@ export class CreateProject implements OnInit, OnDestroy {
         this.progressValue = 0;
         this.progressMessage = 'Initializing project...';
 
-        this.backendService.progressMessage.subscribe(message => {
+        this.be.progressMessage.subscribe(message => {
             this.progressMessage = message;
         });
 
-        this.backendService.progressPercent.subscribe(percent => {
+        this.be.progressPercent.subscribe(percent => {
             this.progressValue = percent;
         });
     }
@@ -359,8 +359,8 @@ export class CreateProject implements OnInit, OnDestroy {
 
     async loadProject() {
         this.snackBar.open(`Loading project from: ${this.projectPath}`, 'Close', { duration: 3000 });
-        this.backendService.log(`Loading workspace ${JSON.stringify(this.exampleSelectionForm.value)}`);
-        await this.backendService.loadWorkspace(this.projectInfoForm.value.projectLocation, this.projectInfoForm.value.projectName, this.exampleSelectionForm.value.example) ;
+        this.be.log(`Loading workspace ${JSON.stringify(this.exampleSelectionForm.value)}`);
+        await this.be.loadWorkspace(this.projectInfoForm.value.projectLocation, this.projectInfoForm.value.projectName, this.exampleSelectionForm.value.example) ;
     }
 
     resetForm() {

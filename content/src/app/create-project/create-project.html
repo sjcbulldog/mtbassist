@@ -105,7 +105,7 @@
         <div class="devkit-bsp-section">
           <div class="devkit-list-header">
             <span class="devkit-list-title"><mat-icon>usb</mat-icon> Connected Kits ({{ filteredDevKits.length }})</span>
-            <button mat-icon-button (click)="backendService.sendRequestWithArgs('refreshDevKits', null)" [disabled]="isLoading" matTooltip="Refresh connected kits">
+            <button mat-icon-button (click)="be.sendRequestWithArgs('refreshDevKits', null)" [disabled]="isLoading" matTooltip="Refresh connected kits">
               <mat-icon>refresh</mat-icon>
             </button>
           </div>
