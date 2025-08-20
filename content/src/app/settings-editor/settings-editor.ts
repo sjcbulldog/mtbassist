@@ -68,6 +68,12 @@ export class SettingsEditor {
     }
   }
 
+  isCustomPathDisabled(): boolean {
+    const customPath = this.settings.find(s => s.name === 'custompath');
+    const toolsVersion = this.settings.find(s => s.name === 'toolsversion');
+    return !!customPath && !!toolsVersion && toolsVersion.value !== 'Custom';
+  }
+
   onValueChange(setting: MTBSetting, value: any) {
     setting.value = value ;
     this.be.sendRequestWithArgs('updateSetting', setting) ;

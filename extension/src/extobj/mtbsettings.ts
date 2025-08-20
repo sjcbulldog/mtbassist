@@ -1,5 +1,5 @@
 import { MTBSetting } from "../comms";
-import { MTBAssistObject } from "../extobj/mtbassistobj";
+import { MTBAssistObject } from "./mtbassistobj";
 import * as path from 'path' ;
 import * as os from 'os' ;
 import * as fs from 'fs' ;
@@ -101,16 +101,8 @@ export class MTBSettings extends EventEmitter {
         this.resolvePaths() ;
     }
 
-    private ensureAllSettings() {
-        for(let setting of MTBSettings.defaultSettings) {
-            if (!this.settings_.find(s => s.name === setting.name)) {
-                let newsetting = { ...setting } ;
-                if (newsetting.type === 'dirpath' || newsetting.type === 'filepath') {  
-                    newsetting.value = this.resolvePath(newsetting.value as string) ;
-                }
-                this.settings_.push(newsetting);
-            }
-        }
+    public get toolsPath() : string {
+        return this.computeToolsPath() ;
     }
 
     public get settings(): MTBSetting[] {
@@ -129,7 +121,7 @@ export class MTBSettings extends EventEmitter {
             }
             else if (setting.name === 'custompath') {
                 this.putWorkspaceSettings() ;
-                this.emit('toolPathChanged', this.computeToolsPath()) ;
+                this.emit('toolsPathChanged', this.computeToolsPath()) ;
             }
             else {
                 this.writeSettingsFile() ;
@@ -151,6 +143,15 @@ export class MTBSettings extends EventEmitter {
                 }
             }
         }
+
+        if (tdir === '') {
+            let tools = ModusToolboxEnvironment.findToolsDirectories().sort() ; 
+            if (tools.length > 0) {
+                tdir = tools[tools.length - 1];
+            }
+        }
+
+        tdir = tdir.replace(/\\/g,'/');
         return tdir ;
     }
 

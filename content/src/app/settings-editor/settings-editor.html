@@ -5,7 +5,11 @@
         <label class="setting-label" style="margin-right: 6px;">{{ setting.displayName }}</label>
         <mat-icon class="setting-help-icon" matTooltip="{{ setting.description }}" style="vertical-align: middle; cursor: pointer; color: #1976d2;">help_outline</mat-icon>
       </div>
-      @if (setting.type === 'string') {
+      @if (setting.type === 'string' && setting.name === 'custompath') {
+        <mat-form-field appearance="outline" class="setting-field">
+          <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" [disabled]="isCustomPathDisabled()" />
+        </mat-form-field>
+      } @else if (setting.type === 'string') {
         <mat-form-field appearance="outline" class="setting-field">
           <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" />
         </mat-form-field>

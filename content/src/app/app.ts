@@ -14,7 +14,7 @@ import { GlossaryComponent } from './glossary/glossary.component';
 })
 
 export class App {
-  public isModusInstalled_ : MTBInstallType = 'none';
+  public isModusInstalled_ : MTBInstallType = 'mtb';
   @ViewChild('topMtbNav') topMtbNav!: MtbNav;
   @ViewChild('softwareInstaller') softwareInstaller!: SoftwareInstallerComponent;
 

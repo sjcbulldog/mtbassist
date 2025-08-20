@@ -15,17 +15,17 @@ import {
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
-import { MTBTasks } from '../misc/mtbtasks';
+import { MTBTasks } from './mtbtasks';
 import { browseropen } from '../browseropen';
 import * as exec from 'child_process';
-import { RecentAppManager } from '../misc/mtbrecent';
+import { RecentAppManager } from './mtbrecent';
 import { IntelliSenseMgr } from './intellisense';
 import { SetupMgr } from '../setup/setupmgr';
 import { BSPMgr } from './bspmgr';
 import { MTBApp } from '../mtbenv/manifest/mtbapp';
 import { VSCodeWorker } from './vscodeworker';
 import { MtbFunIndex } from '../keywords/mtbfunindex';
-import { MTBSettings } from '../settings/mtbsettings';
+import { MTBSettings } from './mtbsettings';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -64,7 +64,7 @@ export class MTBAssistObject {
     private oobmode_: string = 'none';
     private compDescMap_: Map<string, string> = new Map() ;
     private keywords_ : MtbFunIndex ;
-    private toolspath_ : string | undefined = 'C:/users/butch/ModusToolbox/tools_3.4' ;
+    private toolspath_ : string | undefined ;
     private settings_ : MTBSettings ;
 
     // Managers
@@ -94,6 +94,8 @@ export class MTBAssistObject {
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
         this.keywords_ = new MtbFunIndex(this.logger_);
         this.settings_ = new MTBSettings(this) ;
+        this.settings_.on('toolsPathChanged', this.onToolsPathChanged.bind(this));
+        this.toolspath_ = this.settings_.toolsPath ;
         this.bindCommandHandlers();
 
         vscode.window.onDidChangeActiveColorTheme(e => {
@@ -235,7 +237,7 @@ export class MTBAssistObject {
                                                     this.pushRecentlyOpened();
                                                 }
                                                 let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'tasks.json');
-                                                this.tasks_ = new MTBTasks(this.env_!, this.logger_, p, this.toolspath_);
+                                                this.tasks_ = new MTBTasks(this.env_!, this.logger_,p);
                                                 this.switchToTab(MTBAssistObject.applicationStatusTab);
                                                 this.getLaunchData()
                                                     .then(() => {
@@ -1128,6 +1130,38 @@ export class MTBAssistObject {
             missingAssets: false,
             missingAssetDetails: [],
             components: []
+        });
+    }
+
+    private onToolsPathChanged(newdir: string) {
+        this.logger_.info(`Tools path changed to: ${newdir}`);
+        this.toolspath_ = newdir;
+
+        let options: vscode.ProgressOptions = {
+            location: vscode.ProgressLocation.Notification,
+            title: "ModusToolbox: ",
+            cancellable: false
+        };
+        vscode.window.withProgress(options, (progress) => {
+            let p = new Promise<void>((resolve, reject) => {
+                progress.report({ message: "Reloading ModusToolbox application" });
+
+                let flags: MTBLoadFlags = MTBLoadFlags.appInfo | MTBLoadFlags.packs | MTBLoadFlags.tools | MTBLoadFlags.reload ;
+                this.env_!.load(flags, this.env_!.appInfo?.appdir, this.toolspath_)
+                    .then(() => {
+                        progress.report({ message: "Updating all tasks" });
+                        this.tasks_?.clear() ;
+                        this.tasks_?.addAll() ;
+                        this.tasks_?.writeTasks() ;
+                        this.pushAppStatus() ;
+                        resolve() ;
+                    })
+                    .catch((err: Error) => {
+                        this.logger_.error('Error reloading ModusToolbox application:', err);
+                        reject(err);
+                    }) ;
+            });
+            return p ;
         });
     }
 

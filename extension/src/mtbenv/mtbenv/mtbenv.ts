@@ -72,6 +72,10 @@ export class ModusToolboxEnvironment extends EventEmitter {
         this.logger_ = logger ;
     }
 
+    public areWeLoading(flags: MTBLoadFlags) : boolean {
+        return (this.wants_ & flags) === flags ;
+    }
+
     public destroy() {
         ModusToolboxEnvironment.env_ = undefined ;
     }
@@ -152,8 +156,18 @@ export class ModusToolboxEnvironment extends EventEmitter {
     public load(flags: MTBLoadFlags, appdir?: string, toolsPath?: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             if (this.isLoading_) {
-                reject('ModusToolboxEnvironment is already loading') ;
-                return ;
+                if (this.wants_ !== MTBLoadFlags.manifestData || this.loading_ !== MTBLoadFlags.manifestData) {
+                    reject('ModusToolboxEnvironment is already loading') ;
+                    return ;
+                }
+            }
+
+            if (flags & MTBLoadFlags.reload) {
+                this.toolsDb_ = new ToolsDB() ;
+                this.packDb_ = new PackDB() ;
+                flags &= ~MTBLoadFlags.reload;
+                this.has_ &= ~flags ;             
+                this.toolsDir_ = undefined ;   
             }
 
             this.isLoading_ = true ;
@@ -164,6 +178,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
             if (toolsPath !== undefined) {
                 this.requestedToolsDir_ = toolsPath ;
             }
+
             this.wants_ = flags ;
 
             this.loadPacks()
@@ -427,9 +442,11 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 this.appInfo_ = new MTBAppInfo(this, this.appdir_) ;
                 this.appInfo_.load(this.logger_)
                     .then(()=> {
+                        this.loading_ &= ~MTBLoadFlags.appInfo;
                         resolve() ;
                     })
                     .catch((err) => {
+                        this.loading_ &= ~MTBLoadFlags.appInfo;                        
                         reject(err) ;
                     }) ;
             }

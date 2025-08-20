@@ -35,15 +35,13 @@ export class MTBTasks
     private valid_: boolean = false ;
     private env_ : ModusToolboxEnvironment ;
     private logger_ : winston.Logger ;
-    private toolsdir_ : string | undefined ;
 
     private static validVersion = "2.0.0" ;
 
-    constructor(env: ModusToolboxEnvironment, logger: winston.Logger, filename: string, toolspath: string | undefined) {
+    constructor(env: ModusToolboxEnvironment, logger: winston.Logger, filename: string) {
         this.filename_ = filename ;
         this.env_ = env ;
         this.logger_ = logger ;
-        this.toolsdir_ = toolspath ;
 
         if (fs.existsSync(filename)) {
             this.initFromFile() ;
@@ -80,6 +78,10 @@ export class MTBTasks
 
         let contents = JSON.stringify(taskobj, null, 4) ;
         fs.writeFileSync(this.filename_, contents) ;
+    }
+
+    public clear() {
+        this.tasks_ = [];
     }
 
     public addAll() {
@@ -302,8 +304,8 @@ export class MTBTasks
     }
 
     private genToolsPath() : string {
-        if (this.toolsdir_) {
-            return `export CY_TOOLS_PATHS=${this.toolsdir_} ; ` ;
+        if (this.env_.toolsDir) {
+            return `export CY_TOOLS_PATHS=${this.env_.toolsDir} ; ` ;
         }
         return '' ;
     }
@@ -335,10 +337,10 @@ export class MTBTasks
         }
 
         if (project) {
-            unixarg = `export ${this.genToolsPath() } cd ${project} ; make ${targetstr} `;
+            unixarg = `${this.genToolsPath() } cd ${project} ; make ${targetstr} `;
         }
         else {
-            unixarg = `export ${this.genToolsPath() } make ${targetstr} `;
+            unixarg = `${this.genToolsPath() } make ${targetstr} `;
         }
 
         let task =  {

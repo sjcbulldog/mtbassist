@@ -16,7 +16,7 @@
 
 import fs = require('fs');
 import path = require('path') ;
-import { MTBAssistObject } from '../extobj/mtbassistobj';
+import { MTBAssistObject } from './mtbassistobj';
 import { RecentEntry } from '../comms';
 
 export class RecentAppManager {
