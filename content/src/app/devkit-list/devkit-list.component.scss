@@ -1,23 +1,23 @@
-.update-fw-btn {
-  margin-left: 0.5rem;
-  background: var(--primary-color, #007bff);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 0.15rem 0.7rem;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background 0.2s;
+.devkit-list {
+  padding: 1.5rem;
+  max-width: 700px;
+  margin: 0 auto;
+  
+  h2 {
+    color: var(--text-primary, #333);
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+    font-weight: 500;
+  }
 }
-.update-fw-btn:hover {
-  background: var(--primary-hover, #0056b3);
-}
+
 .devkit-list-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1rem;
 }
+
 .refresh-btn {
   background: none;
   border: none;
@@ -27,15 +27,12 @@
   transition: background 0.2s;
   display: flex;
   align-items: center;
+  
+  &:hover {
+    background: var(--hover-background, #f0f0f0);
+  }
 }
-.refresh-btn:hover {
-  background: var(--hover-background, #f0f0f0);
-}
-.devkit-list {
-  padding: 1.5rem;
-  max-width: 700px;
-  margin: 0 auto;
-}
+
 .devkit-card {
   background: var(--card-background, #fff);
   border-radius: 12px;
@@ -44,11 +41,13 @@
   padding: 1.25rem 1.5rem;
   transition: box-shadow 0.2s;
   border: 1px solid var(--border-color, #e0e0e0);
+  
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+    border-color: var(--primary-color, #007bff);
+  }
 }
-.devkit-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
-  border-color: var(--primary-color, #007bff);
-}
+
 .devkit-header {
   display: flex;
   align-items: center;
@@ -57,6 +56,7 @@
   font-size: 1.1rem;
   font-weight: 500;
 }
+
 .devkit-name {
   color: var(--primary-color, #007bff);
   font-size: 1.2rem;
@@ -72,22 +72,26 @@
   vertical-align: middle;
   cursor: pointer;
 }
+
 .devkit-serial {
   color: var(--text-secondary, #888);
   font-size: 0.95rem;
   margin-left: 1.5rem;
 }
+
 .devkit-fw {
   color: var(--text-secondary, #888);
   font-size: 0.95rem;
   margin-left: 1.5rem;
   display: flex;
   align-items: center;
+  
+  &.outdated {
+    color: #d32f2f;
+    font-weight: bold;
+  }
 }
-.devkit-fw.outdated, .devkit-details .outdated {
-  color: #d32f2f;
-  font-weight: bold;
-}
+
 .devkit-details {
   margin-top: 0.5rem;
   font-size: 1rem;
@@ -95,13 +99,191 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem 1.5rem;
+  
+  .outdated {
+    color: #d32f2f;
+    font-weight: bold;
+  }
 }
+
+.bsp-select-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  
+  label {
+    font-weight: 600;
+  }
+  
+  select {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 4px;
+    background: var(--input-background, #fff);
+    color: var(--text-color, #333);
+    font-size: 0.95rem;
+    
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color, #007bff);
+    }
+  }
+}
+
+.update-fw-btn {
+  margin-left: 0.5rem;
+  background: var(--primary-color, #007bff);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: var(--primary-hover, #0056b3);
+  }
+}
+
 .no-kits {
   color: #888;
   text-align: center;
   padding: 2rem 0;
   font-size: 1.1rem;
 }
+
+/* Dark Theme */
+.devkit-list.dark-theme {
+  background: transparent;
+  color: #e0e0e0;
+  
+  h2 {
+    color: #90caf9;
+  }
+  
+  .refresh-btn {
+    &:hover {
+      background: #2d3136;
+    }
+  }
+  
+  .devkit-card {
+    background: #23272f;
+    border-color: #444;
+    
+    &:hover {
+      border-color: #90caf9;
+      box-shadow: 0 4px 16px rgba(144, 202, 249, 0.15);
+    }
+  }
+  
+  .devkit-name {
+    color: #90caf9;
+  }
+  
+  .devkit-serial,
+  .devkit-fw {
+    color: #b0b0b0;
+  }
+  
+  .devkit-details {
+    color: #e0e0e0;
+  }
+  
+  .bsp-select-row {
+    select {
+      background: #1a1d23;
+      border-color: #444;
+      color: #e0e0e0;
+      
+      &:focus {
+        border-color: #90caf9;
+      }
+    }
+  }
+  
+  .update-fw-btn {
+    background: #90caf9;
+    color: #1a1d23;
+    
+    &:hover {
+      background: #64b5f6;
+    }
+  }
+  
+  .no-kits {
+    color: #b0b0b0;
+  }
+}
+
+/* Light Theme */
+.devkit-list.light-theme {
+  background: transparent;
+  color: #333;
+  
+  h2 {
+    color: #1976d2;
+  }
+  
+  .refresh-btn {
+    &:hover {
+      background: #f0f4f8;
+    }
+  }
+  
+  .devkit-card {
+    background: #f8f9fa;
+    border-color: #e9ecef;
+    
+    &:hover {
+      border-color: #1976d2;
+      box-shadow: 0 4px 16px rgba(25, 118, 210, 0.15);
+    }
+  }
+  
+  .devkit-name {
+    color: #1976d2;
+  }
+  
+  .devkit-serial,
+  .devkit-fw {
+    color: #666;
+  }
+  
+  .devkit-details {
+    color: #333;
+  }
+  
+  .bsp-select-row {
+    select {
+      background: #ffffff;
+      border-color: #ccc;
+      color: #333;
+      
+      &:focus {
+        border-color: #1976d2;
+      }
+    }
+  }
+  
+  .update-fw-btn {
+    background: #1976d2;
+    color: #fff;
+    
+    &:hover {
+      background: #1565c0;
+    }
+  }
+  
+  .no-kits {
+    color: #666;
+  }
+}
+
 @media (max-width: 600px) {
   .devkit-details {
     grid-template-columns: 1fr;

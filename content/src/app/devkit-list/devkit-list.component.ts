@@ -15,6 +15,7 @@ import { BackendService } from '../backend/backend-service';
 })
 export class DevkitListComponent {
   devkits: DevKitInfo[] = [];
+  themeType: 'dark' | 'light' = 'light';
 
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
     this.be.devKitStatus.subscribe({
@@ -24,6 +25,11 @@ export class DevkitListComponent {
         this.cdr.detectChanges();
       }
     }) ;
+    
+    // Subscribe to theme changes
+    this.be.theme.subscribe(theme => {
+      this.themeType = theme as 'dark' | 'light';
+    });
   }
 
   refreshDevKits() {

@@ -1,4 +1,4 @@
-<div class="devkit-list">
+<div class="devkit-list" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   <div class="devkit-list-header">
     <h2>Connected Development Kits</h2>
     <button class="refresh-btn" (click)="refreshDevKits()" title="Refresh" style="background: #f1f5f9; border-radius: 50%; padding: 8px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
