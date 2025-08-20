@@ -313,7 +313,9 @@ export class MTBAssistObject {
                                         else {
                                             this.env?.load(MTBLoadFlags.manifestData)
                                                 .then(() => {
+                                                    this.pushDevKitStatus() ;
                                                     this.pushAllBSPs();
+                                                    this.updateStatusBar() ;
                                                     this.logger_.debug('ModusToolbox manifests loaded successfully.');
                                                     resolve();
                                                 })

@@ -156,10 +156,8 @@ export class ModusToolboxEnvironment extends EventEmitter {
     public load(flags: MTBLoadFlags, appdir?: string, toolsPath?: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             if (this.isLoading_) {
-                if (this.wants_ !== MTBLoadFlags.manifestData || this.loading_ !== MTBLoadFlags.manifestData) {
-                    reject('ModusToolboxEnvironment is already loading') ;
-                    return ;
-                }
+                reject('ModusToolboxEnvironment is already loading') ;
+                return ;
             }
 
             if (flags & MTBLoadFlags.reload) {
