@@ -399,7 +399,8 @@
   .tips-section {
     .tips-card {
       background: #23272f;
-      color: #fafafa;
+    color: #f8f8ff !important;
+    font-weight: 500;
       border: 1px solid #444;
       mat-card-header .mat-mdc-card-title {
         color: #90caf9;
@@ -408,7 +409,13 @@
         color: #ffb300;
       }
       mat-list-item {
-        color: #fafafa;
+        color: #f8f8ff !important;
+        font-weight: 500;
+        
+        div[matListItemTitle] {
+          color: #f8f8ff !important;
+          font-weight: 500;
+        }
       }
       mat-list-item mat-icon {
         color: #4caf50;

@@ -6,6 +6,10 @@ Priorities
 - Light, Dark, and High Contrast theme support
 - Lots of testing
 
+Bugs
+----
+- Dev kit BSP not available message in project creation
+
 TODO
 -------------------------------------------------------------------------------------------
 o Getting Started Component                                                                       done

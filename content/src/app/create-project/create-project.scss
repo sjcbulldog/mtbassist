@@ -828,38 +828,38 @@ body.dark-theme,
   .bsp-form,
   .example-form {
     .mat-mdc-form-field {
-      background-color: #000000 !important; // Solid black background
+      background-color: #ffffff !important; // White background for light theme
       border-radius: 8px;
       
       .mdc-notched-outline__leading,
       .mdc-notched-outline__notch,
       .mdc-notched-outline__trailing {
-        border-color: #333333 !important; // Slightly lighter border for visibility on black
+        border-color: #cccccc !important; // Light gray border
       }
       
       &.mat-focused {
         .mdc-notched-outline__leading,
         .mdc-notched-outline__notch,
         .mdc-notched-outline__trailing {
-          border-color: var(--light-border-focused) !important;
+          border-color: #1976d2 !important; // Primary blue when focused
           border-width: 2px !important;
         }
       }
       
       .mat-mdc-input-element {
-        color: #ffffff !important; // White text for text inputs on dark background
+        color: #333333 !important; // Dark text for light background
       }
       
       .mat-mdc-select-value-text {
-        color: #000000 !important; // Black text for selected values
+        color: #333333 !important; // Dark text for selected values
       }
       
       .mat-mdc-floating-label {
-        color: rgba(255, 255, 255, 0.7) !important; // Light white for labels
+        color: rgba(0, 0, 0, 0.6) !important; // Dark gray for labels
       }
       
       &.mat-focused .mat-mdc-floating-label {
-        color: #ffffff !important; // White text for focused labels
+        color: #1976d2 !important; // Primary blue for focused labels
       }
 
       // Ensure all select elements have black text
