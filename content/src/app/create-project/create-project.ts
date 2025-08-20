@@ -93,7 +93,6 @@ export class CreateProject implements OnInit, OnDestroy {
             });
 
             this.be.allBSPs.subscribe(bsps => {
-                this.be.log('All BSPs Updated: ' + JSON.stringify(bsps), 'debug');
                 this.allBSPs = bsps;
             }); 
         }

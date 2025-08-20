@@ -66,6 +66,7 @@ export class MTBAssistObject {
     private keywords_ : MtbFunIndex ;
     private toolspath_ : string | undefined ;
     private settings_ : MTBSettings ;
+    private statusBarItem_: vscode.StatusBarItem ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -101,10 +102,32 @@ export class MTBAssistObject {
         vscode.window.onDidChangeActiveColorTheme(e => {
             this.pushTheme() ;
         });
+
+        this.statusBarItem_ = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100) ;    
+        this.statusBarItem_.command = 'mtbassist2.mtbMainPage' ;
+        this.updateStatusBar() ;    
     }
 
     public get toolsDir() : string | undefined {
         return this.toolspath_;
+    }
+
+    private updateStatusBar() : void {
+        let st: string = 'Initializing' ;
+        let tip: string = 'Initializing' ;
+        if (this.env_) {
+            if (this.env_.has(MTBLoadFlags.manifestData)) {
+                st = 'Ready' ;
+                tip = 'Ready' ;
+            }
+            else {
+                st = 'Loading...' ;
+                tip = 'Loading manifest data' ;
+            }
+        }
+        this.statusBarItem_.text = st ;
+        this.statusBarItem_.tooltip = tip ;
+        this.statusBarItem_.show() ;
     }
 
     /**
@@ -210,6 +233,7 @@ export class MTBAssistObject {
                 return;
             }
 
+            this.updateStatusBar() ;
             this.bsps_ = new BSPMgr(this.context_.extensionUri.fsPath, this.env_!);
             this.worker_ = new VSCodeWorker(this.logger_, this);
             this.worker_.on('progress', this.reportProgress.bind(this));
@@ -218,7 +242,6 @@ export class MTBAssistObject {
 
             this.loadMTBApplication().then(() => {
                 this.createAppStructure();
-                this.logger_.info('MTB Application loaded successfully.');
                 this.preInitializeManagers()
                     .then(() => {
                         this.logger_.info('All managers initialized successfully.');
@@ -270,6 +293,7 @@ export class MTBAssistObject {
                                                                 .then(() => {
                                                                     this.pushDevKitStatus() ;
                                                                     this.pushAllBSPs();
+                                                                    this.updateStatusBar() ;
                                                                     resolve() ;
                                                                 })
                                                                 .catch((err) => {
@@ -885,7 +909,6 @@ export class MTBAssistObject {
     private loadMTBApplication(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.isPossibleMTBApplication()) {
-                this.logger_.debug('Not a ModusToolbox application - skipping loading app.');
                 let flags: MTBLoadFlags = MTBLoadFlags.packs | MTBLoadFlags.tools;
                 this.env_!.load(flags).then(() => {
                     this.envLoaded_ = true;
@@ -1146,8 +1169,14 @@ export class MTBAssistObject {
             let p = new Promise<void>((resolve, reject) => {
                 progress.report({ message: "Reloading ModusToolbox application" });
 
-                let flags: MTBLoadFlags = MTBLoadFlags.appInfo | MTBLoadFlags.packs | MTBLoadFlags.tools | MTBLoadFlags.reload ;
-                this.env_!.load(flags, this.env_!.appInfo?.appdir, this.toolspath_)
+                let appsdir : string | undefined = undefined ;
+                let flags: MTBLoadFlags = MTBLoadFlags.packs | MTBLoadFlags.tools | MTBLoadFlags.reload ;
+                if (this.env_!.appInfo) {
+                    flags |= MTBLoadFlags.appInfo;
+                    appsdir = this.env_!.appInfo?.appdir;
+                }
+
+                this.env_!.load(flags, appsdir, this.toolspath_)
                     .then(() => {
                         progress.report({ message: "Updating all tasks" });
                         this.tasks_?.clear() ;

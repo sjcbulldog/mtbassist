@@ -399,12 +399,16 @@
   .tips-section {
     .tips-card {
       background: #23272f;
-      color: #e0e0e0;
+      color: #fafafa;
+      border: 1px solid #444;
       mat-card-header .mat-mdc-card-title {
         color: #90caf9;
       }
       mat-icon {
         color: #ffb300;
+      }
+      mat-list-item {
+        color: #fafafa;
       }
       mat-list-item mat-icon {
         color: #4caf50;

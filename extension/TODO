@@ -1,9 +1,8 @@
 Priorities
 ----------
-- Settings inside VSCode, honor in all operations
-- If you run library manager, reload the application info
 - Automatically run the 'make vscode' if the .vscode directory is not present
 - LLVM installation
+- LCS support
 - Light, Dark, and High Contrast theme support
 - Lots of testing
 

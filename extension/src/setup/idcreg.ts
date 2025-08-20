@@ -89,7 +89,7 @@ export class IDCRegistry {
     }
 
     private checkOneJSONFile(file: string) {
-        this.logger_.debug(`idcreg: checking JSON file '${file}'`) ;
+        this.logger_.silly(`idcreg: checking JSON file '${file}'`) ;
         let content = fs.readFileSync(file, 'utf-8');
         try {
             content = content.replace(/^\uFEFF/, ''); // Remove BOM if present

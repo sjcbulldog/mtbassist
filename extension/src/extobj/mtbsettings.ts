@@ -125,6 +125,9 @@ export class MTBSettings extends EventEmitter {
             }
             else {
                 this.writeSettingsFile() ;
+                if (setting.name === 'enabled_eap') {
+                    this.emit('toolsPathChanged', this.computeToolsPath()) ;
+                }
             }
         }
     }

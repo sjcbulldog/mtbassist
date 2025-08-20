@@ -232,7 +232,8 @@ export class BackendService {
             this.intellisenseProject.next(cmd.data.data || '');
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'setTheme') {
-            this.theme.next(cmd.data.theme || 'light');
+            this.log('Setting theme **************************************************');
+            this.theme.next(cmd.data.data);
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'settings') {
             this.settings.next(cmd.data.data || []);

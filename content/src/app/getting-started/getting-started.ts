@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,14 +26,16 @@ import MtbNav from '../mtb-nav/mtb-nav';
 export class GettingStarted {
   themeType: 'dark' | 'light' = 'dark'; // Default to light theme
 
-  constructor(private be: BackendService) {
+  constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
     this.be.theme.subscribe(theme => {
+      this.be.log(`GettingStarted: theme changed to ${theme}`);
       if (theme === 'dark' || theme === 'light') {
         this.themeType = theme;
       }
       else {
         this.themeType = 'dark' ;
       }
+      this.cdr.detectChanges() ;
     }) ;
   }
 
