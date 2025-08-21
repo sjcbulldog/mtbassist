@@ -123,5 +123,120 @@
     "term": "Workspace",
     "definition": "A VS Code concept that represents a collection of folders and files that make up your development environment, including project files, settings, and configurations.",
     "category": "Development"
+  },
+  {
+    "term": "AIROC",
+    "definition": "Infineon's family of Wi-Fi, Bluetooth, and combo connectivity solutions that provide wireless capabilities for IoT and embedded applications developed with ModusToolbox.",
+    "category": "Hardware"
+  },
+  {
+    "term": "Application Template",
+    "definition": "Pre-built project structures in ModusToolbox that provide starting points for specific application types such as Hello World, Blinky LED, or sensor applications.",
+    "category": "Development"
+  },
+  {
+    "term": "CapSense",
+    "definition": "Infineon's capacitive touch sensing technology that enables touch, proximity, and gesture detection capabilities in embedded applications.",
+    "category": "Hardware"
+  },
+  {
+    "term": "CapSense Configurator",
+    "definition": "A graphical tool within ModusToolbox that allows developers to configure and tune capacitive touch sensing parameters for CapSense-enabled devices.",
+    "category": "Tools"
+  },
+  {
+    "term": "Device Configurator",
+    "definition": "A powerful graphical tool in ModusToolbox that enables configuration of microcontroller pins, clocks, peripherals, and other hardware resources through an intuitive interface.",
+    "category": "Tools"
+  },
+  {
+    "term": "Eclipse IDE",
+    "definition": "An integrated development environment supported by ModusToolbox as an alternative to VS Code, providing traditional IDE features for embedded development.",
+    "category": "Platform"
+  },
+  {
+    "term": "FreeRTOS",
+    "definition": "A real-time operating system kernel supported by ModusToolbox that provides task scheduling, memory management, and inter-task communication for embedded applications.",
+    "category": "Software"
+  },
+  {
+    "term": "IAR Embedded Workbench",
+    "definition": "A third-party integrated development environment that can be used with ModusToolbox projects, providing advanced debugging and optimization tools.",
+    "category": "Platform"
+  },
+  {
+    "term": "Makefile",
+    "definition": "Build configuration files used by ModusToolbox projects to define compilation rules, dependencies, and build targets for embedded applications.",
+    "category": "Development"
+  },
+  {
+    "term": "ModusToolbox Setup",
+    "definition": "The installation program that downloads and configures the complete ModusToolbox development environment, including tools, libraries, and documentation.",
+    "category": "Tools"
+  },
+  {
+    "term": "Project Creator",
+    "definition": "A tool within ModusToolbox that helps developers create new projects by selecting target devices, BSPs, and application templates through a guided interface.",
+    "category": "Tools"
+  },
+  {
+    "term": "QSPI Configurator",
+    "definition": "A specialized tool in ModusToolbox for configuring Quad Serial Peripheral Interface (QSPI) external memory devices and their timing parameters.",
+    "category": "Tools"
+  },
+  {
+    "term": "SmartIO Configurator",
+    "definition": "A graphical configuration tool that enables setup of Smart I/O blocks in PSoC devices, allowing for hardware-based logic operations without CPU intervention.",
+    "category": "Tools"
+  },
+  {
+    "term": "TRAVEO",
+    "definition": "Infineon's family of automotive microcontrollers designed for ADAS, body, and connectivity applications, supported by ModusToolbox development tools.",
+    "category": "Hardware"
+  },
+  {
+    "term": "XMC",
+    "definition": "Infineon's family of 32-bit industrial microcontrollers based on ARM Cortex-M cores, designed for motor control, power conversion, and industrial automation applications.",
+    "category": "Hardware"
+  },
+  {
+    "term": "Manifest",
+    "definition": "Configuration files that define available libraries, BSPs, code examples, and their dependencies within the ModusToolbox ecosystem.",
+    "category": "Software"
+  },
+  {
+    "term": "Asset",
+    "definition": "Any downloadable component in ModusToolbox including libraries, BSPs, code examples, or tools that can be added to projects through the Library Manager.",
+    "category": "Resources"
+  },
+  {
+    "term": "cy_boot",
+    "definition": "The startup and system initialization code provided by ModusToolbox that handles device configuration, clock setup, and system startup for embedded applications.",
+    "category": "Software"
+  },
+  {
+    "term": "Retarget I/O",
+    "definition": "A ModusToolbox library component that redirects standard C library I/O functions (printf, scanf) to use UART or other communication interfaces for debugging output.",
+    "category": "Software"
+  },
+  {
+    "term": "Machine Learning",
+    "definition": "ModusToolbox provides machine learning inference capabilities through optimized libraries and tools for running AI models on resource-constrained embedded devices.",
+    "category": "Software"
+  },
+  {
+    "term": "Secure Boot",
+    "definition": "A security feature supported by ModusToolbox that ensures only authenticated and authorized firmware can be executed on the target device during startup.",
+    "category": "Security"
+  },
+  {
+    "term": "OTA Update",
+    "definition": "Over-The-Air firmware update capability provided by ModusToolbox libraries that enables remote updating of device firmware through wireless connectivity.",
+    "category": "Software"
+  },
+  {
+    "term": "Power Management",
+    "definition": "ModusToolbox libraries and tools that help developers implement low-power modes, sleep states, and energy-efficient operation in embedded applications.",
+    "category": "Software"
   }
 ]
