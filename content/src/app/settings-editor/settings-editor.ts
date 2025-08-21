@@ -30,10 +30,16 @@ import { BackendService } from '../backend/backend-service';
 })
 export class SettingsEditor {
   settings: MTBSetting[] = [];
+  themeType: 'dark' | 'light' = 'light';
 
   constructor(private be: BackendService) {
     this.be.settings.subscribe(settings => {
       this.settings = settings;
+    });
+
+    // Subscribe to theme changes
+    this.be.theme.subscribe(theme => {
+      this.themeType = theme as 'dark' | 'light';
     });
 
     this.be.browserFolder.subscribe(folder => {

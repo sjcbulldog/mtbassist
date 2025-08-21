@@ -19,11 +19,17 @@ export class GlossaryComponent {
   searchTerm = '';
   selectedLetter = 'A';
   alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  themeType: 'dark' | 'light' = 'light';
   
   constructor(private be: BackendService) {
     this.be.glossaryEntries.subscribe(entries => {
       this.addEntries(entries) ;
     }) ;
+    
+    // Subscribe to theme changes
+    this.be.theme.subscribe(theme => {
+      this.themeType = theme as 'dark' | 'light';
+    });
   }
 
   // API method to add entries

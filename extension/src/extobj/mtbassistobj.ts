@@ -311,17 +311,24 @@ export class MTBAssistObject {
                                             }) ;
                                         }
                                         else {
-                                            this.env?.load(MTBLoadFlags.manifestData)
-                                                .then(() => {
-                                                    this.pushDevKitStatus() ;
-                                                    this.pushAllBSPs();
-                                                    this.updateStatusBar() ;
-                                                    this.logger_.debug('ModusToolbox manifests loaded successfully.');
-                                                    resolve();
-                                                })
-                                                .catch((error: Error) => {
-                                                    this.logger_.error('Failed to load ModusToolbox manifests:', error.message);
-                                                });
+                                            this.sendGlossary()
+                                            .then(() =>  {
+                                                this.env?.load(MTBLoadFlags.manifestData)
+                                                    .then(() => {
+                                                        this.pushDevKitStatus() ;
+                                                        this.pushAllBSPs();
+                                                        this.updateStatusBar() ;
+                                                        this.logger_.debug('ModusToolbox manifests loaded successfully.');
+                                                        resolve();
+                                                    })
+                                                    .catch((error: Error) => {
+                                                        this.logger_.error('Failed to load ModusToolbox manifests:', error.message);
+                                                    });
+                                            })
+                                            .catch((err) => {
+                                                this.logger_.error('Failed to send glossary:', err.message);
+                                                resolve() ;
+                                            });
                                         }
                                     });
                             });

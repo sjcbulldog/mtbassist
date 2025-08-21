@@ -252,4 +252,221 @@
   border: 2px dashed #cbd5e1;
 }
 
-/* Remove vintage paper texture effect */
+/* Dark Theme */
+.glossary-container.dark-theme {
+  background: #23272f;
+  border-color: #444;
+  
+  .glossary-header {
+    background: linear-gradient(135deg, #1a1d23 0%, #23272f 100%);
+    color: #e0e0e0;
+  }
+  
+  .search-input {
+    background: #1a1d23;
+    border-color: #444;
+    color: #e0e0e0;
+    
+    &::placeholder {
+      color: #b0b0b0;
+    }
+    
+    &:focus {
+      border-color: #90caf9;
+      box-shadow: 0 0 0 3px rgba(144, 202, 249, 0.1);
+    }
+  }
+  
+  .clear-search-btn {
+    color: #b0b0b0;
+    
+    &:hover {
+      background-color: rgba(176, 176, 176, 0.1);
+      color: #e0e0e0;
+    }
+  }
+  
+  .alphabet-tabs {
+    background: #1a1d23;
+    border-right-color: #444;
+  }
+  
+  .alphabet-tabs-scroll::-webkit-scrollbar-track {
+    background: #1a1d23;
+  }
+  
+  .alphabet-tabs-scroll::-webkit-scrollbar-thumb {
+    background: #444;
+    
+    &:hover {
+      background: #555;
+    }
+  }
+  
+  .tab-button {
+    color: #b0b0b0;
+    
+    &.active {
+      background: linear-gradient(135deg, #90caf9 0%, #64b5f6 100%);
+      border-right-color: #90caf9;
+      color: #1a1d23;
+    }
+    
+    &.has-entries:hover:not(.active) {
+      background: #2d3136;
+      color: #e0e0e0;
+    }
+  }
+  
+  .dictionary-content {
+    background: #23272f;
+  }
+  
+  .dictionary-content-scroll::-webkit-scrollbar-track {
+    background: #1a1d23;
+  }
+  
+  .dictionary-content-scroll::-webkit-scrollbar-thumb {
+    background: #444;
+    
+    &:hover {
+      background: #555;
+    }
+  }
+  
+  .search-results-header h3,
+  .letter-header h3 {
+    color: #90caf9;
+    border-bottom-color: #90caf9;
+  }
+  
+  .results-count {
+    color: #b0b0b0;
+  }
+  
+  .glossary-entry {
+    background: #1a1d23;
+    border-color: #444;
+    
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      border-color: #555;
+    }
+  }
+  
+  .entry-term {
+    color: #90caf9;
+  }
+  
+  .entry-definition {
+    color: #e0e0e0;
+  }
+  
+  .entry-category {
+    background: linear-gradient(135deg, #90caf9 0%, #64b5f6 100%);
+    color: #1a1d23;
+  }
+  
+  .no-entries {
+    color: #b0b0b0;
+    background: #1a1d23;
+    border-color: #444;
+  }
+}
+
+/* Light Theme */
+.glossary-container.light-theme {
+  background: #f8f9fa;
+  border-color: #e9ecef;
+  
+  .glossary-header {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: #ffffff;
+  }
+  
+  .search-input {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: #d1d5db;
+    color: #333;
+    
+    &::placeholder {
+      color: #666;
+    }
+    
+    &:focus {
+      border-color: #1976d2;
+      box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+    }
+  }
+  
+  .clear-search-btn {
+    color: #666;
+    
+    &:hover {
+      background-color: rgba(102, 102, 102, 0.1);
+      color: #333;
+    }
+  }
+  
+  .alphabet-tabs {
+    background: #f5f7fa;
+    border-right-color: #e9ecef;
+  }
+  
+  .tab-button {
+    color: #666;
+    
+    &.active {
+      background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+      border-right-color: #1976d2;
+      color: white;
+    }
+    
+    &.has-entries:hover:not(.active) {
+      background: #e9ecef;
+      color: #333;
+    }
+  }
+  
+  .dictionary-content {
+    background: #ffffff;
+  }
+  
+  .search-results-header h3,
+  .letter-header h3 {
+    color: #1976d2;
+    border-bottom-color: #1976d2;
+  }
+  
+  .results-count {
+    color: #666;
+  }
+  
+  .glossary-entry {
+    background: #ffffff;
+    border-color: #f1f5f9;
+    
+    &:hover {
+      border-color: #e2e8f0;
+    }
+  }
+  
+  .entry-term {
+    color: #1976d2;
+  }
+  
+  .entry-definition {
+    color: #333;
+  }
+  
+  .entry-category {
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: white;
+  }
+  
+  .no-entries {
+    color: #666;
+    background: #f5f7fa;
+    border-color: #e9ecef;
+  }
+}

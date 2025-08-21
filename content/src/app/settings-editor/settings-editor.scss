@@ -59,3 +59,145 @@ mat-select {
 mat-checkbox {
   margin-left: 0.5rem;
 }
+
+/* Dark Theme */
+.settings-editor-container.dark-theme {
+  background: #23272f;
+  color: #e0e0e0;
+  border: 1px solid #444;
+  
+  .setting-row {
+    border-bottom-color: #444;
+  }
+  
+  .setting-label {
+    color: #90caf9;
+  }
+  
+  .setting-help-icon {
+    color: #90caf9 !important;
+  }
+  
+  mat-form-field {
+    .mat-mdc-form-field-outline {
+      color: #666;
+    }
+    
+    .mat-mdc-form-field-outline-thick {
+      color: #90caf9;
+    }
+    
+    .mat-mdc-input-element {
+      color: #e0e0e0;
+    }
+    
+    .mat-mdc-floating-label {
+      color: #b0b0b0;
+    }
+    
+    &.mat-focused .mat-mdc-floating-label {
+      color: #90caf9;
+    }
+    
+    .mat-mdc-select-value {
+      color: #e0e0e0;
+    }
+    
+    .mat-mdc-select-arrow {
+      color: #b0b0b0;
+    }
+  }
+  
+  mat-checkbox {
+    .mat-mdc-checkbox-frame {
+      border-color: #666;
+    }
+    
+    &.mat-mdc-checkbox-checked .mat-mdc-checkbox-background {
+      background-color: #90caf9;
+    }
+    
+    .mat-mdc-checkbox-label {
+      color: #e0e0e0;
+    }
+  }
+  
+  button[mat-icon-button] {
+    color: #90caf9;
+    
+    &:hover {
+      background-color: rgba(144, 202, 249, 0.1);
+    }
+  }
+}
+
+/* Light Theme */
+.settings-editor-container.light-theme {
+  background: #f5f7fa;
+  color: #333;
+  border: 1px solid #e9ecef;
+  
+  .setting-row {
+    border-bottom-color: #e9ecef;
+  }
+  
+  .setting-label {
+    color: #1976d2;
+  }
+  
+  .setting-help-icon {
+    color: #1976d2 !important;
+  }
+  
+  mat-form-field {
+    .mat-mdc-form-field-outline {
+      color: #ccc;
+    }
+    
+    .mat-mdc-form-field-outline-thick {
+      color: #1976d2;
+    }
+    
+    .mat-mdc-input-element {
+      color: #333;
+    }
+    
+    .mat-mdc-floating-label {
+      color: #666;
+    }
+    
+    &.mat-focused .mat-mdc-floating-label {
+      color: #1976d2;
+    }
+    
+    .mat-mdc-select-value {
+      color: #333;
+    }
+    
+    .mat-mdc-select-arrow {
+      color: #666;
+    }
+  }
+  
+  mat-checkbox {
+    .mat-mdc-checkbox-frame {
+      border-color: #ccc;
+    }
+    
+    &.mat-mdc-checkbox-checked .mat-mdc-checkbox-background {
+      background-color: #1976d2;
+    }
+    
+    .mat-mdc-checkbox-label {
+      color: #333;
+    }
+  }
+  
+  button[mat-icon-button] {
+    color: #1976d2;
+    
+    &:hover {
+      background-color: rgba(25, 118, 210, 0.1);
+    }
+  }
+}

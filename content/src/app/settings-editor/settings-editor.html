@@ -1,4 +1,4 @@
-<div class="settings-editor-container">
+<div class="settings-editor-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   @for (setting of settings; track setting.name) {
     <div class="setting-row">
       <div class="setting-label-group" style="display: flex; align-items: center; min-width: 180px;">
@@ -43,9 +43,13 @@
       } @else if (setting.type === 'dirpath') {
         <div class="browse-row" style="flex: 1;">
           <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
-            <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" />
+            <input matInput 
+                   [(ngModel)]="setting.value" 
+                   [disabled]="setting.name === 'custompath' && isCustomPathDisabled()"
+                   (ngModelChange)="setting.name === 'custompath' ? null : onValueChange(setting, $event)"
+                   (blur)="setting.name === 'custompath' ? onValueChange(setting, setting.value) : null" />
           </mat-form-field>
-          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder">
+          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder" [disabled]="setting.name === 'custompath' && isCustomPathDisabled()">
             <mat-icon>more_horiz</mat-icon>
           </button>
         </div>
