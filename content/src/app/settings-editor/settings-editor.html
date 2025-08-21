@@ -8,6 +8,9 @@
       @if (setting.type === 'string' && setting.name === 'custompath') {
         <mat-form-field appearance="outline" class="setting-field">
           <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" [disabled]="isCustomPathDisabled()" />
+          @if (!manifestStatus) {
+            <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
+          }               
         </mat-form-field>
       } @else if (setting.type === 'string') {
         <mat-form-field appearance="outline" class="setting-field">
@@ -19,6 +22,23 @@
         </mat-form-field>
       } @else if (setting.type === 'boolean') {
         <mat-checkbox [(ngModel)]="setting.value" (change)="onValueChange(setting, $event.checked)"></mat-checkbox>
+      } @else if (setting.name === 'toolsversion' || setting.name === 'enabled_eap') {
+        <div class="browse-row" style="flex: 1;">
+          <mat-form-field class="setting-field" appearance="outline" style="flex: 1;">
+            <mat-label>{{ setting.displayName }}</mat-label>
+            <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)" [disabled]="!manifestStatus">
+              @for (choice of setting.choices; track choice) {
+                <mat-option [value]="choice">{{ choice }}</mat-option>
+              }
+            </mat-select>
+          @if (!manifestStatus) {
+            <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
+          }            
+          </mat-form-field>
+          <button mat-icon-button matTooltip="{{ setting.description }}" aria-label="Help">
+            <mat-icon>help_outline</mat-icon>
+          </button>
+        </div>
       } @else if (setting.type === 'choice') {
         <div class="browse-row" style="flex: 1;">
           <mat-form-field class="setting-field" appearance="outline" style="flex: 1;">
@@ -40,6 +60,23 @@
             <mat-error>Invalid URI</mat-error>
           }
         </mat-form-field>
+      } @else if (setting.name === 'custompath') {
+        <div class="browse-row" style="flex: 1;">
+          <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
+            <input matInput 
+                   [(ngModel)]="setting.value" 
+                   [disabled]="setting.name === 'custompath' && isCustomPathDisabled()"
+                   (ngModelChange)="setting.name === 'custompath' ? null : onValueChange(setting, $event)"
+                   (blur)="setting.name === 'custompath' ? onValueChange(setting, setting.value) : null" />
+          </mat-form-field>
+          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder" [disabled]="setting.name === 'custompath' && isCustomPathDisabled()">
+            <mat-icon>more_horiz</mat-icon>
+          </button>
+        </div>
+        @if (!manifestStatus) {
+          <br>
+          <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
+        }
       } @else if (setting.type === 'dirpath') {
         <div class="browse-row" style="flex: 1;">
           <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">

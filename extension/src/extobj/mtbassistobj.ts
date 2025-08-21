@@ -67,6 +67,7 @@ export class MTBAssistObject {
     private toolspath_ : string | undefined ;
     private settings_ : MTBSettings ;
     private statusBarItem_: vscode.StatusBarItem ;
+    private initializing_: boolean = true;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -113,10 +114,13 @@ export class MTBAssistObject {
     }
 
     private updateStatusBar() : void {
-        let st: string = 'Initializing' ;
+        let st: string = 'Init' ;
         let tip: string = 'Initializing' ;
-        if (this.env_) {
-            if (this.env_.has(MTBLoadFlags.manifestData)) {
+        if (!this.initializing_ && this.env_) {
+            if (this.env_.isLoading === false && !this.env_.has(MTBLoadFlags.appInfo)) {
+                st = 'No App' ;
+            }
+            else if (this.env_.has(MTBLoadFlags.manifestData)) {
                 st = 'Ready' ;
                 tip = 'Ready' ;
             }
@@ -125,7 +129,7 @@ export class MTBAssistObject {
                 tip = 'Loading manifest data' ;
             }
         }
-        this.statusBarItem_.text = st ;
+        this.statusBarItem_.text = 'MTB: ' + st ;
         this.statusBarItem_.tooltip = tip ;
         this.statusBarItem_.show() ;
     }
@@ -233,7 +237,7 @@ export class MTBAssistObject {
                 return;
             }
 
-            this.updateStatusBar() ;
+
             this.bsps_ = new BSPMgr(this.context_.extensionUri.fsPath, this.env_!);
             this.worker_ = new VSCodeWorker(this.logger_, this);
             this.worker_.on('progress', this.reportProgress.bind(this));
@@ -241,6 +245,7 @@ export class MTBAssistObject {
             this.worker_.on('loadedAsset', this.loadedAsset.bind(this));
 
             this.loadMTBApplication().then(() => {
+                this.updateStatusBar();
                 this.createAppStructure();
                 this.preInitializeManagers()
                     .then(() => {
@@ -289,8 +294,11 @@ export class MTBAssistObject {
                                                                 this.setIntellisenseProject();
                                                                 this.logger_.debug('All managers post-initialization completed successfully.');
                                                                                         
+
+                                                                this.updateStatusBar() ;
                                                                 this.env?.load(MTBLoadFlags.manifestData)
                                                                 .then(() => {
+                                                                    this.initializing_ = false ;
                                                                     this.pushManifestStatus() ;
                                                                     this.pushDevKitStatus() ;
                                                                     this.pushAllBSPs();
@@ -314,8 +322,11 @@ export class MTBAssistObject {
                                         else {
                                             this.sendGlossary()
                                             .then(() =>  {
+
+                                                this.updateStatusBar() ;
                                                 this.env?.load(MTBLoadFlags.manifestData)
                                                     .then(() => {
+                                                        this.initializing_ = false ;                                                        
                                                         this.pushManifestStatus() ;
                                                         this.pushDevKitStatus() ;
                                                         this.pushAllBSPs();
@@ -1343,8 +1354,7 @@ export class MTBAssistObject {
     }
 
     private pushManifestStatus() {
-        //this.pushOOB('manifestStatus', this.env_?.has(MTBLoadFlags.manifestData) || false);
-        this.pushOOB('manifestStatus', false) ;
+        this.pushOOB('manifestStatus', this.env_?.has(MTBLoadFlags.manifestData) || false);
     }
 
     private pushAllBSPs() {

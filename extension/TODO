@@ -7,7 +7,6 @@ Priorities
 
 Bugs
 ----
-- If you change the tools or eap settings while the manifests are still loading, it fails
 - Fix the notification on every character for a custom tools path in the settings
 
 TODO
