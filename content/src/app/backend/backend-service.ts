@@ -41,6 +41,7 @@ export class BackendService {
     glossaryEntries: Subject<GlossaryEntry[]> = new Subject<GlossaryEntry[]>();
     intellisenseProject: Subject<string> = new Subject<string>();
     settings: Subject<MTBSetting[]> = new Subject<MTBSetting[]>();
+    manifestStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -53,7 +54,7 @@ export class BackendService {
         this.projectManager_ = new ProjectManager(this);
         this.appStatusManager_ = new AppStatusBackend(this);
 
-        this.setupHandlers();
+        this.setupHandlers();   
     }
 
     public registerHandler(cmd: BackEndToFrontEndResponseType, handler: (cmd: BackEndToFrontEndResponse) => void): void {  
@@ -207,10 +208,10 @@ export class BackendService {
             this.loadedAsset.next(asset);
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'devKitStatus') {
-            this.devKitStatus.next(cmd.data.kits) ;
+            this.devKitStatus.next(cmd.data.data);
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'allbsps') {
-            this.allBSPs.next(cmd.data.bsps || []);
+            this.allBSPs.next(cmd.data.data || []);
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'isMTBInstalled') {
             this.isMTBInstalled.next(cmd.data.data.installed || 'none');
@@ -237,8 +238,11 @@ export class BackendService {
         else if (cmd.data.oobtype && cmd.data.oobtype === 'settings') {
             this.settings.next(cmd.data.data || []);
         }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'manifestStatus') {
+            this.manifestStatus.next(cmd.data.data || false);
+        }
         else {
-            this.log(`Unhandled OOB type: ${cmd.data.oobtype}`);
+            this.log(`Unhandled OOB type: ${cmd.data.oobtype}`, 'error');
         }
     }
 

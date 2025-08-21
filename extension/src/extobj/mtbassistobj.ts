@@ -291,6 +291,7 @@ export class MTBAssistObject {
                                                                                         
                                                                 this.env?.load(MTBLoadFlags.manifestData)
                                                                 .then(() => {
+                                                                    this.pushManifestStatus() ;
                                                                     this.pushDevKitStatus() ;
                                                                     this.pushAllBSPs();
                                                                     this.updateStatusBar() ;
@@ -315,6 +316,7 @@ export class MTBAssistObject {
                                             .then(() =>  {
                                                 this.env?.load(MTBLoadFlags.manifestData)
                                                     .then(() => {
+                                                        this.pushManifestStatus() ;
                                                         this.pushDevKitStatus() ;
                                                         this.pushAllBSPs();
                                                         this.updateStatusBar() ;
@@ -1340,18 +1342,13 @@ export class MTBAssistObject {
         return bsps;
     }
 
+    private pushManifestStatus() {
+        //this.pushOOB('manifestStatus', this.env_?.has(MTBLoadFlags.manifestData) || false);
+        this.pushOOB('manifestStatus', false) ;
+    }
+
     private pushAllBSPs() {
-        if (this.panel_) {
-            let st = {
-                oobtype: 'allbsps',
-                bsps: this.getBSPIdentifiers().sort((a, b) => a.name.localeCompare(b.name))
-            };
-            let oob: BackEndToFrontEndResponse = {
-                response: 'oob',
-                data: st
-            };
-            this.postWebViewMessage(oob);
-        }
+        this.pushOOB('allbsps', this.getBSPIdentifiers().sort((a, b) => a.name.localeCompare(b.name)));
     }
 
     private updateFirmware(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse> {
@@ -1376,18 +1373,7 @@ export class MTBAssistObject {
     }
 
     private pushDevKitStatus() {
-        this.logger_.debug(`Pushing devkits to UI - ${this.devkitMgr_?.devKitInfo.length || 0} found`);
-        if (this.panel_) {
-            let st: any = {
-                kits: this.devkitMgr_?.devKitInfo || [],
-                oobtype: 'devKitStatus'
-            };
-            let oob: BackEndToFrontEndResponse = {
-                response: 'oob',
-                data: st
-            };
-            this.postWebViewMessage(oob);
-        }
+        this.pushOOB('devKitStatus', this.devkitMgr_?.devKitInfo || []);
     }
 
     private getAppStatusFromEnv(): ApplicationStatusData {

@@ -31,10 +31,15 @@ import { BackendService } from '../backend/backend-service';
 export class SettingsEditor {
   settings: MTBSetting[] = [];
   themeType: 'dark' | 'light' = 'light';
+  manifestStatus: boolean = false;
 
   constructor(private be: BackendService) {
     this.be.settings.subscribe(settings => {
       this.settings = settings;
+    });
+
+    this.be.manifestStatus.subscribe(status => {
+      this.manifestStatus = status;
     });
 
     // Subscribe to theme changes
@@ -75,9 +80,15 @@ export class SettingsEditor {
   }
 
   isCustomPathDisabled(): boolean {
+    // Safety check: return false if settings not loaded yet
+    if (!this.settings || this.settings.length === 0) {
+      return false;
+    }
+    
     const customPath = this.settings.find(s => s.name === 'custompath');
     const toolsVersion = this.settings.find(s => s.name === 'toolsversion');
-    return !!customPath && !!toolsVersion && toolsVersion.value !== 'Custom';
+    // Disable if manifest is loading OR if toolsversion is not 'Custom'
+    return !this.manifestStatus || (!!customPath && !!toolsVersion && toolsVersion.value !== 'Custom');
   }
 
   onValueChange(setting: MTBSetting, value: any) {

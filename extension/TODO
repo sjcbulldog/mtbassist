@@ -3,7 +3,6 @@ Priorities
 - Automatically run the 'make vscode' if the .vscode directory is not present
 - LLVM installation
 - LCS support
-- Light, Dark, and High Contrast theme support
 - Lots of testing
 
 Bugs

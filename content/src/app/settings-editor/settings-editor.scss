@@ -41,6 +41,20 @@
   width: 100%;
 }
 
+.setting-field-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.manifest-loading-message {
+  font-size: 0.75rem;
+  color: #ff9800;
+  margin-top: 0.25rem;
+  margin-left: 0.75rem;
+  font-style: italic;
+}
+
 .browse-row {
   display: flex;
   align-items: center;
@@ -129,6 +143,10 @@ mat-checkbox {
       background-color: rgba(144, 202, 249, 0.1);
     }
   }
+  
+  .manifest-loading-message {
+    color: #ffb74d;
+  }
 }
 
 /* Light Theme */
@@ -199,5 +217,9 @@ mat-checkbox {
     &:hover {
       background-color: rgba(25, 118, 210, 0.1);
     }
+  }
+  
+  .manifest-loading-message {
+    color: #f57c00;
   }
 }
