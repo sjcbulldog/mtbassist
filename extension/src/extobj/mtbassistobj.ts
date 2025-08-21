@@ -124,6 +124,10 @@ export class MTBAssistObject {
                 st = 'Ready' ;
                 tip = 'Ready' ;
             }
+            else if (this.env_.isLoading === false) {
+                st = 'Ready (M)' ;
+                tip = 'Ready but no manifest data could be loaded' ;
+            }
             else {
                 st = 'Loading...' ;
                 tip = 'Loading manifest data' ;
@@ -306,6 +310,9 @@ export class MTBAssistObject {
                                                                     resolve() ;
                                                                 })
                                                                 .catch((err) => {
+                                                                    this.initializing_ = false ;                                                        
+                                                                    this.pushManifestStatus() ;
+                                                                    this.updateStatusBar() ;    
                                                                     reject(err) ;
                                                                 }) ;
                                                             })
@@ -328,13 +335,16 @@ export class MTBAssistObject {
                                                     .then(() => {
                                                         this.initializing_ = false ;                                                        
                                                         this.pushManifestStatus() ;
+                                                        this.updateStatusBar() ;                                                        
                                                         this.pushDevKitStatus() ;
                                                         this.pushAllBSPs();
-                                                        this.updateStatusBar() ;
                                                         this.logger_.debug('ModusToolbox manifests loaded successfully.');
                                                         resolve();
                                                     })
                                                     .catch((error: Error) => {
+                                                        this.initializing_ = false ;                                                        
+                                                        this.pushManifestStatus() ;
+                                                        this.updateStatusBar() ;  
                                                         this.logger_.error('Failed to load ModusToolbox manifests:', error.message);
                                                     });
                                             })
@@ -1354,7 +1364,7 @@ export class MTBAssistObject {
     }
 
     private pushManifestStatus() {
-        this.pushOOB('manifestStatus', this.env_?.has(MTBLoadFlags.manifestData) || false);
+        this.pushOOB('manifestStatus', !this.env_!.isLoading);
     }
 
     private pushAllBSPs() {

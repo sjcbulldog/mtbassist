@@ -195,16 +195,12 @@ export class ModusToolboxEnvironment extends EventEmitter {
                             this.isLoading_ = false ;
                             this.has_ = this.has_ | this.wants_ ;
                             this.wants_ = MTBLoadFlags.none ;
-                            this.emit('loaded', this.has_) ;
                             resolve() ;
                         })
                         .catch((err) => {
                             this.isLoading_ = false ;
-                            this.has_ = MTBLoadFlags.none ;
                             this.wants_ = MTBLoadFlags.none ;                            
-                            this.logger_.error('Error loading ModusToolbox environment:', err) ;
-                            this.emit('error', err) ;
-
+                            this.logger_.error(`Error loading ModusToolbox environment: ${err}`) ;
                             reject(err) ;
                         }) ;
                 })
@@ -441,6 +437,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 this.appInfo_.load(this.logger_)
                     .then(()=> {
                         this.loading_ &= ~MTBLoadFlags.appInfo;
+                        this.has_ |= MTBLoadFlags.appInfo ;
                         resolve() ;
                     })
                     .catch((err) => {
