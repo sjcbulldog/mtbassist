@@ -1,4 +1,4 @@
-<div class="application-status">
+<div class="application-status" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   @if (isLoading) {
     <div class="loading-state">
       <div class="spinner"></div>

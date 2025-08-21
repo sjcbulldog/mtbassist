@@ -92,28 +92,10 @@
   --critical-color: #8b0000;
 }
 
-// Light theme (explicit)
-:host-context(.light-theme) {
-  --card-background: #ffffff;
-  --secondary-background: #f8f9fa;
-  --text-color: #212529;
-  --text-secondary: #6c757d;
-  --primary-color: #007bff;
-  --primary-hover: #0056b3;
-  --secondary-color: #f8f9fa;
-  --border-color: #dee2e6;
-  --hover-background: #e9ecef;
-  --progress-background: #e9ecef;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
-  --success-color: #28a745;
-  --warning-color: #ffc107;
-  --danger-color: #dc3545;
-  --critical-color: #8b0000;
-}
+// This is now handled by the .application-status.light-theme selector below
 
 // Dark theme
-:host-context(.dark-theme) {
+.application-status.dark-theme {
   --card-background: #2d2d2d;
   --secondary-background: #404040;
   --text-color: #ffffff;
@@ -130,6 +112,28 @@
   --warning-color: #ff9800;
   --danger-color: #f44336;
   --critical-color: #d32f2f;
+}
+
+// Light theme
+.application-status.light-theme {
+  --card-background: #ffffff;
+  --secondary-background: #f8f9fa;
+  --text-color: #212529;
+  --text-secondary: #6c757d;
+  --primary-color: #007bff;
+  --primary-hover: #0056b3;
+  --secondary-color: #f8f9fa;
+  --border-color: #dee2e6;
+  --hover-background: #e9ecef;
+  --progress-background: #e9ecef;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
+  --success-color: #28a745;
+  --warning-color: #ffc107;
+  --warning-color-hover: #e0a800;
+  --warning-color-rgb: 255, 193, 7;
+  --danger-color: #dc3545;
+  --critical-color: #8b0000;
 }
 
 // Auto dark theme detection
@@ -232,7 +236,7 @@
   }
 
   // Override tab header background for dark theme
-  :host-context(.dark-theme) & {
+  .application-status.dark-theme & {
     .mat-mdc-tab-header {
       background: #000000 !important;
     }
@@ -306,75 +310,7 @@
   }
 }
 
-// Global dark theme overrides for Material tabs - using ::ng-deep for penetration
-:host-context(.dark-theme) {
-  ::ng-deep .status-tabs {
-    .mat-mdc-tab-header {
-      background: #000000 !important;
-    }
-
-    .mat-mdc-tab {
-      color: #ffffff !important;
-    }
-
-    .mat-mdc-tab:not(.mdc-tab--active) {
-      color: #ffffff !important;
-
-      .mdc-tab__text-label {
-        color: #ffffff !important;
-      }
-      
-      mat-icon {
-        color: #ffffff !important;
-      }
-
-      .mat-mdc-tab-label {
-        color: #ffffff !important;
-
-        span {
-          color: #ffffff !important;
-        }
-
-        mat-icon {
-          color: #ffffff !important;
-        }
-      }
-    }
-
-    .mat-mdc-tab.mdc-tab--active {
-      color: #4fc3f7 !important;
-
-      .mdc-tab__text-label {
-        color: #4fc3f7 !important;
-      }
-      
-      mat-icon {
-        color: #4fc3f7 !important;
-      }
-
-      .mat-mdc-tab-label {
-        color: #4fc3f7 !important;
-
-        span {
-          color: #4fc3f7 !important;
-        }
-
-        mat-icon {
-          color: #4fc3f7 !important;
-        }
-      }
-    }
-
-    // Target the ripple and additional Material elements
-    .mat-mdc-tab .mdc-tab__ripple {
-      color: #ffffff !important;
-    }
-
-    .mat-mdc-tab.mdc-tab--active .mdc-tab__ripple {
-      color: #4fc3f7 !important;
-    }
-  }
-}
+// This is now handled by the ::ng-deep .application-status.dark-theme .status-tabs selector above
 
 // Media query fallback with ::ng-deep
 @media (prefers-color-scheme: dark) {
@@ -449,7 +385,7 @@
 }
 
 // Alternative approach - try targeting at the global level without host-context
-::ng-deep .dark-theme .status-tabs {
+::ng-deep .application-status.dark-theme .status-tabs {
   .mat-mdc-tab-header {
     background: #000000 !important;
   }
@@ -952,32 +888,9 @@
   100% { transform: rotate(360deg); }
 }
 
-// Theme support
-:host-context(.light-theme) {
-  --card-background: #ffffff;
-  --secondary-background: #f8f9fa;
-  --text-color: #212529;
-  --text-secondary: #6c757d;
-  --primary-color: #007bff;
-  --primary-hover: #0056b3;
-  --secondary-color: #f8f9fa;
-  --border-color: #dee2e6;
-  --hover-background: #e9ecef;
-  --progress-background: #e9ecef;
-}
+// This is now handled by the .application-status.light-theme selector above
 
-:host-context(.dark-theme) {
-  --card-background: #2d2d2d;
-  --secondary-background: #404040;
-  --text-color: #ffffff;
-  --text-secondary: #b0b0b0;
-  --primary-color: #4fc3f7;
-  --primary-hover: #29b6f6;
-  --secondary-color: #404040;
-  --border-color: #555555;
-  --hover-background: #4a4a4a;
-  --progress-background: #555555;
-}
+// This is now handled by the .application-status.dark-theme selector above
 
 .project-overview {
   background: var(--card-background, #fff);

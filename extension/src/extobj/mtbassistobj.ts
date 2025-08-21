@@ -1425,7 +1425,7 @@ export class MTBAssistObject {
             appst = {
                 valid: false,
                 name: '',
-                toolsdir: '',
+                toolsdir: this.settings_.toolsPath,
                 memory: [],
                 documentation: [],
                 middleware: [],

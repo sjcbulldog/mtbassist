@@ -29,6 +29,7 @@ export class ApplicationStatus implements OnInit {
     currentDate = new Date();
     fixingAssetsProjects: Set<string> = new Set(); // Track which projects are currently fixing assets
     currentlyLoadingAsset: string = ''; // Track which asset is currently being loaded
+    themeType: 'dark' | 'light' = 'light';
     
     // Collapsed states for project sections (projectName -> sectionName -> boolean)
     collapsedSections: Map<string, Map<string, boolean>> = new Map();
@@ -75,6 +76,11 @@ export class ApplicationStatus implements OnInit {
                 this.be.log(`ApplicationStatus: intellisense = ${projectName}`);
                 this.setIntellisenseProject(projectName) ;
             }
+        });
+        
+        // Subscribe to theme changes
+        this.be.theme.subscribe(theme => {
+            this.themeType = theme as 'dark' | 'light';
         });
     }
 
