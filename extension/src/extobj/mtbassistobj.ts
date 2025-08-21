@@ -26,6 +26,7 @@ import { MTBApp } from '../mtbenv/manifest/mtbapp';
 import { VSCodeWorker } from './vscodeworker';
 import { MtbFunIndex } from '../keywords/mtbfunindex';
 import { MTBSettings } from './mtbsettings';
+import { LCSManager } from '../lcs/lcsmgr';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -58,6 +59,7 @@ export class MTBAssistObject {
     private recents_: RecentAppManager | undefined = undefined;
     private intellisense_: IntelliSenseMgr | undefined = undefined;
     private setupMgr_: SetupMgr;
+    private lcsMgr_ : LCSManager | undefined ;
     private bsps_: BSPMgr | undefined;
     private worker_: VSCodeWorker | undefined;
     private launchTimer: NodeJS.Timer | undefined = undefined;
@@ -241,6 +243,7 @@ export class MTBAssistObject {
                 return;
             }
 
+            this.lcsMgr_ = new LCSManager(this.env_) ;
 
             this.bsps_ = new BSPMgr(this.context_.extensionUri.fsPath, this.env_!);
             this.worker_ = new VSCodeWorker(this.logger_, this);
@@ -290,6 +293,9 @@ export class MTBAssistObject {
                                                         parray.push(p) ;
 
                                                         p = this.keywords_.init(this.env_!.appInfo!) ;
+                                                        parray.push(p) ;
+
+                                                        p = this.lcsMgr_!.init() ;
                                                         parray.push(p) ;
 
                                                         Promise.all(parray)
