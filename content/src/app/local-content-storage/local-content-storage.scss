@@ -42,24 +42,22 @@
       flex-shrink: 0;
 
       .arrow-button {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background-color: #1976d2;
-        color: white;
+        min-width: 100px;
+        height: 40px;
+        font-weight: 500;
+        font-size: 14px;
         transition: all 0.2s ease;
 
         &:hover {
-          background-color: #1565c0;
-          transform: scale(1.1);
+          transform: scale(1.05);
         }
 
         &:active {
           transform: scale(0.95);
         }
 
-        mat-icon {
-          font-size: 24px;
+        &:disabled {
+          transform: none;
         }
       }
     }
@@ -86,6 +84,18 @@
         padding: 8px 16px 16px 16px;
         min-height: 0;
         overflow: hidden;
+      }
+
+      .filter-section {
+        padding: 8px 16px 0 16px;
+
+        .filter-input {
+          width: 100%;
+          
+          ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+            display: none;
+          }
+        }
       }
     }
 
@@ -341,13 +351,41 @@
     background-color: #fff3e0;
     border-color: #ff9800;
 
+    .bsp-update-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
     .bsp-update-message {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
       .warning-icon {
         color: #ff9800;
+        font-size: 24px;
       }
 
       .update-text {
         color: #e65100;
+        font-weight: 500;
+      }
+    }
+
+    .bsp-update-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+
+      mat-checkbox {
+        flex-shrink: 0;
+      }
+
+      .apply-button {
+        flex-shrink: 0;
+        min-width: 120px;
       }
     }
   }
@@ -425,6 +463,30 @@
     }
   }
 
+  // Dark theme for filter input
+  .filter-section {
+    .filter-input {
+      ::ng-deep .mat-mdc-form-field {
+        --mdc-filled-text-field-container-color: #2a2a2a;
+        --mdc-filled-text-field-label-text-color: #ffffff;
+        --mdc-filled-text-field-input-text-color: #ffffff;
+        --mdc-outlined-text-field-outline-color: #404040;
+        --mdc-outlined-text-field-hover-outline-color: #64b5f6;
+        --mdc-outlined-text-field-focus-outline-color: #64b5f6;
+        --mdc-outlined-text-field-label-text-color: #ffffff;
+        --mdc-outlined-text-field-input-text-color: #ffffff;
+      }
+
+      ::ng-deep .mat-mdc-form-field-icon-suffix {
+        color: #ffffff !important;
+      }
+      
+      ::ng-deep input {
+        color: #ffffff !important;
+      }
+    }
+  }
+
   .update-controls {
     background-color: #1e1e1e;
     border-color: #404040;
@@ -443,15 +505,50 @@
         color: #ffcc80;
       }
     }
-  }
 
-  .arrow-buttons-section {
-    .arrow-button {
-      background-color: #64b5f6;
-      color: #121212;
+    .bsp-update-controls {
+      mat-checkbox {
+        --mdc-checkbox-unselected-icon-color: #ffffff;
+        --mdc-checkbox-unselected-hover-icon-color: #ffffff;
+        --mdc-checkbox-unselected-focus-icon-color: #ffffff;
+        --mdc-checkbox-selected-icon-color: #64b5f6;
+        --mdc-checkbox-selected-hover-icon-color: #42a5f5;
+        --mdc-checkbox-selected-focus-icon-color: #64b5f6;
+        --mdc-checkbox-selected-checkmark-color: #121212;
+        --mdc-checkbox-label-text-color: #ffffff;
+        --mdc-checkbox-unselected-outline-color: #ffffff;
+        --mdc-checkbox-unselected-hover-outline-color: #ffffff;
+        --mdc-checkbox-unselected-focus-outline-color: #ffffff;
+        
+        .mdc-form-field {
+          color: #ffffff !important;
+        }
 
-      &:hover {
-        background-color: #42a5f5;
+        .mdc-checkbox {
+          .mdc-form-field > label {
+            color: #ffffff !important;
+          }
+        }
+
+        // Target the label text specifically
+        ::ng-deep .mat-mdc-checkbox-label {
+          color: #ffffff !important;
+        }
+
+        // Alternative targeting for label
+        ::ng-deep .mdc-form-field > label {
+          color: #ffffff !important;
+        }
+
+        // Ensure checkbox outline is visible
+        ::ng-deep .mdc-checkbox__native-control:enabled:not(:checked):not(:indeterminate) ~ .mdc-checkbox__background {
+          border-color: #ffffff !important;
+        }
+
+        // Checkbox ripple color for dark theme
+        ::ng-deep .mat-mdc-checkbox .mat-mdc-checkbox-ripple .mat-ripple-element {
+          background-color: rgba(255, 255, 255, 0.12) !important;
+        }
       }
     }
   }

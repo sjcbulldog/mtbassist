@@ -13,8 +13,9 @@ import * as EventEmitter from 'events';
 import * as exec from 'child_process' ;
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { URI } from 'vscode-uri';
-import { platform } from 'process';
+import { MTBSettings } from '../../extobj/mtbsettings';
 
 export class ModusToolboxEnvironment extends EventEmitter {
     // Static variables
@@ -36,12 +37,13 @@ export class ModusToolboxEnvironment extends EventEmitter {
     private requestedToolsDir_? : string ;
     private exeDir_? : string ;
     private toolsDir_? : string ;
+    private settings_ : MTBSettings ;
 
     private logger_ : winston.Logger ;  
 
-    public static getInstance(logger: winston.Logger, exedir?: string) : ModusToolboxEnvironment | null {
+    public static getInstance(logger: winston.Logger, settings: MTBSettings, exedir?: string) : ModusToolboxEnvironment | null {
         if (!ModusToolboxEnvironment.env_) {
-            ModusToolboxEnvironment.env_ = new ModusToolboxEnvironment(logger, exedir) ;
+            ModusToolboxEnvironment.env_ = new ModusToolboxEnvironment(logger, settings, exedir) ;
         }
         else {
             if (exedir && exedir !== ModusToolboxEnvironment.env_.exeDir_) {
@@ -58,12 +60,13 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ModusToolboxEnvironment.env_ ;
     }
 
-    private constructor(logger: winston.Logger, exedir?: string) {
+    private constructor(logger: winston.Logger, settings: MTBSettings, exedir?: string) {
         super() ;
         this.logger_ = logger ; 
         this.toolsDb_ = new ToolsDB() ;
         this.packDb_ = new PackDB() ;
         this.manifestDb_ = new MTBManifestDB() ;
+        this.settings_ = settings ;
 
         this.exeDir_ = exedir ;
         if (this.exeDir_) {
@@ -628,11 +631,47 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ret ;
     }
 
+    private getDefaultManifest() : URI {
+        //
+        // First priority is the LCS manifest if it should be enabled.
+        //
+        let opmode = this.settings_.settingByName('operation_mode')?.value;
+        if (opmode && typeof opmode === 'string' && (opmode as string) === 'Local Content Mode') {
+            let lcspath = this.settings_.settingByName('lcs_path')?.value ;
+            if (!lcspath) {
+                this.logger_.warn('Local Content Mode is enabled but lcs_path is not set - using default location');
+                lcspath = path.join(os.homedir(), '.modustoolbox', 'lcs') ;
+            }
+
+            lcspath = path.join(lcspath as string, 'manifests-v2.X', 'super-manifest-fv2.xml');
+            let uri = URI.file(lcspath as string) ;
+            return uri ;
+        }
+
+        //
+        // Second priority is the alternate manifest location if it has been set
+        //
+        let manifestUrl = this.settings_.settingByName('manifestdb_system_url')?.value;
+        if (manifestUrl && typeof manifestUrl === 'string' && (manifestUrl as string).length > 0) {
+            let manuri = URI.parse(manifestUrl as string);
+            return manuri;
+        }
+
+        //  
+        // Finally, the last priority is the default
+        //
+        return URI.parse(ModusToolboxEnvironment.mtbDefaultManifest);
+    }
+
     private loadManifest() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.logger_.debug('Loading Manifest') ;
+            let uri = this.getDefaultManifest() ;
+
+            this.logger_.info(`Using Super Manifest URI: ${uri.toString()}`)
+
             let defman : PackManifest = { 
-                uripath: URI.parse(ModusToolboxEnvironment.mtbDefaultManifest),
+                uripath: uri,
                 iseap: false 
             } ;
             this.manifestDb_.loadManifestData(this.logger_, [defman, ...this.packDb_.getManifestFiles()])

@@ -1,11 +1,15 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatListModule } from '@angular/material/list';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { Subscription } from 'rxjs';
 import { BackendService } from '../backend/backend-service';
@@ -15,12 +19,16 @@ import { BackendService } from '../backend/backend-service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatListModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    MatCheckboxModule,
+    MatInputModule,
+    MatFormFieldModule,
     DragDropModule
   ],
   templateUrl: './local-content-storage.html',
@@ -35,6 +43,8 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
   needsUpdate: boolean = false ;
   needsApply: boolean = false ;
   busy: boolean = false ;
+  showChanges: boolean = false;
+  leftListFilterText: string = '';
 
   private subscriptions: Subscription[] = [];
 
@@ -146,6 +156,10 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
     }
   }
 
+  onRevert(): void {
+    this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'revert', data: null });
+  }
+
   // Helper methods for visual highlighting
   isInDeleteQueue(bsp: string): boolean {
     return this.bspsToDelete.includes(bsp);
@@ -175,5 +189,32 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
     // }
 
     return classes;
+  }
+
+  // Getter methods for filtered lists based on showChanges checkbox
+  get displayedBspsNotIn(): string[] {
+    let filteredList = this.bspsNotInList;
+    
+    // Apply show changes filter first
+    if (this.showChanges) {
+      // Show only BSPs that are in the delete queue (BSPs that are currently local but will be removed)
+      filteredList = filteredList.filter(bsp => this.isInDeleteQueue(bsp));
+    }
+    
+    // Apply text filter
+    if (this.leftListFilterText && this.leftListFilterText.trim()) {
+      const filterText = this.leftListFilterText.toLowerCase().trim();
+      filteredList = filteredList.filter(bsp => bsp.toLowerCase().includes(filterText));
+    }
+    
+    return filteredList;
+  }
+
+  get displayedBspsIn(): string[] {
+    if (this.showChanges) {
+      // Show only BSPs that are in the add queue (BSPs that will be added to local storage)
+      return this.bspsInList.filter(bsp => this.isInAddQueue(bsp));
+    }
+    return this.bspsInList;
   }
 }

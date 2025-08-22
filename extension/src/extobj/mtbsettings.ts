@@ -24,7 +24,7 @@ export class MTBSettings extends EventEmitter {
             owner: 'workspace',
             type: 'dirpath',
             value: '',
-            description: 'The location of ModusToolbox if it is located in a custom location.'
+            description: `The location of ModusToolbox if it is located in a custom location.  This is only used if the Tools Version setting is 'Custom'.`
         },
         {
             name: 'enabled_eap',
@@ -85,7 +85,6 @@ export class MTBSettings extends EventEmitter {
             choices: ['Online Mode', 'Local Content Mode'],
             description: 'The operating mode for ModusToolbox.  This determines how the tool interacts with the file system and network resources.  Online Mode dynamically retrieves content from the internet, while Local Content Mode uses only locally available content.'
         },
-
     ] ;
 
     private settings_: MTBSetting[];
@@ -109,6 +108,10 @@ export class MTBSettings extends EventEmitter {
         this.updateEAPChoices() ;
         this.updateToolPathChoices() ;
         return this.settings_;
+    }
+
+    public settingByName(name: string) : MTBSetting | undefined {
+        return this.settings_.find(s => s.name === name);
     }
 
     public update(setting: MTBSetting) {

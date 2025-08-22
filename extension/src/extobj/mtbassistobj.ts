@@ -237,7 +237,7 @@ export class MTBAssistObject {
 
     private initWithTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            this.env_ = ModusToolboxEnvironment.getInstance(this.logger_);
+            this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
             if (!this.env_) {
                 this.logger_.error('Failed to initialize ModusToolbox environment.');
                 return;

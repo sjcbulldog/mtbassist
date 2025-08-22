@@ -23,6 +23,20 @@
         <mat-card-header>
           <mat-card-title class="list-title">Not Available Locally</mat-card-title>
         </mat-card-header>
+        
+        <!-- Filter Input for Left List -->
+        <div class="filter-section">
+          <mat-form-field appearance="outline" class="filter-input">
+            <mat-label>Filter BSPs</mat-label>
+            <input 
+              matInput 
+              [(ngModel)]="leftListFilterText" 
+              placeholder="Type to filter..."
+              [disabled]="busy">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>
+        
         <mat-card-content>
           <div 
             class="bsp-list"
@@ -32,7 +46,7 @@
             [cdkDropListConnectedTo]="[inList]"
             [cdkDropListDisabled]="busy"
             (cdkDropListDropped)="onDrop($event)">
-            @for (bsp of bspsNotInList; track bsp) {
+            @for (bsp of displayedBspsNotIn; track bsp) {
               <div [class]="getBspClasses(bsp, false)" cdkDrag [cdkDragData]="bsp" [cdkDragDisabled]="busy">
                 <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
                 <span class="bsp-name">{{ bsp }}</span>
@@ -41,31 +55,48 @@
                 }
               </div>
             }
-            @if (bspsNotInList.length === 0) {
+            @if (displayedBspsNotIn.length === 0 && bspsNotInList.length === 0) {
               <div class="empty-list">Loading manifest data...</div>
+            }
+            @if (displayedBspsNotIn.length === 0 && bspsNotInList.length > 0 && showChanges) {
+              <div class="empty-list">No BSPs to be removed</div>
+            }
+            @if (displayedBspsNotIn.length === 0 && bspsNotInList.length > 0 && !showChanges) {
+              <div class="empty-list">All BSPs are stored locally</div>
             }
           </div>
         </mat-card-content>
       </mat-card>
     </div>
 
-    <!-- Arrow Buttons -->
+    <!-- Add/Remove All Buttons -->
     <div class="arrow-buttons-section">
       <button 
-        mat-icon-button 
+        mat-raised-button 
+        color="primary"
         class="arrow-button"
         [disabled]="busy"
-        matTooltip="Move selected to local storage"
+        matTooltip="Move all BSPs to local storage"
         (click)="moveToLocalStorage()">
-        <mat-icon>arrow_forward</mat-icon>
+        Add All
       </button>
       <button 
-        mat-icon-button 
+        mat-raised-button 
+        color="accent"
         class="arrow-button"
         [disabled]="busy"
-        matTooltip="Remove from local storage"
+        matTooltip="Remove all BSPs from local storage"
         (click)="removeFromLocalStorage()">
-        <mat-icon>arrow_back</mat-icon>
+        Remove All
+      </button>
+      <button 
+        mat-raised-button 
+        color="warn"
+        class="arrow-button"
+        [disabled]="busy"
+        matTooltip="Revert all pending changes"
+        (click)="onRevert()">
+        Revert
       </button>
     </div>
 
@@ -84,7 +115,7 @@
             [cdkDropListConnectedTo]="[notInList]"
             [cdkDropListDisabled]="busy"
             (cdkDropListDropped)="onDrop($event)">
-            @for (bsp of bspsInList; track bsp) {
+            @for (bsp of displayedBspsIn; track bsp) {
               <div [class]="getBspClasses(bsp, true)" cdkDrag [cdkDragData]="bsp" [cdkDragDisabled]="busy">
                 <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
                 <span class="bsp-name">{{ bsp }}</span>
@@ -93,8 +124,11 @@
                 }
               </div>
             }
-            @if (bspsInList.length === 0) {
+            @if (displayedBspsIn.length === 0 && bspsInList.length === 0) {
               <div class="empty-list">No items stored locally</div>
+            }
+            @if (displayedBspsIn.length === 0 && bspsInList.length > 0 && showChanges) {
+              <div class="empty-list">No BSPs to be added</div>
             }
           </div>
         </mat-card-content>
@@ -111,15 +145,23 @@
                 <mat-icon class="warning-icon">warning</mat-icon>
                 <span class="update-text">The local content storage configuration has changed. Press apply to update the local content storage</span>
             </div>
-          <button 
-            mat-raised-button 
-            color="warn"
-            (click)="applyBspChanges()"
-            class="apply-button"
-            [disabled]="busy">
-            <mat-icon>check</mat-icon>
-            Apply
-          </button>
+            <div class="bsp-update-controls">
+              <mat-checkbox 
+                [(ngModel)]="showChanges" 
+                color="primary"
+                [disabled]="busy">
+                Show Changes
+              </mat-checkbox>
+              <button 
+                mat-raised-button 
+                color="warn"
+                (click)="applyBspChanges()"
+                class="apply-button"
+                [disabled]="busy">
+                <mat-icon>check</mat-icon>
+                Apply
+              </button>
+            </div>
         </div>
       </mat-card-content>
     </mat-card>

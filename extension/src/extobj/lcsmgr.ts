@@ -15,6 +15,7 @@ export class LCSManager extends EventEmitter {
     static sentinelString: string = 'No items in watch list' ;
     private ext_ : MTBAssistObject ;
     private needsUpdate_ : boolean = false ;
+    private original_ : string[] = [] ;
     private bsps_ : string[] = [] ;
     private toadd_: string[] = [] ;
     private todel_: string[] = [] ;
@@ -81,6 +82,7 @@ export class LCSManager extends EventEmitter {
                         return ;
                     }
                     this.bsps_ = this.parseOutput(output[1]) ;
+                    this.original_ = [...this.bsps_] ;
                     resolve();
                 })
                 .catch((error) => {
@@ -93,6 +95,12 @@ export class LCSManager extends EventEmitter {
     public command(data: any) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             switch (data.cmd) {
+                case 'revert' : 
+                    this.bsps_ = [...this.original_] ;
+                    this.toadd_ = [] ;
+                    this.todel_ = [] ;
+                    resolve() ;
+                    break ;
                 case 'togglebsp':
                     this.toggleBSP(data.bsp);
                     resolve() ;
