@@ -65,9 +65,8 @@ o Dark vs Light vs High Contrast theme support                                  
 
 o LCS Support
   - LCS GUI
-    - Busy overlay
+    - Busy overlay                                                                                    done
     - Reset after apply
+    - Show changes
   - Change how manifests are read
 
-o Test
-  - be sure all tools come from the EAP if the EAP is enabled
