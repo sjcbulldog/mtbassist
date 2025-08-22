@@ -42,10 +42,9 @@ o Dev Kits Component                                                            
   - Add info button if kit is unknown                                                                 done
   - If dev kit is unknown, allow the user to select the associated bsp and remember it                done
 
-o Settings
-  - Use VSCode settings
-  - Control what the environment sees based on settings TOOL_PATH, EAP, etc.
-  - Sync settings from VS Code extension and the external settings file
+o Settings                                                                                        done
+  - Use VSCode settings (where possible)                                                              done
+  - Control what the environment sees based on settings TOOL_PATH, EAP, etc.                          done
 
 o Outside of main GUI                                                                             
   - Intellisense: port over current intellisense support                                              done
@@ -62,7 +61,13 @@ o Outside of main GUI
 o Help component                                                                                  done
   - index on the left like a book                                                                     done
 
-o Dark vs Light vs High Contrast theme support
+o Dark vs Light vs High Contrast theme support                                                    done
+
+o LCS Support
+  - LCS GUI
+    - Busy overlay
+    - Reset after apply
+  - Change how manifests are read
 
 o Test
   - be sure all tools come from the EAP if the EAP is enabled

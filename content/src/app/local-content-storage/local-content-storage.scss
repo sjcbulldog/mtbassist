@@ -1,4 +1,5 @@
 .local-content-storage-container {
+  position: relative;
   padding: 16px;
   height: 100vh;
   display: flex;
@@ -475,6 +476,41 @@
     .bsp-list {
       border-color: #64b5f6;
       background-color: rgba(100, 181, 246, 0.1);
+    }
+  }
+}
+
+// Busy overlay styles
+.busy-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(192, 192, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: inherit;
+
+  [data-theme="dark"] & {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+
+  .busy-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+
+    .busy-message {
+      color: var(--mdc-theme-on-surface);
+      font-weight: 500;
+      text-align: center;
+      color: black;
+      font-size: 2.4rem;
     }
   }
 }

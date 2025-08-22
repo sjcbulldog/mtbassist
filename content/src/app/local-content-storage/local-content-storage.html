@@ -1,4 +1,16 @@
 <div class="local-content-storage-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
+  
+  <!-- Busy Overlay -->
+  @if (busy) {
+    <div class="busy-overlay">
+      <div class="busy-content">
+        <span class="busy-message">Updating Local Content Storage ...</span>
+        <span class="busy-message">Note closing VS Code before this is complete may corrupt the local content storage.</span>
+        <mat-spinner diameter="50"></mat-spinner>
+      </div>
+    </div>
+  }
+
   <div class="header">
     <h2>Local Content Storage Management</h2>
   </div>
@@ -17,9 +29,10 @@
             #notInList="cdkDropList"
             [cdkDropListData]="bspsNotInList"
             [cdkDropListConnectedTo]="[inList]"
+            [cdkDropListDisabled]="busy"
             (cdkDropListDropped)="onDrop($event)">
             @for (bsp of bspsNotInList; track bsp) {
-              <div [class]="getBspClasses(bsp, false)" cdkDrag [cdkDragData]="bsp">
+              <div [class]="getBspClasses(bsp, false)" cdkDrag [cdkDragData]="bsp" [cdkDragDisabled]="busy">
                 <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
                 <span class="bsp-name">{{ bsp }}</span>
                 @if (isInAddQueue(bsp)) {
@@ -40,6 +53,7 @@
       <button 
         mat-icon-button 
         class="arrow-button"
+        [disabled]="busy"
         matTooltip="Move selected to local storage"
         (click)="moveToLocalStorage()">
         <mat-icon>arrow_forward</mat-icon>
@@ -47,6 +61,7 @@
       <button 
         mat-icon-button 
         class="arrow-button"
+        [disabled]="busy"
         matTooltip="Remove from local storage"
         (click)="removeFromLocalStorage()">
         <mat-icon>arrow_back</mat-icon>
@@ -66,9 +81,10 @@
             #inList="cdkDropList"
             [cdkDropListData]="bspsInList"
             [cdkDropListConnectedTo]="[notInList]"
+            [cdkDropListDisabled]="busy"
             (cdkDropListDropped)="onDrop($event)">
             @for (bsp of bspsInList; track bsp) {
-              <div [class]="getBspClasses(bsp, true)" cdkDrag [cdkDragData]="bsp">
+              <div [class]="getBspClasses(bsp, true)" cdkDrag [cdkDragData]="bsp" [cdkDragDisabled]="busy">
                 <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
                 <span class="bsp-name">{{ bsp }}</span>
                 @if (isInDeleteQueue(bsp)) {
@@ -98,7 +114,8 @@
             mat-raised-button 
             color="warn"
             (click)="applyBspChanges()"
-            class="apply-button">
+            class="apply-button"
+            [disabled]="busy">
             <mat-icon>check</mat-icon>
             Apply
           </button>
@@ -122,7 +139,7 @@
     <button 
         mat-raised-button 
         color="accent" 
-        [disabled]="!needsUpdate"
+        [disabled]="!needsUpdate || busy"
         (click)="startUpdate()"
         class="update-button">
         <mat-icon>download</mat-icon>
@@ -134,7 +151,8 @@
         mat-raised-button 
         color="primary" 
         (click)="checkForUpdates()"
-        class="update-button">
+        class="update-button"
+        [disabled]="busy">
         <mat-icon>refresh</mat-icon>
         Check for Updates
       </button>

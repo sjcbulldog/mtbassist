@@ -5,6 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { Subscription } from 'rxjs';
 import { BackendService } from '../backend/backend-service';
@@ -19,6 +20,7 @@ import { BackendService } from '../backend/backend-service';
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
+    MatProgressSpinnerModule,
     DragDropModule
   ],
   templateUrl: './local-content-storage.html',
@@ -43,28 +45,24 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.backendService.bspsNotIn.subscribe(bsps => {
         this.bspsNotInList = [...bsps];
-        this.busy = false ;
       })
     );
 
     this.subscriptions.push(
       this.backendService.bspsIn.subscribe(bsps => {
         this.bspsInList = [...bsps];
-        this.busy = false ;
       })
     );
 
     this.subscriptions.push(
       this.backendService.lcsToAdd.subscribe(bsps => {
         this.bspsToAdd = [...bsps];
-        this.busy = false ;
       })
     );
 
     this.subscriptions.push(
       this.backendService.lcsToDelete.subscribe(bsps => {
         this.bspsToDelete = [...bsps];
-        this.busy = false ;
       })
     );
 
@@ -77,14 +75,18 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.backendService.lcsNeedsUpdate.subscribe(needsUpdate => {
         this.needsUpdate = needsUpdate;
-        this.busy = false ;
       })
     );
 
     this.subscriptions.push(
       this.backendService.lcsNeedsApply.subscribe(needsApply => {
         this.needsApply = needsApply;
-        this.busy = false ;
+      })
+    );
+
+    this.subscriptions.push(
+      this.backendService.lcsBusy.subscribe(busy => {
+        this.busy = busy;
       })
     );
 
@@ -114,16 +116,17 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
   }
 
   startUpdate(): void {
-    this.busy = true ;
+    this.backendService.lcsBusy.next(true);
     this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'update', data: { action: 'start' } });
   }
 
   checkForUpdates(): void {
+    this.backendService.lcsBusy.next(true);
     this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'check', data: null });
   }
 
   applyBspChanges(): void {
-    this.busy = true ;
+    this.backendService.lcsBusy.next(true);
     this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'apply', data: null });
   }
 

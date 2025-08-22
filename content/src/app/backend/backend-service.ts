@@ -48,6 +48,7 @@ export class BackendService {
     lcsToDelete: Subject<string[]> = new Subject<string[]>();
     lcsNeedsUpdate: Subject<boolean> = new Subject<boolean>();
     lcsNeedsApply: Subject<boolean> = new Subject<boolean>();
+    lcsBusy: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -249,15 +250,23 @@ export class BackendService {
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'bspsNotIn') {
             this.bspsNotIn.next(cmd.data.data || []);
+            // Reset busy state when data is updated
+            this.lcsBusy.next(false);
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'bspsIn') {
             this.bspsIn.next(cmd.data.data || []);
+            // Reset busy state when data is updated
+            this.lcsBusy.next(false);
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'needsUpdate') {
             this.lcsNeedsUpdate.next(cmd.data.data || false);
+            // Reset busy state when update status is received
+            this.lcsBusy.next(false);
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'needsApply') {
             this.lcsNeedsApply.next(cmd.data.data || false);
+            // Reset busy state when apply status is received
+            this.lcsBusy.next(false);
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'lcsToAdd') {
             this.log('lcsToAdd: ' + JSON.stringify(cmd.data.data));

@@ -236,6 +236,20 @@ export class LCSManager extends EventEmitter {
             this.emit('show') ;
             let args : string[] = [];
 
+            if (this.toadd_.length > 0) {
+                args = [] ;
+                for(let bsp of this.toadd_) {
+                    args.push('--add-bsp');
+                    args.push(bsp);
+                }
+                try {
+                    await this.runLCSCmd(args, this.show.bind(this)) ;
+                    this.toadd_ = [] ; // Clear the add queue after processing
+                } catch (error) {
+                    reject(error);
+                }
+            }
+
             if (this.todel_.length > 0) {
                 for(let bsp of this.todel_) {
                     args.push('--clear-bsp');
@@ -244,19 +258,6 @@ export class LCSManager extends EventEmitter {
                 try {
                     await this.runLCSCmd(args, this.show.bind(this)) ;
                     this.todel_ = [] ; // Clear the delete queue after processing
-                } catch (error) {
-                    reject(error);
-                }
-            }
-
-            if (this.toadd_.length > 0) {
-                for(let bsp of this.toadd_) {
-                    args.push('--add-bsp');
-                    args.push(bsp);
-                }
-                try {
-                    await this.runLCSCmd(args, this.show.bind(this)) ;
-                    this.toadd_ = [] ; // Clear the add queue after processing
                 } catch (error) {
                     reject(error);
                 }

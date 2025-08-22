@@ -589,11 +589,17 @@ export class MTBAssistObject {
 
     private lcscmd(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {    
         let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
-            this.lcsMgr_!.command(request.data) ;
-            this.pushBSPsInLCS() ;
-            this.pushNeedsApply() ;
-            this.pushNeedsUpdate() ;
-            resolve(null) ;
+            this.lcsMgr_!.command(request.data)
+            .then(() => {
+                this.pushBSPsInLCS();
+                this.pushNeedsApply();
+                this.pushNeedsUpdate();
+                resolve(null);      
+            })
+            .catch((error: Error) => {
+                this.logger_.error('Failed to execute LCS command:', error.message);
+                reject(error);
+            });
         });
         return ret;
     }
