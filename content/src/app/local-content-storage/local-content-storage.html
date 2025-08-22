@@ -1,0 +1,144 @@
+<div class="local-content-storage-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
+  <div class="header">
+    <h2>Local Content Storage Management</h2>
+  </div>
+
+  <div class="lists-container">
+    <!-- Not In Local Storage List -->
+    <div class="list-section">
+      <mat-card class="list-card">
+        <mat-card-header>
+          <mat-card-title class="list-title">Not Available Locally</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div 
+            class="bsp-list"
+            cdkDropList
+            #notInList="cdkDropList"
+            [cdkDropListData]="bspsNotInList"
+            [cdkDropListConnectedTo]="[inList]"
+            (cdkDropListDropped)="onDrop($event)">
+            @for (bsp of bspsNotInList; track bsp) {
+              <div [class]="getBspClasses(bsp, false)" cdkDrag [cdkDragData]="bsp">
+                <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
+                <span class="bsp-name">{{ bsp }}</span>
+                @if (isInAddQueue(bsp)) {
+                  <mat-icon class="status-icon pending-add-icon" matTooltip="Queued for addition">add_circle</mat-icon>
+                }
+              </div>
+            }
+            @if (bspsNotInList.length === 0) {
+              <div class="empty-list">Loading manifest data...</div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Arrow Buttons -->
+    <div class="arrow-buttons-section">
+      <button 
+        mat-icon-button 
+        class="arrow-button"
+        matTooltip="Move selected to local storage"
+        (click)="moveToLocalStorage()">
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+      <button 
+        mat-icon-button 
+        class="arrow-button"
+        matTooltip="Remove from local storage"
+        (click)="removeFromLocalStorage()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+    </div>
+
+    <!-- In Local Storage List -->
+    <div class="list-section">
+      <mat-card class="list-card">
+        <mat-card-header>
+          <mat-card-title class="list-title">Available Locally</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div 
+            class="bsp-list"
+            cdkDropList
+            #inList="cdkDropList"
+            [cdkDropListData]="bspsInList"
+            [cdkDropListConnectedTo]="[notInList]"
+            (cdkDropListDropped)="onDrop($event)">
+            @for (bsp of bspsInList; track bsp) {
+              <div [class]="getBspClasses(bsp, true)" cdkDrag [cdkDragData]="bsp">
+                <mat-icon cdkDragHandle class="drag-handle">drag_indicator</mat-icon>
+                <span class="bsp-name">{{ bsp }}</span>
+                @if (isInDeleteQueue(bsp)) {
+                  <mat-icon class="status-icon pending-delete-icon" matTooltip="Queued for removal">remove_circle</mat-icon>
+                }
+              </div>
+            }
+            @if (bspsInList.length === 0) {
+              <div class="empty-list">No items stored locally</div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- BSP Changes Card -->
+  @if (needsApply) {
+    <mat-card class="bsp-update-card">
+      <mat-card-content>
+        <div class="bsp-update-content">
+            <div class="bsp-update-message">
+                <mat-icon class="warning-icon">warning</mat-icon>
+                <span class="update-text">The local content storage configuration has changed. Press apply to update the local content storage</span>
+            </div>
+          <button 
+            mat-raised-button 
+            color="warn"
+            (click)="applyBspChanges()"
+            class="apply-button">
+            <mat-icon>check</mat-icon>
+            Apply
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Update Controls -->
+  <div class="update-controls">
+    <div class="update-status">
+      @if (needsUpdate) {
+        <mat-icon class="update-icon available">cloud_download</mat-icon>
+        <span class="status-text available">Updates Available</span>
+      } @else {
+        <mat-icon class="update-icon current">check_circle</mat-icon>
+        <span class="status-text current">Up to Date</span>
+      }
+    </div>
+          
+    <button 
+        mat-raised-button 
+        color="accent" 
+        [disabled]="!needsUpdate"
+        (click)="startUpdate()"
+        class="update-button">
+        <mat-icon>download</mat-icon>
+        Start Update
+    </button>
+
+    <div class="update-buttons">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="checkForUpdates()"
+        class="update-button">
+        <mat-icon>refresh</mat-icon>
+        Check for Updates
+      </button>
+
+    </div>
+  </div>
+</div>

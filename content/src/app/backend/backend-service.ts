@@ -42,6 +42,12 @@ export class BackendService {
     intellisenseProject: Subject<string> = new Subject<string>();
     settings: Subject<MTBSetting[]> = new Subject<MTBSetting[]>();
     manifestStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    bspsNotIn: Subject<string[]> = new Subject<string[]>();
+    bspsIn: Subject<string[]> = new Subject<string[]>();
+    lcsToAdd: Subject<string[]> = new Subject<string[]>();
+    lcsToDelete: Subject<string[]> = new Subject<string[]>();
+    lcsNeedsUpdate: Subject<boolean> = new Subject<boolean>();
+    lcsNeedsApply: Subject<boolean> = new Subject<boolean>();
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -240,6 +246,26 @@ export class BackendService {
         }
         else if (cmd.data.oobtype && cmd.data.oobtype === 'manifestStatus') {
             this.manifestStatus.next(cmd.data.data || false);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'bspsNotIn') {
+            this.bspsNotIn.next(cmd.data.data || []);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'bspsIn') {
+            this.bspsIn.next(cmd.data.data || []);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'needsUpdate') {
+            this.lcsNeedsUpdate.next(cmd.data.data || false);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'needsApply') {
+            this.lcsNeedsApply.next(cmd.data.data || false);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'lcsToAdd') {
+            this.log('lcsToAdd: ' + JSON.stringify(cmd.data.data));
+            this.lcsToAdd.next(cmd.data.data);
+        }
+        else if (cmd.data.oobtype && cmd.data.oobtype === 'lcsToDelete') {
+            this.log('lcsToDelete: ' + JSON.stringify(cmd.data.data));
+            this.lcsToDelete.next(cmd.data.data);
         }
         else {
             this.log(`Unhandled OOB type: ${cmd.data.oobtype}`, 'error');

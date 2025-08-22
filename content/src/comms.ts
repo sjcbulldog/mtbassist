@@ -31,7 +31,9 @@ export type FrontEndToBackEndRequestType =
     'restartExtension' |
     'runSetupProgram'|
     'setIntellisenseProject' |
-    'updateDevKitBsp'
+    'updateDevKitBsp' |
+    'updateBSPStorage' |
+    'lcscmd'
     ;
 
 export type BackEndToFrontEndResponseType =

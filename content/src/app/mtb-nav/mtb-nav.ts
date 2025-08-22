@@ -10,6 +10,7 @@ import { DevkitListComponent } from "../devkit-list/devkit-list.component";
 import { RecentlyOpenedComponent } from "../recently-opened/recently-opened.component";
 import { GlossaryComponent } from "../glossary/glossary.component";
 import { SettingsEditor } from "../settings-editor/settings-editor";
+import { LocalContentStorageComponent } from "../local-content-storage/local-content-storage";
 
 export interface MtbNavTab {
   label: string;
@@ -30,7 +31,8 @@ export interface MtbNavTab {
     DevkitListComponent,
     RecentlyOpenedComponent,
     GlossaryComponent,
-    SettingsEditor
+    SettingsEditor,
+    LocalContentStorageComponent
 ],
   templateUrl: './mtb-nav.html',
   styleUrl: './mtb-nav.scss'

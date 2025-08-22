@@ -61,6 +61,11 @@ export class App {
       icon: 'dashboard'
     },
     {
+      label: 'LCS',
+      component: 'LocalContentStorageComponent',
+      icon: 'storage'
+    },
+    {
       label: 'Settings',
       component: 'SettingsEditor',
       icon: 'settings'

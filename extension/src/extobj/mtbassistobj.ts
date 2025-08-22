@@ -26,7 +26,7 @@ import { MTBApp } from '../mtbenv/manifest/mtbapp';
 import { VSCodeWorker } from './vscodeworker';
 import { MtbFunIndex } from '../keywords/mtbfunindex';
 import { MTBSettings } from './mtbsettings';
-import { LCSManager } from '../lcs/lcsmgr';
+import { LCSManager } from './lcsmgr';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -243,7 +243,11 @@ export class MTBAssistObject {
                 return;
             }
 
-            this.lcsMgr_ = new LCSManager(this.env_) ;
+            this.lcsMgr_ = new LCSManager(this) ;
+            this.lcsMgr_.on('show', this.bringChannelToFront.bind(this)) ;
+            this.lcsMgr_.on('log', (line) => {
+                this.logger_.info(`lcs-manager: ${line}`);
+            });
 
             this.bsps_ = new BSPMgr(this.context_.extensionUri.fsPath, this.env_!);
             this.worker_ = new VSCodeWorker(this.logger_, this);
@@ -295,12 +299,13 @@ export class MTBAssistObject {
                                                         p = this.keywords_.init(this.env_!.appInfo!) ;
                                                         parray.push(p) ;
 
-                                                        p = this.lcsMgr_!.init() ;
+                                                        p = this.lcsMgr_!.updateBSPS() ;
                                                         parray.push(p) ;
 
                                                         Promise.all(parray)
                                                             .then(() => {
                                                                 this.pushAppStatus();
+                                                                this.pushBSPsInLCS() ;
                                                                 this.setIntellisenseProject();
                                                                 this.logger_.debug('All managers post-initialization completed successfully.');
                                                                                         
@@ -312,8 +317,16 @@ export class MTBAssistObject {
                                                                     this.pushManifestStatus() ;
                                                                     this.pushDevKitStatus() ;
                                                                     this.pushAllBSPs();
+                                                                    this.pushBSPsInLCS() ;
                                                                     this.updateStatusBar() ;
-                                                                    resolve() ;
+                                                                    this.lcsMgr_!.updateNeedsUpdate()
+                                                                    .then(() => {
+                                                                        this.pushNeedsUpdate() ;
+                                                                        resolve() ;
+                                                                    })
+                                                                    .catch((err) => {
+                                                                        reject(err) ;
+                                                                    });
                                                                 })
                                                                 .catch((err) => {
                                                                     this.initializing_ = false ;                                                        
@@ -571,6 +584,18 @@ export class MTBAssistObject {
         this.cmdhandler_.set('setIntellisenseProject', this.setIntellisenseProjectFromGUI.bind(this));
         this.cmdhandler_.set('updateDevKitBsp', this.updateDevKitBsp.bind(this));
         this.cmdhandler_.set('updateSetting', this.updateSetting.bind(this));   
+        this.cmdhandler_.set('lcscmd', this.lcscmd.bind(this)); 
+    }
+
+    private lcscmd(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {    
+        let ret = new Promise<BackEndToFrontEndResponse | null>((resolve, reject) => {
+            this.lcsMgr_!.command(request.data) ;
+            this.pushBSPsInLCS() ;
+            this.pushNeedsApply() ;
+            this.pushNeedsUpdate() ;
+            resolve(null) ;
+        });
+        return ret;
     }
 
     private updateSetting(request: FrontEndToBackEndRequest): Promise<BackEndToFrontEndResponse | null> {
@@ -1242,6 +1267,21 @@ export class MTBAssistObject {
             };
             this.postWebViewMessage(oob);
         }
+    }
+
+    private pushBSPsInLCS() {
+        this.pushOOB('bspsIn', this.lcsMgr_!.bspsIn);
+        this.pushOOB('bspsNotIn', this.lcsMgr_!.bspsOut) ;
+        this.pushOOB('lcsToAdd', this.lcsMgr_!.toAdd) ;
+        this.pushOOB('lcsToDelete', this.lcsMgr_!.toDelete) ;
+    }
+
+    private pushNeedsUpdate() {
+        this.pushOOB('needsUpdate', this.lcsMgr_!.needsUpdate);
+    }
+
+    private pushNeedsApply() {
+        this.pushOOB('needsApply', this.lcsMgr_!.needsApplyChanges);
     }
 
     private pushSettings() {

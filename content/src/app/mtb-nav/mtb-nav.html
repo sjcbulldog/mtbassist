@@ -93,6 +93,19 @@
 
           @case (5) {
             <div class="tab-panel">
+              @if (tab.component === 'LocalContentStorageComponent') {
+                <app-local-content-storage></app-local-content-storage>
+              } @else {
+                <div class="placeholder-content">
+                  <h2>{{ tab.label }}</h2>
+                  <h2>Component: {{ tab.component.toString() }}</h2>
+                </div>
+              }
+            </div>
+          }            
+
+          @case (6) {
+            <div class="tab-panel">
               @if (tab.component === 'SettingsEditor') {
                 <mtb-settings-editor></mtb-settings-editor>
               } @else {
@@ -104,7 +117,7 @@
             </div>
           }  
           
-          @case (6) {
+          @case (7) {
             <div class="tab-panel">
               @if (tab.component === 'GlossaryComponent') {
                 <app-glossary #glossary></app-glossary>
