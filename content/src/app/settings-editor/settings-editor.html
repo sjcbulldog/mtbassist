@@ -7,7 +7,7 @@
       </div>
       @if (setting.type === 'string' && setting.name === 'custompath') {
         <mat-form-field appearance="outline" class="setting-field">
-          <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" [disabled]="isCustomPathDisabled()" />
+          <input matInput [ngModel]="getCustomPathDisplayValue()" (ngModelChange)="onCustomPathDisplayValueChange($event)" [disabled]="isCustomPathDisabled()" />
           @if (!manifestStatus) {
             <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
           }               
@@ -64,12 +64,11 @@
         <div class="browse-row" style="flex: 1;">
           <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
             <input matInput 
-                   [(ngModel)]="setting.value" 
-                   [disabled]="setting.name === 'custompath' && isCustomPathDisabled()"
-                   (ngModelChange)="setting.name === 'custompath' ? null : onValueChange(setting, $event)"
-                   (blur)="setting.name === 'custompath' ? onValueChange(setting, setting.value) : null" />
+                   [ngModel]="getCustomPathDisplayValue()" 
+                   [disabled]="isCustomPathDisabled()"
+                   (ngModelChange)="onCustomPathDisplayValueChange($event)" />
           </mat-form-field>
-          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder" [disabled]="setting.name === 'custompath' && isCustomPathDisabled()">
+          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder" [disabled]="isCustomPathDisabled()">
             <mat-icon>more_horiz</mat-icon>
           </button>
         </div>
@@ -82,11 +81,9 @@
           <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
             <input matInput 
                    [(ngModel)]="setting.value" 
-                   [disabled]="setting.name === 'custompath' && isCustomPathDisabled()"
-                   (ngModelChange)="setting.name === 'custompath' ? null : onValueChange(setting, $event)"
-                   (blur)="setting.name === 'custompath' ? onValueChange(setting, setting.value) : null" />
+                   (ngModelChange)="onValueChange(setting, $event)" />
           </mat-form-field>
-          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder" [disabled]="setting.name === 'custompath' && isCustomPathDisabled()">
+          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder">
             <mat-icon>more_horiz</mat-icon>
           </button>
         </div>

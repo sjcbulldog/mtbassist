@@ -635,7 +635,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         //
         // First priority is the LCS manifest if it should be enabled.
         //
-        let opmode = this.settings_.settingByName('operation_mode')?.value;
+        let opmode = this.settings_.settingByName('operating_mode')?.value;
         if (opmode && typeof opmode === 'string' && (opmode as string) === 'Local Content Mode') {
             let lcspath = this.settings_.settingByName('lcs_path')?.value ;
             if (!lcspath) {

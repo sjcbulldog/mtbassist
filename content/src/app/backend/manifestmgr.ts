@@ -17,7 +17,7 @@ export class ManifestManager {
         this.parent_ = be;
         this.refreshBSPs();
 
-        this.parent_.registerHandler('setBSPs', this.processDevKits.bind(this));
+        this.parent_.registerHandler('setBSPs', this.processBSPs.bind(this));
         this.parent_.registerHandler('setCodeExamples', this.processCodeExamples.bind(this));
     }
 
@@ -55,9 +55,10 @@ export class ManifestManager {
         return ret;
     }
 
-    public processDevKits(cmd: BackEndToFrontEndResponse): void {
+    public processBSPs(cmd: BackEndToFrontEndResponse): void {
         this.bsps = (cmd.data! as BSPData).bsps as BSPIdentifier[];
         this.bspCategories = [...new Set(this.bsps.map(bsp => bsp.category))];
+        this.parent_.log(`Processed BSPs: ${this.bsps.length} found, categories: ${this.bspCategories.join(', ')}`);
 
         for (let resolver of this.bspResolvers) {
             resolver();

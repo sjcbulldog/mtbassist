@@ -22,7 +22,9 @@ export class BSPMgr {
         this.readCachedKits();
     }
 
-    public getDevKits(live?: boolean): Promise<BSPData> {
+    public getBSPs(): Promise<BSPData> {
+        let live = true ;       // Don't provide cached data as it may not be accurate with LCS and EAPs
+        
         let ret = new Promise<BSPData>((resolve, reject) => {
             if (live) {
                 //

@@ -51,8 +51,17 @@ export class SettingsEditor {
       if (folder) {
         for(let setting of this.settings) {
           if (setting.name === folder.tag) {
-            setting.value = folder.path ;
-            this.onValueChange(setting, folder.path);
+            if (setting.name === 'custompath') {
+              // For custompath, only update if toolsversion is 'Custom'
+              const toolsVersion = this.settings.find(s => s.name === 'toolsversion');
+              if (toolsVersion && toolsVersion.value === 'Custom') {
+                setting.value = folder.path;
+                this.onValueChange(setting, folder.path);
+              }
+            } else {
+              setting.value = folder.path;
+              this.onValueChange(setting, folder.path);
+            }
           }
         }
       }
@@ -89,6 +98,30 @@ export class SettingsEditor {
     const toolsVersion = this.settings.find(s => s.name === 'toolsversion');
     // Disable if manifest is loading OR if toolsversion is not 'Custom'
     return !this.manifestStatus || (!!customPath && !!toolsVersion && toolsVersion.value !== 'Custom');
+  }
+
+  getCustomPathDisplayValue(): string {
+    // Return empty string if custompath should be hidden, otherwise return the actual value
+    if (this.isCustomPathDisabled()) {
+      const toolsVersion = this.settings.find(s => s.name === 'toolsversion');
+      // Only hide the value if toolsversion is not 'Custom' (but not if manifest is just loading)
+      if (toolsVersion && toolsVersion.value !== 'Custom') {
+        return '';
+      }
+    }
+    
+    const customPath = this.settings.find(s => s.name === 'custompath');
+    return customPath ? String(customPath.value || '') : '';
+  }
+
+  onCustomPathDisplayValueChange(value: string) {
+    // Only update the actual setting value if toolsversion is 'Custom'
+    const toolsVersion = this.settings.find(s => s.name === 'toolsversion');
+    const customPath = this.settings.find(s => s.name === 'custompath');
+    
+    if (customPath && toolsVersion && toolsVersion.value === 'Custom') {
+      this.onValueChange(customPath, value);
+    }
   }
 
   onValueChange(setting: MTBSetting, value: any) {

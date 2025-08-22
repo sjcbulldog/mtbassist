@@ -1759,7 +1759,7 @@ export class MTBAssistObject {
                 });
                 return;
             }
-            this.bsps_!.getDevKits()
+            this.bsps_!.getBSPs()
                 .then((kits) => {
                     resolve({
                         response: 'setBSPs',
