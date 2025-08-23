@@ -1,9 +1,10 @@
 export type PlatformType = 'browser' | 'electron' | 'vscode' ;
 
-export type FrontEndToBackEndRequestType = 
+export type FrontEndToBackEndType = 
     'logMessage' | 
     'getBSPs' |
     'getCodeExamples' |
+    'progress' |
     'getStarted' |
     'createProject' |
     'loadWorkspace' |
@@ -36,16 +37,36 @@ export type FrontEndToBackEndRequestType =
     'lcscmd'
     ;
 
-export type BackEndToFrontEndResponseType =
-    'setBSPs' |
-    'setCodeExamples' |
+export type BackEndToFrontEndType =
+    'createProjectProgress' |
+    'appStatus' |
+    'sendActiveBSPs' |
+    'sendAllBSPs' |
+    'sendCodeExamples' |
+    'recentlyOpened' |
+    'selectTab' |
+    'loadedAsset' |
+    'devKitStatus' |
+    'allbsps' |
+    'mtbInstallStatus' |
+    'setupTab' |
+    'neededTools' |
+    'installProgress' |
+    'glossaryEntries' |
+    'setIntellisenseProject' |
+    'setTheme' |
+    'settings' |
+    'manifestStatus' |
+    'lcsBspsNoIn' |
+    'lcsBspsIn' |
+    'lcsNeedsUpdate' |
+    'lcsNeedsApply' |
+    'lcsToAdd' |
+    'lcsToDelete' |
     'createProjectResult' |
     'browseForFolderResult' |
     'browseForFileResult' |
-    'appStatusResult' |
-    'oob' |
-    'success' |
-    'error' ;
+    'appStatusResult' ;
 
 export type MTBInstallType = 
     'none' |
@@ -82,12 +103,12 @@ export interface BSPData {
 }
 
 export interface FrontEndToBackEndRequest {
-    request: FrontEndToBackEndRequestType ;
+    request: FrontEndToBackEndType ;
     data: any ;
 }
 
 export interface BackEndToFrontEndResponse {
-    response: BackEndToFrontEndResponseType ;
+    response: BackEndToFrontEndType ;
     data: any ;
 }
 
@@ -127,13 +148,6 @@ export interface MemoryUsage {
   total: number;
   percentage: number;
   unit: string;
-}
-
-export interface MemoryStats {
-  totalUsed: number;
-  totalAvailable: number;
-  memoryTypes: MemoryUsage[];
-  lastUpdated: Date;
 }
 
 export interface MemoryInfo {

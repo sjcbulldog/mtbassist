@@ -24,7 +24,7 @@ export class App {
       this.topMtbNav.selectedIndex = index;
     });
 
-    this.be.isMTBInstalled.subscribe(isInstalled => {
+    this.be.mtbInstallStatus.subscribe(isInstalled => {
       this.isModusInstalled_ = isInstalled;
     });
 

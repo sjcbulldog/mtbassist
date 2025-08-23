@@ -4,8 +4,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPData, BSPIdentifier, FrontEndToBackEndRequest, MemoryStats, MemoryUsage, ApplicationStatusData, BackEndToFrontEndResponseType, DevKitInfo, RecentEntry, FrontEndToBackEndRequestType, SetupProgram, InstallProgress, MTBInstallType, GlossaryEntry, MTBSetting, BrowseResult } from '../../comms';
-import { ManifestManager } from './manifestmgr';
+import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBInstallType, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier } from '../../comms';
 import { ProjectManager } from './projectmgr';
 import { AppStatusBackend } from './appmgrbe';
 
@@ -16,32 +15,43 @@ declare var acquireVsCodeApi: any | undefined ;
 })
 export class BackendService {
     private pipe_?: PipeInterface ;
-    private manifestManager_: ManifestManager;
     private projectManager_ : ProjectManager ;
     private appStatusManager_ : AppStatusBackend;
 
     private handlers_ : Map<string, (cmd: BackEndToFrontEndResponse) => void> = new Map<string, (cmd: BackEndToFrontEndResponse) => void>();
 
+    // Dispay related
     theme: Subject<string> = new Subject<string>();
     navTab: Subject<number> = new Subject<number>() ;
     setupTab: Subject<number> = new Subject<number>() ;
     browserFolder: Subject<BrowseResult | null> = new Subject<BrowseResult | null>();
     browserFile: Subject<BrowseResult | null> = new Subject<BrowseResult | null>();
-    memoryStats = new BehaviorSubject<MemoryStats | null>(null);  
+
+    // Application related
     appStatusData: BehaviorSubject<ApplicationStatusData | null> = new BehaviorSubject<ApplicationStatusData | null>(null);
     loadedAsset: Subject<string> = new Subject<string>();
-    devKitStatus: Subject<DevKitInfo[]> = new Subject<DevKitInfo[]>();
-    allBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();
-    recentlyOpened: Subject<RecentEntry[]> = new Subject<RecentEntry[]>();
+
+    // Install and setup
     progressMessage: Subject<string> = new Subject<string>();
     progressPercent: Subject<number> = new Subject<number>();
-    isMTBInstalled: Subject<MTBInstallType> = new Subject<MTBInstallType>();
+    mtbInstallStatus: Subject<MTBInstallType> = new Subject<MTBInstallType>();
     neededTools: Subject<SetupProgram[]> = new Subject<SetupProgram[]>();
     installProgress: Subject<InstallProgress> = new Subject<InstallProgress>();
+
+    // MISC
     glossaryEntries: Subject<GlossaryEntry[]> = new Subject<GlossaryEntry[]>();
     intellisenseProject: Subject<string> = new Subject<string>();
     settings: Subject<MTBSetting[]> = new Subject<MTBSetting[]>();
+    recentlyOpened: Subject<RecentEntry[]> = new Subject<RecentEntry[]>();
+    devKitStatus: Subject<DevKitInfo[]> = new Subject<DevKitInfo[]>();
+
+    // Manfiest related
     manifestStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    allBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();
+    activeBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>() ;
+    codeExample: BehaviorSubject<CodeExampleIdentifier[]> = new BehaviorSubject<CodeExampleIdentifier[]>([]) ;
+
+    // LCS related
     bspsNotIn: Subject<string[]> = new Subject<string[]>();
     bspsIn: Subject<string[]> = new Subject<string[]>();
     lcsToAdd: Subject<string[]> = new Subject<string[]>();
@@ -50,6 +60,8 @@ export class BackendService {
     lcsNeedsApply: Subject<boolean> = new Subject<boolean>();
     lcsBusy: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
+    private allBSPsData : BSPIdentifier[] = [] ;
+
     constructor() {
         this.pipe_ = this.createPipe() ;
         if (this.pipe_) {
@@ -57,22 +69,17 @@ export class BackendService {
             this.log(`BackendService initialized with ${this.pipe_.displayName} pipe.`);
         }
 
-        this.manifestManager_ = new ManifestManager(this);
         this.projectManager_ = new ProjectManager(this);
         this.appStatusManager_ = new AppStatusBackend(this);
 
         this.setupHandlers();   
     }
 
-    public registerHandler(cmd: BackEndToFrontEndResponseType, handler: (cmd: BackEndToFrontEndResponse) => void): void {  
+    public registerHandler(cmd: BackEndToFrontEndType, handler: (cmd: BackEndToFrontEndResponse) => void): void {  
         if (this.handlers_.has(cmd)) {
             this.log(`Warning: Overriding existing handler for command: ${cmd}`) ;
         }
         this.handlers_.set(cmd, handler);
-    }
-
-    public get manifestMgr(): ManifestManager {
-        return this.manifestManager_;
     }
 
     public get appStatusMgr() : AppStatusBackend {
@@ -109,7 +116,7 @@ export class BackendService {
         }
     }
 
-    public sendRequestWithArgs(cmd: FrontEndToBackEndRequestType, data: any) {
+    public sendRequestWithArgs(cmd: FrontEndToBackEndType, data: any) {
         if (this.pipe_) {
             this.pipe_!.sendRequest({
                 request: cmd,
@@ -166,9 +173,31 @@ export class BackendService {
     private setupHandlers() {
         this.registerHandler('browseForFolderResult', this.browseForFolderResult.bind(this));
         this.registerHandler('browseForFileResult', this.browseForFileResult.bind(this));
-        this.registerHandler('oob', this.oobResult.bind(this));
+        this.registerHandler('createProjectProgress', this.processProgress.bind(this));
+        this.registerHandler('appStatus', this.processAppStatus.bind(this));
+        this.registerHandler('recentlyOpened', (cmd) => { this.recentlyOpened.next(cmd.data || [])});
+        this.registerHandler('selectTab', (cmd) => { this.navTab.next(cmd.data || [])});
+        this.registerHandler('loadedAsset', (cmd) => { this.loadedAsset.next(cmd.data || '')});
+        this.registerHandler('devKitStatus', (cmd) => { this.devKitStatus.next(cmd.data)}) ;
+        this.registerHandler('sendAllBSPs', (cmd) => { this.allBSPsData = cmd.data || [] ; this.allBSPs.next(cmd.data || [])}) ;
+        this.registerHandler('sendActiveBSPs', (cmd) => { this.activeBSPs.next(cmd.data || [])}) ;
+        this.registerHandler('mtbInstallStatus', (cmd) => { this.mtbInstallStatus.next(cmd.data || 'none')}) ;
+        this.registerHandler('setupTab', (cmd) => { this.setupTab.next(cmd.data || 0)}) ;
+        this.registerHandler('neededTools', (cmd) => { this.neededTools.next(cmd.data)}) ;
+        this.registerHandler('installProgress', (cmd) => { this.installProgress.next(cmd.data)}) ;
+        this.registerHandler('glossaryEntries', (cmd) => { this.glossaryEntries.next(cmd.data)}) ;
+        this.registerHandler('setIntellisenseProject', (cmd) => { this.intellisenseProject.next(cmd.data)}) ;
+        this.registerHandler('setTheme', (cmd) => { this.theme.next(cmd.data || 'dark')}) ;
+        this.registerHandler('settings', (cmd) => { this.settings.next(cmd.data)}) ;
+        this.registerHandler('manifestStatus', (cmd) => { this.manifestStatus.next(cmd.data || false)}) ;
+        this.registerHandler('lcsBspsIn', this.processLcsBSPsIn.bind(this)) ;
+        this.registerHandler('lcsNeedsUpdate', (cmd) => { this.lcsBusy.next(false) ; this.lcsNeedsUpdate.next(cmd.data || false) });
+        this.registerHandler('lcsNeedsApply', (cmd) => { this.lcsBusy.next(false) ; this.lcsNeedsApply.next(cmd.data || false)});
+        this.registerHandler('lcsToAdd', (cmd) => { this.lcsToAdd.next(cmd.data || [])});
+        this.registerHandler('lcsToDelete', (cmd) => { this.lcsToDelete.next(cmd.data || [])}) ;
+        this.registerHandler('sendCodeExamples', (cmd) => { this.codeExample.next(cmd.data || [])}) ;
     }
-
+    
     public executeBuildAction(action: string, project?: string): void {
         this.log(`Executing build action: ${action}`);
         if (this.pipe_) {
@@ -190,95 +219,29 @@ export class BackendService {
         this.browserFile.next(cmd.data as BrowseResult | null);
     }
 
-    private oobResult(cmd: BackEndToFrontEndResponse) {
-        if (cmd.data.oobtype && cmd.data.oobtype === 'progress') {
+    private processProgress(cmd: BackEndToFrontEndResponse) {
+        if (cmd.data) {
             this.progressMessage.next(cmd.data.message || '');
             this.progressPercent.next(cmd.data.percent || 0);
         }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'appStatus') {
-            let appStatusData: ApplicationStatusData = cmd.data;
-            let str = '' ;
-            for(let proj of appStatusData.projects) {
-                str += ' ' + proj.missingAssets ? 'true' : 'false';
-            }
-            this.appStatusData.next(appStatusData);
+    }   
+
+    private processAppStatus(cmd: BackEndToFrontEndResponse) {
+        let appStatusData: ApplicationStatusData = cmd.data;
+        let str = '' ;
+        for(let proj of appStatusData.projects) {
+            str += ' ' + proj.missingAssets ? 'true' : 'false';
         }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'recentlyOpened') {
-            this.recentlyOpened.next(cmd.data.recents || []);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'selectTab') {
-            let index = cmd.data.index || 0;
-            this.navTab.next(index);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'loadedAsset') {
-            let asset = cmd.data.asset || '';
-            this.loadedAsset.next(asset);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'devKitStatus') {
-            this.devKitStatus.next(cmd.data.data);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'allbsps') {
-            this.allBSPs.next(cmd.data.data || []);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'isMTBInstalled') {
-            this.isMTBInstalled.next(cmd.data.data.installed || 'none');
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'setupTab') {
-            let index = cmd.data.index || 0;
-            this.setupTab.next(index);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'neededTools') {
-            this.neededTools.next(cmd.data.data || []);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'installProgress') {
-            this.installProgress.next(cmd.data.data) ;
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'glossaryEntries') {
-            this.glossaryEntries.next(cmd.data.data || []) ;
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'setIntellisenseProject') {
-            this.intellisenseProject.next(cmd.data.data || '');
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'setTheme') {
-            this.theme.next(cmd.data.data);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'settings') {
-            this.settings.next(cmd.data.data || []);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'manifestStatus') {
-            this.manifestStatus.next(cmd.data.data || false);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'bspsNotIn') {
-            this.bspsNotIn.next(cmd.data.data || []);
-            // Reset busy state when data is updated
-            this.lcsBusy.next(false);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'bspsIn') {
-            this.bspsIn.next(cmd.data.data || []);
-            // Reset busy state when data is updated
-            this.lcsBusy.next(false);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'needsUpdate') {
-            this.lcsNeedsUpdate.next(cmd.data.data || false);
-            // Reset busy state when update status is received
-            this.lcsBusy.next(false);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'needsApply') {
-            this.lcsNeedsApply.next(cmd.data.data || false);
-            // Reset busy state when apply status is received
-            this.lcsBusy.next(false);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'lcsToAdd') {
-            this.log('lcsToAdd: ' + JSON.stringify(cmd.data.data));
-            this.lcsToAdd.next(cmd.data.data);
-        }
-        else if (cmd.data.oobtype && cmd.data.oobtype === 'lcsToDelete') {
-            this.log('lcsToDelete: ' + JSON.stringify(cmd.data.data));
-            this.lcsToDelete.next(cmd.data.data);
-        }
-        else {
-            this.log(`Unhandled OOB type: ${cmd.data.oobtype}`, 'error');
-        }
+        this.appStatusData.next(appStatusData);        
+    }
+
+    private processLcsBSPsIn(cmd: BackEndToFrontEndResponse) {
+        let inlist = cmd.data ? (cmd.data as string[]) : [] ;
+        this.bspsIn.next(inlist) ;
+        let outbsplist = this.allBSPsData.map(bsp=> bsp.name ) ;
+        let outbsps = outbsplist.filter(bsp => !inlist.includes(bsp)) ;
+        this.bspsNotIn.next(outbsps) ;
+        this.lcsBusy.next(false) ;
     }
 
     private messageProc(cmd: BackEndToFrontEndResponse) {

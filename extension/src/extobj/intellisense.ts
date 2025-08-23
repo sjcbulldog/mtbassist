@@ -39,18 +39,6 @@ export class IntelliSenseMgr extends MtbManagerBase {
 
     public async trySetupIntellisense(): Promise<void> {
         let ret = new Promise<void>(async (resolve, reject) => {
-            try {
-                //
-                // This eliminates issues with the life cycle of the clangd extension.
-                //
-                this.ext.logger.info("Activating 'clangd' extension");
-                // await vscode.commands.executeCommand('clangd.activate');
-            }
-            catch (err) {
-                let errobj: Error = (err as any) as Error;
-                this.ext.logger.error("Error activating 'clangd' extension: " + errobj.message);
-                resolve() ;
-            }                 
             this.init();
             if (this.hasClangD) {
                 await this.checkBasicClangdConfig();

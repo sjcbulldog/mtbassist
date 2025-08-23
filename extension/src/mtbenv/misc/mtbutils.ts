@@ -133,10 +133,14 @@ export class MTBUtils {
     private static createEnv(toolspath: string | undefined) : NodeJS.ProcessEnv {
         let env: NodeJS.ProcessEnv = { } ;
 
+        if (process.platform === 'win32' && toolspath) {
+            toolspath = toolspath.replace(/\\/g,'/');
+        }
+
         if (toolspath) {
             let found = false ;
             for(let key in process.env) {
-                if (key === 'CY_TOOLS_PATHS') {
+                if (key === 'CY_TOOLS_PATHS' && toolspath) {
                     env[key] = toolspath ;
                     found = true ;
                     break ;

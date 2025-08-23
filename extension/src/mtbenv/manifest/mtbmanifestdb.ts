@@ -58,10 +58,10 @@ export class MTBManifestDB {
     }
 
     public get bspNames() : string[] {
-        return this.bsps.map(b => b.name) ;
+        return this.activeBSPs.map(b => b.name) ;
     }
 
-    public get bsps() : MTBBoard[] {
+    public get activeBSPs() : MTBBoard[] {
         let ret: MTBBoard[] = [];
         for(let bsp of this.boards_.values()) {
             if (!this.eapPath_ || bsp.source.iseap) {
@@ -74,6 +74,10 @@ export class MTBManifestDB {
 
     public get allBspNames() : string[] {
         return [...this.boards_.values()].map(b => b.name).sort() ;
+    }
+
+    public get allBsps() : MTBBoard[] {
+        return [...this.boards_.values()];
     }
 
     private getLatestBSPFromId(id: string) : [MTBBoard, MTBItemVersion] | [] {

@@ -152,7 +152,7 @@
                          (selectionChange)="onCategoryChange()"
                          [disabled]="isLoading"
                          panelClass="bsp-dropdown-panel">
-                @for (category of categories; track category) {
+                @for (category of getBSPCategories(); track category) {
                   <mat-option [value]="category">
                     {{ category }}
                   </mat-option>
@@ -174,9 +174,9 @@
                   <mat-label>Board Support Package</mat-label>
                   <mat-select formControlName="bsp" 
                              (selectionChange)="onBSPChange()"
-                             [disabled]="isLoading || bsps.length === 0"
+                             [disabled]="isLoading || activeBSPs.length === 0"
                              panelClass="bsp-dropdown-panel">
-                    @for (bsp of bsps; track bsp.id) {
+                    @for (bsp of activeBSPs; track bsp.id) {
                       <mat-option [value]="bsp.id"
                                  (mouseenter)="onBSPHover(bsp)"
                                  (mouseleave)="onBSPLeave()">
@@ -255,9 +255,9 @@
                 <mat-label>Example Category</mat-label>
                 <mat-select formControlName="exampleCategory" 
                            (selectionChange)="onExampleCategoryChange()"
-                           [disabled]="isLoading || exampleCategories.length === 0"
+                           [disabled]="isLoading || getExampleCategories().length === 0"
                            panelClass="example-dropdown-panel">
-                  @for (category of exampleCategories; track category) {
+                  @for (category of getExampleCategories(); track category) {
                     <mat-option [value]="category">
                       {{ category }}
                     </mat-option>

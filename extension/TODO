@@ -8,6 +8,7 @@ Priorities
 Bugs
 ----
 - Fix the notification on every character for a custom tools path in the settings
+- Selecting code examples based on capabilities has bugs, look at the Control C3 BSPs
 
 TODO
 -------------------------------------------------------------------------------------------

@@ -30,7 +30,7 @@ export class LCSManager extends EventEmitter {
         return this.toadd_.length > 0 || this.todel_.length > 0 ;
     }
 
-    public get isValid() : boolean {
+    public get isLCSReady() : boolean {
         return this.bsps_.length > 0 ;
     }
 

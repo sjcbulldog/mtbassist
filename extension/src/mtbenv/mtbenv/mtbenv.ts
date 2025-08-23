@@ -79,7 +79,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return (this.wants_ & flags) === flags ;
     }
 
-    public destroy() {
+    public static destroy() {
         ModusToolboxEnvironment.env_ = undefined ;
     }
 
@@ -198,6 +198,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
                             this.isLoading_ = false ;
                             this.has_ = this.has_ | this.wants_ ;
                             this.wants_ = MTBLoadFlags.none ;
+                            this.emit('loaded', this.has_) ;
                             resolve() ;
                         })
                         .catch((err) => {
@@ -423,6 +424,10 @@ export class ModusToolboxEnvironment extends EventEmitter {
             
             if (!this.toolsDir_) {
                 this.toolsDir_ = this.setupToolsDir() ;
+                if (!this.toolsDir_ || !fs.existsSync(this.toolsDir_!)) {
+                    this.logger_.error('Cannot locate a valid tools directory') ;
+                    reject(new Error('Cannot locate a valid tools directory')) ;
+                }
             }
 
             if (this.toolsDir_ === undefined) {
@@ -441,6 +446,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
                     .then(()=> {
                         this.loading_ &= ~MTBLoadFlags.appInfo;
                         this.has_ |= MTBLoadFlags.appInfo ;
+                        this.logger_.debug('Loading AppInfo complete') ;
                         resolve() ;
                     })
                     .catch((err) => {
@@ -617,14 +623,30 @@ export class ModusToolboxEnvironment extends EventEmitter {
 
         if (this.requestedToolsDir_ !== undefined) {
             ret = this.requestedToolsDir_ ;
+            if (!fs.existsSync(ret)) {
+                this.logger_.error('Requested tools directory does not exist');
+                ret = undefined ;
+            }
         }
-        else if (exeToolsDir) {
+
+
+        if (ret === undefined && exeToolsDir) {
             ret = exeToolsDir ;
+            if (!fs.existsSync(ret)) {
+                this.logger_.error('Executable tools directory does not exist');
+                ret = undefined ;
+            }
         }
-        else if (toolspathDir) {
+
+        if (ret === undefined && toolspathDir) {
             ret = toolspathDir ;
+            if (!fs.existsSync(ret)) {
+                this.logger_.error('Tools path directory does not exist');
+                ret = undefined ;
+            }
         }
-        else if (commonDir) {
+
+        if (ret === undefined && commonDir) {
             ret = commonDir ;
         }
 

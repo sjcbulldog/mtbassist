@@ -80,6 +80,7 @@ export class MtbFunIndex
                 }
                 catch(err) {
                     reject(err) ;
+                    return ;
                 }
             }
             this.logger_.info(`detected ${count} keywords in ModusToolbox application`) ;

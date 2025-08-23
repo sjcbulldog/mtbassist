@@ -46,5 +46,9 @@
     {
         "name": "55500A1",
         "description": "Indicates this code is being built to work with a 55500A1 wireless device."
+    },
+    {
+        "name": "4343W",
+        "description": "Indicates this code is being built to work with a 4343W wireless device."
     }
 ]

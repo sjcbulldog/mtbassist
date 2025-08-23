@@ -124,7 +124,19 @@ export class MTBSettings extends EventEmitter {
             }
             else if (setting.name === 'custompath') {
                 this.putWorkspaceSettings() ;
-                this.emit('toolsPathChanged', this.computeToolsPath()) ;
+                let p = this.computeToolsPath() ;
+                if (this.customPathOK(p)) {
+                    this.emit('toolsPathChanged', p) ;
+                }
+            }
+            else if (setting.name === 'operating_mode') {
+                if (!this.ext_.lcsMgr || !this.ext_.lcsMgr.isLCSReady) {
+
+                }
+                else {
+                    this.putWorkspaceSettings() ;
+                    this.emit('restartWorkspace', this.computeToolsPath()) ;
+                }
             }
             else {
                 this.writeSettingsFile() ;
@@ -133,6 +145,20 @@ export class MTBSettings extends EventEmitter {
                 }
             }
         }
+    }
+
+    private customPathOK(p: string) : boolean {
+        if (!fs.existsSync(p) || !fs.lstatSync(p).isDirectory()) {
+            return false;
+        }
+
+        for(let contents of fs.readdirSync(p)) {
+            if (/version-[0-9]+.[0-9]+.xml/.test(contents)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private computeToolsPath() : string {

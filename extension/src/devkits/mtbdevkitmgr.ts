@@ -278,9 +278,6 @@ export class MTBDevKitMgr extends MtbManagerBase {
                                 if (res[0] === 0) {
                                     await this.extractKits(res[1]);
                                 }
-                                if (this.kits.length === 0) {
-                                    this.injectMockData() ;
-                                }                                
                                 this.scanning = false ;
                                 this.emit('updated') ;
                                 resolve(true) ;
@@ -577,29 +574,5 @@ export class MTBDevKitMgr extends MtbManagerBase {
         }
 
         return ret;
-    }
-
-    private injectMockData() {
-        let kit : MTBDevKit ;
-        
-        kit = new MTBDevKit('kp3', '8765309', 'HID', '1.0.0', false) ;
-        kit.name = "KIT_PSOCE84_EVK",
-        kit.bsp = this.getBSPForSerial(kit) ;
-        this.kits.push(kit) ;
-
-        kit = new MTBDevKit('kp3', '12345678', 'HID', '2.0.0', false) ;
-        kit.name = "KIT_PSOCE84_EVK",
-        kit.bsp = this.getBSPForSerial(kit) ;
-        this.kits.push(kit) ;
-
-        kit = new MTBDevKit('kp3', '98765432', 'HID', '3.0.0', false) ;
-        kit.bsp = this.getBSPForSerial(kit) ;
-        kit.outdated = true ;
-        this.kits.push(kit) ;
-        
-        kit = new MTBDevKit('kp3', '12123434', 'HID', '4.0.0', false) ;
-        kit.bsp = this.getBSPForSerial(kit) ;
-        kit.outdated = true ;
-        this.kits.push(kit) ;
     }
 }
