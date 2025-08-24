@@ -1,8 +1,10 @@
 
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, Input, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { Subscription } from 'rxjs';
+import { BackendService } from '../backend/backend-service';
 import { GettingStarted } from '../getting-started/getting-started';
 import { CreateProject } from '../create-project/create-project';
 import { ApplicationStatus } from '../application-status/application-status';
@@ -37,17 +39,37 @@ export interface MtbNavTab {
   templateUrl: './mtb-nav.html',
   styleUrl: './mtb-nav.scss'
 })
-export class MtbNav {
+export class MtbNav implements OnInit, OnDestroy {
   @Input() tabs: MtbNavTab[] = [];
   @Input() backgroundColor: 'primary' | 'accent' | 'warn' = 'primary';
   @Input() alignment: 'start' | 'center' | 'end' = 'center';
   @Input() selectedIndex: number = 0;
   @ViewChild('glossary') glossary!: GlossaryComponent;
 
-  constructor() {
+  private subscriptions: Subscription[] = [];
+  lcsBusy: boolean = false;
+
+  constructor(private backendService: BackendService) {
+  }
+
+  ngOnInit() {
+    // Subscribe to local content storage busy state
+    this.subscriptions.push(
+      this.backendService.lcsBusy.subscribe(busy => {
+        this.lcsBusy = busy;
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   onTabChange(index: number) {
+    // Prevent tab changes when local content storage is busy
+    if (this.lcsBusy) {
+      return;
+    }
     this.selectedIndex = index;
   }
 }

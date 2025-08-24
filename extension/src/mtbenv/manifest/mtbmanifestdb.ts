@@ -77,11 +77,19 @@ export class MTBManifestDB {
     }
 
     public get allBspNames() : string[] {
-        return [...this.boards_.values()].map(b => b.name).sort() ;
+        return Array.from(this.boards_.values()).map(b => b.name).sort() ;
     }
 
     public get allBsps() : MTBBoard[] {
-        return [...this.boards_.values()];
+        return Array.from(this.boards_.values());
+    }
+
+    public get allBSPsExceptEAP() : MTBBoard[] {
+        return Array.from(this.boards_.values()).filter(b => !b.source.iseap);
+    }
+
+    public get allBSPsExceptEAPNames() : string[] {
+        return this.allBSPsExceptEAP.map(b => b.name).sort();
     }
 
     private getLatestBSPFromId(id: string) : [MTBBoard, MTBItemVersion] | [] {

@@ -12,10 +12,32 @@
 
 .setting-row {
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 1rem 0;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.setting-main {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.setting-error {
+  font-size: 0.75rem;
+  color: #d32f2f;
+  margin-top: 0.25rem;
+  margin-left: 0.75rem;
+  font-style: italic;
+}
+
+.setting-disabled-message {
+  font-size: 0.75rem;
+  color: #757575;
+  margin-top: 0.25rem;
+  margin-left: 0.75rem;
+  font-style: italic;
 }
 
 .setting-label {
@@ -147,6 +169,14 @@ mat-checkbox {
   .manifest-loading-message {
     color: #ffb74d;
   }
+  
+  .setting-error {
+    color: #f48fb1;
+  }
+  
+  .setting-disabled-message {
+    color: #bdbdbd;
+  }
 }
 
 /* Light Theme */
@@ -221,5 +251,13 @@ mat-checkbox {
   
   .manifest-loading-message {
     color: #f57c00;
+  }
+  
+  .setting-error {
+    color: #d32f2f;
+  }
+  
+  .setting-disabled-message {
+    color: #757575;
   }
 }

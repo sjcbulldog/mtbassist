@@ -43,6 +43,7 @@ export type BackEndToFrontEndType =
     'appStatus' |
     'sendActiveBSPs' |
     'sendAllBSPs' |
+    'sendAllBSPsExceptEAP' |
     'sendCodeExamples' |
     'recentlyOpened' |
     'selectTab' |
@@ -71,6 +72,11 @@ export type BackEndToFrontEndType =
     'sendDefaultProjectDir' |
     'showSettingsError'
     ;
+
+export interface SettingsError {
+  setting: string ;
+  message: string ;
+} ;
 
 export type MTBInstallType = 
     'none' |
@@ -235,6 +241,7 @@ export interface MTBSetting {
     value: string | number | boolean ;
     choices? : string[] ;
     description: string ;
+    disabledMessage? : string ;
 }
 
 export interface SetupProgram {

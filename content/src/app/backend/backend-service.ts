@@ -4,7 +4,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBInstallType, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier } from '../../comms';
+import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBInstallType, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError } from '../../comms';
 import { ProjectManager } from './projectmgr';
 
 declare var acquireVsCodeApi: any | undefined ;
@@ -29,17 +29,20 @@ export class BackendService {
     appStatusData: BehaviorSubject<ApplicationStatusData | null> = new BehaviorSubject<ApplicationStatusData | null>(null);
     loadedAsset: Subject<string> = new Subject<string>();
 
-    // Install and setup
+    // Install and setup related
     progressMessage: Subject<string> = new Subject<string>();
     progressPercent: Subject<number> = new Subject<number>();
     mtbInstallStatus: Subject<MTBInstallType> = new Subject<MTBInstallType>();
     neededTools: Subject<SetupProgram[]> = new Subject<SetupProgram[]>();
     installProgress: Subject<InstallProgress> = new Subject<InstallProgress>();
 
+    // Settings related
+    settings: Subject<MTBSetting[]> = new Subject<MTBSetting[]>();
+    settingsErrors: Subject<SettingsError[]> = new Subject<SettingsError[]>();
+
     // MISC
     glossaryEntries: Subject<GlossaryEntry[]> = new Subject<GlossaryEntry[]>();
     intellisenseProject: Subject<string> = new Subject<string>();
-    settings: Subject<MTBSetting[]> = new Subject<MTBSetting[]>();
     recentlyOpened: Subject<RecentEntry[]> = new Subject<RecentEntry[]>();
     devKitStatus: Subject<DevKitInfo[]> = new Subject<DevKitInfo[]>();
     defaultProjectDir: Subject<string> = new Subject<string>() ;
@@ -47,6 +50,7 @@ export class BackendService {
     // Manfiest related
     manifestStatus: BehaviorSubject<'loading' | 'loaded' | 'not-available'> = new BehaviorSubject<'loading' | 'loaded' | 'not-available'>('loading');
     allBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();
+    allBSPsExceptEAP: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();    
     activeBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>() ;
     codeExample: BehaviorSubject<CodeExampleIdentifier[]> = new BehaviorSubject<CodeExampleIdentifier[]>([]) ;
 
@@ -59,7 +63,7 @@ export class BackendService {
     lcsNeedsApply: Subject<boolean> = new Subject<boolean>();
     lcsBusy: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
-    private allBSPsData : BSPIdentifier[] = [] ;
+    private allBSPExceptEAPData : BSPIdentifier[] = [] ;
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -171,8 +175,9 @@ export class BackendService {
         this.registerHandler('selectTab', (cmd) => { this.navTab.next(cmd.data || [])});
         this.registerHandler('loadedAsset', (cmd) => { this.loadedAsset.next(cmd.data || '')});
         this.registerHandler('devKitStatus', (cmd) => { this.devKitStatus.next(cmd.data)}) ;
-        this.registerHandler('sendAllBSPs', (cmd) => { this.allBSPsData = cmd.data || [] ; this.allBSPs.next(cmd.data || [])}) ;
+        this.registerHandler('sendAllBSPs', (cmd) => { this.allBSPs.next(cmd.data || [])}) ;
         this.registerHandler('sendActiveBSPs', (cmd) => { this.activeBSPs.next(cmd.data || [])}) ;
+        this.registerHandler('sendAllBSPsExceptEAP', (cmd) => { this.allBSPExceptEAPData = cmd.data || []; this.allBSPsExceptEAP.next(cmd.data || [])}) ;
         this.registerHandler('mtbInstallStatus', (cmd) => { this.mtbInstallStatus.next(cmd.data || 'none')}) ;
         this.registerHandler('setupTab', (cmd) => { this.setupTab.next(cmd.data || 0)}) ;
         this.registerHandler('neededTools', (cmd) => { this.neededTools.next(cmd.data)}) ;
@@ -199,7 +204,7 @@ export class BackendService {
         this.registerHandler('lcsToDelete', (cmd) => { this.lcsToDelete.next(cmd.data || [])}) ;
         this.registerHandler('sendCodeExamples', (cmd) => { this.codeExample.next(cmd.data || [])}) ;
         this.registerHandler('sendDefaultProjectDir', (cmd) => { this.defaultProjectDir.next(cmd.data || '')}) ;
-        this.registerHandler('showSettingsError', (cmd) => { alert(`Error with setting ${cmd.data.name}: ${cmd.data.message}`)}) ;
+        this.registerHandler('showSettingsError', (cmd) => { this.settingsErrors.next(cmd.data) ; }) ;
     }
     
     public executeBuildAction(action: string, project?: string): void {
@@ -242,7 +247,7 @@ export class BackendService {
     private processLcsBSPsIn(cmd: BackEndToFrontEndResponse) {
         let inlist = cmd.data ? (cmd.data as string[]) : [] ;
         this.bspsIn.next(inlist) ;
-        let outbsplist = this.allBSPsData.map(bsp=> bsp.name ) ;
+        let outbsplist = this.allBSPExceptEAPData.map(bsp=> bsp.name ) ;
         let outbsps = outbsplist.filter(bsp => !inlist.includes(bsp)) ;
         this.bspsNotIn.next(outbsps) ;
         this.lcsBusy.next(false) ;

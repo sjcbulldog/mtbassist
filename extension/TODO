@@ -10,6 +10,8 @@ Priorities
 
 Known Bugs
 ----------
+- Thoroughly check out what BSPs are available with and without LCS.
+- Figure out the interaction of operating mode and EAP
 - Selecting code examples based on capabilities has bugs, look at the Control C3 BSPs, look at Edge and Hello World (not PSOC Edge Hello World)
 - Catch switch to Local Content Mode in settings when LCS is not initialized
 

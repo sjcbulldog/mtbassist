@@ -193,7 +193,8 @@ export class LCSManager extends EventEmitter {
                 this.ext_.logger.info('******************************************************') ;                               
                 this.ext_.logger.info('Local Content Storage BSP changes applied successfully') ;
                 this.ext_.logger.info('******************************************************') ; 
-                this.ext_.logger.info('******************************************************') ;                               
+                this.ext_.logger.info('******************************************************') ;
+                this.emit('lcsdone') ;
                 resolve() ;
             })
             .catch((error) => {
@@ -285,6 +286,7 @@ export class LCSManager extends EventEmitter {
                         reject(new Error("lcs-cli command failed")) ;
                         return ;
                     }
+                    this.emit('lcsdone');
                     resolve();
                 })
                 .catch((error) => {
@@ -316,10 +318,11 @@ export class LCSManager extends EventEmitter {
     private toggleBSP(bsp: string) {
         if (this.bsps_.includes(bsp)) {
             // BSP is currently in local storage
-            if (this.todel_.includes(bsp)) {
+            if (this.toadd_.includes(bsp)) {
                 // Was queued for deletion, remove from delete queue and add back visually
-                let index = this.todel_.indexOf(bsp);
-                this.todel_.splice(index, 1);
+                let index = this.toadd_.indexOf(bsp);
+                this.toadd_.splice(index, 1);
+                this.bsps_ = this.bsps_.filter(b => b !== bsp);
             }
             else {
                 // Add to delete queue and remove visually
@@ -328,10 +331,10 @@ export class LCSManager extends EventEmitter {
             }
         } else {
             // BSP is currently not in local storage
-            if (this.toadd_.includes(bsp)) {
+            if (this.todel_.includes(bsp)) {
                 // Was queued for addition, remove from add queue and remove visually
-                let index = this.toadd_.indexOf(bsp);
-                this.toadd_.splice(index, 1);
+                let index = this.todel_.indexOf(bsp);
+                this.todel_.splice(index, 1);
             }
             else {
                 // Add to add queue and add visually

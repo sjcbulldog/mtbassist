@@ -11,7 +11,7 @@ import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
-    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, MemoryInfo, Middleware, MTBSetting, Project, Tool
+    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, MemoryInfo, Middleware, MTBSetting, Project, SettingsError, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
@@ -122,7 +122,8 @@ export class MTBAssistObject {
     }
 
     private showSettingsError(name: string, message: string) {
-        this.sendMessageWithArgs('showSettingsError', { name: name, message: message }) ;
+        let err : SettingsError = { setting: name, message: message } ;
+        this.sendMessageWithArgs('showSettingsError', [err]) ;
         this.sendMessageWithArgs('settings', this.settings_.settings) ;
     }
 
@@ -235,6 +236,26 @@ export class MTBAssistObject {
         });
     }
 
+    private getAllBspExceptEAPInfo() : BSPIdentifier[] {
+        let list = this.env_?.manifestDB?.allBSPsExceptEAP || [];
+        return list.map(board => {
+            return {
+                name: board.name,
+                id: board.id,
+                device: board.chips.get('mcu') || '',
+                connectivity: board.chips.get('radio') || '',
+                category: board.category,
+                description: board.description || ''
+            };
+        });
+    }    
+
+    private sendBSPInformation() {
+        this.sendMessageWithArgs('sendAllBSPs', this.getAllBspInfo());
+        this.sendMessageWithArgs('sendActiveBSPs', this.getActiveBspInfo());
+        this.sendMessageWithArgs('sendAllBSPsExceptEAP', this.getAllBspExceptEAPInfo()) ;
+    }
+
     private initWithTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
@@ -247,6 +268,10 @@ export class MTBAssistObject {
             this.lcsMgr_.on('show', this.bringChannelToFront.bind(this)) ;
             this.lcsMgr_.on('log', (line) => {
                 this.logger_.info(`lcs-manager: ${line}`);
+            });
+            this.lcsMgr_.on('lcsdone', () => {
+                this.sendMessageWithArgs('settings', this.settings_.settings);
+                this.logger_.debug(`lcs-manager: LCS operation completed`);
             });
 
             this.worker_ = new VSCodeWorker(this.logger_, this);
@@ -311,7 +336,8 @@ export class MTBAssistObject {
 
                                                         Promise.all(parray)
                                                             .then(() => {
-                                                                        this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv());
+                                                                this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv());
+                                                                this.sendMessageWithArgs('settings', this.settings_.settings) ;
                                                                 this.pushBSPsInLCS() ;
                                                                 this.setIntellisenseProject();
                                                                 this.logger_.debug('All managers post-initialization completed successfully.');
@@ -323,8 +349,7 @@ export class MTBAssistObject {
                                                                     this.initializing_ = false ;
                                                                     this.pushManifestStatus() ;
                                                                     this.pushDevKitStatus() ;
-                                                                    this.sendMessageWithArgs('sendAllBSPs', this.getAllBspInfo());
-                                                                    this.sendMessageWithArgs('sendActiveBSPs', this.getActiveBspInfo()) ;
+                                                                    this.sendBSPInformation() ;
                                                                     this.pushBSPsInLCS() ;
                                                                     this.updateStatusBar() ;
                                                                     this.lcsMgr_!.updateNeedsUpdate()
@@ -364,8 +389,7 @@ export class MTBAssistObject {
                                                         this.pushManifestStatus() ;
                                                         this.updateStatusBar() ;                                                        
                                                         this.pushDevKitStatus() ;
-                                                        this.sendMessageWithArgs('sendAllBSPs', this.getAllBspInfo());
-                                                        this.sendMessageWithArgs('sendActiveBSPs', this.getActiveBspInfo());
+                                                        this.sendBSPInformation() ;
                                                         this.logger_.debug('ModusToolbox manifests loaded successfully.');
                                                         resolve();
                                                     })
@@ -1718,8 +1742,7 @@ export class MTBAssistObject {
                 resolve() ;
                 return;
             }
-            this.sendMessageWithArgs('sendAllBSPs', this.getAllBspInfo());
-            this.sendMessageWithArgs('sendActiveBSPs', this.getActiveBspInfo());
+            this.sendBSPInformation() ;
         });
         return ret;
     }

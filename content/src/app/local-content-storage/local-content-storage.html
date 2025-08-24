@@ -32,7 +32,7 @@
               matInput 
               [(ngModel)]="leftListFilterText" 
               placeholder="Type to filter..."
-              [disabled]="busy">
+              [disabled]="busy || showChanges">
             <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
         </div>
@@ -147,7 +147,8 @@
             </div>
             <div class="bsp-update-controls">
               <mat-checkbox 
-                [(ngModel)]="showChanges" 
+                [checked]="showChanges"
+                (change)="onShowChangesChange($event.checked)"
                 color="primary"
                 [disabled]="busy">
                 Show Changes

@@ -8,7 +8,7 @@
   @for (tab of tabs; track tab.label; let i = $index) {
     <mat-tab 
       [label]="tab.label"
-      [disabled]="tab.disabled || false">
+      [disabled]="tab.disabled || (lcsBusy && tab.component !== 'LocalContentStorageComponent')">
       
       <!-- Tab content with icon support -->
       @if (tab.icon) {

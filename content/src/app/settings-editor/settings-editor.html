@@ -1,10 +1,11 @@
 <div class="settings-editor-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   @for (setting of settings; track setting.name) {
     <div class="setting-row">
-      <div class="setting-label-group" style="display: flex; align-items: center; min-width: 180px;">
-        <label class="setting-label" style="margin-right: 6px;">{{ setting.displayName }}</label>
-        <mat-icon class="setting-help-icon" matTooltip="{{ setting.description }}" style="vertical-align: middle; cursor: pointer; color: #1976d2;">help_outline</mat-icon>
-      </div>
+      <div class="setting-main">
+        <div class="setting-label-group" style="display: flex; align-items: center; min-width: 180px;">
+          <label class="setting-label" style="margin-right: 6px;">{{ setting.displayName }}</label>
+          <mat-icon class="setting-help-icon" matTooltip="{{ setting.description }}" style="vertical-align: middle; cursor: pointer; color: #1976d2;">help_outline</mat-icon>
+        </div>
       @if (setting.type === 'string' && setting.name === 'custompath') {
         <mat-form-field appearance="outline" class="setting-field">
           <input matInput [ngModel]="getCustomPathDisplayValue()" (ngModelChange)="onCustomPathDisplayValueChange($event)" [disabled]="isCustomPathDisabled()" />
@@ -14,19 +15,19 @@
         </mat-form-field>
       } @else if (setting.type === 'string') {
         <mat-form-field appearance="outline" class="setting-field">
-          <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" />
+          <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" [disabled]="isSettingDisabled(setting)" />
         </mat-form-field>
       } @else if (setting.type === 'number') {
         <mat-form-field appearance="outline" class="setting-field">
-          <input matInput type="number" [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" />
+          <input matInput type="number" [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" [disabled]="isSettingDisabled(setting)" />
         </mat-form-field>
       } @else if (setting.type === 'boolean') {
-        <mat-checkbox [(ngModel)]="setting.value" (change)="onValueChange(setting, $event.checked)"></mat-checkbox>
+        <mat-checkbox [(ngModel)]="setting.value" (change)="onValueChange(setting, $event.checked)" [disabled]="isSettingDisabled(setting)"></mat-checkbox>
       } @else if (setting.name === 'toolsversion' || setting.name === 'enabled_eap') {
         <div class="browse-row" style="flex: 1;">
           <mat-form-field class="setting-field" appearance="outline" style="flex: 1;">
             <mat-label>{{ setting.displayName }}</mat-label>
-            <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)" [disabled]="manifestStatus === 'loading'">
+            <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)" [disabled]="manifestStatus === 'loading' || isSettingDisabled(setting)">
               @for (choice of setting.choices; track choice) {
                 <mat-option [value]="choice">{{ choice }}</mat-option>
               }
@@ -43,7 +44,7 @@
         <div class="browse-row" style="flex: 1;">
           <mat-form-field class="setting-field" appearance="outline" style="flex: 1;">
             <mat-label>{{ setting.displayName }}</mat-label>
-            <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)">
+            <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)" [disabled]="isSettingDisabled(setting)">
               @for (choice of setting.choices; track choice) {
                 <mat-option [value]="choice">{{ choice }}</mat-option>
               }
@@ -55,7 +56,7 @@
         </div>
       } @else if (setting.type === 'uri') {
         <mat-form-field appearance="outline" class="setting-field" [color]="isValidUri(setting.value) ? 'primary' : 'warn'">
-          <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" placeholder="Enter a valid URI" />
+          <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" placeholder="Enter a valid URI" [disabled]="isSettingDisabled(setting)" />
           @if (!isValidUri(setting.value)) {
             <mat-error>Invalid URI</mat-error>
           }
@@ -81,21 +82,31 @@
           <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
             <input matInput 
                    [(ngModel)]="setting.value" 
-                   (ngModelChange)="onValueChange(setting, $event)" />
+                   (ngModelChange)="onValueChange(setting, $event)" 
+                   [disabled]="isSettingDisabled(setting)" />
           </mat-form-field>
-          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder">
+          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder" [disabled]="isSettingDisabled(setting)">
             <mat-icon>more_horiz</mat-icon>
           </button>
         </div>
       } @else if (setting.type === 'filepath') {
         <div class="browse-row" style="flex: 1;">
           <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
-            <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" />
+            <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" [disabled]="isSettingDisabled(setting)" />
           </mat-form-field>
-          <button mat-icon-button (click)="onBrowseForFile(setting)" matTooltip="Browse for file">
+          <button mat-icon-button (click)="onBrowseForFile(setting)" matTooltip="Browse for file" [disabled]="isSettingDisabled(setting)">
             <mat-icon>more_horiz</mat-icon>
           </button>
         </div>
+      }
+      </div>
+      <!-- Display errors for this setting -->
+      @for (error of getErrorsForSetting(setting.name); track error.message) {
+        <div class="setting-error">{{ error.message }}</div>
+      }
+      <!-- Display disabled message if setting is disabled -->
+      @if (setting.disabledMessage) {
+        <div class="setting-disabled-message">{{ setting.disabledMessage }}</div>
       }
     </div>
   }

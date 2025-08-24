@@ -8,7 +8,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MTBSetting } from '../../comms';
+import { MTBSetting, SettingsError } from '../../comms';
 import { BackendService } from '../backend/backend-service';
 
 @Component({
@@ -32,12 +32,18 @@ export class SettingsEditor implements OnInit {
   settings: MTBSetting[] = [];
   themeType: 'dark' | 'light' = 'light';
   manifestStatus: 'loading' | 'loaded' | 'not-available' = 'loading';
+  settingsErrors: SettingsError[] = [] ;
 
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
     this.be.settings.subscribe(settings => {
       this.settings = settings;
+      this.settingsErrors = [] ;
       this.cdr.detectChanges() ;
-      this.be.log(`Settings values (updated): ${JSON.stringify(this.settings)}`);      
+    });
+
+    this.be.settingsErrors.subscribe(errors => {
+      this.settingsErrors.push(...errors)
+      this.cdr.detectChanges();
     });
 
     this.be.manifestStatus.subscribe(status => {
@@ -141,5 +147,13 @@ export class SettingsEditor implements OnInit {
 
   onBrowseForFile(setting: MTBSetting) {
     this.be.browseForFile(setting.name) ;
+  }
+
+  getErrorsForSetting(settingName: string): SettingsError[] {
+    return this.settingsErrors.filter(error => error.setting === settingName);
+  }
+
+  isSettingDisabled(setting: MTBSetting): boolean {
+    return !!setting.disabledMessage;
   }
 }

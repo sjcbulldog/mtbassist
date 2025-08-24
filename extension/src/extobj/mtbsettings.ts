@@ -107,6 +107,7 @@ export class MTBSettings extends EventEmitter {
     public get settings(): MTBSetting[] {
         this.updateEAPChoices() ;
         this.updateToolPathChoices() ;
+        this.checkLCS() ;
         return this.settings_;
     }
 
@@ -132,6 +133,7 @@ export class MTBSettings extends EventEmitter {
             else if (setting.name === 'operating_mode') {
                 if (!this.ext_.lcsMgr || !this.ext_.lcsMgr.isLCSReady && setting.value === 'Local Content Mode') {
                     // We don't have a valid ESP setup - refuse to change the setting and tell the user
+                    this.settings[index].value = 'Online Mode';
                     this.emit('showError', setting.name, 'The local content storeage has not been initialized.  See the LCS tab to initialize LCS content') ;
                 }
                 else {
@@ -336,6 +338,19 @@ export class MTBSettings extends EventEmitter {
         let setting = this.settings_.find(s => s.name === 'toolsversion');
         if (setting) {
             setting.choices = choices;
+        }
+    }
+
+    private checkLCS() : void {
+        let setting = this.settings_.find(s => s.name === 'operating_mode');
+        if (setting) {
+            if (!this.ext_.lcsMgr || !this.ext_.lcsMgr.isLCSReady) {
+                setting.value = 'Online Mode' ;
+                setting.disabledMessage = 'This setting is not available because Local Content Storage has not been initialized.  See the LCS tab for more information.' ;
+            }
+            else {
+                setting.disabledMessage = undefined ;
+            }
         }
     }
 }

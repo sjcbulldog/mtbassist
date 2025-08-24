@@ -110,8 +110,8 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
-      // Get the BSP name being moved
-      const movedBsp = event.previousContainer.data[event.previousIndex];
+      // Get the BSP name being moved from the drag data (this works correctly with filtered lists)
+      const movedBsp = event.item.data;
       
       transferArrayItem(
         event.previousContainer.data,
@@ -138,6 +138,10 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
   applyBspChanges(): void {
     this.backendService.lcsBusy.next(true);
     this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'apply', data: null });
+    
+    // Uncheck show changes and clear filter when applying changes
+    this.showChanges = false;
+    this.leftListFilterText = '';
   }
 
   moveToLocalStorage(): void {
@@ -216,5 +220,13 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
       return this.bspsInList.filter(bsp => this.isInAddQueue(bsp));
     }
     return this.bspsInList;
+  }
+
+  onShowChangesChange(checked: boolean): void {
+    this.showChanges = checked;
+    if (checked) {
+      // Clear the filter text when show changes is enabled
+      this.leftListFilterText = '';
+    }
   }
 }
