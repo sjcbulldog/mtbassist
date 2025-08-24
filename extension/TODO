@@ -1,8 +1,8 @@
 Priorities
 ----------
 - Automatically run the 'make vscode' if the .vscode directory is not present
+- Check not valid tools directory, but custom tools path
 - LLVM installation
-- LCS support
 - Lots of testing
 
 Known Bugs
