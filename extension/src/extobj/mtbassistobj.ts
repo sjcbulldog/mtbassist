@@ -100,6 +100,7 @@ export class MTBAssistObject {
         this.settings_ = new MTBSettings(this) ;
         this.settings_.on('toolsPathChanged', this.onToolsPathChanged.bind(this));
         this.settings_.on('restartWorkspace', this.doRestartExtension.bind(this));
+        this.settings_.on('showError', this.showSettingsError.bind(this));
         this.toolspath_ = this.settings_.toolsPath ;
         this.bindCommandHandlers();
 
@@ -118,6 +119,11 @@ export class MTBAssistObject {
 
     public get lcsMgr() : LCSManager | undefined {
         return this.lcsMgr_;
+    }
+
+    private showSettingsError(name: string, message: string) {
+        this.sendMessageWithArgs('showSettingsError', { name: name, message: message }) ;
+        this.sendMessageWithArgs('settings', this.settings_.settings) ;
     }
 
     private updateStatusBar() : void {
@@ -185,6 +191,7 @@ export class MTBAssistObject {
                 .then(() => {
                     this.oobmode_ = this.setupMgr_.isLauncherAvailable ? 'launcher' : 'none';
                     this.sendMessageWithArgs('mtbInstallStatus', this.oobmode_ );
+                    this.sendMessageWithArgs('settings', this.settings_.settings);
                     resolve();
                     return;
                 });
@@ -256,6 +263,11 @@ export class MTBAssistObject {
                         this.initializeCommands();
                         this.optionallyShowPage()
                             .then(() => {
+                                // The settings depend on the loaded application, specifically the tools version, recreated the settings
+                                if (this.settings_.checkToolsVersion()) {
+                                    this.sendMessageWithArgs('settings', this.settings_.settings);
+                                }
+
                                 if (this.env_ && this.env_.appInfo) {
                                     this.sendMessageWithArgs('sendDefaultProjectDir', path.dirname(this.env_!.appInfo!.appdir)) ;
                                 }
@@ -442,7 +454,6 @@ export class MTBAssistObject {
                 vscode.commands.executeCommand('mtbassist2.mtbMainPage')
                     .then(() => {
                         this.pushTheme() ;
-                        this.sendMessageWithArgs('settings', this.settings_.settings) ;
                         resolve();
                     });
             }
@@ -451,7 +462,6 @@ export class MTBAssistObject {
                     vscode.commands.executeCommand('mtbassist2.mtbMainPage')
                         .then(() => {
                             this.pushTheme() ;
-                            this.sendMessageWithArgs('settings', this.settings_.settings) ;
                             resolve();
                         });
                 }
@@ -586,6 +596,15 @@ export class MTBAssistObject {
         this.cmdhandler_.set('updateDevKitBsp', this.updateDevKitBsp.bind(this));
         this.cmdhandler_.set('updateSetting', this.updateSetting.bind(this));   
         this.cmdhandler_.set('lcscmd', this.lcscmd.bind(this)); 
+        this.cmdhandler_.set('getSettings', this.getSettings.bind(this));
+    }
+
+    private getSettings(request: FrontEndToBackEndRequest): Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            this.sendMessageWithArgs('settings', this.settings_.settings);
+            resolve();
+        });
+        return ret;
     }
 
     private lcscmd(request: FrontEndToBackEndRequest): Promise<void> {    

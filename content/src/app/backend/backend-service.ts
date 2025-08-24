@@ -6,7 +6,6 @@ import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
 import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBInstallType, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier } from '../../comms';
 import { ProjectManager } from './projectmgr';
-import { AppStatusBackend } from './appmgrbe';
 
 declare var acquireVsCodeApi: any | undefined ;
 
@@ -16,7 +15,6 @@ declare var acquireVsCodeApi: any | undefined ;
 export class BackendService {
     private pipe_?: PipeInterface ;
     private projectManager_ : ProjectManager ;
-    private appStatusManager_ : AppStatusBackend;
 
     private handlers_ : Map<string, (cmd: BackEndToFrontEndResponse) => void> = new Map<string, (cmd: BackEndToFrontEndResponse) => void>();
 
@@ -71,8 +69,6 @@ export class BackendService {
         }
 
         this.projectManager_ = new ProjectManager(this);
-        this.appStatusManager_ = new AppStatusBackend(this);
-
         this.setupHandlers();   
     }
 
@@ -83,12 +79,7 @@ export class BackendService {
         this.handlers_.set(cmd, handler);
     }
 
-    public get appStatusMgr() : AppStatusBackend {
-        return new AppStatusBackend(this);
-    }
-
     public log(message: string, type?: string) {
-        console.log(`BackendService: ${message}`);
         if (this.pipe_) {
             this.pipe_.sendRequest({
                 request: 'logMessage',
@@ -208,6 +199,7 @@ export class BackendService {
         this.registerHandler('lcsToDelete', (cmd) => { this.lcsToDelete.next(cmd.data || [])}) ;
         this.registerHandler('sendCodeExamples', (cmd) => { this.codeExample.next(cmd.data || [])}) ;
         this.registerHandler('sendDefaultProjectDir', (cmd) => { this.defaultProjectDir.next(cmd.data || '')}) ;
+        this.registerHandler('showSettingsError', (cmd) => { alert(`Error with setting ${cmd.data.name}: ${cmd.data.message}`)}) ;
     }
     
     public executeBuildAction(action: string, project?: string): void {

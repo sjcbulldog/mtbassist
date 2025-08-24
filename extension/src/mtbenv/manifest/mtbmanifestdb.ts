@@ -61,7 +61,7 @@ export class MTBManifestDB {
         this.eapPath_ = path;
     }
 
-    public get bspNames() : string[] {
+    public get activeBspNames() : string[] {
         return this.activeBSPs.map(b => b.name) ;
     }
 

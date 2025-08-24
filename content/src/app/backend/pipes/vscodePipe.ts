@@ -8,7 +8,6 @@ export class VSCodePipe implements PipeInterface {
     private responseHandler: ((response: BackEndToFrontEndResponse) => void) | null = null;
 
     constructor() {
-        console.log('VSCodePipe initialized');
     }
 
     get displayName(): string {

@@ -414,7 +414,6 @@ export class SetupMgr extends MtbManagerBase {
                     try {
                         let json = JSON.parse(result);
                         if (json) {
-                            console.log('access: ' + json.accessToken) ;
                             resolve(json as AccessTokenResponse);
                         } else {
                             resolve(undefined);

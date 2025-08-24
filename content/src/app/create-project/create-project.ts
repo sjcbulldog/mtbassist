@@ -131,10 +131,6 @@ export class CreateProject implements OnInit, OnDestroy {
         return this.devKits.filter(kit => kit.bsp);
     }
 
-    private findBSPById(id: string): BSPIdentifier | null {
-        return this.allBSPs.find(bsp => bsp.id === id) || null;
-    }
-
     // Called when a dev kit is selected from the UI
     onDevKitSelect(kit: DevKitInfo) {
         this.selectedDevKit = kit;
@@ -191,7 +187,6 @@ export class CreateProject implements OnInit, OnDestroy {
     }
 
     async browseForDirectory() {
-        this.be.log('Opening directory picker');
         this.be.browseForFolder('create-project');
     }
 
@@ -204,14 +199,6 @@ export class CreateProject implements OnInit, OnDestroy {
         this.selectedBSP = null;
         this.examples = [];
         this.exampleSelectionForm.patchValue({ example: '' });
-        // activeBSPs should always be the full set of BSPs
-        this.activeBSPs = this.allBSPs;
-
-        // Optionally, reset selectedBSP if it is not in the filtered list
-        if (this.selectedBSP && !this.activeBSPs.some(bsp => bsp.id === this.selectedBSP?.id)) {
-            this.selectedBSP = null;
-            this.bspSelectionForm.patchValue({ bsp: '' });
-        }
 
         // If a dev kit is selected, try to auto-select its BSP if it matches the category
         if (this.selectedDevKit) {
@@ -256,10 +243,8 @@ export class CreateProject implements OnInit, OnDestroy {
         try {
             this.isLoading = true;
             // Load examples for the selected BSP and category
-            this.examples = this.allexamples.filter(example => example.category === category);
-            this.be.log(`Category: ${category} - Filtered ${this.examples.length} examples for category ${category}`) ;
+            this.examples = this.allexamples.filter(example => example.category === category).sort((a, b) => a.name.localeCompare(b.name));
         } catch (error) {
-            console.error('Failed to load examples:', error);
             this.snackBar.open('Failed to load examples for category', 'Close', { duration: 3000 });
         } finally {
             this.isLoading = false;

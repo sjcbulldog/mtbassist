@@ -33,7 +33,6 @@ export class MTBDevKitMgr extends MtbManagerBase {
     private static theBoardFeatures = "Board Features:" ;        
 
     public kits : MTBDevKit[] = [] ;
-    private changedCallbacks: (() => void)[] = [] ;
     private scanning: boolean = false ;
     private devkitBsp: Array<[string, string]> = [] ;
     private devKitMapping: DevKitName2BSPMapping[] = [] ;
@@ -53,13 +52,13 @@ export class MTBDevKitMgr extends MtbManagerBase {
         let mapentry = this.devKitMapping.find(entry => entry.name === kit.name) ;
         if (mapentry) {
             for(let bsp of mapentry.validBSPs) {
-                if (this.ext.env!.manifestDB.allBspNames.includes(bsp)) {
+                if (this.ext.env!.manifestDB.activeBspNames.includes(bsp)) {
                     ret.push(bsp) ;
                 }
             }
         }
         else {
-            ret = this.ext.env!.manifestDB.allBspNames ;
+            ret = this.ext.env!.manifestDB.activeBspNames ;
         }
         return ret ;
     }
@@ -114,12 +113,6 @@ export class MTBDevKitMgr extends MtbManagerBase {
         }
 
         return ret;
-    }
-
-    public addKitsChangedCallback(cb: () => void) {
-        if (this.changedCallbacks.indexOf(cb) === -1) {
-            this.changedCallbacks.push(cb) ;
-        }
     }
 
     public getKitBySerial(serial: string) : MTBDevKit | undefined {
@@ -476,11 +469,6 @@ export class MTBDevKitMgr extends MtbManagerBase {
                         this.kits.splice(i, 1) ;
                     }
                 }        
-
-                for(let cb of this.changedCallbacks) {
-                    cb() ;
-                }
-
                 resolve() ;
             })() ;
         }) ;

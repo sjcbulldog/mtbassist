@@ -119,22 +119,23 @@ export class MTBSettings extends EventEmitter {
         if (index !== -1) {
             this.settings[index].value = setting.value;            
             if (setting.name === 'toolsversion') {
-                this.putWorkspaceSettings() ;
+                this.writeWorkspaceSettings() ;
                 this.emit('toolsPathChanged', this.computeToolsPath()) ;
             }
             else if (setting.name === 'custompath') {
-                this.putWorkspaceSettings() ;
+                this.writeWorkspaceSettings() ;
                 let p = this.computeToolsPath() ;
                 if (this.customPathOK(p)) {
                     this.emit('toolsPathChanged', p) ;
                 }
             }
             else if (setting.name === 'operating_mode') {
-                if (!this.ext_.lcsMgr || !this.ext_.lcsMgr.isLCSReady) {
-
+                if (!this.ext_.lcsMgr || !this.ext_.lcsMgr.isLCSReady && setting.value === 'Local Content Mode') {
+                    // We don't have a valid ESP setup - refuse to change the setting and tell the user
+                    this.emit('showError', setting.name, 'The local content storeage has not been initialized.  See the LCS tab to initialize LCS content') ;
                 }
                 else {
-                    this.putWorkspaceSettings() ;
+                    this.writeWorkspaceSettings() ;
                     this.emit('restartWorkspace', this.computeToolsPath()) ;
                 }
             }
@@ -218,6 +219,21 @@ export class MTBSettings extends EventEmitter {
         return ret ;
     }
 
+    public checkToolsVersion() : boolean {
+        let ret = false ;
+        let setting = this.settings_.find(s => s.name === 'toolsversion');
+        if (setting && !setting.value) {
+            // There is no setting for tools version, we want to set it to the default
+            // when we can.
+            if (this.ext_.env?.defaultToolsDir) {
+                setting.value = this.toolDirToVersion(this.ext_.env?.defaultToolsDir) ;
+                this.writeWorkspaceSettings() ;
+                ret = true ;
+            }
+        }
+        return ret ;
+    }
+
     private readWorkspaceSettings() {
         for(let setting of this.settings_) {
             if (setting.owner === 'workspace') {
@@ -226,7 +242,7 @@ export class MTBSettings extends EventEmitter {
         }
     }
 
-    private putWorkspaceSettings() : void {
+    private writeWorkspaceSettings() : void {
         for(let setting of this.settings_) {
             if (setting.owner === 'workspace') {
                 this.ext_.context.workspaceState.update(setting.name, setting.value);
@@ -266,8 +282,6 @@ export class MTBSettings extends EventEmitter {
             mtb: data
         };
         fs.writeFileSync(settings, JSON.stringify(contents, null, 4));
-        
-        this.putWorkspaceSettings() ;
     }
 
     private updateEAPChoices() : void {
@@ -291,6 +305,11 @@ export class MTBSettings extends EventEmitter {
 
     private toolDirToVersion(tdir: string) : string {
         let hdir = MTBUtils.getCommonInstallLocation() ;
+        if (!hdir) {
+            return tdir ;
+        }
+        
+        hdir = hdir.replace(/\\/g,'/');
         let ret = tdir ;
         if (hdir && tdir.startsWith(hdir)) {
             if (tdir.includes('3.2')) {
@@ -310,7 +329,8 @@ export class MTBSettings extends EventEmitter {
         let tools = ModusToolboxEnvironment.findToolsDirectories();   
         let choices: string[] = [];
         for (let tool of tools) {
-            choices.push(this.toolDirToVersion(tool));
+            let fixtool = tool.replace(/\\/g,'/');
+            choices.push(this.toolDirToVersion(fixtool));
         }
         choices.push('Custom') ;
         let setting = this.settings_.find(s => s.name === 'toolsversion');

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -28,14 +28,16 @@ import { BackendService } from '../backend/backend-service';
   templateUrl: './settings-editor.html',
   styleUrl: './settings-editor.scss'
 })
-export class SettingsEditor {
+export class SettingsEditor implements OnInit {
   settings: MTBSetting[] = [];
   themeType: 'dark' | 'light' = 'light';
   manifestStatus: 'loading' | 'loaded' | 'not-available' = 'loading';
 
-  constructor(private be: BackendService) {
+  constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
     this.be.settings.subscribe(settings => {
       this.settings = settings;
+      this.cdr.detectChanges() ;
+      this.be.log(`Settings values (updated): ${JSON.stringify(this.settings)}`);      
     });
 
     this.be.manifestStatus.subscribe(status => {
@@ -77,6 +79,10 @@ export class SettingsEditor {
         }
       }
     });
+  }
+
+  ngOnInit() {
+    this.be.sendRequestWithArgs('getSettings', null) ;
   }
 
   isValidUri(value: any): boolean {

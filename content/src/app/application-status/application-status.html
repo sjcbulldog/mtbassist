@@ -6,14 +6,6 @@
     </div>
   }
 
-  @if (hasError && !isLoading) {
-    <div class="error-state">
-      <div class="error-icon">❌</div>
-      <p>{{ errorMessage }}</p>
-      <button (click)="refresh()" class="retry-button">Retry</button>
-    </div>
-  }
-
   @if (!isLoading && !hasError && applicationStatus) {
     <div class="content">
     <mat-tab-group class="status-tabs">

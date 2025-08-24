@@ -119,12 +119,6 @@ export class ApplicationStatus implements OnInit {
     }
 
     ngOnInit(): void {
-        // Request app status refresh
-        try {
-            this.be.appStatusMgr?.refreshAppStatus();
-        } catch (error) {
-            console.error('Error refreshing app status:', error);
-        }
     }
 
     formatBytes(bytes: number): string {
@@ -309,22 +303,6 @@ export class ApplicationStatus implements OnInit {
 
     openDocument(doc: Documentation): void {
         this.be.sendRequestWithArgs('open', doc) ;
-    }
-
-    refresh(): void {
-        this.isLoading = true;
-        this.hasError = false;
-        this.errorMessage = '';
-        this.currentDate = new Date();
-        
-        try {
-            this.be.appStatusMgr?.refreshAppStatus();
-        } catch (error) {
-            console.error('Error refreshing app status:', error);
-            this.hasError = true;
-            this.errorMessage = 'Failed to refresh application status';
-            this.isLoading = false;
-        }
     }
 
     // Build Actions

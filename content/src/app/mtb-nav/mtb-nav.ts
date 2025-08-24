@@ -49,7 +49,6 @@ export class MtbNav {
 
   onTabChange(index: number) {
     this.selectedIndex = index;
-    console.log(`Tab changed to index: ${index}`);
   }
 }
 

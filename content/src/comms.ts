@@ -34,7 +34,8 @@ export type FrontEndToBackEndType =
     'setIntellisenseProject' |
     'updateDevKitBsp' |
     'updateBSPStorage' |
-    'lcscmd'
+    'lcscmd'|
+    'getSettings'
     ;
 
 export type BackEndToFrontEndType =
@@ -67,7 +68,8 @@ export type BackEndToFrontEndType =
     'browseForFolderResult' |
     'browseForFileResult' |
     'appStatusResult' | 
-    'sendDefaultProjectDir'
+    'sendDefaultProjectDir' |
+    'showSettingsError'
     ;
 
 export type MTBInstallType = 
