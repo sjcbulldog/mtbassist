@@ -183,9 +183,9 @@
                   <mat-label>Board Support Package</mat-label>
                   <mat-select formControlName="bsp" 
                              (selectionChange)="onBSPChange()"
-                             [disabled]="isLoading || activeBSPs.length === 0"
+                             [disabled]="isLoading || getBSPsForSelectedCategory().length === 0"
                              panelClass="bsp-dropdown-panel">
-                    @for (bsp of activeBSPs; track bsp.id) {
+                    @for (bsp of getBSPsForSelectedCategory(); track bsp.id) {
                       <mat-option [value]="bsp.id"
                                  (mouseenter)="onBSPHover(bsp)"
                                  (mouseleave)="onBSPLeave()">

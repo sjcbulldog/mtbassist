@@ -1,4 +1,3 @@
-
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -205,24 +204,23 @@ export class CreateProject implements OnInit, OnDestroy {
         this.selectedBSP = null;
         this.examples = [];
         this.exampleSelectionForm.patchValue({ example: '' });
-        this.cdr.detectChanges();
+        // activeBSPs should always be the full set of BSPs
+        this.activeBSPs = this.allBSPs;
 
-        try {
-            this.isLoading = true;
+        // Optionally, reset selectedBSP if it is not in the filtered list
+        if (this.selectedBSP && !this.activeBSPs.some(bsp => bsp.id === this.selectedBSP?.id)) {
+            this.selectedBSP = null;
+            this.bspSelectionForm.patchValue({ bsp: '' });
+        }
 
-            if (this.selectedDevKit) {
-                let bsp = this.findBSPById(this.selectedDevKit.bsp) ;
-                if (bsp) {
-                    this.selectedBSP = bsp;
-                    this.bspSelectionForm.patchValue({ category: this.selectedCategory, bsp: bsp.id });
-                    this.onBSPChange() ;
-                }
+        // If a dev kit is selected, try to auto-select its BSP if it matches the category
+        if (this.selectedDevKit) {
+            let bsp = this.activeBSPs.find(bsp => bsp.name === this.selectedDevKit?.bsp && bsp.category === category);
+            if (bsp) {
+                this.selectedBSP = bsp;
+                this.bspSelectionForm.patchValue({ category: this.selectedCategory, bsp: bsp.id });
+                this.onBSPChange();
             }
-        } catch (error) {
-            console.error('Failed to load BSPs:', error);
-            this.snackBar.open('Failed to load BSPs for category', 'Close', { duration: 3000 });
-        } finally {
-            this.isLoading = false;
         }
     }
 
@@ -396,13 +394,18 @@ export class CreateProject implements OnInit, OnDestroy {
     }
 
     getBSPCategories() : string[] {
-        let catset = new Set(this.activeBSPs.map(bsp => bsp.category))
-        return [...catset] ;
+        const catset = new Set(this.activeBSPs.map(bsp => bsp.category));
+        return [...catset];
     }
 
     getExampleCategories() : string[] {
         let exset = new Set(this.allexamples.map(ex => ex.category))
         return [...exset] ;
+    }
+
+    public getBSPsForSelectedCategory(): BSPIdentifier[] {
+        if (!this.selectedCategory) return [];
+        return this.activeBSPs.filter(bsp => bsp.category === this.selectedCategory);
     }
 }
 
