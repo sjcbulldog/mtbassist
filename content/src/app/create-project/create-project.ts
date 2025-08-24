@@ -171,8 +171,8 @@ export class CreateProject implements OnInit, OnDestroy {
 
     private initializeForms() {
         this.projectInfoForm = this.formBuilder.group({
-            projectName: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9_-]+$/)]],
-            projectLocation: ['', Validators.required]
+            projectName: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9_-]+$/), this.noSpacesValidator]],
+            projectLocation: ['', [Validators.required, this.noSpacesValidator]]
         });
 
         this.bspSelectionForm = this.formBuilder.group({
@@ -184,6 +184,14 @@ export class CreateProject implements OnInit, OnDestroy {
             exampleCategory: ['', Validators.required],
             example: ['', Validators.required]
         });
+    }
+
+    // Custom validator to check for spaces
+    private noSpacesValidator(control: any) {
+        if (control.value && control.value.includes(' ')) {
+            return { hasSpaces: true };
+        }
+        return null;
     }
 
     async browseForDirectory() {

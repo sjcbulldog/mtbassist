@@ -50,11 +50,17 @@
                   Project name is required
                 </mat-error>
               }
+              @if (projectInfoForm.get('projectName')?.hasError('hasSpaces')) {
+                <mat-error>
+                  Spaces are not allowed in project name
+                </mat-error>
+              }              
               @if (projectInfoForm.get('projectName')?.hasError('pattern')) {
                 <mat-error>
                   Invalid characters in project name
                 </mat-error>
               }
+
             </mat-form-field>
           </div>
           
@@ -70,6 +76,11 @@
                 @if (projectInfoForm.get('projectLocation')?.hasError('required')) {
                   <mat-error>
                     Project location is required
+                  </mat-error>
+                }
+                @if (projectInfoForm.get('projectLocation')?.hasError('hasSpaces')) {
+                  <mat-error>
+                    Spaces are not allowed in project location
                   </mat-error>
                 }
               </mat-form-field>

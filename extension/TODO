@@ -1,18 +1,27 @@
 Priorities
 ----------
 - Automatically run the 'make vscode' if the .vscode directory is not present
-- Check not valid tools directory, but custom tools path
+- If a user name has spaces, get alternate location
 - LLVM installation
 - Lots of testing
+  o Windows
+  o Linux
+  o Mac OS
 
 Known Bugs
 ----------
-- Fix the notification on every character for a custom tools path in the settings
 - Selecting code examples based on capabilities has bugs, look at the Control C3 BSPs, look at Edge and Hello World (not PSOC Edge Hello World)
 - Catch switch to Local Content Mode in settings when LCS is not initialized
 
 TODO
 -------------------------------------------------------------------------------------------
+o Setup
+  - If user name has spaces, get alternate location
+  - Prompt for three choices
+    o Tools already installed - ask for where they are
+    o Common directory to install tools and store LCS, settings, etc.
+    o Seperate directories for tools and LCS, settings, etc.
+
 o Getting Started Component                                                                       done
   - add reference to recent project page                                                              done
 
