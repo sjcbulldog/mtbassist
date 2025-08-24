@@ -147,6 +147,9 @@
           <ng-template mat-tab-label>
             <span>📦</span>
             {{ project.name }}
+            @if (hasMissingAssets(project)) {
+              <mat-icon class="missing-assets-tab-icon" matTooltip="This project has missing assets">warning</mat-icon>
+            }
           </ng-template>
         
         <div class="tab-content">

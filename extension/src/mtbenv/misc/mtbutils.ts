@@ -131,7 +131,7 @@ export class MTBUtils {
     }
 
     private static createEnv(toolspath: string | undefined) : NodeJS.ProcessEnv {
-        let env: NodeJS.ProcessEnv = { } ;
+        let env: NodeJS.ProcessEnv = { ...process.env } ;
 
         if (process.platform === 'win32' && toolspath) {
             toolspath = toolspath.replace(/\\/g,'/');
@@ -205,10 +205,10 @@ export class MTBUtils {
                 bashpath = bashpath.replace(/\\/g,'/') ;
             }
 
-            let pgm = 'PATH=/bin:/usr/bin ; ' + makepath + ' ' + makeargs.join(' ') ;
-
+            let pgm = 'PATH=/bin:/usr/bin ; make ' + makeargs.join(' ') ;
             let args = ['--norc', '--noprofile', '-c', pgm] ;
 
+            cwd = cwd.replace(/\\/g,'/') ;
             MTBUtils.runProg(logger, toolsdir, bashpath, cwd, args)
             .then((result) => {
                 resolve(result) ;

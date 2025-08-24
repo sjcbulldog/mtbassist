@@ -101,6 +101,7 @@ export class MTBAssistObject {
         this.settings_.on('toolsPathChanged', this.onToolsPathChanged.bind(this));
         this.settings_.on('restartWorkspace', this.doRestartExtension.bind(this));
         this.settings_.on('showError', this.showSettingsError.bind(this));
+        this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings) });  
         this.toolspath_ = this.settings_.toolsPath ;
         this.bindCommandHandlers();
 
@@ -707,6 +708,7 @@ export class MTBAssistObject {
             this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
             this.initialize()
                 .then(() => {
+                    this.sendMessageWithArgs('settings', this.settings_.settings) ;
                     resolve();
                 })
                 .catch((error: Error) => {
@@ -1275,7 +1277,8 @@ export class MTBAssistObject {
                         this.tasks_?.clear() ;
                         this.tasks_?.addAll() ;
                         this.tasks_?.writeTasks() ;
-                                this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
+                        this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
+                        this.sendMessageWithArgs('settings', this.settings_.settings) ;
                         resolve() ;
                     })
                     .catch((err: Error) => {

@@ -107,7 +107,7 @@ export class MTBSettings extends EventEmitter {
     public get settings(): MTBSetting[] {
         this.updateEAPChoices() ;
         this.updateToolPathChoices() ;
-        this.checkLCS() ;
+        this.checkLCSandEAP() ;
         return this.settings_;
     }
 
@@ -140,10 +140,12 @@ export class MTBSettings extends EventEmitter {
                     this.writeWorkspaceSettings() ;
                     this.emit('restartWorkspace', this.computeToolsPath()) ;
                 }
+                this.emit('refresh') ;                
             }
             else {
                 this.writeSettingsFile() ;
                 if (setting.name === 'enabled_eap') {
+                    this.emit('refresh') ;                    
                     this.emit('toolsPathChanged', this.computeToolsPath()) ;
                 }
             }
@@ -295,12 +297,11 @@ export class MTBSettings extends EventEmitter {
             }
         }
 
-        for(let setting of this.settings_) {
-            if (setting.name === 'enabled_eap') {
-                setting.choices = eapChoices;
-                if (eapChoices.length > 0 && !eapChoices.includes(setting.value as string)) {
-                    setting.value = eapChoices[0]; // Default to first EAP if current is not valid
-                }
+        let setting = this.settings_.find(s => s.name === 'enabled_eap');
+        if (setting) {
+            setting.choices = eapChoices;
+            if (eapChoices.length > 0 && !eapChoices.includes(setting.value as string)) {
+                setting.value = eapChoices[0]; // Default to first EAP if current is not valid
             }
         }
     }
@@ -341,15 +342,26 @@ export class MTBSettings extends EventEmitter {
         }
     }
 
-    private checkLCS() : void {
-        let setting = this.settings_.find(s => s.name === 'operating_mode');
-        if (setting) {
-            if (!this.ext_.lcsMgr || !this.ext_.lcsMgr.isLCSReady) {
-                setting.value = 'Online Mode' ;
-                setting.disabledMessage = 'This setting is not available because Local Content Storage has not been initialized.  See the LCS tab for more information.' ;
+    private checkLCSandEAP() : void {
+        let opmode = this.settings_.find(s => s.name === 'operating_mode');
+        let eap = this.settings_.find(s => s.name === 'enabled_eap');
+
+        if (opmode && eap) {
+            if (opmode.value === 'Local Content Mode' && eap.value !== 'None') {
+                // This is an illegal state - favor the EAP
+                opmode.value = 'Online Mode' ;
+            }
+
+            if (opmode.value === 'Local Content Mode') {
+                eap.disabledMessage = 'This setting is not available in Local Content Mode.';
+                opmode.disabledMessage = undefined ;
+            } else if (eap.value !== 'None') {
+                opmode.disabledMessage = 'This setting is not available when an Early Access Pack is seleced.';
+                eap.disabledMessage = undefined;
             }
             else {
-                setting.disabledMessage = undefined ;
+                opmode.disabledMessage = undefined;
+                eap.disabledMessage = undefined;
             }
         }
     }

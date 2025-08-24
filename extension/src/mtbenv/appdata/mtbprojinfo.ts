@@ -254,8 +254,15 @@ export class MTBProjectInfo {
 
     public initialize(logger: winston.Logger) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            if (!fs.existsSync(this.depsdir())) {
-                fs.mkdirSync(this.depsdir()) ;
+            let ddir = this.depsdir() ;            
+            if (!fs.existsSync(ddir)) {
+                try {
+                    fs.mkdirSync(ddir) ;
+                }
+                catch(err) {
+                    logger.error(`loadapp: unable to create the dependencies directory ${ddir}`) ;
+                    reject(err) ;
+                }
                 if (!fs.existsSync(this.depsdir())) {
                     let msg = `loadapp: unable to create the dependencies directory ${this.depsdir()}` ;
                     logger.error(msg) ;
