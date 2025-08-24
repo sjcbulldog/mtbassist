@@ -1,4 +1,11 @@
 <div class="create-project-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
+  <!-- Manifest Status Overlay -->
+  <div *ngIf="!manifestStatus" class="manifest-overlay">
+    <div class="manifest-message">
+      <mat-spinner diameter="48"></mat-spinner>
+      <span class="manifest-wait-text">Waiting on manifest data...</span>
+    </div>
+  </div>
   <!-- Header -->
   <div class="header">
     <h1>
@@ -21,14 +28,15 @@
         <h2>Project Details</h2>
         <p class="step-description">Specify the project name and location</p>
         
-        <form [formGroup]="projectInfoForm" class="project-form">
+  <form [formGroup]="projectInfoForm" class="project-form">
           <div class="form-row">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Project Name</mat-label>
-              <input matInput 
-                     formControlName="projectName" 
-                     placeholder="my-modustoolbox-app"
-                     maxlength="50">
+    <input matInput 
+      formControlName="projectName" 
+      placeholder="my-modustoolbox-app"
+      maxlength="50"
+      [disabled]="!manifestStatus">
               <mat-hint>Use only letters, numbers, hyphens, and underscores</mat-hint>
               @if (projectInfoForm.get('projectName')?.hasError('required')) {
                 <mat-error>
@@ -47,9 +55,10 @@
             <div class="location-input-container">
               <mat-form-field appearance="outline" class="location-field">
                 <mat-label>Project Location</mat-label>
-                <input matInput 
-                       formControlName="projectLocation" 
-                       placeholder="C:\\workspace\\my-projects">
+      <input matInput 
+        formControlName="projectLocation" 
+        placeholder="C:\\workspace\\my-projects"
+        [disabled]="!manifestStatus">
                 <mat-hint>Choose where to create your project</mat-hint>
                 @if (projectInfoForm.get('projectLocation')?.hasError('required')) {
                   <mat-error>
@@ -62,7 +71,7 @@
                       color="accent"
                       class="browse-button"
                       (click)="browseForDirectory()"
-                      [disabled]="isLoading"
+                      [disabled]="isLoading || !manifestStatus"
                       matTooltip="Browse for directory">
                 <mat-icon>folder_open</mat-icon>
                 Browse
@@ -105,7 +114,7 @@
         <div class="devkit-bsp-section">
           <div class="devkit-list-header">
             <span class="devkit-list-title"><mat-icon>usb</mat-icon> Connected Kits ({{ filteredDevKits.length }})</span>
-            <button mat-icon-button (click)="be.sendRequestWithArgs('refreshDevKits', null)" [disabled]="isLoading" matTooltip="Refresh connected kits">
+            <button mat-icon-button (click)="refreshKits()" [disabled]="isLoading" matTooltip="Refresh connected kits">
               <mat-icon>refresh</mat-icon>
             </button>
           </div>

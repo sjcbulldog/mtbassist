@@ -256,6 +256,9 @@ export class MTBAssistObject {
                         this.initializeCommands();
                         this.optionallyShowPage()
                             .then(() => {
+                                if (this.env_ && this.env_.appInfo) {
+                                    this.sendMessageWithArgs('sendDefaultProjectDir', path.dirname(this.env_!.appInfo!.appdir)) ;
+                                }
                                 this.oobmode_ = 'mtb';
                                 this.sendMessageWithArgs('mtbInstallStatus', this.oobmode_ );
                                 this.postInitializeManagers()
@@ -308,7 +311,7 @@ export class MTBAssistObject {
                                                                     this.initializing_ = false ;
                                                                     this.pushManifestStatus() ;
                                                                     this.pushDevKitStatus() ;
-                                                                    this.sendMessageWithArgs('sendAllBSPs', this.getAllBspInfo);
+                                                                    this.sendMessageWithArgs('sendAllBSPs', this.getAllBspInfo());
                                                                     this.sendMessageWithArgs('sendActiveBSPs', this.getActiveBspInfo()) ;
                                                                     this.pushBSPsInLCS() ;
                                                                     this.updateStatusBar() ;
@@ -1463,7 +1466,7 @@ export class MTBAssistObject {
             }, null, this.context_.subscriptions);
 
             this.panel_.webview.onDidReceiveMessage((message) => {
-                this.logger_.silly(`Received message from webview: ${JSON.stringify(message)}`);
+                this.logger_.debug(`server: Received message: ${JSON.stringify(message)}`);
                 let handler = this.cmdhandler_.get(message.request);
                 if (handler) {
                     handler(message)
@@ -1716,9 +1719,9 @@ export class MTBAssistObject {
     private getCodeExamples(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             if (this.env_) {
-                this.env_.manifestDB.getCodeExamplesForBSP(request.data.bspId)
+                this.env_.manifestDB.getCodeExamplesForBSP(request.data.id)
                     .then((examples) => {
-                        this.sendMessageWithArgs('sendCodeExamples', examples) ;
+                        this.sendMessageWithArgs('sendCodeExamples', this.convertCodeExamples(examples)) ;
                         resolve() ;
                     })
                     .catch((error) => {

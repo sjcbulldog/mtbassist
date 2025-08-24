@@ -44,6 +44,7 @@ export class BackendService {
     settings: Subject<MTBSetting[]> = new Subject<MTBSetting[]>();
     recentlyOpened: Subject<RecentEntry[]> = new Subject<RecentEntry[]>();
     devKitStatus: Subject<DevKitInfo[]> = new Subject<DevKitInfo[]>();
+    defaultProjectDir: Subject<string> = new Subject<string>() ;
 
     // Manfiest related
     manifestStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
@@ -196,6 +197,7 @@ export class BackendService {
         this.registerHandler('lcsToAdd', (cmd) => { this.lcsToAdd.next(cmd.data || [])});
         this.registerHandler('lcsToDelete', (cmd) => { this.lcsToDelete.next(cmd.data || [])}) ;
         this.registerHandler('sendCodeExamples', (cmd) => { this.codeExample.next(cmd.data || [])}) ;
+        this.registerHandler('sendDefaultProjectDir', (cmd) => { this.defaultProjectDir.next(cmd.data || '')}) ;
     }
     
     public executeBuildAction(action: string, project?: string): void {

@@ -1,5 +1,5 @@
 
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
@@ -49,6 +49,7 @@ export class CreateProject implements OnInit, OnDestroy {
     themeType: 'dark' | 'light' | 'high-contrast' = 'light'; // Default to dark theme
     projectCreated = false;
     projectPath = '';
+    defaultProjectPath = '';
     progressValue = 0;
     progressMessage = 'Initializing project...';
     progressInterval?: number;
@@ -62,21 +63,33 @@ export class CreateProject implements OnInit, OnDestroy {
 
     activeBSPs: BSPIdentifier[] = [];
     examples: CodeExampleIdentifier[] = [];
+    allexamples: CodeExampleIdentifier[] = [];
     allBSPs: BSPIdentifier[] = [];
 
     // Dev kit integration
     devKits: DevKitInfo[] = [];
     selectedDevKit: DevKitInfo | null = null;
+    manifestStatus: boolean = false ;
 
     constructor(
         private formBuilder: FormBuilder,
-        public be: BackendService,
+        private be: BackendService,
+        private cdr: ChangeDetectorRef,
         private snackBar: MatSnackBar) {
+            this.be.manifestStatus.subscribe(status => {
+                this.manifestStatus = status ;
+            }) ;
+
             this.be.browserFolder.subscribe(folder => {
                 if (folder && folder.tag === 'create-project') {
                     this.projectInfoForm.patchValue({ projectLocation: folder.path });
                 }
             });
+
+            this.be.defaultProjectDir.subscribe(path => {
+                this.defaultProjectPath = path ;
+                this.projectInfoForm.patchValue({ projectLocation: this.defaultProjectPath });  
+            }) ;
 
             this.be.theme.subscribe(theme => {
                 if (theme === 'dark' || theme === 'light' || theme === 'high-contrast') {
@@ -95,8 +108,12 @@ export class CreateProject implements OnInit, OnDestroy {
                 this.allBSPs = bsps;
             }); 
 
+            this.be.activeBSPs.subscribe(bsps => {
+                this.activeBSPs = bsps ;
+            })
+
             this.be.codeExample.subscribe(examples => {
-                this.examples = examples ;
+                this.allexamples = examples ;
             });
         }
 
@@ -104,6 +121,10 @@ export class CreateProject implements OnInit, OnDestroy {
         this.themeType = 'dark';
         this.initializeForms();
         this.be.sendRequestWithArgs('getBSPs', null) ;
+    }
+
+    public refreshKits() {
+        this.be.sendRequestWithArgs('refreshDevKits', null) ;
     }
     
     // Only show dev kits with a non-empty, non-'unknown' name
@@ -184,15 +205,14 @@ export class CreateProject implements OnInit, OnDestroy {
         this.selectedBSP = null;
         this.examples = [];
         this.exampleSelectionForm.patchValue({ example: '' });
+        this.cdr.detectChanges();
 
         try {
             this.isLoading = true;
-            this.activeBSPs = this.allBSPs.filter(bsp => bsp.category === category);
 
             if (this.selectedDevKit) {
                 let bsp = this.findBSPById(this.selectedDevKit.bsp) ;
                 if (bsp) {
-                    this.be.log(`Selected dev kit: ${this.selectedDevKit}`);
                     this.selectedBSP = bsp;
                     this.bspSelectionForm.patchValue({ category: this.selectedCategory, bsp: bsp.id });
                     this.onBSPChange() ;
@@ -238,7 +258,8 @@ export class CreateProject implements OnInit, OnDestroy {
         try {
             this.isLoading = true;
             // Load examples for the selected BSP and category
-            this.examples = this.examples.filter(example => example.category === category);
+            this.examples = this.allexamples.filter(example => example.category === category);
+            this.be.log(`Category: ${category} - Filtered ${this.examples.length} examples for category ${category}`) ;
         } catch (error) {
             console.error('Failed to load examples:', error);
             this.snackBar.open('Failed to load examples for category', 'Close', { duration: 3000 });
@@ -375,12 +396,12 @@ export class CreateProject implements OnInit, OnDestroy {
     }
 
     getBSPCategories() : string[] {
-        let catset = new Set(this.allBSPs.map(bsp => bsp.category))
+        let catset = new Set(this.activeBSPs.map(bsp => bsp.category))
         return [...catset] ;
     }
 
     getExampleCategories() : string[] {
-        let exset = new Set(this.examples.map(ex => ex.category))
+        let exset = new Set(this.allexamples.map(ex => ex.category))
         return [...exset] ;
     }
 }

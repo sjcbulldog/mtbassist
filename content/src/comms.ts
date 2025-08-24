@@ -66,7 +66,9 @@ export type BackEndToFrontEndType =
     'createProjectResult' |
     'browseForFolderResult' |
     'browseForFileResult' |
-    'appStatusResult' ;
+    'appStatusResult' | 
+    'sendDefaultProjectDir'
+    ;
 
 export type MTBInstallType = 
     'none' |
