@@ -8,7 +8,7 @@
       @if (setting.type === 'string' && setting.name === 'custompath') {
         <mat-form-field appearance="outline" class="setting-field">
           <input matInput [ngModel]="getCustomPathDisplayValue()" (ngModelChange)="onCustomPathDisplayValueChange($event)" [disabled]="isCustomPathDisabled()" />
-          @if (!manifestStatus) {
+          @if (manifestStatus === 'loading') {
             <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
           }               
         </mat-form-field>
@@ -26,12 +26,12 @@
         <div class="browse-row" style="flex: 1;">
           <mat-form-field class="setting-field" appearance="outline" style="flex: 1;">
             <mat-label>{{ setting.displayName }}</mat-label>
-            <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)" [disabled]="!manifestStatus">
+            <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)" [disabled]="manifestStatus === 'loading'">
               @for (choice of setting.choices; track choice) {
                 <mat-option [value]="choice">{{ choice }}</mat-option>
               }
             </mat-select>
-          @if (!manifestStatus) {
+          @if (manifestStatus === 'loading') {
             <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
           }            
           </mat-form-field>
@@ -72,7 +72,7 @@
             <mat-icon>more_horiz</mat-icon>
           </button>
         </div>
-        @if (!manifestStatus) {
+        @if (manifestStatus === 'loading') {
           <br>
           <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
         }

@@ -1356,7 +1356,13 @@ export class MTBAssistObject {
     }
 
     private pushManifestStatus() {
-        this.sendMessageWithArgs('manifestStatus', !this.env_!.isLoading);
+        let status: 'loading' | 'loaded' | 'not-available' = 'loading';
+        if (this.env_ && this.env_.manifestDB && this.env_.manifestDB.errorLoading) {
+            status = 'not-available';
+        } else if (this.env_ && !this.env_.isLoading && this.env_.has(MTBLoadFlags.manifestData)) {
+            status = 'loaded';
+        }
+        this.sendMessageWithArgs('manifestStatus', status);
     }
 
     private updateFirmware(request: FrontEndToBackEndRequest): Promise<void> {

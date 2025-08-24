@@ -1,9 +1,10 @@
 <div class="create-project-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   <!-- Manifest Status Overlay -->
-  <div *ngIf="!manifestStatus" class="manifest-overlay">
+  <div *ngIf="manifestStatus === 'loading' || manifestStatus === 'not-available'" class="manifest-overlay">
     <div class="manifest-message">
-      <mat-spinner diameter="48"></mat-spinner>
-      <span class="manifest-wait-text">Waiting on manifest data...</span>
+      <mat-spinner diameter="48" *ngIf="manifestStatus === 'loading'"></mat-spinner>
+      <span class="manifest-wait-text" *ngIf="manifestStatus === 'loading'">Waiting on manifest data...</span>
+      <span class="manifest-wait-text" *ngIf="manifestStatus === 'not-available'">No manifest data available<br>Check your internet connection or Local Content Storage configuration</span>
     </div>
   </div>
   <!-- Header -->
@@ -36,7 +37,7 @@
       formControlName="projectName" 
       placeholder="my-modustoolbox-app"
       maxlength="50"
-      [disabled]="!manifestStatus">
+  [disabled]="manifestStatus !== 'loaded'">
               <mat-hint>Use only letters, numbers, hyphens, and underscores</mat-hint>
               @if (projectInfoForm.get('projectName')?.hasError('required')) {
                 <mat-error>
@@ -58,7 +59,7 @@
       <input matInput 
         formControlName="projectLocation" 
         placeholder="C:\\workspace\\my-projects"
-        [disabled]="!manifestStatus">
+  [disabled]="manifestStatus !== 'loaded'">
                 <mat-hint>Choose where to create your project</mat-hint>
                 @if (projectInfoForm.get('projectLocation')?.hasError('required')) {
                   <mat-error>
@@ -71,7 +72,7 @@
                       color="accent"
                       class="browse-button"
                       (click)="browseForDirectory()"
-                      [disabled]="isLoading || !manifestStatus"
+                      [disabled]="isLoading || manifestStatus !== 'loaded'"
                       matTooltip="Browse for directory">
                 <mat-icon>folder_open</mat-icon>
                 Browse

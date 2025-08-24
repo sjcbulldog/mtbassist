@@ -49,6 +49,10 @@ export class MTBManifestDB {
         this.hadError = false;
     }
 
+    public get errorLoading() : boolean {
+        return this.hadError ;
+    }
+
     public get eapPath() : string | undefined {
         return this.eapPath_ ;
     }

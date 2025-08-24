@@ -68,7 +68,7 @@ export class CreateProject implements OnInit, OnDestroy {
     // Dev kit integration
     devKits: DevKitInfo[] = [];
     selectedDevKit: DevKitInfo | null = null;
-    manifestStatus: boolean = false ;
+    manifestStatus: 'loading' | 'loaded' | 'not-available' = 'loading';
 
     constructor(
         private formBuilder: FormBuilder,
@@ -76,8 +76,8 @@ export class CreateProject implements OnInit, OnDestroy {
         private cdr: ChangeDetectorRef,
         private snackBar: MatSnackBar) {
             this.be.manifestStatus.subscribe(status => {
-                this.manifestStatus = status ;
-            }) ;
+                this.manifestStatus = status as 'loading' | 'loaded' | 'not-available';
+            });
 
             this.be.browserFolder.subscribe(folder => {
                 if (folder && folder.tag === 'create-project') {

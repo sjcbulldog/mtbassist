@@ -47,7 +47,7 @@ export class BackendService {
     defaultProjectDir: Subject<string> = new Subject<string>() ;
 
     // Manfiest related
-    manifestStatus: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    manifestStatus: BehaviorSubject<'loading' | 'loaded' | 'not-available'> = new BehaviorSubject<'loading' | 'loaded' | 'not-available'>('loading');
     allBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();
     activeBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>() ;
     codeExample: BehaviorSubject<CodeExampleIdentifier[]> = new BehaviorSubject<CodeExampleIdentifier[]>([]) ;
@@ -190,7 +190,17 @@ export class BackendService {
         this.registerHandler('setIntellisenseProject', (cmd) => { this.intellisenseProject.next(cmd.data)}) ;
         this.registerHandler('setTheme', (cmd) => { this.theme.next(cmd.data || 'dark')}) ;
         this.registerHandler('settings', (cmd) => { this.settings.next(cmd.data)}) ;
-        this.registerHandler('manifestStatus', (cmd) => { this.manifestStatus.next(cmd.data || false)}) ;
+        this.registerHandler('manifestStatus', (cmd) => {
+            if (cmd.data === true) {
+                this.manifestStatus.next('loaded');
+            } else if (cmd.data === false) {
+                this.manifestStatus.next('loading');
+            } else if (typeof cmd.data === 'string' && (cmd.data === 'loading' || cmd.data === 'loaded' || cmd.data === 'not-available')) {
+                this.manifestStatus.next(cmd.data);
+            } else {
+                this.manifestStatus.next('not-available');
+            }
+        });
         this.registerHandler('lcsBspsIn', this.processLcsBSPsIn.bind(this)) ;
         this.registerHandler('lcsNeedsUpdate', (cmd) => { this.lcsBusy.next(false) ; this.lcsNeedsUpdate.next(cmd.data || false) });
         this.registerHandler('lcsNeedsApply', (cmd) => { this.lcsBusy.next(false) ; this.lcsNeedsApply.next(cmd.data || false)});

@@ -31,7 +31,7 @@ import { BackendService } from '../backend/backend-service';
 export class SettingsEditor {
   settings: MTBSetting[] = [];
   themeType: 'dark' | 'light' = 'light';
-  manifestStatus: boolean = false;
+  manifestStatus: 'loading' | 'loaded' | 'not-available' = 'loading';
 
   constructor(private be: BackendService) {
     this.be.settings.subscribe(settings => {
