@@ -1,22 +1,30 @@
 <div class="recently-opened-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   <h2>Recently Opened Applications</h2>
-  <div *ngFor="let group of groupedRecents">
+  @for (group of groupedRecents; track group) {
     <div class="recent-group-header" (click)="toggleCollapse(group)">
       <mat-icon>{{ group.collapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
       <span>{{ group.label }}</span>
       <span class="count">({{ group.entries.length }})</span>
     </div>
-    <div class="recent-group-list" *ngIf="!group.collapsed">
-      <div class="recent-entry" *ngFor="let entry of group.entries" (click)="openRecent(entry)">
-        <mat-icon>folder_open</mat-icon>
-        <span class="recent-path">{{ entry.apppath }}</span>
-        <span class="recent-bsp" *ngIf="entry.bspname">[{{ entry.bspname }}]</span>
-        <span class="recent-date">{{ entry.lastopened | date:'medium' }}</span>
+    @if (!group.collapsed) {
+      <div class="recent-group-list">
+        @for (entry of group.entries; track entry) {
+          <div class="recent-entry" (click)="openRecent(entry)">
+            <mat-icon>folder_open</mat-icon>
+            <span class="recent-path">{{ entry.apppath }}</span>
+            @if (entry.bspname) {
+              <span class="recent-bsp">[{{ entry.bspname }}]</span>
+            }
+            <span class="recent-date">{{ entry.lastopened | date:'medium' }}</span>
+          </div>
+        }
       </div>
+    }
+  }
+  @if (groupedRecents.length === 0) {
+    <div class="no-recents">
+      <mat-icon>history</mat-icon>
+      <span>No recently opened applications.</span>
     </div>
-  </div>
-  <div *ngIf="groupedRecents.length === 0" class="no-recents">
-    <mat-icon>history</mat-icon>
-    <span>No recently opened applications.</span>
-  </div>
+  }
 </div>

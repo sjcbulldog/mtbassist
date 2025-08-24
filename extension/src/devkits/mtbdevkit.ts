@@ -30,7 +30,7 @@ export class MTBDevKit {
 
     public info(bspChoices: string[]) : DevKitInfo {
         return {
-            name: this.name || 'Unknown',
+            name: this.name || `Serial ${this.serial}`,
             serial: this.serial,
             firmwareVersion: this.version,
             boardFeatures: this.boardFeatures,

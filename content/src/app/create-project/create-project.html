@@ -1,12 +1,18 @@
 <div class="create-project-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   <!-- Manifest Status Overlay -->
-  <div *ngIf="manifestStatus === 'loading' || manifestStatus === 'not-available'" class="manifest-overlay">
+  @if (manifestStatus === 'loading' || manifestStatus === 'not-available') {
+    <div class="manifest-overlay">
     <div class="manifest-message">
-      <mat-spinner diameter="48" *ngIf="manifestStatus === 'loading'"></mat-spinner>
-      <span class="manifest-wait-text" *ngIf="manifestStatus === 'loading'">Waiting on manifest data...</span>
-      <span class="manifest-wait-text" *ngIf="manifestStatus === 'not-available'">No manifest data available<br>Check your internet connection or Local Content Storage configuration</span>
+      @if (manifestStatus === 'loading') {
+        <mat-spinner diameter="48"></mat-spinner>
+        <span class="manifest-wait-text">Waiting on manifest data...</span>
+      }
+      @if (manifestStatus === 'not-available') {
+        <span class="manifest-wait-text">No manifest data available<br>Check your internet connection or Local Content Storage configuration</span>
+      }
     </div>
-  </div>
+    </div>
+  }
   <!-- Header -->
   <div class="header">
     <h1>

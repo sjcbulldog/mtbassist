@@ -301,6 +301,7 @@ export class LCSManager extends EventEmitter {
                 reject(new Error("lcs-cli command not found")) ;
                 return ;
             }
+            this.ext_.logger.debug(`Running lcs-cli: ${cmd} ${args.join(' ')}`) ;
             ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), cmd, this.ext_.toolsDir, args, cb)
                 .then((output) => {
                     resolve(output) ;
