@@ -1488,3 +1488,30 @@
     border-top-color: var(--border-color);
   }
 }
+
+// Missing assets tab icon styling
+::ng-deep .missing-assets-tab-icon {
+  color: #f44336 !important; // Red warning color
+  font-size: 18px !important;
+  margin-left: 8px !important;
+  vertical-align: middle !important;
+}
+
+// Dark theme support for missing assets tab icon
+::ng-deep .dark-theme .missing-assets-tab-icon {
+  color: #ef5350 !important; // Lighter red for dark theme
+}
+
+// Light theme support for missing assets tab icon  
+::ng-deep .light-theme .missing-assets-tab-icon {
+  color: #d32f2f !important; // Darker red for light theme
+}
+
+// Additional specificity for Material Design tab labels
+::ng-deep .mat-mdc-tab .missing-assets-tab-icon {
+  color: #f44336 !important;
+}
+
+::ng-deep .mat-mdc-tab-label .missing-assets-tab-icon {
+  color: #f44336 !important;
+}

@@ -284,7 +284,7 @@ export class VSCodeWorker extends EventEmitter  {
     }   
 
     public fixMissingAssets(projname: string): Promise<void> {
-        let ret = new Promise<void>((resolve) => {
+        let ret = new Promise<void>((resolve, reject) => {
             let proj = this.ext_.env!.appInfo?.projects.find((p) => p.name === projname);
             if (!proj) {
                 this.logger_.error(`Project '${projname}' not found.`) ;
@@ -300,7 +300,11 @@ export class VSCodeWorker extends EventEmitter  {
                     this.logger_.info(`Successfully fixed missing assets for project '${projname}'.`) ;
                 }
                 resolve() ;
-            }) ;
+            })
+            .catch((error) => {
+                this.logger_.error(`Failed to fix missing assets for project '${projname}': ${error.message}`) ;
+                reject(error) ;
+            });
         }) ;
         return ret ;
     }    
