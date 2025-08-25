@@ -6,6 +6,8 @@
   </mtb-nav>
 } @else if (isModusInstalled_ === 'launcher') {
   <app-software-installer></app-software-installer>
+} @else if (isModusInstalled_ === 'insttype') {
+  <app-install-choice></app-install-choice> 
 } @else {
   <idc-launcher-required></idc-launcher-required>
 }

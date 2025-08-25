@@ -186,12 +186,25 @@ export class MTBAssistObject {
         this.postWebViewMessage(resp) ;
     }
 
+    private getModusToolboxInstallDirectory() : string | undefined {
+        return this.context.globalState.get('mtbInstallDir');
+    }
+
     private initNoTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.initializeCommands();
             this.optionallyShowPage()
                 .then(() => {
-                    this.oobmode_ = this.setupMgr_.isLauncherAvailable ? 'launcher' : 'none';
+                    let instdir = this.getModusToolboxInstallDirectory() ;
+                    if (!this.setupMgr_.isLauncherAvailable) {
+                        this.oobmode_ = 'none' ;
+                    }
+                    else if (this.getModusToolboxInstallDirectory() == undefined) {
+                        this.oobmode_ = 'insttype' ;
+                    }
+                    else {
+                        this.oobmode_ = 'launcher' ;
+                    }
                     this.sendMessageWithArgs('mtbInstallStatus', this.oobmode_ );
                     this.sendMessageWithArgs('settings', this.settings_.settings);
                     resolve();

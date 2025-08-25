@@ -81,6 +81,7 @@ export interface SettingsError {
 export type MTBInstallType = 
     'none' |
     'launcher' |
+    'insttype' |
     'mtb' ;
 
 export interface BSPIdentifier {
@@ -248,12 +249,12 @@ export interface SetupProgram {
     featureId: string;
     name: string;
     version: string ;
-    versions: any[] ;
     current?: string ;
     required: boolean ;
     installed: boolean ;
     upgradable: boolean ;
     path?: string ;
+    versions: any[] ;
 }
 
 export interface InstallProgress {
