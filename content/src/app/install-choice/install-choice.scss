@@ -5,6 +5,12 @@
   padding: 1rem;
 }
 
+.actions-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
 .intro-text {
   font-size: 1.05rem;
   line-height: 1.4;
@@ -107,6 +113,7 @@
 :host-context(.vs-dark),
 :host-context(.theme-dark) {
   .intro-text { color: #eee; }
+  .actions-row button { background: #1976d2; color: #fff; }
   .choice-card { background: #2c3036; border-color: #555; }
   .choice-card.selected { background: #1c2f40; border-color: #4fa3e6; box-shadow: 0 0 0 3px rgba(79, 163, 230, 0.55); }
   .card-description { color: #d0d0d0; }
@@ -133,6 +140,7 @@
   .choice-card { background: #000; border-color: #fff; }
   .choice-card.selected { background: #00263a; border-color: #6ec6ff; }
   .card-description { color: #fff; }
+  .actions-row button { background: #1976d2; color: #fff; }
   .warning-text { color: #ffdd9a; background: #000; border-color: #ffdd9a; }
   .error-text { color: #ffb3b3; background: #000; border-color: #ffb3b3; }
 }

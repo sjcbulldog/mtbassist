@@ -39,9 +39,6 @@ export class InstallChoiceComponent {
           this.customPathChange.emit(this.customPath);
         }
     });
-
-    this.homeError = 'Your user name contains spaces and therefore cannot be used for installation.  Please pick a custom path for installation.';
-    this.customWarning = 'This path is not writable by the user and will required administrative privileges to install.';
   }
 
   select(choice: InstallChoiceType) {
@@ -66,5 +63,15 @@ export class InstallChoiceComponent {
 
   isSelected(choice: InstallChoiceType): boolean {
     return this.selected === choice;
+  }
+
+  onNext() {
+    if (!this.selected) { return; }
+    const payload: any = { type: this.selected };
+    if (this.selected === 'custom') {
+      payload.path = this.customPath;
+    }
+    // Send request to backend
+    this.backend.sendRequestWithArgs('chooseMTBLocation', payload);
   }
 }

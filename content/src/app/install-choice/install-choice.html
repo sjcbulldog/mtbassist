@@ -14,7 +14,7 @@
           <h3>Install Under Home Directory</h3>
         </div>
         <p class="card-description">
-          Install ModusToolbox and related tools under your home directory on this machine.
+          Install ModusToolbox under your home directory on this machine.  Other related tools will be installed in their default location.
         </p>
       </div>
       @if (homeWarning && !homeError) {
@@ -45,7 +45,7 @@
                    [disabled]="customError !== undefined" 
                    [ngModel]="customPath" 
                    (ngModelChange)="onCustomPathInput($event)"
-                   placeholder="/path/to/modustoolbox" />
+                   placeholder="Path to tools directory" />
           </mat-form-field>
           <button mat-raised-button 
                   color="primary" 
@@ -63,5 +63,12 @@
       }
     </mat-card>
 
+  </div>
+  <div class="actions-row">
+    <button mat-raised-button color="primary"
+            (click)="onNext()" 
+            [disabled]="!selected || (selected === 'custom' && !customPath) || homeError && selected==='home' || customError && selected==='custom'">
+      Next
+    </button>
   </div>
 </div>

@@ -6,6 +6,7 @@ import { ToolList } from "./toollist";
 import { MTBVersion } from "../mtbenv/misc/mtbversion";
 import { IDCRegistry } from "./idcreg";
 import { SetupProgram } from "../comms";
+import * as path from 'path' ;
 
 //
 // AppData/Local/Infineon_Technologies_AG/Infineon-Toolbox/Tools/ ...
@@ -47,6 +48,8 @@ export class SetupMgr extends MtbManagerBase {
     private port_? : number ;
     private accessToken_?: AccessTokenResponse;
     private neededTools_ : SetupProgram[] = [] ;
+    private mtbLocation_ : string | undefined = undefined ;
+    private mtbTools_ : string | undefined = undefined ;
 
     constructor(ext: MTBAssistObject) {
         super(ext);
@@ -61,6 +64,14 @@ export class SetupMgr extends MtbManagerBase {
 
     public get neededTools() : SetupProgram[] {
         return this.neededTools_ ;
+    }
+
+    public set mtbLocation(loc: string | undefined) {
+        this.mtbLocation_ = loc ;
+    }
+
+    public set mtbTools(loc: string | undefined) {
+        this.mtbTools_ = loc ;
     }
 
     public async initializeLocal() : Promise<void> {
@@ -172,6 +183,10 @@ export class SetupMgr extends MtbManagerBase {
         });
 
         return ret ;
+    }
+
+    private isModusToolbox(id: string) {
+        return id === 'com.ifx.tb.tool.modustoolbox' ;
     }
 
     private checkNeededTools(flist: string[], required: boolean) : SetupProgram[] {
@@ -332,6 +347,11 @@ export class SetupMgr extends MtbManagerBase {
         return one ;
     }
 
+    private idToName(id: string) {
+        let tags = id.split('.') ;
+        return tags[tags.length - 1] ;
+    }
+
     private installFeature(id: string, version: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             let props = this.toollist_.getToolByFeature(id) ;
@@ -345,11 +365,21 @@ export class SetupMgr extends MtbManagerBase {
 
             let cmdstr = 'installOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
             let addargs : string[] = [] ;
-            if (attrs && attrs['silent-install']) {
+            if ((attrs && attrs['silent-install']) || id === 'com.ifx.tb.tool.mtbgccpackage') {
                 addargs.push('--') ;
                 addargs.push('/verysilent') ;
                 addargs.push('/supressmsgboxes') ;
-                addargs.push('/dir=C:\\Infineon\\Tools') ;
+                if (this.isModusToolbox(id)) {
+                    if (this.mtbLocation_ && this.mtbLocation_.length > 0) {
+                        addargs.push(`/dir=${this.mtbLocation_}`) ;
+                    }
+                }
+                else {
+                    if (this.mtbTools_ && this.mtbTools_.length > 0) {
+                        let p = path.join(this.mtbTools_, this.idToName(id)) ;
+                        addargs.push(`/dir=${p}`) ;
+                    }
+                }
             }
             this.launcher_.run(['-idc.service', cmdstr, ...addargs], this.downloadCallback.bind(this), id)
             .then((result) => {

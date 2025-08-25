@@ -70,6 +70,9 @@ export class MTBAssistObject {
     private statusBarItem_: vscode.StatusBarItem ;
     private initializing_: boolean = true;
     private termRegistered_ : boolean = false ;
+    private locationOverride_ : boolean = false ;
+    private mtbLocation_ : string | undefined = undefined ;
+    private mtbTools_ : string | undefined = undefined ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -92,10 +95,15 @@ export class MTBAssistObject {
             ]
         });
 
+        this.mtbLocation_ = this.context_.globalState.get('mtbLocation');
+        this.mtbTools_ = this.context_.globalState.get('mtbTools');        
+
         this.recents_ = new RecentAppManager(this);
         this.intellisense_ = new IntelliSenseMgr(this);
         this.setupMgr_ = new SetupMgr(this);
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
+        this.setupMgr_.mtbLocation = this.mtbLocation_ as string;
+        this.setupMgr_.mtbTools = this.mtbTools_ as string;
         this.keywords_ = new MtbFunIndex(this.logger_);
         this.settings_ = new MTBSettings(this) ;
         this.settings_.on('toolsPathChanged', this.onToolsPathChanged.bind(this));
@@ -112,6 +120,8 @@ export class MTBAssistObject {
         this.statusBarItem_ = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100) ;    
         this.statusBarItem_.command = 'mtbassist2.mtbMainPage' ;
         this.updateStatusBar() ;    
+
+
     }
 
     public get toolsDir() : string | undefined {
@@ -186,20 +196,15 @@ export class MTBAssistObject {
         this.postWebViewMessage(resp) ;
     }
 
-    private getModusToolboxInstallDirectory() : string | undefined {
-        return this.context.globalState.get('mtbInstallDir');
-    }
-
     private initNoTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.initializeCommands();
             this.optionallyShowPage()
                 .then(() => {
-                    let instdir = this.getModusToolboxInstallDirectory() ;
                     if (!this.setupMgr_.isLauncherAvailable) {
                         this.oobmode_ = 'none' ;
                     }
-                    else if (this.getModusToolboxInstallDirectory() == undefined) {
+                    else if (this.mtbLocation_ === undefined || this.mtbTools_ === undefined || this.locationOverride_) {
                         this.oobmode_ = 'insttype' ;
                     }
                     else {
@@ -635,6 +640,33 @@ export class MTBAssistObject {
         this.cmdhandler_.set('updateSetting', this.updateSetting.bind(this));   
         this.cmdhandler_.set('lcscmd', this.lcscmd.bind(this)); 
         this.cmdhandler_.set('getSettings', this.getSettings.bind(this));
+        this.cmdhandler_.set('chooseMTBLocation', this.chooseMTBLocation.bind(this));
+    }
+
+    private chooseMTBLocation(request: FrontEndToBackEndRequest): Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            if (request.data.type === 'home') {
+                this.mtbLocation_ = path.join(os.homedir(), 'ModusToolbox') ;
+                this.mtbTools_ = '' ;
+            }
+            else {
+                if (request.data.path === undefined) {
+                    return ;
+                }
+                this.mtbLocation_ = path.join(request.data.path, 'ModusToolbox') ;
+                this.mtbTools_ = request.data.path ;
+            }
+
+            this.setupMgr_.mtbLocation = this.mtbLocation_ as string;
+            this.setupMgr_.mtbTools = this.mtbTools_ as string;
+
+            this.context_.globalState.update('mtbLocation', this.mtbLocation_);
+            this.context_.globalState.update('mtbTools', this.mtbTools_);
+            this.oobmode_ = 'launcher' ;
+            this.sendMessageWithArgs('mtbInstallStatus', this.oobmode_ );
+            resolve();
+        });
+        return ret;
     }
 
     private getSettings(request: FrontEndToBackEndRequest): Promise<void> {
@@ -719,6 +751,8 @@ export class MTBAssistObject {
 
             this.setupMgr_ = new SetupMgr(this);
             this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
+            this.setupMgr_.mtbLocation = this.mtbLocation_ as string;
+            this.setupMgr_.mtbTools = this.mtbTools_ as string;
             this.initialize()
                 .then(() => {
                     this.sendMessageWithArgs('settings', this.settings_.settings) ;

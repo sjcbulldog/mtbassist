@@ -35,7 +35,8 @@ export type FrontEndToBackEndType =
     'updateDevKitBsp' |
     'updateBSPStorage' |
     'lcscmd'|
-    'getSettings'
+    'getSettings' |
+    'chooseMTBLocation'
     ;
 
 export type BackEndToFrontEndType =
