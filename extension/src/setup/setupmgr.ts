@@ -197,7 +197,8 @@ export class SetupMgr extends MtbManagerBase {
                         required: required,
                         upgradable: true,
                         installed: true,
-                        current: inst!.version
+                        current: inst!.version,
+                        versions: []
                     });
                 }
                 else {
@@ -208,7 +209,8 @@ export class SetupMgr extends MtbManagerBase {
                         required: required,
                         upgradable: false,
                         installed: true,
-                        current: inst!.version                        
+                        current: inst!.version,
+                        versions: []                
                     });
                 }
             }
@@ -224,7 +226,8 @@ export class SetupMgr extends MtbManagerBase {
                             version: latest.toString(),
                             required: required,
                             upgradable: false,
-                            installed: false
+                            installed: false,
+                            versions: []
                         });
                     }
                 }
@@ -299,10 +302,56 @@ export class SetupMgr extends MtbManagerBase {
         }
     }
 
+    private getOSKey() : string {
+        let ret = 'win32' ;
+
+        if (process.platform === 'win32') {
+            ret = 'windows';
+        } else if (process.platform === 'darwin') {
+            ret = 'macOS';
+        } else {
+            ret = 'linux';
+        }
+        return ret;
+    }
+
+    private findAttributes(props: SetupProgram, version: string) {
+        let one: any = undefined ;
+        let key: string = this.getOSKey() ;
+        if (props.versions) {
+            for(let v of Object.keys(props.versions)) {
+                if (v === version) {
+                    let obj = props.versions[v as keyof typeof props.versions] ;
+                    let attrs = obj.additionalAttributes ;
+                    if (attrs && attrs[key]) {
+                        one = attrs[key] ;
+                    }
+                }
+            }
+        }
+        return one ;
+    }
+
     private installFeature(id: string, version: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
+            let props = this.toollist_.getToolByFeature(id) ;
+            if (!props) {
+                this.logger.error(`No tool found for feature ${id}`);
+                resolve() ;
+                return ;
+            }
+
+            let attrs = this.findAttributes(props, version) ;
+
             let cmdstr = 'installOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
-            this.launcher_.run(['-accesstoken', this.accessToken_!.accessToken, '-idc.service', cmdstr], this.downloadCallback.bind(this), id)
+            let addargs : string[] = [] ;
+            if (attrs && attrs['silent-install']) {
+                addargs.push('--') ;
+                addargs.push('/verysilent') ;
+                addargs.push('/supressmsgboxes') ;
+                addargs.push('/dir=C:\\Infineon\\Tools') ;
+            }
+            this.launcher_.run(['-idc.service', cmdstr, ...addargs], this.downloadCallback.bind(this), id)
             .then((result) => {
                 if (!result) {
                     reject(new Error(`Failed to install feature ${id} - ${version}`));

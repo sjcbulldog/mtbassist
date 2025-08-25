@@ -106,7 +106,8 @@ export class IDCRegistry {
                     required: obj.required,
                     upgradable: obj.upgradable,
                     path: obj.path,
-                    installed: true
+                    installed: true,
+                    versions: []
                 });
                 set.sort((a, b) => {
                     return this.compareTwoTools(a, b);

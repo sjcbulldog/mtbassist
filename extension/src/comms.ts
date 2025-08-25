@@ -248,6 +248,7 @@ export interface SetupProgram {
     featureId: string;
     name: string;
     version: string ;
+    versions: any[] ;
     current?: string ;
     required: boolean ;
     installed: boolean ;
