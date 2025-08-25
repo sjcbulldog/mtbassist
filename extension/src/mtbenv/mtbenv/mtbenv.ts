@@ -565,7 +565,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
     public static findToolsDirectories() : string[] {
         let choices = [] ;
         let dir = MTBUtils.getCommonInstallLocation() ;
-        if (dir !== undefined) {
+        if (dir !== undefined && fs.existsSync(dir)) {
             for(let one of fs.readdirSync(dir)) {
                 let fullpath = path.join(dir, one) ;
                 if (one.match(MTBUtils.toolsRegex1) || one.match(MTBUtils.toolsRegex2)) {

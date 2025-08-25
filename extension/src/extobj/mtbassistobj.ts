@@ -109,8 +109,8 @@ export class MTBAssistObject {
         this.settings_.on('toolsPathChanged', this.onToolsPathChanged.bind(this));
         this.settings_.on('restartWorkspace', this.doRestartExtension.bind(this));
         this.settings_.on('showError', this.showSettingsError.bind(this));
-        this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings) });  
-        this.toolspath_ = this.settings_.toolsPath ;
+        this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
+        this.toolspath_ = this.settings_.toolsPath ? this.settings_.toolsPath : '';
         this.bindCommandHandlers();
 
         vscode.window.onDidChangeActiveColorTheme(e => {
@@ -204,14 +204,10 @@ export class MTBAssistObject {
                     if (!this.setupMgr_.isLauncherAvailable) {
                         this.oobmode_ = 'none' ;
                     }
-                    else if (this.mtbLocation_ === undefined || this.mtbTools_ === undefined || this.locationOverride_) {
-                        this.oobmode_ = 'insttype' ;
-                    }
                     else {
                         this.oobmode_ = 'launcher' ;
                     }
                     this.sendMessageWithArgs('mtbInstallStatus', this.oobmode_ );
-                    this.sendMessageWithArgs('settings', this.settings_.settings);
                     resolve();
                     return;
                 });
@@ -297,6 +293,8 @@ export class MTBAssistObject {
             this.worker_.on('progress', this.sendMessageWithArgs.bind(this, 'createProjectProgress'));
             this.worker_.on('runtask', this.runTask.bind(this));
             this.worker_.on('loadedAsset', this.sendMessageWithArgs.bind(this, 'loadedAsset'));
+
+            this.readComponentDefinitions() ;                
 
             this.loadMTBApplication().then(() => {
                 this.updateStatusBar();
@@ -521,7 +519,6 @@ export class MTBAssistObject {
 
     public async initialize(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            this.readComponentDefinitions() ;
             this.setupMgr_?.initializeLocal()
                 .then(() => {
                     if (this.setupMgr_!.doWeNeedTools()) {
@@ -536,7 +533,7 @@ export class MTBAssistObject {
                                 reject(err);
                             });
                     }
-                    else {
+                    else {                    
                         this.initWithTools()
                             .then(() => {
                                 resolve();
@@ -1515,7 +1512,7 @@ export class MTBAssistObject {
             appst = {
                 valid: false,
                 name: '',
-                toolsdir: this.settings_.toolsPath,
+                toolsdir: this.settings_.toolsPath ? this.settings_.toolsPath : '',
                 memory: [],
                 documentation: [],
                 middleware: [],

@@ -100,7 +100,7 @@ export class MTBSettings extends EventEmitter {
         this.resolvePaths() ;
     }
 
-    public get toolsPath() : string {
+    public get toolsPath() : string | undefined {
         return this.computeToolsPath() ;
     }
 
@@ -126,7 +126,7 @@ export class MTBSettings extends EventEmitter {
             else if (setting.name === 'custompath') {
                 this.writeWorkspaceSettings() ;
                 let p = this.computeToolsPath() ;
-                if (this.customPathOK(p)) {
+                if (p && this.customPathOK(p)) {
                     this.emit('toolsPathChanged', p) ;
                 }
             }
@@ -166,8 +166,8 @@ export class MTBSettings extends EventEmitter {
         return false;
     }
 
-    private computeToolsPath() : string {
-        let tdir: string = '' ;
+    private computeToolsPath() : string | undefined {
+        let tdir: undefined | string = '' ;
         let versetting = this.settings_.find(s => s.name === 'toolsversion');
         if (versetting) {
             if (versetting.value !== 'Custom') {
@@ -181,14 +181,16 @@ export class MTBSettings extends EventEmitter {
             }
         }
 
-        if (tdir === '') {
+        if (tdir === '' || tdir === undefined) {
             let tools = ModusToolboxEnvironment.findToolsDirectories().sort() ; 
             if (tools.length > 0) {
                 tdir = tools[tools.length - 1];
             }
         }
 
-        tdir = tdir.replace(/\\/g,'/');
+        if (tdir) {
+            tdir = tdir.replace(/\\/g,'/');
+        }
         return tdir ;
     }
 
@@ -207,8 +209,8 @@ export class MTBSettings extends EventEmitter {
         }
     }
 
-    private versionToToolsDir(ver: string) : string {
-        let ret = ver ;
+    private versionToToolsDir(ver: string) : string | undefined {
+        let ret = undefined ;
 
         if (ver.startsWith('ModusToolbox ')) {
             ver = ver.substring('ModusToolbox '.length);

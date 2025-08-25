@@ -1,7 +1,47 @@
 <div class="software-installer-container">
     <h2>Software Installer</h2>
-    <div class="step-indicator">Step {{ step + 1 }} of 3</div>
-    @switch (step) {
+    @if (!hasChosenLocation) {
+      <div class="install-choice-container">
+        <p class="intro-text">Pick a method for installing ModusToolbox and related tools</p>
+        <div class="cards-wrapper">
+          <div class="choice-card" [class.selected]="installChoice==='home'" [class.disabled]="homeError" (click)="selectInstallChoice('home')">
+            <div class="card-content">
+              <div class="card-header">
+                <mat-icon>home</mat-icon>
+                <h3>Install Under Home Directory</h3>
+              </div>
+              <p class="card-description">Install ModusToolbox and related tools under your home directory on this machine.</p>
+            </div>
+            @if (homeWarning && !homeError) { <div class="warning-text">{{ homeWarning }}</div> }
+            @if (homeError) { <div class="error-text">{{ homeError }}</div> }
+          </div>
+          <div class="choice-card" [class.selected]="installChoice==='custom'" [class.disabled]="customError" (click)="selectInstallChoice('custom')">
+            <div class="card-content">
+              <div class="card-header">
+                <mat-icon>folder_open</mat-icon>
+                <h3>Install In Custom Directory</h3>
+              </div>
+              <p class="card-description">Install ModusToolbox and related tools in a directory of your choosing. This directory should not contain any spaces.</p>
+              <div class="custom-path-row" (click)="$event.stopPropagation()">
+                <mat-form-field appearance="outline" class="path-field">
+                  <mat-label>Custom Install Path</mat-label>
+                  <input matInput [disabled]="!!customError" [ngModel]="customPath" (ngModelChange)="onCustomPathInput($event)" placeholder="/path/to/modustoolbox" />
+                </mat-form-field>
+                <button mat-raised-button color="primary" (click)="browseForCustom()" [disabled]="!!customError"><mat-icon>folder</mat-icon>&nbsp;Browse</button>
+              </div>
+            </div>
+            @if (customWarning && !customError) { <div class="warning-text">{{ customWarning }}</div> }
+            @if (customError) { <div class="error-text">{{ customError }}</div> }
+          </div>
+        </div>
+        <div class="actions-row">
+          <button mat-raised-button color="primary" (click)="locationNext()" [disabled]="!installChoice || (installChoice==='custom' && !customPath)">Next</button>
+        </div>
+      </div>
+    }
+    @else {
+      <div class="step-indicator">Step {{ step + 1 }} of 3</div>
+      @switch (step) {
       @case (0) {
         <div class="tile-row">
           <div class="install-tile no-account" (click)="onNoAccountClick()" [class.disabled]="loadingTools" [attr.aria-disabled]="loadingTools ? true : null" [style.pointer-events]="loadingTools ? 'none' : 'auto'">
@@ -26,7 +66,7 @@
           </div>
         }
       }
-      @case (1) {
+      @case (2) {
         <div class="confirm-tools">
           <h3>Confirm Tools to Download & Install</h3>
           <div class="tool-section">
@@ -113,5 +153,6 @@
           <button class="reinit-btn" (click)="onReinit()">Reinitialize Extension</button>
         </div>
       }
+    }
     }
 </div>

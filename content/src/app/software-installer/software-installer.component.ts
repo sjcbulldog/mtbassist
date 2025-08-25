@@ -2,12 +2,17 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { BackendService } from '../backend/backend-service';
 
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import type { SetupProgram } from '../../comms';
+export type InstallChoiceType = 'home' | 'custom';
 
 @Component({
   selector: 'app-software-installer',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, MatIconModule, MatButtonModule, MatInputModule, MatFormFieldModule],
   templateUrl: './software-installer.component.html',
   styleUrls: ['./software-installer.component.scss']
 })
@@ -16,7 +21,15 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   activeInstallSet: Set<string> = new Set();
   private static readonly urlStr = 'https://www.infineon.com/';
 
-  step = 0;
+  step = 0; // Backend-driven steps (account, confirm tools, complete) after location selection
+  // Location selection (pre-step) state
+  hasChosenLocation = false;
+  installChoice: InstallChoiceType | null = null;
+  customPath: string = '';
+  homeError?: string;
+  homeWarning?: string;
+  customError?: string;
+  customWarning?: string;
   loadingTools = false;
   downloading: boolean = false;
   neededTools: SetupProgram[] = [];
@@ -25,6 +38,8 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   progress: { [featureId: string]: { message?: string, percent?: number } } = {};
 
   private neededToolsSub?: any;
+  private browserSub?: any;
+
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
     this.be.setupTab.subscribe(index => {
       this.step = index;
@@ -33,6 +48,13 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
 
     this.be.installProgress.subscribe(progress => {
       this.onReportProgress(progress.featureId, progress.message, progress.percent);
+    });
+
+    this.browserSub = this.be.browserFolder.subscribe(reply => {
+      if (reply && reply.tag === 'customToolInstall') {
+        this.customPath = reply.path;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -60,6 +82,25 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
     if (this.neededToolsSub) {
       this.neededToolsSub.unsubscribe();
     }
+    if (this.browserSub) { this.browserSub.unsubscribe(); }
+  }
+
+  // Location selection methods
+  selectInstallChoice(choice: InstallChoiceType) {
+    if ((choice === 'home' && this.homeError) || (choice === 'custom' && this.customError)) { return; }
+    this.installChoice = choice;
+  }
+  onCustomPathInput(value: string) { this.customPath = value; }
+  browseForCustom() {
+    if (this.customError) { return; }
+    this.be.browseForFolder('customToolInstall');
+  }
+  locationNext() {
+    if (!this.installChoice) { return; }
+    const payload: any = { type: this.installChoice };
+    if (this.installChoice === 'custom') { payload.path = this.customPath; }
+    this.be.sendRequestWithArgs('chooseMTBLocation' as any, payload);
+    this.hasChosenLocation = true;
   }
 
   onNoAccountClick() {
