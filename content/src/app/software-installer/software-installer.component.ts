@@ -21,8 +21,8 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   activeInstallSet: Set<string> = new Set();
   private static readonly urlStr = 'https://www.infineon.com/';
 
-  step = 0; // Backend-driven steps (account, confirm tools, complete) after location selection
-  // Location selection (pre-step) state
+  step = 0; // Backend-driven steps (location, confirm tools, complete) after account verification
+  // Account verification (pre-step) state
   hasChosenLocation = false;
   installChoice: InstallChoiceType | null = null;
   customPath: string = '';
@@ -32,6 +32,7 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   customWarning?: string;
   loadingTools = false;
   downloading: boolean = false;
+  disableNext: boolean = false ;
   neededTools: SetupProgram[] = [];
   installSelections: { [featureId: string]: boolean } = {};
   upgradeSelections: { [featureId: string]: boolean } = {};
@@ -74,6 +75,7 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
         }
         this.progress[tool.featureId] = { message: '', percent: 0 };
       }
+      this.disableNext = false ;
       this.cdr.detectChanges();
     });
   }
@@ -85,6 +87,17 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
     if (this.browserSub) { this.browserSub.unsubscribe(); }
   }
 
+  onNoAccountClick() {
+    this.be.sendRequestWithArgs('open', { location: SoftwareInstallerComponent.urlStr} );
+  }
+
+  onHasAccountClick() {
+    this.be.log('User has an account, initializing setup...');
+    this.loadingTools = true;
+    // Move to location selection step
+    this.hasChosenLocation = true;
+  }
+
   // Location selection methods
   selectInstallChoice(choice: InstallChoiceType) {
     if ((choice === 'home' && this.homeError) || (choice === 'custom' && this.customError)) { return; }
@@ -93,24 +106,18 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   onCustomPathInput(value: string) { this.customPath = value; }
   browseForCustom() {
     if (this.customError) { return; }
+    // Automatically select the custom path card when browse is clicked
+    this.installChoice = 'custom';
     this.be.browseForFolder('customToolInstall');
   }
+
   locationNext() {
     if (!this.installChoice) { return; }
     const payload: any = { type: this.installChoice };
     if (this.installChoice === 'custom') { payload.path = this.customPath; }
-    this.be.sendRequestWithArgs('chooseMTBLocation' as any, payload);
-    this.hasChosenLocation = true;
-  }
-
-  onNoAccountClick() {
-    this.be.sendRequestWithArgs('open', { location: SoftwareInstallerComponent.urlStr} );
-  }
-
-  onHasAccountClick() {
-    this.be.log('User has an account, initializing setup...');
-    this.loadingTools = true;
-    this.be.sendRequestWithArgs('initSetup', null);
+    this.be.sendRequestWithArgs('initSetup' as any, payload);
+    this.disableNext = true ;
+    this.step = 1;
   }
 
   onConfirmTools() {

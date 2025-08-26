@@ -83,7 +83,9 @@ export class PackDBLoader {
         else {
             // content pack
             this.logger_.silly(`packdbloader: file '${file}' is a content pack - loading it`) ;
-            this.checkPack(obj) ;
+            if (obj.path && fs.existsSync(obj.path)) {
+                this.checkPack(obj) ;
+            }
         }
     }
 

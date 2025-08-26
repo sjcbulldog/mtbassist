@@ -104,6 +104,14 @@ export class MTBSettings extends EventEmitter {
         return this.computeToolsPath() ;
     }
 
+    public set toolsPath(p: string | undefined) {
+        if (p) {
+            this.settings_.find(s => s.name === 'toolsversion')!.value = 'Custom';
+            this.settings_.find(s => s.name === 'custompath')!.value = p;
+            this.writeWorkspaceSettings() ;
+        }
+    }
+
     public get settings(): MTBSetting[] {
         this.updateEAPChoices() ;
         this.updateToolPathChoices() ;

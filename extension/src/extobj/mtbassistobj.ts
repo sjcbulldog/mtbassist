@@ -111,6 +111,13 @@ export class MTBAssistObject {
         this.settings_.on('showError', this.showSettingsError.bind(this));
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
         this.toolspath_ = this.settings_.toolsPath ? this.settings_.toolsPath : '';
+        if (!this.toolspath_ || this.toolspath_.length === 0) {
+            let possible = ModusToolboxEnvironment.findToolsDirectories(this.mtbLocation_) ;
+            if (possible.length > 0) {
+                this.toolspath_ = possible[possible.length - 1] ;
+                this.settings_.toolsPath = this.toolspath_ ;
+            }
+        }
         this.bindCommandHandlers();
 
         vscode.window.onDidChangeActiveColorTheme(e => {
@@ -120,8 +127,6 @@ export class MTBAssistObject {
         this.statusBarItem_ = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100) ;    
         this.statusBarItem_.command = 'mtbassist2.mtbMainPage' ;
         this.updateStatusBar() ;    
-
-
     }
 
     public get toolsDir() : string | undefined {
@@ -637,21 +642,20 @@ export class MTBAssistObject {
         this.cmdhandler_.set('updateSetting', this.updateSetting.bind(this));   
         this.cmdhandler_.set('lcscmd', this.lcscmd.bind(this)); 
         this.cmdhandler_.set('getSettings', this.getSettings.bind(this));
-        this.cmdhandler_.set('chooseMTBLocation', this.chooseMTBLocation.bind(this));
     }
 
-    private chooseMTBLocation(request: FrontEndToBackEndRequest): Promise<void> {
+    private chooseMTBLocation(type: string, cpath: string): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            if (request.data.type === 'home') {
+            if (type === 'home') {
                 this.mtbLocation_ = path.join(os.homedir(), 'ModusToolbox') ;
                 this.mtbTools_ = '' ;
             }
             else {
-                if (request.data.path === undefined) {
+                if (cpath === undefined) {
                     return ;
                 }
-                this.mtbLocation_ = path.join(request.data.path, 'ModusToolbox') ;
-                this.mtbTools_ = request.data.path ;
+                this.mtbLocation_ = path.join(cpath, 'ModusToolbox') ;
+                this.mtbTools_ = cpath ;
             }
 
             this.setupMgr_.mtbLocation = this.mtbLocation_ as string;
@@ -659,8 +663,6 @@ export class MTBAssistObject {
 
             this.context_.globalState.update('mtbLocation', this.mtbLocation_);
             this.context_.globalState.update('mtbTools', this.mtbTools_);
-            this.oobmode_ = 'launcher' ;
-            this.sendMessageWithArgs('mtbInstallStatus', this.oobmode_ );
             resolve();
         });
         return ret;
@@ -780,7 +782,7 @@ export class MTBAssistObject {
             if (this.setupMgr_) {
                 this.setupMgr_.installTools(request.data)
                     .then(() => {
-                        this.sendMessageWithArgs('setupTab', 2) ;
+                        this.sendMessageWithArgs('setupTab', 2);
                         resolve();
                     })
                     .catch((error: Error) => {
@@ -797,15 +799,20 @@ export class MTBAssistObject {
 
     private initSetup(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            this.setupMgr_?.initialize().then(() => {
-                if (this.panel_) {
-                    this.pushNeededTools();
-                    this.sendMessageWithArgs('setupTab', 1) ;
-                }
-                resolve();
-            }).catch((error) => {
-                reject(error);
-            });
+            this.chooseMTBLocation(request.data.type, request.data.path)
+            .then(() => { 
+                this.setupMgr_?.initialize().then(() => {
+                    if (this.panel_) {
+                        this.pushNeededTools();
+                    }
+                    resolve();
+                }).catch((error) => {
+                    reject(error);
+                });
+            })
+            .catch((err) => { 
+                reject(err);
+            }) ;
         });
         return ret;
     }

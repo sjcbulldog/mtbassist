@@ -368,7 +368,8 @@ export class SetupMgr extends MtbManagerBase {
             if ((attrs && attrs['silent-install']) || id === 'com.ifx.tb.tool.mtbgccpackage') {
                 addargs.push('--') ;
                 addargs.push('/verysilent') ;
-                addargs.push('/supressmsgboxes') ;
+                addargs.push('/suppressmsgboxes') ;
+                addargs.push('/sp-') ;
                 if (this.isModusToolbox(id)) {
                     if (this.mtbLocation_ && this.mtbLocation_.length > 0) {
                         addargs.push(`/dir=${this.mtbLocation_}`) ;
