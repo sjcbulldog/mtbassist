@@ -108,31 +108,6 @@
               }
             </ul>
           </div>
-          <div class="tool-section">
-            <h4>Optional Software</h4>
-            <ul class="tool-list">
-              @for (tool of neededTools; track tool.featureId) {
-                @if (!tool.required && (!downloading || activeInstallSet.has(tool.featureId))) {
-                  <li>
-                    <div class="tool-info">
-                      <span class="tool-name">{{ tool.name }} (v{{ tool.version }})</span>
-                      @if (tool.installed) {
-                        <span class="tool-status installed">Already installed</span>
-                      } @else {
-                        <label><input type="checkbox" [(ngModel)]="installSelections[tool.featureId]"> Install</label>
-                      }
-                    </div>
-                    @if (progress[tool.featureId].message) {
-                      <div class="progress-message">{{ progress[tool.featureId].message }}</div>
-                      <div class="progress-bar">
-                        <div class="progress-fill" [style.width.%]="progress[tool.featureId].percent"></div>
-                      </div>
-                    }
-                  </li>
-                }
-              }
-            </ul>
-          </div>
           <button class="next-btn" (click)="onConfirmTools()" [disabled]="disableNext || downloading">
             @if (downloading) {
               Installing...

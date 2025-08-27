@@ -70,7 +70,6 @@ export class MTBAssistObject {
     private statusBarItem_: vscode.StatusBarItem ;
     private initializing_: boolean = true;
     private termRegistered_ : boolean = false ;
-    private locationOverride_ : boolean = false ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -93,15 +92,10 @@ export class MTBAssistObject {
             ]
         });
 
-        this.mtbLocation_ = this.context_.globalState.get('mtbLocation');
-        this.mtbTools_ = this.context_.globalState.get('mtbTools');        
-
         this.recents_ = new RecentAppManager(this);
         this.intellisense_ = new IntelliSenseMgr(this);
         this.setupMgr_ = new SetupMgr(this);
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
-        this.setupMgr_.mtbLocation = this.mtbLocation_ as string;
-        this.setupMgr_.mtbTools = this.mtbTools_ as string;
         this.keywords_ = new MtbFunIndex(this.logger_);
         this.settings_ = new MTBSettings(this) ;
         this.settings_.on('toolsPathChanged', this.onToolsPathChanged.bind(this));
@@ -109,13 +103,6 @@ export class MTBAssistObject {
         this.settings_.on('showError', this.showSettingsError.bind(this));
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
         this.toolspath_ = this.settings_.toolsPath ? this.settings_.toolsPath : '';
-        if (!this.toolspath_ || this.toolspath_.length === 0) {
-            let possible = ModusToolboxEnvironment.findToolsDirectories(this.mtbLocation_) ;
-            if (possible.length > 0) {
-                this.toolspath_ = possible[possible.length - 1] ;
-                this.settings_.toolsPath = this.toolspath_ ;
-            }
-        }
         this.bindCommandHandlers();
 
         vscode.window.onDidChangeActiveColorTheme(e => {
@@ -274,6 +261,10 @@ export class MTBAssistObject {
         this.sendMessageWithArgs('sendAllBSPsExceptEAP', this.getAllBspExceptEAPInfo()) ;
     }
 
+    private getToolsFromIDCRegistry() : string | undefined {
+        return undefined ;
+    }
+
     private initWithTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
@@ -283,6 +274,10 @@ export class MTBAssistObject {
             }
 
             let tools = this.settings_.toolsPath ;
+            if (!tools || tools.length === 0) {
+                tools = this.getToolsFromIDCRegistry();
+            }
+
             if (tools && tools.length > 0) {
                 this.env_.setRequestedToolsDir(tools) ;
             }
@@ -733,23 +728,23 @@ export class MTBAssistObject {
 
     private chooseMTBLocation(type: string, cpath: string): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
+            let mtbLocation: string ;
+            let mtbTools: string ;
+
             if (type === 'home') {
-                this.mtbLocation_ = path.join(os.homedir(), 'ModusToolbox') ;
-                this.mtbTools_ = '' ;
+                mtbLocation = path.join(os.homedir(), 'ModusToolbox') ;
+                mtbTools = '' ;
             }
             else {
                 if (cpath === undefined) {
                     return ;
                 }
-                this.mtbLocation_ = path.join(cpath, 'ModusToolbox') ;
-                this.mtbTools_ = cpath ;
+                mtbLocation = path.join(cpath, 'ModusToolbox') ;
+                mtbTools = cpath ;
             }
 
-            this.setupMgr_.mtbLocation = this.mtbLocation_ as string;
-            this.setupMgr_.mtbTools = this.mtbTools_ as string;
-
-            this.context_.globalState.update('mtbLocation', this.mtbLocation_);
-            this.context_.globalState.update('mtbTools', this.mtbTools_);
+            this.setupMgr_.mtbLocation = mtbLocation;
+            this.setupMgr_.mtbTools = mtbTools ;
             resolve();
         });
         return ret;
@@ -837,8 +832,6 @@ export class MTBAssistObject {
 
             this.setupMgr_ = new SetupMgr(this);
             this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
-            this.setupMgr_.mtbLocation = this.mtbLocation_ as string;
-            this.setupMgr_.mtbTools = this.mtbTools_ as string;
             this.initialize()
                 .then(() => {
                     this.sendMessageWithArgs('settings', this.settings_.settings) ;

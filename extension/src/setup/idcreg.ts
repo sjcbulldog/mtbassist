@@ -28,12 +28,20 @@ export class IDCRegistry {
         return ret;
     }
 
-    public getToolByFeatureId(featureId: string) : SetupProgram | undefined {
+    public getLatestToolByFeatureId(featureId: string) : SetupProgram | undefined {
         let list = this.entries_.get(featureId) ;
         if (!list) {
             return undefined ;
         }
         return list[0] ;
+    }
+
+    public getToolsByFeatureId(featureId: string) : SetupProgram[] {
+        let list = this.entries_.get(featureId) ;
+        if (!list) {
+            return [] ;
+        }
+        return list ;
     }
 
     public initialize() : Promise<void> {

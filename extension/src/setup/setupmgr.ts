@@ -26,6 +26,8 @@ export interface AccessTokenResponse {
 }
 
 export class SetupMgr extends MtbManagerBase {
+    private static readonly mtbFeatureId = 'com.ifx.tb.tool.modustoolbox';
+
     private static readonly requiredFeatures : string[] = [
         'com.ifx.tb.tool.modustoolboxedgeprotectsecuritysuite',
         'com.ifx.tb.tool.modustoolboxprogtools',
@@ -72,6 +74,16 @@ export class SetupMgr extends MtbManagerBase {
 
     public set mtbTools(loc: string | undefined) {
         this.mtbTools_ = loc ;
+    }
+
+    public get mtbLocations() : string[] {
+        let ret : string[] = [] ;
+
+        let tools = this.registry_.getToolsByFeatureId(SetupMgr.mtbFeatureId) ;
+        if (tools.length > 0) {
+        }
+        return ret ;
+
     }
 
     public async initializeLocal() : Promise<void> {
@@ -203,7 +215,7 @@ export class SetupMgr extends MtbManagerBase {
                 // We have this required tool, see if there is a newer version
                 //
                 let latest = this.findLatestVersion(pgm);
-                let inst = this.registry_.getToolByFeatureId(f) ;
+                let inst = this.registry_.getLatestToolByFeatureId(f) ;
                 if (latest && latest.isGreaterThen(MTBVersion.fromVersionString(inst!.version))) {
                     ret.push({
                         featureId: f,
