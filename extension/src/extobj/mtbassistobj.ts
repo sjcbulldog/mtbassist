@@ -97,6 +97,9 @@ export class MTBAssistObject {
         this.recents_ = new RecentAppManager(this);
 
         this.aimgr_ = new AIManager(this);
+        this.aimgr_.on('apikey', (apikey) => {
+            this.sendMessageWithArgs('apikey', apikey);
+        });
 
         this.intellisense_ = new IntelliSenseMgr(this);
 

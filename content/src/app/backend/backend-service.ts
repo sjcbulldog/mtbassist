@@ -67,6 +67,9 @@ export class BackendService {
     lcsNeedsApply: Subject<boolean> = new Subject<boolean>();
     lcsBusy: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
+    // AI related
+    aiApiKey : Subject<string> = new Subject<string>();
+
     private allBSPExceptEAPData : BSPIdentifier[] = [] ;
 
     constructor() {
@@ -211,6 +214,7 @@ export class BackendService {
         this.registerHandler('showSettingsError', (cmd) => { this.settingsErrors.next(cmd.data) ; }) ;
         this.registerHandler('setChooseMTBLocationStatus', this.handleMTBLocationStatus.bind(this));
         this.registerHandler('installProgress', (cmd) => { this.installProgress.next(cmd.data || 0) });
+        this.registerHandler('apikey', (cmd) => { this.aiApiKey.next(cmd.data || '') });
     }
 
     private handleMTBLocationStatus(cmd: BackEndToFrontEndResponse) {

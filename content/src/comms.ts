@@ -74,7 +74,8 @@ export type BackEndToFrontEndType =
     'appStatusResult' | 
     'sendDefaultProjectDir' |
     'showSettingsError' |
-    'setChooseMTBLocationStatus'
+    'setChooseMTBLocationStatus' |
+    'apikey'
     ;
 
 export interface MTBLocationStatus {
