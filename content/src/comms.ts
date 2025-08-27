@@ -36,7 +36,9 @@ export type FrontEndToBackEndType =
     'updateBSPStorage' |
     'lcscmd'|
     'getSettings' |
-    'chooseMTBLocation'
+    'chooseMTBLocation' |
+    'hasAccount' |
+    'checkInstallPath'
     ;
 
 export type BackEndToFrontEndType =
@@ -71,8 +73,16 @@ export type BackEndToFrontEndType =
     'browseForFileResult' |
     'appStatusResult' | 
     'sendDefaultProjectDir' |
-    'showSettingsError'
+    'showSettingsError' |
+    'setChooseMTBLocationStatus'
     ;
+
+export interface MTBLocationStatus {
+  homeError?: string ;
+  homeWarning?: string ;
+  customError?: string ;
+  customWarning?: string ;
+}
 
 export interface SettingsError {
   setting: string ;

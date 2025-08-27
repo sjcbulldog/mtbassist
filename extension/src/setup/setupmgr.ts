@@ -365,7 +365,7 @@ export class SetupMgr extends MtbManagerBase {
 
             let cmdstr = 'installOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
             let addargs : string[] = [] ;
-            if ((attrs && attrs['silent-install']) || id === 'com.ifx.tb.tool.mtbgccpackage') {
+            if (true) {
                 addargs.push('--') ;
                 addargs.push('/verysilent') ;
                 addargs.push('/suppressmsgboxes') ;
@@ -415,7 +415,12 @@ export class SetupMgr extends MtbManagerBase {
                     this.launcher_.run(['-accesstoken', this.accessToken_!.accessToken, '-idc.service', cmdstr], this.downloadCallback.bind(this), id)
                     .then((result) => {
                         if (!result) {
-                            reject(new Error(`Failed to download feature ${id} - ${version}`));
+                            //
+                            // Report the error - then resolve
+                            //
+                            this.logger.error(`Failed to download feature ${id} - ${version}`);
+                            this.emit('downloadProgress', id, 'Download Error', 100);   
+                            resolve();
                         }
                         else {
                             this.logger.debug(`Feature ${id} version ${version} downloaded successfully.`);
@@ -423,7 +428,7 @@ export class SetupMgr extends MtbManagerBase {
                             this.emit('downloadProgress', id, 'Installing...', -1 );
                             this.installFeature(id, version!.toString())
                             .then(() => {
-                                this.emit('downloadProgress', id, 'Installing Complete!', -1 );                                
+                                this.emit('downloadProgress', id, 'Installation Complete!', -1 );                                
                                 this.logger.debug(`Feature ${id} version ${version} installed successfully.`);
                                 resolve();
                             })

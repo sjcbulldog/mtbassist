@@ -11,7 +11,7 @@ import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
-    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, MemoryInfo, Middleware, MTBSetting, Project, SettingsError, Tool
+    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, MemoryInfo, Middleware, MTBLocationStatus, MTBSetting, Project, SettingsError, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
@@ -71,8 +71,6 @@ export class MTBAssistObject {
     private initializing_: boolean = true;
     private termRegistered_ : boolean = false ;
     private locationOverride_ : boolean = false ;
-    private mtbLocation_ : string | undefined = undefined ;
-    private mtbTools_ : string | undefined = undefined ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -282,6 +280,11 @@ export class MTBAssistObject {
             if (!this.env_) {
                 this.logger_.error('Failed to initialize ModusToolbox environment.');
                 return;
+            }
+
+            let tools = this.settings_.toolsPath ;
+            if (tools && tools.length > 0) {
+                this.env_.setRequestedToolsDir(tools) ;
             }
 
             this.lcsMgr_ = new LCSManager(this) ;
@@ -642,6 +645,90 @@ export class MTBAssistObject {
         this.cmdhandler_.set('updateSetting', this.updateSetting.bind(this));   
         this.cmdhandler_.set('lcscmd', this.lcscmd.bind(this)); 
         this.cmdhandler_.set('getSettings', this.getSettings.bind(this));
+        this.cmdhandler_.set('checkInstallPath', this.checkInstallPath.bind(this)); 
+        this.cmdhandler_.set('hasAccount', this.hasAccount.bind(this));
+    }
+
+    static readonly validPathChars: RegExp = /^[a-zA-Z0-9_\-\/\\\.]+$/;
+    static readonly validPathCharsWindows: RegExp = /^[A-Z]:[a-zA-Z0-9_\-\/\\\.]+$/;
+    private checkValidPath(p: string): boolean {
+        if (MTBAssistObject.validPathChars.test(p)) {
+            return true ;
+        }
+
+        if (process.platform === 'win32' && MTBAssistObject.validPathCharsWindows.test(p)) {
+            return true;
+        }
+
+        return false ;
+    }
+
+    private checkWritable(p: string) : boolean {
+        try {
+            // Check if directory exists
+            if (!fs.existsSync(p)) {
+                return false;
+            }
+            
+            // Check if it's actually a directory
+            const stat = fs.statSync(p);
+            if (!stat.isDirectory()) {
+                return false;
+            }
+            
+            // Test write permission by creating a temporary file
+            const testFile = path.join(p, '.write_test_' + Date.now());
+            try {
+                fs.writeFileSync(testFile, 'test');
+                fs.unlinkSync(testFile);
+                return true;
+            } catch (writeError) {
+                return false;
+            }
+        } catch (error) {
+            return false;
+        }
+    }
+
+    private hasAccount(request: FrontEndToBackEndRequest): Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let homedir = os.homedir() ;
+            if (!this.checkValidPath(homedir)) {
+                let st : MTBLocationStatus = {
+                    homeError : 'Your home directory is not a valid ModusToolbox install location. It contains invalid characters.  Please choose a custom path that is valid.'
+                } ;
+                this.sendMessageWithArgs('setChooseMTBLocationStatus', st) ;
+                resolve() ;
+                return ;
+            }
+        });
+        return ret;
+    }
+
+    private checkInstallPath(request: FrontEndToBackEndRequest): Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let send = false ;
+            let homedir = os.homedir() ;
+            let st: MTBLocationStatus = {} ;
+
+            if (!this.checkValidPath(homedir)) {
+                st['homeError'] = 'Your home directory is not a valid ModusToolbox install location. It contains invalid characters.  Please choose a custom path that is valid.';
+            }
+
+            if (!this.checkValidPath(request.data)) {
+                st['customError'] = 'The chosen path is not a valid ModusToolbox install location. It contains invalid characters.  Please choose a different path.' ;
+                send = true ;
+            }
+            else if (!this.checkWritable(request.data)) {
+                st['customWarning'] = 'The chosen path is not writable by the current user.  Administration priviledges will be required for this installation.' ;
+                send = true ;
+            }
+
+            if (send) {
+                this.sendMessageWithArgs('setChooseMTBLocationStatus', st) ;
+            }
+        });
+        return ret;
     }
 
     private chooseMTBLocation(type: string, cpath: string): Promise<void> {
@@ -668,7 +755,7 @@ export class MTBAssistObject {
         return ret;
     }
 
-    private getSettings(request: FrontEndToBackEndRequest): Promise<void> {
+    private getSettings(_: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.sendMessageWithArgs('settings', this.settings_.settings);
             resolve();
@@ -767,7 +854,7 @@ export class MTBAssistObject {
 
     private reportInstallProgress(featureId: string, message: string, percent: number) {
         let msg: BackEndToFrontEndResponse = {
-            response: 'createProjectProgress',
+            response: 'installProgress',
             data: {
                 featureId: featureId,
                 message: message,

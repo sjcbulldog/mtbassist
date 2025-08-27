@@ -78,6 +78,30 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
       this.disableNext = false ;
       this.cdr.detectChanges();
     });
+
+    this.be.homeError.subscribe(err => {
+      this.be.log(`Home error status updated: ${err}`);
+      this.homeError = err;
+      this.cdr.detectChanges();
+    });
+
+    this.be.homeWarning.subscribe(warn => {
+      this.be.log(`Home warning status updated: ${warn}`);
+      this.homeWarning = warn;
+      this.cdr.detectChanges();
+    });
+
+    this.be.customError.subscribe(err => {
+      this.be.log(`Custom error status updated: ${err}`);
+      this.customError = err;
+      this.cdr.detectChanges();
+    });
+
+    this.be.customWarning.subscribe(warn => {
+      this.be.log(`Custom warning status updated: ${warn}`);
+      this.customWarning = warn;
+      this.cdr.detectChanges();
+    });    
   }
 
   ngOnDestroy(): void {
@@ -92,18 +116,24 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   }
 
   onHasAccountClick() {
-    this.be.log('User has an account, initializing setup...');
     this.loadingTools = true;
-    // Move to location selection step
     this.hasChosenLocation = true;
+    this.be.sendRequestWithArgs('hasAccount', null) ;
   }
 
   // Location selection methods
   selectInstallChoice(choice: InstallChoiceType) {
-    if ((choice === 'home' && this.homeError) || (choice === 'custom' && this.customError)) { return; }
+    if ((choice === 'home' && this.homeError) || (choice === 'custom' && this.customError)) { 
+      return; 
+    }
     this.installChoice = choice;
   }
-  onCustomPathInput(value: string) { this.customPath = value; }
+
+  onCustomPathInput(value: string) { 
+    this.customPath = value; 
+    this.be.sendRequestWithArgs('checkInstallPath', value) ;
+  }
+
   browseForCustom() {
     if (this.customError) { return; }
     // Automatically select the custom path card when browse is clicked
@@ -115,7 +145,7 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
     if (!this.installChoice) { return; }
     const payload: any = { type: this.installChoice };
     if (this.installChoice === 'custom') { payload.path = this.customPath; }
-    this.be.sendRequestWithArgs('initSetup' as any, payload);
+    this.be.sendRequestWithArgs('initSetup', payload);
     this.disableNext = true ;
     this.step = 1;
   }

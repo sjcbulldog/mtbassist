@@ -8,6 +8,7 @@ import * as vscodeuri from 'vscode-uri';
 import * as EventEmitter from 'events' ;
 import { MTBLoadFlags } from "../mtbenv/mtbenv/loadflags";
 import { MTBAssistObject } from "./mtbassistobj";
+import { MTBProjectInfo } from "../mtbenv/appdata/mtbprojinfo";
 
 interface OutputPercentMap {
     match: RegExp ;
@@ -292,7 +293,7 @@ export class VSCodeWorker extends EventEmitter  {
                 return;
             }
 
-            this.runMakeGetLibs(this.ext_.env!.appInfo!.appdir, proj.name)
+            this.runMakeGetLibs(proj)
             .then((result) => {
                 if (result[0] !== 0) {
                     this.logger_.error(`Failed to fix missing assets for project '${projname}': ${result[1].join('\n')}`) ;
@@ -320,15 +321,18 @@ export class VSCodeWorker extends EventEmitter  {
         }
     }
 
-    private runMakeGetLibs(appdir: string, projdir: string): Promise<[number, string[]]> {
+    private runMakeGetLibs(proj: MTBProjectInfo): Promise<[number, string[]]> {
         return new Promise<[number, string[]]>((resolve, reject) => {
-            let p = path.join(appdir, projdir);
+            let p = proj.path ;
             let cliPath = this.findMakePath();
             if (cliPath === undefined) {
                 resolve([-1, ["modus shell not found."]]) ;
             }
             else {
                 this.makeLines_ = 0 ;
+                if (process.platform === 'win32') {
+                    cliPath += ".exe" ;
+                }
                 ModusToolboxEnvironment.runCmdCaptureOutput(p, cliPath, this.ext_.toolsDir, ['getlibs'], this.dumpMakeOutput.bind(this))
                 .then((result) => {
                     resolve([0, [``]]);

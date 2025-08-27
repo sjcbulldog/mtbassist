@@ -284,6 +284,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
             let text: string = "" ;
             let penv : any = {} ;
             let found = false ;
+            let cyfound = false ;
             for(let key in process.env) {
                 if (key === 'PATH') {
                     penv['PATH'] = ModusToolboxEnvironment.filterPath(process.env[key]!) ;
@@ -291,10 +292,15 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 }
                 else if (toolspath && key === 'CY_TOOLS_PATHS') {
                     penv[key] = toolspath ;
+                    cyfound = true ;
                 }
                 else {
                     penv[key] = process.env[key] ;
                 }
+            }
+
+            if (!cyfound) {
+                penv['CY_TOOLS_PATHS'] = toolspath ;
             }
 
             if (!found) {

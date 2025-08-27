@@ -30,11 +30,15 @@ export class BackendService {
     loadedAsset: Subject<string> = new Subject<string>();
 
     // Install and setup related
-    progressMessage: Subject<string> = new Subject<string>();
-    progressPercent: Subject<number> = new Subject<number>();
     mtbInstallStatus: Subject<MTBInstallType> = new Subject<MTBInstallType>();
     neededTools: Subject<SetupProgram[]> = new Subject<SetupProgram[]>();
+    progressMessage: Subject<string> = new Subject<string>();
+    progressPercent: Subject<number> = new Subject<number>();
     installProgress: Subject<InstallProgress> = new Subject<InstallProgress>();
+    homeError: Subject<string | undefined> = new Subject<string | undefined>();
+    customError: Subject<string | undefined> = new Subject<string | undefined>();
+    customWarning: Subject<string | undefined> = new Subject<string | undefined>();
+    homeWarning: Subject<string | undefined> = new Subject<string | undefined>();
 
     // Settings related
     settings: Subject<MTBSetting[]> = new Subject<MTBSetting[]>();
@@ -205,8 +209,18 @@ export class BackendService {
         this.registerHandler('sendCodeExamples', (cmd) => { this.codeExample.next(cmd.data || [])}) ;
         this.registerHandler('sendDefaultProjectDir', (cmd) => { this.defaultProjectDir.next(cmd.data || '')}) ;
         this.registerHandler('showSettingsError', (cmd) => { this.settingsErrors.next(cmd.data) ; }) ;
+        this.registerHandler('setChooseMTBLocationStatus', this.handleMTBLocationStatus.bind(this));
+        this.registerHandler('installProgress', (cmd) => { this.installProgress.next(cmd.data || 0) });
     }
-    
+
+    private handleMTBLocationStatus(cmd: BackEndToFrontEndResponse) {
+        this.log(`MTB location status updated: ${JSON.stringify(cmd.data)}`);
+        this.homeError.next(cmd.data.homeError) ;
+        this.homeWarning.next(cmd.data.homeWarning) ;
+        this.customError.next(cmd.data.customError) ;
+        this.customWarning.next(cmd.data.customWarning) ;
+    }
+
     public executeBuildAction(action: string, project?: string): void {
         this.log(`Executing build action: ${action}`);
         if (this.pipe_) {
