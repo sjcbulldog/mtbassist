@@ -7,6 +7,7 @@ import { MTBVersion } from "../mtbenv/misc/mtbversion";
 import { IDCRegistry } from "./idcreg";
 import { SetupProgram } from "../comms";
 import * as path from 'path' ;
+import * as fs from 'fs' ;
 
 //
 // AppData/Local/Infineon_Technologies_AG/Infineon-Toolbox/Tools/ ...
@@ -27,12 +28,16 @@ export interface AccessTokenResponse {
 
 export class SetupMgr extends MtbManagerBase {
     private static readonly mtbFeatureId = 'com.ifx.tb.tool.modustoolbox';
+    private static readonly mtbSetupId = 'com.ifx.tb.tool.modustoolboxsetup';
+    private static readonly downloadRatio = 0.8;
 
     private static readonly requiredFeatures : string[] = [
         'com.ifx.tb.tool.modustoolboxedgeprotectsecuritysuite',
         'com.ifx.tb.tool.modustoolboxprogtools',
         'com.ifx.tb.tool.modustoolbox',
-        'com.ifx.tb.tool.mtbgccpackage'
+        'com.ifx.tb.tool.mtbgccpackage',
+        'com.ifx.tb.tool.modustoolboxsetup',
+
     ] ;
 
     private static readonly optionalFeatures : string[] = [
@@ -81,9 +86,41 @@ export class SetupMgr extends MtbManagerBase {
 
         let tools = this.registry_.getToolsByFeatureId(SetupMgr.mtbFeatureId) ;
         if (tools.length > 0) {
+            for (let tool of tools) {
+                if (tool.path && fs.existsSync(tool.path)) {
+                    let p = path.normalize(tool.path) ;
+                    let toolsDir = this.findToolsDirFromPath(p);
+                    if (toolsDir) {
+                        ret.push(toolsDir);
+                    }
+                }
+            }
         }
-        return ret ;
 
+        ret.sort(this.compareToolsDirs.bind(this)) ;
+        return ret ;
+    }
+
+    private compareToolsDirs(a: string, b: string) : number {
+        let basea = path.basename(a) ;
+        let baseb = path.basename(b) ;
+        return basea.localeCompare(baseb);
+    }
+
+    private findToolsDirFromPath(p: string) : string | undefined {
+        while (true) {
+            let bname = path.basename(p) ;
+            if (/^tools_[0-9]+.[0-9]+$/.test(bname)) {
+                return p ;
+            }
+            let parent = path.dirname(p) ;
+            if (parent === p) {
+                break ;
+            }
+            p = parent ;
+        }
+
+        return undefined ;
     }
 
     public async initializeLocal() : Promise<void> {
@@ -166,7 +203,7 @@ export class SetupMgr extends MtbManagerBase {
     }
 
     public findNeededTools() : SetupProgram[] {
-        return [...this.checkNeededTools(SetupMgr.requiredFeatures, true), ...this.checkNeededTools(SetupMgr.optionalFeatures, false)] ;
+        return [...this.checkNeededTools(SetupMgr.requiredFeatures, true)] ;
     }
 
     public installTools(tools: SetupProgram[]) : Promise<void> {
@@ -201,6 +238,17 @@ export class SetupMgr extends MtbManagerBase {
         return id === 'com.ifx.tb.tool.modustoolbox' ;
     }
 
+    private getName(id: string) : string {
+        let ret : string ;
+        
+        if (id === SetupMgr.mtbSetupId) {
+            ret = 'ModusToolbox Setup';
+        } else {
+            ret = this.toollist_.getToolByFeature(id)?.name || 'Unknown';
+        }
+        return ret;
+    }
+
     private checkNeededTools(flist: string[], required: boolean) : SetupProgram[] {
         let ret : SetupProgram[] = [] ;
         for(let f of flist) {
@@ -219,7 +267,7 @@ export class SetupMgr extends MtbManagerBase {
                 if (latest && latest.isGreaterThen(MTBVersion.fromVersionString(inst!.version))) {
                     ret.push({
                         featureId: f,
-                        name: pgm.name,
+                        name: this.getName(f),
                         version: latest.toString(),
                         required: required,
                         upgradable: true,
@@ -231,7 +279,7 @@ export class SetupMgr extends MtbManagerBase {
                 else {
                     ret.push({
                         featureId: f,
-                        name: pgm.name,
+                        name: this.getName(f),
                         version: '',
                         required: required,
                         upgradable: false,
@@ -249,7 +297,7 @@ export class SetupMgr extends MtbManagerBase {
                     } else {
                         ret.push({
                             featureId: f,
-                            name: pgm.name,
+                            name: this.getName(f),
                             version: latest.toString(),
                             required: required,
                             upgradable: false,
@@ -324,7 +372,7 @@ export class SetupMgr extends MtbManagerBase {
             if (m) {
                 let percent = parseFloat(m[1]);
                 this.logger.debug(`Download progress for ${id}: ${percent}%`);
-                this.emit('downloadProgress', id, `Downloading ... ${percent}%`, percent );
+                this.emit('downloadProgress', id, `Downloading ... ${percent}%`, percent * SetupMgr.downloadRatio);
             }
         }
     }
@@ -411,6 +459,7 @@ export class SetupMgr extends MtbManagerBase {
 
     private downloadFeature(id: string)  : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
+            this.emit('downloadProgress', id, 'Preparing...', 0);   
             let tool = this.toollist_.getToolByFeature(id);
             let version = this.findLatestVersion(tool) ;
             if (!version) {
@@ -437,10 +486,10 @@ export class SetupMgr extends MtbManagerBase {
                         else {
                             this.logger.debug(`Feature ${id} version ${version} downloaded successfully.`);
                             this.logger.debug(`Installing feature ${id} version ${version}...`);
-                            this.emit('downloadProgress', id, 'Installing...', -1 );
+                            this.emit('downloadProgress', id, 'Installing...', SetupMgr.downloadRatio * 100 );
                             this.installFeature(id, version!.toString())
                             .then(() => {
-                                this.emit('downloadProgress', id, 'Installation Complete!', -1 );                                
+                                this.emit('downloadProgress', id, 'Complete', 100) ;
                                 this.logger.debug(`Feature ${id} version ${version} installed successfully.`);
                                 resolve();
                             })

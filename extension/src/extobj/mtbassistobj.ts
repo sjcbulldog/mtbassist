@@ -262,7 +262,8 @@ export class MTBAssistObject {
     }
 
     private getToolsFromIDCRegistry() : string | undefined {
-        return undefined ;
+        let list = this.setupMgr_.mtbLocations;
+        return list.length > 0 ? list[0] : undefined;
     }
 
     private initWithTools(): Promise<void> {
@@ -273,13 +274,9 @@ export class MTBAssistObject {
                 return;
             }
 
-            let tools = this.settings_.toolsPath ;
-            if (!tools || tools.length === 0) {
-                tools = this.getToolsFromIDCRegistry();
-            }
-
-            if (tools && tools.length > 0) {
-                this.env_.setRequestedToolsDir(tools) ;
+            this.toolspath_ = this.settings_.toolsPath ;
+            if (!this.toolspath_ || this.toolspath_.length === 0) {
+                this.toolspath_ = this.getToolsFromIDCRegistry();
             }
 
             this.lcsMgr_ = new LCSManager(this) ;
@@ -996,6 +993,9 @@ export class MTBAssistObject {
             if (tool) {
                 this.launch(tool);
             }
+            else {
+                vscode.window.showErrorMessage('Setup program has not been installed.');
+            }
             resolve();
         });
         return ret;
@@ -1153,7 +1153,7 @@ export class MTBAssistObject {
                     return;
                 }
 
-                this.logger_.debug('ModusToolbox application detected - loading...');
+                this.logger_.debug(`ModusToolbox application detected - loading '${appDir}'`);
 
                 //
                 // Load the ModusToolbox application w/ packs and tools

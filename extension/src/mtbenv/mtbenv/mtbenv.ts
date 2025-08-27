@@ -34,10 +34,11 @@ export class ModusToolboxEnvironment extends EventEmitter {
     private packDb_ : PackDB ;
     private appInfo_? : MTBAppInfo ;
 
-    private requestedToolsDir_? : string ;
     private exeDir_? : string ;
     private toolsDir_? : string ;
     private settings_ : MTBSettings ;
+
+    private passedToolsDirs_ : string | undefined ;
 
     private logger_ : winston.Logger ;  
 
@@ -112,10 +113,6 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return this.appInfo_ ;
     }
 
-    public setRequestedToolsDir(dir: string) {
-        this.requestedToolsDir_ = dir ;
-    }
-
     public get toolsDir() : string | undefined {
         return this.toolsDir_ ;
     }
@@ -163,6 +160,8 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 return ;
             }
 
+            this.passedToolsDirs_ = toolsPath;
+
             if (flags & MTBLoadFlags.reload) {
                 this.toolsDb_ = new ToolsDB() ;
                 this.packDb_ = new PackDB() ;
@@ -174,10 +173,6 @@ export class ModusToolboxEnvironment extends EventEmitter {
             this.isLoading_ = true ;
             if (appdir !== undefined) {
                 this.appdir_ = appdir ;
-            }
-
-            if (toolsPath !== undefined) {
-                this.requestedToolsDir_ = toolsPath ;
             }
 
             this.wants_ = flags ;
@@ -627,14 +622,9 @@ export class ModusToolboxEnvironment extends EventEmitter {
         let toolspathDir = this.cyToolsPathDir() ;
         let commonDir = this.searchCommonDir() ;
 
-        if (this.requestedToolsDir_ !== undefined) {
-            ret = this.requestedToolsDir_ ;
-            if (!fs.existsSync(ret)) {
-                this.logger_.error('Requested tools directory does not exist');
-                ret = undefined ;
-            }
+        if (this.passedToolsDirs_ !== undefined) {
+            ret = this.passedToolsDirs_ ;
         }
-
 
         if (ret === undefined && exeToolsDir) {
             ret = exeToolsDir ;

@@ -72,7 +72,10 @@
         <div class="confirm-tools">
           <h3>Confirm Tools to Download & Install</h3>
           <div class="tool-section">
-            <h4>Required Software</h4>
+            <h4 style="text-align: center; width: 100%;">Required Software</h4>
+            <div style="text-align: center; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">
+              This list is the required minimum list of software for ModusToolbox ecosystem.  Additional software can be installed as needed from the ModusToolbox Setup program.
+            </div>
             <ul class="tool-list">
               @for (tool of neededTools; track tool.featureId) {
                 @if (tool.required && (!downloading || activeInstallSet.has(tool.featureId))) {
@@ -98,10 +101,17 @@
                       }
                     </div>
                     @if (progress[tool.featureId].message) {
-                      <div class="progress-message">{{ progress[tool.featureId].message }}</div>
-                      <div class="progress-bar">
-                        <div class="progress-fill" [style.width.%]="progress[tool.featureId].percent"></div>
-                      </div>
+                      @if (tool.installed) {
+                        <div class="progress-message">Complete</div>
+                        <div class="progress-bar">
+                          <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                      } @else {
+                        <div class="progress-message">{{ progress[tool.featureId].message }}</div>
+                        <div class="progress-bar">
+                          <div class="progress-fill" [style.width.%]="progress[tool.featureId].percent"></div>
+                        </div>
+                      }
                     }
                   </li>
                 }
