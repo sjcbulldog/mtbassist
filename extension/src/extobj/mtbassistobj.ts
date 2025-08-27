@@ -27,6 +27,7 @@ import { MtbFunIndex } from '../keywords/mtbfunindex';
 import { MTBSettings } from './mtbsettings';
 import { LCSManager } from './lcsmgr';
 import { MTBBoard } from '../mtbenv/manifest/mtbboard';
+import { AIManager } from '../ai/aimgr';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -70,6 +71,7 @@ export class MTBAssistObject {
     private statusBarItem_: vscode.StatusBarItem ;
     private initializing_: boolean = true;
     private termRegistered_ : boolean = false ;
+    private aimgr_ : AIManager ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -93,15 +95,22 @@ export class MTBAssistObject {
         });
 
         this.recents_ = new RecentAppManager(this);
+
+        this.aimgr_ = new AIManager(this);
+
         this.intellisense_ = new IntelliSenseMgr(this);
+
         this.setupMgr_ = new SetupMgr(this);
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
+
         this.keywords_ = new MtbFunIndex(this.logger_);
+
         this.settings_ = new MTBSettings(this) ;
         this.settings_.on('toolsPathChanged', this.onToolsPathChanged.bind(this));
         this.settings_.on('restartWorkspace', this.doRestartExtension.bind(this));
         this.settings_.on('showError', this.showSettingsError.bind(this));
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
+
         this.toolspath_ = this.settings_.toolsPath ? this.settings_.toolsPath : '';
         this.bindCommandHandlers();
 
@@ -349,6 +358,9 @@ export class MTBAssistObject {
                                                         parray.push(p) ;
 
                                                         p = this.lcsMgr_!.updateBSPS() ;
+                                                        parray.push(p) ;
+
+                                                        p = this.aimgr_.initialize() ;
                                                         parray.push(p) ;
 
                                                         Promise.all(parray)
