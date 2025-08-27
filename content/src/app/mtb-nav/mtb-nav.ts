@@ -13,6 +13,7 @@ import { RecentlyOpenedComponent } from "../recently-opened/recently-opened.comp
 import { GlossaryComponent } from "../glossary/glossary.component";
 import { SettingsEditor } from "../settings-editor/settings-editor";
 import { LocalContentStorageComponent } from "../local-content-storage/local-content-storage";
+import { AIViewComponent } from "../ai-view/ai-view.component";
 
 export interface MtbNavTab {
   label: string;
@@ -34,7 +35,8 @@ export interface MtbNavTab {
     RecentlyOpenedComponent,
     GlossaryComponent,
     SettingsEditor,
-    LocalContentStorageComponent
+    LocalContentStorageComponent,
+    AIViewComponent
 ],
   templateUrl: './mtb-nav.html',
   styleUrl: './mtb-nav.scss'

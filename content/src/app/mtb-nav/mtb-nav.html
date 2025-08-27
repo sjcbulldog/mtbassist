@@ -116,8 +116,21 @@
               }
             </div>
           }  
-          
+
           @case (7) {
+            <div class="tab-panel">
+              @if (tab.component === 'AIViewComponent') {
+                <app-ai-view></app-ai-view>
+              } @else {
+                <div class="placeholder-content">
+                  <h2>{{ tab.label }}</h2>
+                  <h2>Component: {{ tab.component.toString() }}</h2>
+                </div>
+              }
+            </div>
+          }               
+          
+          @case (8) {
             <div class="tab-panel">
               @if (tab.component === 'GlossaryComponent') {
                 <app-glossary #glossary></app-glossary>

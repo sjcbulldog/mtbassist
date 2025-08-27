@@ -68,7 +68,7 @@ export class BackendService {
     lcsBusy: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     // AI related
-    aiApiKey : Subject<string> = new Subject<string>();
+    aiApiKey : Subject<any> = new Subject<any>();
 
     private allBSPExceptEAPData : BSPIdentifier[] = [] ;
 
@@ -214,11 +214,15 @@ export class BackendService {
         this.registerHandler('showSettingsError', (cmd) => { this.settingsErrors.next(cmd.data) ; }) ;
         this.registerHandler('setChooseMTBLocationStatus', this.handleMTBLocationStatus.bind(this));
         this.registerHandler('installProgress', (cmd) => { this.installProgress.next(cmd.data || 0) });
-        this.registerHandler('apikey', (cmd) => { this.aiApiKey.next(cmd.data || '') });
+        this.registerHandler('apikey', this.handleAPIKey.bind(this));
     }
 
+    private handleAPIKey(cmd: BackEndToFrontEndResponse) {
+        this.log(`API key received: ${JSON.stringify(cmd.data)}`);
+        this.aiApiKey.next(cmd.data) ;
+    }   
+
     private handleMTBLocationStatus(cmd: BackEndToFrontEndResponse) {
-        this.log(`MTB location status updated: ${JSON.stringify(cmd.data)}`);
         this.homeError.next(cmd.data.homeError) ;
         this.homeWarning.next(cmd.data.homeWarning) ;
         this.customError.next(cmd.data.customError) ;
@@ -226,7 +230,6 @@ export class BackendService {
     }
 
     public executeBuildAction(action: string, project?: string): void {
-        this.log(`Executing build action: ${action}`);
         if (this.pipe_) {
             this.pipe_.sendRequest({
                 request: 'buildAction',

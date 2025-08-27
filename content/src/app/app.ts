@@ -70,6 +70,11 @@ export class App {
       icon: 'settings'
     },
     {
+      label: 'AI',
+      component: 'AIViewComponent',
+      icon: 'smart_toy'
+    },    
+    {
       label: 'Glossary',
       component: 'GlossaryComponent',
       icon: 'help'
