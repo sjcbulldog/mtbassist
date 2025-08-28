@@ -58,7 +58,6 @@ export class MtbNav implements OnInit, OnDestroy {
     // Subscribe to local content storage busy state
     this.subscriptions.push(
       this.backendService.lcsBusy.subscribe(busy => {
-        this.backendService.log(`lcsbusy is ${busy}`) ;
         this.lcsBusy = busy;
       })
     );

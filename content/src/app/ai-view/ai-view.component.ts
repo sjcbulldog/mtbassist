@@ -18,9 +18,13 @@ export class AIViewComponent implements AfterViewInit, OnInit {
 
     ngOnInit(): void {
         this.be.aiApiKey.subscribe((key) => {
-            this.be.log('AI API key received');
             this.apiKey = key;
-            this.initView() ;
+            if (this.apiKey.error) {
+                this.initError() ;
+            }
+            else {
+                this.initView() ;
+            }
         });        
 
         this.be.theme.subscribe((theme) => {
@@ -32,10 +36,17 @@ export class AIViewComponent implements AfterViewInit, OnInit {
     ngAfterViewInit() {
     }
 
-    private initView() {
-        this.be.log('AIViewComponent initialized');
+    private initError() {
         if (this.myContainer) {
-            this.be.log('    Container found - loading AI script with key: ' + this.apiKey.access_token) ;
+            let container = this.myContainer.nativeElement;
+            let span = document.createElement("span") as HTMLSpanElement;
+            span.innerText = `ModusToolbox AI Error: ${this.apiKey.error_description}` 
+            container.appendChild(span);
+        }
+    }
+
+    private initView() {
+        if (this.myContainer) {
             let w = (window as any) ;
             w.eptAIConfig = { 
                 accessToken: this.apiKey.access_token,
@@ -56,7 +67,6 @@ export class AIViewComponent implements AfterViewInit, OnInit {
             try {
                 let container = this.myContainer.nativeElement;
                 container.appendChild(script);
-                this.be.log('    AI script loaded successfully');
             }
             catch(err) {
                 this.be.log('    Error loading AI script: ' + err);
