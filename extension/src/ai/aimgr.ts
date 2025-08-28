@@ -31,10 +31,10 @@ export class AIManager extends EventEmitter {
         let ret = new Promise<any>((resolve, reject) => {
 
             let req = {
-                // eslint-disable-next-line @typescript-eslint/naming-convention            
-                client_id: "UYet54C32fMCcbR8rWUfjC1E1IC4PW7j",
                 // eslint-disable-next-line @typescript-eslint/naming-convention
-                client_secret: "3rqt9WIBs5GHnrqt0DNoIKtiejFUpThu3lkRMsJ1Rlz7OvNflMjCSYyWNK-pi93w",
+                client_id: "<client_id>",
+                // eslint-disable-next-line @typescript-eslint/naming-convention
+                client_secret: "<client_secret>",
 
                 audience: "wss://ws.api.ept.ai",
 
