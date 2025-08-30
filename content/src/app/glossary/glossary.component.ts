@@ -1,8 +1,9 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GlossaryEntry } from '../../comms';
 import { BackendService } from '../backend/backend-service';
+import { Subscription } from 'rxjs/internal/Subscription';
 
 
 
@@ -13,24 +14,43 @@ import { BackendService } from '../backend/backend-service';
   templateUrl: './glossary.component.html',
   styleUrls: ['./glossary.component.scss']
 })
-export class GlossaryComponent {
+export class GlossaryComponent implements OnInit, OnDestroy {
   @Input() entries: GlossaryEntry[] = [];
   
   searchTerm = '';
   selectedLetter = 'A';
   alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
   themeType: 'dark' | 'light' = 'light';
-  
+
+  private glossarySubscription?: Subscription;
+  private themeSubscription?: Subscription;
+  private readySubscription?: Subscription;
+
   constructor(private be: BackendService) {
-    this.be.glossaryEntries.subscribe(entries => {
-      this.addEntries(entries) ;
-    }) ;
-    
-    // Subscribe to theme changes
-    this.be.theme.subscribe(theme => {
+  }
+
+  ngOnInit(): void {
+    this.glossarySubscription = this.be.glossaryEntries.subscribe(entries => {
+      this.addEntries(entries);
+    });
+
+    this.themeSubscription = this.be.theme.subscribe(theme => {
       this.themeType = theme as 'dark' | 'light';
     });
+
+    this.readySubscription = this.be.ready.subscribe(ready => {
+      if (ready) {
+        this.be.sendRequestWithArgs('glossary-data', null);
+      }
+    });
   }
+
+  ngOnDestroy(): void {
+    this.glossarySubscription?.unsubscribe();
+    this.themeSubscription?.unsubscribe();
+    this.readySubscription?.unsubscribe();
+  }  
 
   // API method to add entries
   addEntries(newEntries: GlossaryEntry[]): void {

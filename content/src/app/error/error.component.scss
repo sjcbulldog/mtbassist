@@ -1,0 +1,264 @@
+.error-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 2rem;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 600px;
+  gap: 1.5rem;
+}
+
+.error-icon {
+  font-size: 4rem;
+  width: 4rem;
+  height: 4rem;
+  color: #f44336;
+  filter: drop-shadow(0 2px 4px rgba(244, 67, 54, 0.3));
+  animation: pulse 2s infinite;
+}
+
+.error-message {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.025em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  
+  // HTML content styling
+  ::ng-deep {
+    p {
+      margin: 0.5rem 0;
+      
+      &:first-child {
+        margin-top: 0;
+      }
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    
+    strong, b {
+      font-weight: 700;
+    }
+    
+    em, i {
+      font-style: italic;
+    }
+    
+    code {
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      background-color: rgba(244, 67, 54, 0.1);
+      color: inherit;
+    }
+    
+    a {
+      color: #2196f3;
+      text-decoration: underline;
+      
+      &:hover {
+        color: #1976d2;
+      }
+    }
+    
+    ul, ol {
+      text-align: left;
+      margin: 0.5rem 0;
+      padding-left: 1.5rem;
+      
+      li {
+        margin: 0.25rem 0;
+      }
+    }
+    
+    br {
+      line-height: 1.8;
+    }
+  }
+}
+
+// Pulse animation for the error icon
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// Dark theme
+.error-container.dark-theme {
+  background: #1a1a1a;
+  color: #ffffff;
+  
+  .error-message {
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    
+    ::ng-deep {
+      code {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+      }
+      
+      a {
+        color: #64b5f6;
+        
+        &:hover {
+          color: #90caf9;
+        }
+      }
+    }
+  }
+  
+  .error-icon {
+    filter: drop-shadow(0 2px 4px rgba(244, 67, 54, 0.5));
+  }
+}
+
+// Light theme
+.error-container.light-theme {
+  background: #fafafa;
+  color: #333333;
+  
+  .error-message {
+    color: #333333;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    
+    ::ng-deep {
+      code {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #333333;
+      }
+      
+      a {
+        color: #1976d2;
+        
+        &:hover {
+          color: #1565c0;
+        }
+      }
+    }
+  }
+  
+  .error-icon {
+    filter: drop-shadow(0 2px 4px rgba(244, 67, 54, 0.3));
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .error-container {
+    padding: 1rem;
+  }
+  
+  .error-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+  }
+  
+  .error-message {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-container {
+    padding: 0.75rem;
+  }
+  
+  .error-icon {
+    font-size: 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .error-message {
+    font-size: 1.125rem;
+  }
+}
+
+// Fallback for system preference detection
+@media (prefers-color-scheme: dark) {
+  .error-container:not(.light-theme) {
+    background: #1a1a1a;
+    color: #ffffff;
+    
+    .error-message {
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      
+      ::ng-deep {
+        code {
+          background-color: rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+        }
+        
+        a {
+          color: #64b5f6;
+          
+          &:hover {
+            color: #90caf9;
+          }
+        }
+      }
+    }
+    
+    .error-icon {
+      filter: drop-shadow(0 2px 4px rgba(244, 67, 54, 0.5));
+    }
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .error-container:not(.dark-theme) {
+    background: #fafafa;
+    color: #333333;
+    
+    .error-message {
+      color: #333333;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+      
+      ::ng-deep {
+        code {
+          background-color: rgba(0, 0, 0, 0.05);
+          color: #333333;
+        }
+        
+        a {
+          color: #1976d2;
+          
+          &:hover {
+            color: #1565c0;
+          }
+        }
+      }
+    }
+    
+    .error-icon {
+      filter: drop-shadow(0 2px 4px rgba(244, 67, 54, 0.3));
+    }
+  }
+}

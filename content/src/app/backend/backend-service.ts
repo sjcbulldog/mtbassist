@@ -1,11 +1,12 @@
-import { Injectable, Pipe } from '@angular/core';
+import { Injectable, OnDestroy, OnInit, Pipe } from '@angular/core';
 import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
 import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBInstallType, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError } from '../../comms';
+import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType } from '../../comms';
 import { ProjectManager } from './projectmgr';
+import { App } from '../app';
 
 declare var acquireVsCodeApi: any | undefined ;
 
@@ -15,72 +16,83 @@ declare var acquireVsCodeApi: any | undefined ;
 export class BackendService {
     private pipe_?: PipeInterface ;
     private projectManager_ : ProjectManager ;
+    private ready_ : boolean = false ;
 
+    // Handler for messages from the backend
     private handlers_ : Map<string, (cmd: BackEndToFrontEndResponse) => void> = new Map<string, (cmd: BackEndToFrontEndResponse) => void>();
 
     // Dispay related
-    theme: Subject<string> = new Subject<string>();
-    navTab: Subject<number> = new Subject<number>() ;
-    setupTab: Subject<number> = new Subject<number>() ;
-    browserFolder: Subject<BrowseResult | null> = new Subject<BrowseResult | null>();
-    browserFile: Subject<BrowseResult | null> = new Subject<BrowseResult | null>();
+    theme: BehaviorSubject<ThemeType> = new BehaviorSubject<ThemeType>('light');
+    navTab: BehaviorSubject<number> = new BehaviorSubject<number>(0) ;
+    setupTab: BehaviorSubject<number> = new BehaviorSubject<number>(0) ;
+    browserFolder: BehaviorSubject<BrowseResult | null> = new BehaviorSubject<BrowseResult | null>(null);
+    browserFile: BehaviorSubject<BrowseResult | null> = new BehaviorSubject<BrowseResult | null>(null);
 
     // Application related
     appStatusData: BehaviorSubject<ApplicationStatusData | null> = new BehaviorSubject<ApplicationStatusData | null>(null);
-    loadedAsset: Subject<string> = new Subject<string>();
+    loadedAsset: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
 
     // Install and setup related
-    mtbInstallStatus: Subject<MTBInstallType> = new Subject<MTBInstallType>();
-    neededTools: Subject<SetupProgram[]> = new Subject<SetupProgram[]>();
-    progressMessage: Subject<string> = new Subject<string>();
-    progressPercent: Subject<number> = new Subject<number>();
-    installProgress: Subject<InstallProgress> = new Subject<InstallProgress>();
-    homeError: Subject<string | undefined> = new Subject<string | undefined>();
-    customError: Subject<string | undefined> = new Subject<string | undefined>();
-    customWarning: Subject<string | undefined> = new Subject<string | undefined>();
-    homeWarning: Subject<string | undefined> = new Subject<string | undefined>();
+    neededTools: BehaviorSubject<SetupProgram[]> = new BehaviorSubject<SetupProgram[]>([]);
+    progressMessage: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+    progressPercent: BehaviorSubject<number | null> = new BehaviorSubject<number | null>(null);
+    installProgress: BehaviorSubject<InstallProgress | null> = new BehaviorSubject<InstallProgress | null>(null);
+    homeError: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
+    customError: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
+    customWarning: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
+    homeWarning: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
 
     // Settings related
-    settings: Subject<MTBSetting[]> = new Subject<MTBSetting[]>();
-    settingsErrors: Subject<SettingsError[]> = new Subject<SettingsError[]>();
+    settings: BehaviorSubject<MTBSetting[]> = new BehaviorSubject<MTBSetting[]>([]);
+    settingsErrors: BehaviorSubject<SettingsError[]> = new BehaviorSubject<SettingsError[]>([]);
+
+    // Extension state
+    mtbMode: BehaviorSubject<MTBAssistantMode> = new BehaviorSubject<MTBAssistantMode>('initializing');    
+    errorMessage: BehaviorSubject<string> = new BehaviorSubject<string>('Default Error Message');
+    ready: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     // MISC
-    glossaryEntries: Subject<GlossaryEntry[]> = new Subject<GlossaryEntry[]>();
-    intellisenseProject: Subject<string> = new Subject<string>();
-    recentlyOpened: Subject<RecentEntry[]> = new Subject<RecentEntry[]>();
-    devKitStatus: Subject<DevKitInfo[]> = new Subject<DevKitInfo[]>();
-    defaultProjectDir: Subject<string> = new Subject<string>() ;
+    glossaryEntries: BehaviorSubject<GlossaryEntry[]> = new BehaviorSubject<GlossaryEntry[]>([]);
+    intellisenseProject: BehaviorSubject<string> = new BehaviorSubject<string>('');
+    recentlyOpened: BehaviorSubject<RecentEntry[]> = new BehaviorSubject<RecentEntry[]>([]);
+    devKitStatus: BehaviorSubject<DevKitInfo[]> = new BehaviorSubject<DevKitInfo[]>([]);
+    defaultProjectDir: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
 
     // Manfiest related
-    manifestStatus: BehaviorSubject<'loading' | 'loaded' | 'not-available'> = new BehaviorSubject<'loading' | 'loaded' | 'not-available'>('loading');
-    allBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();
-    allBSPsExceptEAP: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>();    
-    activeBSPs: Subject<BSPIdentifier[]> = new Subject<BSPIdentifier[]>() ;
+    manifestStatus: BehaviorSubject<ManifestStatusType> = new BehaviorSubject<ManifestStatusType>('loading') ;
+    allBSPs: BehaviorSubject<BSPIdentifier[]> = new BehaviorSubject<BSPIdentifier[]>([]);
+    allBSPsExceptEAP: BehaviorSubject<BSPIdentifier[]> = new BehaviorSubject<BSPIdentifier[]>([]);    
+    activeBSPs: BehaviorSubject<BSPIdentifier[]> = new BehaviorSubject<BSPIdentifier[]>([]) ;
     codeExample: BehaviorSubject<CodeExampleIdentifier[]> = new BehaviorSubject<CodeExampleIdentifier[]>([]) ;
 
     // LCS related
-    bspsNotIn: Subject<string[]> = new Subject<string[]>();
-    bspsIn: Subject<string[]> = new Subject<string[]>();
-    lcsToAdd: Subject<string[]> = new Subject<string[]>();
-    lcsToDelete: Subject<string[]> = new Subject<string[]>();
-    lcsNeedsUpdate: Subject<boolean> = new Subject<boolean>();
-    lcsNeedsApply: Subject<boolean> = new Subject<boolean>();
+    bspsNotIn: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
+    bspsIn: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
+    lcsToAdd: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
+    lcsToDelete: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
+    lcsNeedsUpdate: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    lcsNeedsApply: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     lcsBusy: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     // AI related
-    aiApiKey : Subject<any> = new Subject<any>();
+    aiApiKey : BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
 
+    // Data members
     private allBSPExceptEAPData : BSPIdentifier[] = [] ;
+    private appComp: App | undefined;
 
     constructor() {
         this.pipe_ = this.createPipe() ;
         if (this.pipe_) {
             this.pipe_.registerResponseHandler(this.messageProc.bind(this));
-            this.log(`BackendService initialized with ${this.pipe_.displayName} pipe.`);
         }
-
         this.projectManager_ = new ProjectManager(this);
         this.setupHandlers();   
+    }
+
+    public setAppComponent(app: App) {
+        this.appComp = app;
+        this.appComp.dmesg = 'BackendService connected' ;
     }
 
     public registerHandler(cmd: BackEndToFrontEndType, handler: (cmd: BackEndToFrontEndResponse) => void): void {  
@@ -91,7 +103,11 @@ export class BackendService {
     }
 
     public log(message: string, type?: string) {
-        if (this.pipe_) {
+        if (this.appComp) {
+            this.appComp.dmesg = message;
+        }
+
+        if (this.pipe_ && this.ready_) {
             this.pipe_.sendRequest({
                 request: 'logMessage',
                 data: {
@@ -185,7 +201,7 @@ export class BackendService {
         this.registerHandler('sendAllBSPs', (cmd) => { this.allBSPs.next(cmd.data || [])}) ;
         this.registerHandler('sendActiveBSPs', (cmd) => { this.activeBSPs.next(cmd.data || [])}) ;
         this.registerHandler('sendAllBSPsExceptEAP', (cmd) => { this.allBSPExceptEAPData = cmd.data || []; this.allBSPsExceptEAP.next(cmd.data || [])}) ;
-        this.registerHandler('mtbInstallStatus', (cmd) => { this.mtbInstallStatus.next(cmd.data || 'none')}) ;
+        this.registerHandler('mtbMode', (cmd) => { this.mtbMode.next(cmd.data || 'none')}) ;
         this.registerHandler('setupTab', (cmd) => { this.setupTab.next(cmd.data || 0)}) ;
         this.registerHandler('neededTools', (cmd) => { this.neededTools.next(cmd.data)}) ;
         this.registerHandler('installProgress', (cmd) => { this.installProgress.next(cmd.data)}) ;
@@ -213,8 +229,14 @@ export class BackendService {
         this.registerHandler('sendDefaultProjectDir', (cmd) => { this.defaultProjectDir.next(cmd.data || '')}) ;
         this.registerHandler('showSettingsError', (cmd) => { this.settingsErrors.next(cmd.data) ; }) ;
         this.registerHandler('setChooseMTBLocationStatus', this.handleMTBLocationStatus.bind(this));
-        this.registerHandler('installProgress', (cmd) => { this.installProgress.next(cmd.data || 0) });
         this.registerHandler('apikey', this.handleAPIKey.bind(this));
+        this.registerHandler('ready', (cmd) => { this.ready_ = cmd.data; this.ready.next(this.ready_); })
+        this.registerHandler('error', this.handleErrorMessage.bind(this));
+    }
+
+    private handleErrorMessage(cmd: BackEndToFrontEndResponse) {
+        this.errorMessage.next(cmd.data);
+        this.mtbMode.next('error') ;
     }
 
     private handleAPIKey(cmd: BackEndToFrontEndResponse) {
@@ -229,16 +251,20 @@ export class BackendService {
         this.customWarning.next(cmd.data.customWarning) ;
     }
 
-    public executeBuildAction(action: string, project?: string): void {
-        if (this.pipe_) {
-            this.pipe_.sendRequest({
-                request: 'buildAction',
-                data: {
-                    action: action,
-                    project: project
-                }
-            });
+    private sendPipeRequest(req: FrontEndToBackEndRequest) : void {
+        if (this.pipe_ && this.ready_) {
+            this.pipe_.sendRequest(req);
         }
+    }
+
+    public executeBuildAction(action: string, project?: string): void {
+        this.sendPipeRequest({
+            request: 'buildAction',
+            data: {
+                action: action,
+                project: project
+            }
+        });
     }
 
     private browseForFolderResult(cmd: BackEndToFrontEndResponse) {
@@ -283,7 +309,7 @@ export class BackendService {
 
         const handler = this.handlers_.get(cmd.response);
         if (!handler) {
-            this.log(`No handler found for command: ${cmd.response}`);
+            this.log(`No handler found for command: ${cmd.response}`, 'silly');
             return;
         }
         handler(cmd);

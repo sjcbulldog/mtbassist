@@ -67,7 +67,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
         let promise = new Promise<void>((resolve, reject) => {
             this.scanForDevKits()
                 .then((st: boolean) => {
-                    this.logger.info(`MTBDevKitMgr initialized successfully - ${JSON.stringify(this.devKitInfo)}.`);
+                    this.logger.info(`MTBDevKitMgr initialized successfully - ${this.devKitInfo.length} kits detected.`);
                     resolve();
                 })
                 .catch((error: Error) => {
@@ -484,8 +484,13 @@ export class MTBDevKitMgr extends MtbManagerBase {
         }
 
         let env = ext.env ;
-        if (!env || env.isLoading) {
+        if (!env) {
             this.ext.logger.error('ModusToolbox environment is not initialized - cannot find fw-loader.');
+            return undefined ;
+        }
+
+        if (env.isLoading && !env.isLoadingOnlyManifest) {
+            this.ext.logger.error('ModusToolbox environment is currently loading (other than manifests) - cannot find fw-loader.');
             return undefined ;
         }
 
@@ -507,7 +512,8 @@ export class MTBDevKitMgr extends MtbManagerBase {
 
         for(let pgm of fwloader.props.opt.programs) {
             if (pgm.id === MTBDevKitMgr.fwloaderProgramUUID) {
-                return path.join(fwloader.path, pgm.exe) ;
+                let ret = path.join(fwloader.path, pgm.exe) ;
+                return ret;
             }
         }
 

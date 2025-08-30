@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MTBSetting, SettingsError } from '../../comms';
 import { BackendService } from '../backend/backend-service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'mtb-settings-editor',
@@ -28,34 +29,53 @@ import { BackendService } from '../backend/backend-service';
   templateUrl: './settings-editor.html',
   styleUrl: './settings-editor.scss'
 })
-export class SettingsEditor implements OnInit {
+export class SettingsEditor implements OnInit, OnDestroy {
   settings: MTBSetting[] = [];
   themeType: 'dark' | 'light' = 'light';
   manifestStatus: 'loading' | 'loaded' | 'not-available' = 'loading';
   settingsErrors: SettingsError[] = [] ;
 
+  private subscriptions: Subscription[] = [];
+
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
-    this.be.settings.subscribe(settings => {
-      this.settings = settings;
-      this.settingsErrors = [] ;
-      this.cdr.detectChanges() ;
-    });
 
-    this.be.settingsErrors.subscribe(errors => {
-      this.settingsErrors.push(...errors)
-      this.cdr.detectChanges();
-    });
+  }
 
-    this.be.manifestStatus.subscribe(status => {
+  ngOnInit() {
+    this.be.log('SettingsEditor: ngOnInit called');
+    this.subscriptions.push(
+      this.be.ready.subscribe(ready => {
+        if (ready) {
+          this.be.sendRequestWithArgs('settings-data', null);
+        }
+      })
+    );
+
+    this.subscriptions.push(
+      this.be.settings.subscribe(settings => {
+        this.settings = settings;
+        this.settingsErrors = [];
+        this.cdr.detectChanges();
+      })
+    );
+
+    this.subscriptions.push(
+      this.be.settingsErrors.subscribe(errors => {
+        this.settingsErrors.push(...errors);
+        this.cdr.detectChanges();
+      })
+    );
+
+    this.subscriptions.push(this.be.manifestStatus.subscribe(status => {
       this.manifestStatus = status;
-    });
+    }));
 
     // Subscribe to theme changes
-    this.be.theme.subscribe(theme => {
-      this.themeType = theme as 'dark' | 'light';
-    });
+    this.subscriptions.push(this.be.theme.subscribe(theme => {
+      this.themeType = theme ;
+    }));
 
-    this.be.browserFolder.subscribe(folder => {
+    this.subscriptions.push(this.be.browserFolder.subscribe(folder => {
       if (folder) {
         for(let setting of this.settings) {
           if (setting.name === folder.tag) {
@@ -73,9 +93,9 @@ export class SettingsEditor implements OnInit {
           }
         }
       }
-    });
+    }));
 
-    this.be.browserFile.subscribe(file => {
+    this.subscriptions.push(this.be.browserFile.subscribe(file => {
       if (file) {
         for(let setting of this.settings) {
           if (setting.name === file.tag) {
@@ -84,11 +104,11 @@ export class SettingsEditor implements OnInit {
           }
         }
       }
-    });
+    }));    
   }
 
-  ngOnInit() {
-    this.be.sendRequestWithArgs('getSettings', null) ;
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   isValidUri(value: any): boolean {

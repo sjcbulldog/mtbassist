@@ -1,5 +1,6 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { BackendService } from '../backend/backend-service';
+import { Subscription } from 'rxjs';
 
 
 @Component({
@@ -7,17 +8,21 @@ import { BackendService } from '../backend/backend-service';
   standalone: true,
   template: `<div #aiAgentContainer></div>`
 })
-export class AIViewComponent implements AfterViewInit, OnInit {
+export class AIViewComponent implements OnInit , OnDestroy {
     @ViewChild('aiAgentContainer') myContainer?: ElementRef<HTMLDivElement>;
     private apiKey: any ;
     private theme: string = 'dark' ;
+
+    private apiKeySubscription?: Subscription;
+    private themeSubscription?: Subscription;
+    private readySubscription?: Subscription;
 
     constructor(private be: BackendService) {
         this.be.log('AIViewComponent constructor called');
     }
 
     ngOnInit(): void {
-        this.be.aiApiKey.subscribe((key) => {
+        this.apiKeySubscription = this.be.aiApiKey.subscribe((key) => {
             this.apiKey = key;
             if (this.apiKey.error) {
                 this.initError() ;
@@ -27,13 +32,30 @@ export class AIViewComponent implements AfterViewInit, OnInit {
             }
         });        
 
-        this.be.theme.subscribe((theme) => {
-            this.be.log('Theme received');
+        this.themeSubscription = this.be.theme.subscribe((theme) => {
+            this.be.log('AIViewComponent: theme received');
             this.theme = theme;
+        });
+
+        this.be.ready.subscribe(() => {
+            this.be.log('AIViewComponent: backend ready');
+            this.be.sendRequestWithArgs('ai-data', null) ;
         });
     }
 
-    ngAfterViewInit() {
+    ngOnDestroy(): void {
+        this.be.log('AIViewComponent ngOnDestroy');
+        if (this.apiKeySubscription) {
+            this.apiKeySubscription.unsubscribe();
+        }
+
+        if (this.themeSubscription) {
+            this.themeSubscription.unsubscribe();
+        }
+
+        if (this.readySubscription) {
+            this.readySubscription.unsubscribe();
+        }
     }
 
     private initError() {

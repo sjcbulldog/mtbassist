@@ -1,0 +1,60 @@
+.initializing-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  transition: all 0.3s ease;
+}
+
+.initializing-text {
+  font-size: 1.5rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.4;
+  transition: color 0.3s ease;
+}
+
+// Dark theme
+.initializing-container.dark-theme {
+  background: #121212;
+  color: #ffffff;
+  
+  .initializing-text {
+    color: #ffffff;
+  }
+}
+
+// Light theme
+.initializing-container.light-theme {
+  background: #fafafa;
+  color: #333333;
+  
+  .initializing-text {
+    color: #333333;
+  }
+}
+
+// Fallback for system preference detection
+@media (prefers-color-scheme: dark) {
+  .initializing-container:not(.light-theme) {
+    background: #121212;
+    color: #ffffff;
+    
+    .initializing-text {
+      color: #ffffff;
+    }
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .initializing-container:not(.dark-theme) {
+    background: #fafafa;
+    color: #333333;
+    
+    .initializing-text {
+      color: #333333;
+    }
+  }
+}

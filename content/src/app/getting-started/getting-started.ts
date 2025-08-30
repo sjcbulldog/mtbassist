@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { BackendService } from '../backend/backend-service';
 import MtbNav from '../mtb-nav/mtb-nav';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-getting-started',
@@ -23,19 +24,30 @@ import MtbNav from '../mtb-nav/mtb-nav';
   templateUrl: './getting-started.html',
   styleUrl: './getting-started.scss'
 })
-export class GettingStarted {
+export class GettingStarted implements OnInit, OnDestroy {
   themeType: 'dark' | 'light' = 'dark'; // Default to light theme
 
+  private themeSubscription?: Subscription;
+  private readySubscription?: Subscription ;
+
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
-    this.be.theme.subscribe(theme => {
-      if (theme === 'dark' || theme === 'light') {
-        this.themeType = theme;
-      }
-      else {
-        this.themeType = 'dark' ;
-      }
-      this.cdr.detectChanges() ;
+
+  }
+
+  ngOnInit(): void {
+    this.themeSubscription = this.be.theme.subscribe(theme => {
+      this.themeType = theme;
     }) ;
+
+    this.readySubscription = this.be.ready.subscribe(ready => {
+      if (ready) {
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.themeSubscription?.unsubscribe();
+    this.readySubscription?.unsubscribe();
   }
 
   goToCreateProject() {
@@ -45,6 +57,7 @@ export class GettingStarted {
   goToRecentlyOpened() {
     this.be.navTab?.next(2); // 2 = Recently Opened tab index (adjust if needed)
   }
+  
   features = [
     {
       icon: 'speed',

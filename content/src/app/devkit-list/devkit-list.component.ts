@@ -1,10 +1,11 @@
-import { ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DevKitInfo } from '../../comms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BackendService } from '../backend/backend-service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-devkit-list',
@@ -13,12 +14,27 @@ import { BackendService } from '../backend/backend-service';
   templateUrl: './devkit-list.component.html',
   styleUrls: ['./devkit-list.component.scss']
 })
-export class DevkitListComponent {
+export class DevkitListComponent implements OnInit, OnDestroy {
   devkits: DevKitInfo[] = [];
   themeType: 'dark' | 'light' = 'light';
 
+  private devKitStatusSubscription?: Subscription;
+  private themeSubscription?: Subscription;
+  private readySubscription?: Subscription ;
+
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
-    this.be.devKitStatus.subscribe({
+  }
+
+  ngOnInit(): void {
+    this.be.log('DevkitListComponent initialized');
+
+    this.readySubscription = this.be.ready.subscribe((ready) => {
+      if (ready) {
+        this.be.sendRequestWithArgs('kit-data', null);
+      }
+    });
+
+    this.devKitStatusSubscription = this.be.devKitStatus.subscribe({
       next: (data) => {
         this.be.log('Dev Kit status data received:') ;
         this.devkits = data ;
@@ -27,13 +43,19 @@ export class DevkitListComponent {
     }) ;
     
     // Subscribe to theme changes
-    this.be.theme.subscribe(theme => {
+    this.themeSubscription = this.be.theme.subscribe(theme => {
       this.themeType = theme as 'dark' | 'light';
-    });
+    });    
+  }
+
+  ngOnDestroy(): void {
+    this.be.log('DevkitListComponent destroyed');
+    this.devKitStatusSubscription?.unsubscribe();
+    this.themeSubscription?.unsubscribe();
   }
 
   refreshDevKits() {
-    this.be.sendRequestWithArgs('refreshDevKits', null) ;
+    this.be.sendRequestWithArgs('kit-data', null) ;
   }
 
   updateFirmware(kit: DevKitInfo) {

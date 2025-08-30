@@ -1,0 +1,6 @@
+<div class="error-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
+  <div class="error-content">
+    <mat-icon class="error-icon">{{ icon }}</mat-icon>
+    <div class="error-message" [innerHTML]="message"></div>
+  </div>
+</div>

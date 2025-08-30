@@ -48,54 +48,60 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
 
-  constructor(private backendService: BackendService) {}
+  constructor(private be: BackendService) {}
 
   ngOnInit(): void {
+    this.subscriptions.push(
+      this.be.ready.subscribe(ready => {
+        this.be.sendRequestWithArgs('lcs-data', null) ;
+      })
+    ) ;
+
     // Subscribe to backend data
     this.subscriptions.push(
-      this.backendService.bspsNotIn.subscribe(bsps => {
+      this.be.bspsNotIn.subscribe(bsps => {
         this.bspsNotInList = [...bsps];
       })
     );
 
     this.subscriptions.push(
-      this.backendService.bspsIn.subscribe(bsps => {
+      this.be.bspsIn.subscribe(bsps => {
         this.bspsInList = [...bsps];
       })
     );
 
     this.subscriptions.push(
-      this.backendService.lcsToAdd.subscribe(bsps => {
+      this.be.lcsToAdd.subscribe(bsps => {
         this.bspsToAdd = [...bsps];
       })
     );
 
     this.subscriptions.push(
-      this.backendService.lcsToDelete.subscribe(bsps => {
+      this.be.lcsToDelete.subscribe(bsps => {
         this.bspsToDelete = [...bsps];
       })
     );
 
     this.subscriptions.push(
-      this.backendService.theme.subscribe(theme => {
+      this.be.theme.subscribe(theme => {
         this.themeType = theme;
       })
     );
 
     this.subscriptions.push(
-      this.backendService.lcsNeedsUpdate.subscribe(needsUpdate => {
+      this.be.lcsNeedsUpdate.subscribe(needsUpdate => {
         this.needsUpdate = needsUpdate;
       })
     );
 
     this.subscriptions.push(
-      this.backendService.lcsNeedsApply.subscribe(needsApply => {
+      this.be.lcsNeedsApply.subscribe(needsApply => {
         this.needsApply = needsApply;
       })
     );
 
     this.subscriptions.push(
-      this.backendService.lcsBusy.subscribe(busy => {
+      this.be.lcsBusy.subscribe(busy => {
         this.busy = busy;
       })
     );
@@ -121,23 +127,23 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
       );
       
       // Send the toggle command to the backend with the BSP name
-      this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'togglebsp', bsp: movedBsp });
+      this.be.sendRequestWithArgs('lcscmd', { cmd: 'togglebsp', bsp: movedBsp });
     }
   }
 
   startUpdate(): void {
-    this.backendService.lcsBusy.next(true);
-    this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'update', data: { action: 'start' } });
+    this.be.lcsBusy.next(true);
+    this.be.sendRequestWithArgs('lcscmd', { cmd: 'update', data: { action: 'start' } });
   }
 
   checkForUpdates(): void {
-    this.backendService.lcsBusy.next(true);
-    this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'check', data: null });
+    this.be.lcsBusy.next(true);
+    this.be.sendRequestWithArgs('lcscmd', { cmd: 'check', data: null });
   }
 
   applyBspChanges(): void {
-    this.backendService.lcsBusy.next(true);
-    this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'apply', data: null });
+    this.be.lcsBusy.next(true);
+    this.be.sendRequestWithArgs('lcscmd', { cmd: 'apply', data: null });
     
     // Uncheck show changes and clear filter when applying changes
     this.showChanges = false;
@@ -148,7 +154,7 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
     // Move all BSPs from "Not In Local Storage" to "In Local Storage"
     const bspsToMove = [...this.bspsNotInList];
     if (bspsToMove.length > 0) {
-      this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'moveAllToLocal', data: bspsToMove });
+      this.be.sendRequestWithArgs('lcscmd', { cmd: 'moveAllToLocal', data: bspsToMove });
     }
   }
 
@@ -156,12 +162,12 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
     // Move all BSPs from "In Local Storage" to "Not In Local Storage"
     const bspsToRemove = [...this.bspsInList];
     if (bspsToRemove.length > 0) {
-      this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'removeAllFromLocal', data: bspsToRemove });
+      this.be.sendRequestWithArgs('lcscmd', { cmd: 'removeAllFromLocal', data: bspsToRemove });
     }
   }
 
   onRevert(): void {
-    this.backendService.sendRequestWithArgs('lcscmd', { cmd: 'revert', data: null });
+    this.be.sendRequestWithArgs('lcscmd', { cmd: 'revert', data: null });
   }
 
   // Helper methods for visual highlighting

@@ -2,7 +2,6 @@ export type PlatformType = 'browser' | 'electron' | 'vscode' ;
 
 export type FrontEndToBackEndType = 
     'logMessage' | 
-    'getBSPs' |
     'getCodeExamples' |
     'progress' |
     'getStarted' |
@@ -22,7 +21,6 @@ export type FrontEndToBackEndType =
     'libmgr' |
     'devcfg' |
     'tool' |
-    'refreshDevKits' |
     'updateFirmware' |
     'recentlyOpened' |
     'openRecent' |
@@ -38,7 +36,15 @@ export type FrontEndToBackEndType =
     'getSettings' |
     'chooseMTBLocation' |
     'hasAccount' |
-    'checkInstallPath'
+    'checkInstallPath' |
+    'ai-data' |
+    'app-data' |
+    'cproj-data' |
+    'kit-data' |
+    'glossary-data' |
+    'lcs-data' |
+    'recent-data' |
+    'settings-data'
     ;
 
 export type BackEndToFrontEndType =
@@ -53,7 +59,7 @@ export type BackEndToFrontEndType =
     'loadedAsset' |
     'devKitStatus' |
     'allbsps' |
-    'mtbInstallStatus' |
+    'mtbMode' |
     'setupTab' |
     'neededTools' |
     'installProgress' |
@@ -75,8 +81,14 @@ export type BackEndToFrontEndType =
     'sendDefaultProjectDir' |
     'showSettingsError' |
     'setChooseMTBLocationStatus' |
-    'apikey'
+    'apikey' | 
+    'error' |
+    'ready' ;
     ;
+
+export type ThemeType = 'dark' | 'light' ;
+
+export type ManifestStatusType = 'loaded' | 'loading' | 'not-available';
 
 export interface MTBLocationStatus {
   homeError?: string ;
@@ -90,11 +102,12 @@ export interface SettingsError {
   message: string ;
 } ;
 
-export type MTBInstallType = 
+export type MTBAssistantMode = 
+    'initializing' |
     'none' |
     'launcher' |
-    'insttype' |
-    'mtb' ;
+    'mtb' |
+    'error' ;
 
 export interface BSPIdentifier {
     name : string ;

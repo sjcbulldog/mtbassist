@@ -1,4 +1,3 @@
-
 import { Component, Input, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -50,15 +49,23 @@ export class MtbNav implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
   lcsBusy: boolean = false;
+  manifestStatus: string = 'loading';
 
-  constructor(private backendService: BackendService) {
+  constructor(private be: BackendService) {
   }
 
   ngOnInit() {
     // Subscribe to local content storage busy state
     this.subscriptions.push(
-      this.backendService.lcsBusy.subscribe(busy => {
+      this.be.lcsBusy.subscribe(busy => {
         this.lcsBusy = busy;
+      })
+    );
+    
+    // Subscribe to manifest status
+    this.subscriptions.push(
+      this.be.manifestStatus.subscribe(status => {
+        this.manifestStatus = status;
       })
     );
   }
@@ -68,10 +75,6 @@ export class MtbNav implements OnInit, OnDestroy {
   }
 
   onTabChange(index: number) {
-    // Prevent tab changes when local content storage is busy
-    if (this.lcsBusy) {
-      return;
-    }
     this.selectedIndex = index;
   }
 }

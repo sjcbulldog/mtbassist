@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { BackendService } from '../backend/backend-service';
 import { RecentEntry } from '../../comms';
+import { Subscription } from 'rxjs';
 
 interface GroupedRecents {
 	label: string;
@@ -17,28 +18,44 @@ interface GroupedRecents {
 	templateUrl: './recently-opened.component.html',
 	styleUrls: ['./recently-opened.component.scss']
 })
-export class RecentlyOpenedComponent implements OnInit {
+export class RecentlyOpenedComponent implements OnInit, OnDestroy {
 	groupedRecents: GroupedRecents[] = [];
 	themeType: 'dark' | 'light' = 'light';
 
+	private subscriptions: Subscription[] = [];
+
 	constructor(private be: BackendService) {
-		this.be.sendRequestWithArgs('recentlyOpened', this.groupedRecents);
-		
-		// Subscribe to theme changes
-		this.be.theme.subscribe(theme => {
-			if (theme === 'dark' || theme === 'light') {
-				this.themeType = theme;
-			}
-			else {
-				this.themeType = 'dark' ;
-			}
-		});
 	}
 
 	ngOnInit() {
-		this.be.recentlyOpened.subscribe(entries => {
-			this.groupedRecents = this.groupRecents(entries);
-		});
+		this.subscriptions.push(
+			this.be.ready.subscribe(ready => {
+				if (ready) {
+					this.be.sendRequestWithArgs('recent-data', this.groupedRecents);
+				}
+			})
+		);
+
+		this.subscriptions.push(
+			this.be.theme.subscribe(theme => {
+				if (theme === 'dark' || theme === 'light') {
+					this.themeType = theme;
+				}
+				else {
+					this.themeType = 'dark' ;
+				}
+			})
+		);
+
+		this.subscriptions.push(
+			this.be.recentlyOpened.subscribe(entries => {
+				this.groupedRecents = this.groupRecents(entries);
+			})
+		);
+	}
+
+	ngOnDestroy(): void {
+		this.subscriptions.forEach(sub => sub.unsubscribe());
 	}
 
 	groupRecents(entries: RecentEntry[]): GroupedRecents[] {

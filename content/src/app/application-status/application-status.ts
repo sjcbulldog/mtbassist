@@ -1,10 +1,11 @@
-import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApplicationStatusData, Documentation } from '../../comms';
 import { BackendService } from '../backend/backend-service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-application-status',
@@ -19,12 +20,13 @@ import { BackendService } from '../backend/backend-service';
     styleUrls: ['./application-status.scss'],
     encapsulation: ViewEncapsulation.None
 })
-export class ApplicationStatus implements OnInit {
+export class ApplicationStatus implements OnInit, OnDestroy {
     intellisenseProject: string | null = null;
 
     applicationStatus: ApplicationStatusData | null = null;
     isLoading = true;
     hasError = false;
+
     errorMessage = '';
     currentDate = new Date();
     fixingAssetsProjects: Set<string> = new Set(); // Track which projects are currently fixing assets
@@ -34,9 +36,25 @@ export class ApplicationStatus implements OnInit {
     // Collapsed states for project sections (projectName -> sectionName -> boolean)
     collapsedSections: Map<string, Map<string, boolean>> = new Map();
 
+    private appStatusDataSubscription?: Subscription ;
+    private loadedAssetSubscription?: Subscription ;
+    private intellisenseProjectSubscription?: Subscription ;
+    private themeSubscription?: Subscription ;
+    private readySubscription?: Subscription ;
+
     constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
         // Subscribe to app status data
-        this.be.appStatusData.subscribe({
+    }
+
+    ngOnInit() : void {
+
+        this.readySubscription = this.be.ready.subscribe((ready) => {
+            if (ready) {
+                this.be.sendRequestWithArgs('app-data', null) ;
+            }
+        });
+
+        this.appStatusDataSubscription = this.be.appStatusData.subscribe({
             next: (data) => {
                 this.be.log('Application status data received:') ;
                 this.applicationStatus = data;
@@ -65,13 +83,15 @@ export class ApplicationStatus implements OnInit {
         });
 
         // Subscribe to loaded asset updates
-        this.be.loadedAsset.subscribe({
+        this.loadedAssetSubscription = this.be.loadedAsset.subscribe({
             next: (asset) => {
-                this.currentlyLoadingAsset = asset;
+                if (asset) {
+                    this.currentlyLoadingAsset = asset;
+                }   
             }
         });
 
-        this.be.intellisenseProject.subscribe({
+        this.intellisenseProjectSubscription = this.be.intellisenseProject.subscribe({
             next: (projectName) => {
                 this.be.log(`ApplicationStatus: intellisense = ${projectName}`);
                 this.setIntellisenseProject(projectName) ;
@@ -79,9 +99,18 @@ export class ApplicationStatus implements OnInit {
         });
         
         // Subscribe to theme changes
-        this.be.theme.subscribe(theme => {
+        this.themeSubscription = this.be.theme.subscribe(theme => {
             this.themeType = theme as 'dark' | 'light';
         });
+    }
+
+    ngOnDestroy(): void {
+        this.be.log('ApplicationStatus ngOnDestroy');
+        this.readySubscription?.unsubscribe() ;
+        this.appStatusDataSubscription?.unsubscribe();
+        this.loadedAssetSubscription?.unsubscribe();
+        this.intellisenseProjectSubscription?.unsubscribe();
+        this.themeSubscription?.unsubscribe();
     }
 
     // Called when Intellisense Project checkbox is changed
@@ -116,9 +145,6 @@ export class ApplicationStatus implements OnInit {
 
     onToolClick(project: any, tool: any): void {
         this.be.sendRequestWithArgs('tool', { tool: tool, project: project }) ;
-    }
-
-    ngOnInit(): void {
     }
 
     formatBytes(bytes: number): string {

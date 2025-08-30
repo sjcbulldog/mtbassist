@@ -1,11 +1,14 @@
-@if (isModusInstalled_ === 'mtb') {
-  <mtb-nav #topMtbNav
-    [tabs]="navigationTabs"
-    backgroundColor="primary"
-    alignment="center">
-  </mtb-nav>
-} @else if (isModusInstalled_ === 'launcher') {
-  <app-software-installer></app-software-installer>
-} @else {
+<div #xyzzy>{{ dmesg }}</div>
+
+@if (mtbMode === 'initializing') {
+  <app-initializing></app-initializing>
+} @else if (mtbMode === 'none') {
   <idc-launcher-required></idc-launcher-required>
+} @else if (mtbMode === 'launcher') {
+  <app-software-installer></app-software-installer>
+} @else if (mtbMode === 'error') {
+  <app-error></app-error>
+}
+@else {
+  <mtb-nav #topMtbNav [tabs]="navigationTabs" backgroundColor="primary" alignment="center"></mtb-nav>
 }

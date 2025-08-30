@@ -125,6 +125,10 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return this.isLoading_ ; 
     }
 
+    public get isLoadingOnlyManifest() : boolean {
+        return this.isLoading_ && this.wants_ === MTBLoadFlags.manifestData ;
+    }
+
     public reloadAppInfo() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             if (this.appdir_ === undefined) {
@@ -686,7 +690,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
             this.logger_.debug('Loading Manifest') ;
             let uri = this.getDefaultManifest() ;
 
-            this.logger_.info(`Using Super Manifest URI: ${uri.toString()}`)
+            this.logger_.info(`Using Super Manifest URI: ${uri.toString()}`);
 
             let defman : PackManifest = { 
                 uripath: uri,

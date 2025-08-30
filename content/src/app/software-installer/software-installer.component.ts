@@ -48,7 +48,9 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
     }) ;
 
     this.be.installProgress.subscribe(progress => {
-      this.onReportProgress(progress.featureId, progress.message, progress.percent);
+      if (progress) {
+        this.onReportProgress(progress.featureId, progress.message, progress.percent);
+      }
     });
 
     this.browserSub = this.be.browserFolder.subscribe(reply => {

@@ -13,8 +13,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BackendService } from '../backend/backend-service';
-import { BSPIdentifier, CodeExampleIdentifier, DevKitInfo } from '../../comms';
+import { BSPIdentifier, CodeExampleIdentifier, DevKitInfo, ThemeType } from '../../comms';
 import { MatDivider } from "@angular/material/divider";
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-create-project',
@@ -45,7 +46,7 @@ export class CreateProject implements OnInit, OnDestroy {
     bspSelectionForm!: FormGroup;
     exampleSelectionForm!: FormGroup;
     isLoading = false;
-    themeType: 'dark' | 'light' | 'high-contrast' = 'light'; // Default to dark theme
+    themeType: ThemeType = 'light' ;
     projectCreated = false;
     projectPath = '';
     defaultProjectPath = '';
@@ -70,60 +71,88 @@ export class CreateProject implements OnInit, OnDestroy {
     selectedDevKit: DevKitInfo | null = null;
     manifestStatus: 'loading' | 'loaded' | 'not-available' = 'loading';
 
-    constructor(
-        private formBuilder: FormBuilder,
-        private be: BackendService,
-        private cdr: ChangeDetectorRef,
-        private snackBar: MatSnackBar) {
-            this.be.manifestStatus.subscribe(status => {
-                this.manifestStatus = status as 'loading' | 'loaded' | 'not-available';
-            });
+    private subscriptions: Subscription[] = [];
 
-            this.be.browserFolder.subscribe(folder => {
-                if (folder && folder.tag === 'create-project') {
-                    this.projectInfoForm.patchValue({ projectLocation: folder.path });
-                }
-            });
-
-            this.be.defaultProjectDir.subscribe(path => {
-                this.defaultProjectPath = path ;
-                this.projectInfoForm.patchValue({ projectLocation: this.defaultProjectPath });  
-            }) ;
-
-            this.be.theme.subscribe(theme => {
-                if (theme === 'dark' || theme === 'light' || theme === 'high-contrast') {
-                    this.themeType = theme;
-                } else {
-                    this.themeType = 'dark';
-                }
-            });
-
-            // Subscribe to dev kit status
-            this.be.devKitStatus.subscribe(kits => {
-                this.devKits = kits;
-            });
-
-            this.be.allBSPs.subscribe(bsps => {
-                this.allBSPs = bsps;
-            }); 
-
-            this.be.activeBSPs.subscribe(bsps => {
-                this.activeBSPs = bsps ;
-            })
-
-            this.be.codeExample.subscribe(examples => {
-                this.allexamples = examples ;
-            });
-        }
+    constructor(private formBuilder: FormBuilder, private be: BackendService, private cdr: ChangeDetectorRef, private snackBar: MatSnackBar) {
+    }
 
     ngOnInit() {
-        this.themeType = 'dark';
+        this.be.log('CreateProject component initialized');
         this.initializeForms();
-        this.be.sendRequestWithArgs('getBSPs', null) ;
+
+        this.subscriptions.push(this.be.ready.subscribe((ready) => {
+            this.be.log(`CreateProject Component: ready: '${ready}'`, 'debug');
+            this.be.sendRequestWithArgs('cproj-data', null);
+            this.be.sendRequestWithArgs('kit-data', null);
+        }));
+
+        this.subscriptions.push(this.be.manifestStatus.subscribe(status => {
+            this.be.log(`CreateProject Component: manifestStatus: '${status}'`, 'debug');   
+            this.manifestStatus = status ;
+            if (status === 'loaded') {
+                // Ask for the BSPs and kits again as the manifest is loaded and we have
+                // more information
+                this.be.sendRequestWithArgs('cproj-data', null);
+                this.be.sendRequestWithArgs('kit-data', null);
+            }
+        }));
+
+        this.subscriptions.push(this.be.browserFolder.subscribe(folder => {
+            if (folder && folder.tag === 'create-project') {
+                this.be.log(`CreateProject Component: browserFolder: '${folder.path}'`, 'debug');
+                this.projectInfoForm.patchValue({ projectLocation: folder.path });
+            }
+        }));
+
+        this.subscriptions.push(this.be.defaultProjectDir.subscribe(path => {
+            this.be.log(`CreateProject Component: defaultProjectDir: '${path}'`, 'debug');             
+            this.defaultProjectPath = path ;
+            this.projectInfoForm.patchValue({ projectLocation: this.defaultProjectPath });  
+        })) ;
+
+        this.subscriptions.push(this.be.theme.subscribe(theme => {
+            this.be.log(`CreateProject Component: theme: '${theme}'`, 'debug'); 
+            this.themeType = theme;
+            this.cdr.detectChanges() ;
+        }));
+
+        // Subscribe to dev kit status
+        this.subscriptions.push(this.be.devKitStatus.subscribe(kits => {
+            this.be.log(`CreateProject Component: devKitStatus: '${kits}'`, 'debug');
+            this.devKits = kits;
+        }));
+
+        this.subscriptions.push(this.be.allBSPs.subscribe(bsps => {
+            this.be.log(`CreateProject Component: allBSPs: '${bsps.length} BSPs'`, 'debug');
+            this.allBSPs = bsps;
+        })); 
+
+        this.subscriptions.push(this.be.activeBSPs.subscribe(bsps => {
+            this.be.log(`CreateProject Component: activeBSPs: '${bsps.length} BSPS'`, 'debug');
+            this.activeBSPs = bsps;
+        }));
+
+        this.subscriptions.push(this.be.codeExample.subscribe(examples => {
+            this.be.log(`CreateProject Component: codeExamples: '${examples.length} Examples'`, 'debug');
+            this.allexamples = examples;
+        }));
+
+        this.subscriptions.push(this.be.progressMessage.subscribe(message => {
+            this.progressMessage = message || '' ;
+        }));    
+
+        this.subscriptions.push(this.be.progressPercent.subscribe(percent => {
+            this.progressValue = percent || 0 ;
+        }));
+    }
+
+    ngOnDestroy(): void {
+        this.be.log('CreateProject component destroyed');
+        this.subscriptions.forEach(sub => sub.unsubscribe());
     }
 
     public refreshKits() {
-        this.be.sendRequestWithArgs('refreshDevKits', null) ;
+        this.be.sendRequestWithArgs('kit-data', null) ;
     }
     
     // Only show dev kits with a non-empty, non-'unknown' name
@@ -163,10 +192,6 @@ export class CreateProject implements OnInit, OnDestroy {
                 this.onCategoryChange();    
             }
         }
-    }
-
-    ngOnDestroy() {
-        // Cleanup if needed
     }
 
     private initializeForms() {
@@ -295,7 +320,6 @@ export class CreateProject implements OnInit, OnDestroy {
 
         try {
             this.isLoading = true;
-            this.startProgressSimulation();
 
             // Scroll to the progress bar after a short delay to ensure it is rendered
             setTimeout(() => {
@@ -313,13 +337,6 @@ export class CreateProject implements OnInit, OnDestroy {
                     duration: 5000,
                     panelClass: ['success-snackbar']
                 });
-                // Scroll to the step actions (Load Project button) after project is created
-                setTimeout(() => {
-                    if (this.stepActionsSectionRef && this.stepActionsSectionRef.nativeElement) {
-                        this.stepActionsSectionRef.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }
-                }, 100);
-                // Don't reset form anymore, keep the data for reference
             } else {
                 throw new Error('Project creation failed');
             }
@@ -337,11 +354,21 @@ export class CreateProject implements OnInit, OnDestroy {
         this.progressMessage = 'Initializing project...';
 
         this.be.progressMessage.subscribe(message => {
-            this.progressMessage = message;
+            if (message) {
+                this.progressMessage = message;
+            }
+            else {
+                this.progressMessage = '' ;
+            }
         });
 
         this.be.progressPercent.subscribe(percent => {
-            this.progressValue = percent;
+            if (percent) {
+                this.progressValue = percent;
+            }
+            else {
+                this.progressValue = 0;
+            }
         });
     }
     
