@@ -83,6 +83,7 @@ export type BackEndToFrontEndType =
     'apikey' | 
     'error' |
     'justNeedTools' |
+    'tools-loc-error' |
     'ready' ;
     ;
 

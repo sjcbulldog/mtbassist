@@ -103,23 +103,29 @@ export class IDCRegistry {
             content = content.replace(/^\uFEFF/, ''); // Remove BOM if present
             let obj = JSON.parse(content);
             if (obj.guid && obj.featureId && obj.title && obj.version && obj.path) {
-                if (!this.entries_.has(obj.featureId)) {
-                    this.entries_.set(obj.featureId, []);
+                let p = path.normalize(obj.path) ;
+                if (fs.existsSync(p)) {
+                    if (!this.entries_.has(obj.featureId)) {
+                        this.entries_.set(obj.featureId, []);
+                    }
+                    let set = this.entries_.get(obj.featureId)!;
+                    set.push({
+                        featureId: obj.featureId,
+                        name: obj.name,
+                        version: obj.version,
+                        required: obj.required,
+                        upgradable: obj.upgradable,
+                        path: obj.path,
+                        installed: true,
+                        versions: []
+                    });
+                    set.sort((a, b) => {
+                        return this.compareTwoTools(a, b);
+                    });
                 }
-                let set = this.entries_.get(obj.featureId)!;
-                set.push({
-                    featureId: obj.featureId,
-                    name: obj.name,
-                    version: obj.version,
-                    required: obj.required,
-                    upgradable: obj.upgradable,
-                    path: obj.path,
-                    installed: true,
-                    versions: []
-                });
-                set.sort((a, b) => {
-                    return this.compareTwoTools(a, b);
-                });
+                else {
+                    this.logger_.debug(`idcreg: found JSON file for feature '${obj.featureId}' but path does not exist`) ;
+                }
             }
         }
         catch(err) {

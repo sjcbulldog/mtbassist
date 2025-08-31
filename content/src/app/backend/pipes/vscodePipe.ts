@@ -21,13 +21,20 @@ export class VSCodePipe implements PipeInterface {
     registerResponseHandler(handler: (response: BackEndToFrontEndResponse) => void): void {
         this.responseHandler = handler;
         window.addEventListener('message', (event) => {
-            let str = JSON.stringify(event.data);
-            if (str.length > 128) {
-                str = str.substring(0, 128) + '...';
+            if (event && event.data && event.data.response && this.responseHandler) {
+                try {       
+                    this.responseHandler(event.data);
+                }
+                catch(err) {
+                    this.sendRequest({request: 'logMessage', data: { level : 'error' , message : `Error occurred while handling message: ${JSON.stringify(event)}`}});
+                    this.sendRequest({request: 'logMessage', data: { level : 'error' , message : `   ${(err as Error).message}`}});
+                }
             }
-            this.sendRequest({request: 'logMessage', data: { level : 'silly' , message : `received message: ${str}`}});
-            if (event.data && event.data.response && this.responseHandler) {
-                this.responseHandler(event.data);
+            else if (!this.responseHandler) {
+                this.sendRequest({request: 'logMessage', data: { level : 'debug' , message : 'No response handler registered in VSCodePipe!'}});
+            }
+            else {
+                this.sendRequest({request: 'logMessage', data: { level : 'debug' , message : `received but did not handle message: ${JSON.stringify(event)}`}});
             }
         });
     }

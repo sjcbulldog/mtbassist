@@ -35,6 +35,7 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   downloading: boolean = false;
   disableNext: boolean = false ;
   justNeedTools: boolean = false ;
+  toolsLocError: string | undefined = undefined ;
   neededTools: SetupProgram[] = [];
   installSelections: { [featureId: string]: boolean } = {};
   upgradeSelections: { [featureId: string]: boolean } = {};
@@ -42,8 +43,9 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [] ;
 
-  constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
-
+  public be: BackendService;
+  constructor(be: BackendService, private cdr: ChangeDetectorRef) {
+    this.be = be;
   }
 
   ngOnInit() : void {
@@ -110,6 +112,11 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
 
     this.subscriptions.push(this.be.justNeedTools.subscribe(justNeed => {
       this.justNeedTools = justNeed;
+      this.cdr.detectChanges();
+    }));
+
+    this.subscriptions.push(this.be.toolsLocError.subscribe(err => {
+      this.toolsLocError = err;
       this.cdr.detectChanges();
     }));
   }

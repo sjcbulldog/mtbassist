@@ -1756,7 +1756,12 @@ export class MTBAssistObject {
                     this.sendMessageWithArgs('browseForFolderResult', undefined);
                 }
                 else {
-                    this.sendMessageWithArgs('browseForFolderResult', { tag: request.data, path: uri[0].fsPath });
+                    if (request.data === 'find-tools-location') {
+                        this.findToolsLocation(uri[0].fsPath);
+                    }
+                    else {
+                        this.sendMessageWithArgs('browseForFolderResult', { tag: request.data, path: uri[0].fsPath });
+                    }
                 }
 
                 resolve();
@@ -1785,6 +1790,27 @@ export class MTBAssistObject {
             });
         });
         return ret;
+    }
+
+    private findToolsLocation(dir: string) {
+        if (!fs.existsSync(dir)) {
+            this.sendMessageWithArgs('tools-loc-error', `The path ${dir} does not exist.`);
+        }
+        else {
+            let found = false ;
+            for(let file of fs.readdirSync(dir)) {
+                if (/^version-[0-9]+.[0-9]+.[0-9]+.xml$/.test(file)) {
+                    found = true ;
+                }
+            }
+            if (!found) {
+                this.sendMessageWithArgs('tools-loc-error', `The path '${dir}' is not a valid tools location - missing version XML file.`);
+            }
+            else {
+                this.settings_.toolsPath = dir ;
+                this.doRestartExtension() ;
+            }
+        }
     }
 
     private updateAllTasks() {

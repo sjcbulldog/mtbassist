@@ -42,6 +42,7 @@ export class BackendService {
     customWarning: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
     homeWarning: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
     justNeedTools: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    toolsLocError: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
 
     // Settings related
     settings: BehaviorSubject<MTBSetting[]> = new BehaviorSubject<MTBSetting[]>([]);
@@ -83,12 +84,12 @@ export class BackendService {
 
     constructor() {
         this.pipe_ = this.createPipe() ;
+        this.log('BackendService constructor called', 'debug') ;
         if (this.pipe_) {
             this.pipe_.registerResponseHandler(this.messageProc.bind(this));
+            this.setupHandlers();
         }
         this.projectManager_ = new ProjectManager(this);
-        this.setupHandlers();   
-
         this.sendRequestWithArgs('check-ready', null) ;
     }
 
@@ -100,7 +101,7 @@ export class BackendService {
     }
 
     public log(message: string, type?: string) {
-        if (this.pipe_ && this.ready_) {
+        if (this.pipe_) {
             this.pipe_.sendRequest({
                 request: 'logMessage',
                 data: {
@@ -216,18 +217,24 @@ export class BackendService {
         this.registerHandler('ready', this.handleReadyMessage.bind(this));
         this.registerHandler('error', this.handleErrorMessage.bind(this));
         this.registerHandler('justNeedTools', (cmd) => { this.justNeedTools.next(cmd.data || false) });
+        this.registerHandler('tools-loc-error', this.handleToolsLocError.bind(this)) ;
+    }
+
+    private handleToolsLocError(cmd: BackEndToFrontEndResponse) {
+        this.log(`Tools location error: ${JSON.stringify(cmd.data)}`, 'debug');
+        this.toolsLocError.next(cmd.data);
     }
 
     private handleManifestStatus(cmd: BackEndToFrontEndResponse) {
-            if (cmd.data === true) {
-                this.manifestStatus.next('loaded');
-            } else if (cmd.data === false) {
-                this.manifestStatus.next('loading');
-            } else if (typeof cmd.data === 'string' && (cmd.data === 'loading' || cmd.data === 'loaded' || cmd.data === 'not-available')) {
-                this.manifestStatus.next(cmd.data);
-            } else {
-                this.manifestStatus.next('not-available');
-            }
+        if (cmd.data === true) {
+            this.manifestStatus.next('loaded');
+        } else if (cmd.data === false) {
+            this.manifestStatus.next('loading');
+        } else if (typeof cmd.data === 'string' && (cmd.data === 'loading' || cmd.data === 'loaded' || cmd.data === 'not-available')) {
+            this.manifestStatus.next(cmd.data);
+        } else {
+            this.manifestStatus.next('not-available');
+        }
     }
 
     private handleReadyMessage(cmd: BackEndToFrontEndResponse) {
@@ -313,10 +320,9 @@ export class BackendService {
         if (str.length > maxstr) {
             str = str.substring(0, maxstr) + '...';
         }
-
         const handler = this.handlers_.get(cmd.response);
         if (!handler) {
-            this.log(`No handler found for command: ${cmd.response}`, 'silly');
+            this.log(`No handler found for command: ${cmd.response}`, 'debug');
             return;
         }
         handler(cmd);

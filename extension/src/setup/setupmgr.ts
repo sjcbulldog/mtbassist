@@ -74,7 +74,19 @@ export class SetupMgr extends MtbManagerBase {
     }
 
     public get justNeedToolsPackage() : boolean {
-        return this.neededTools_.length === 1 && this.neededTools_[0].featureId === SetupMgr.mtbFeatureId ;
+        if (!this.doWeNeedTools()) {
+            return false;
+        }
+
+        let count = 0 ;
+        let fid: string = '' ;
+        for(let f of SetupMgr.requiredFeatures) {
+            if (!this.registry_.hasTool(f)) {
+                count++ ;
+                fid = f ;
+            }
+        }
+        return count === 1 && fid === SetupMgr.mtbFeatureId;
     }
 
     public set mtbLocation(loc: string | undefined) {
