@@ -106,6 +106,13 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
       })
     );
 
+    this.subscriptions.push(
+        this.be.manifestStatus.subscribe(status => {
+          if (status === 'loaded') {
+            this.be.sendRequestWithArgs('lcs-data', null) ;
+          }
+        })
+      );
   }
 
   ngOnDestroy(): void {

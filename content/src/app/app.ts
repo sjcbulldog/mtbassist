@@ -17,14 +17,10 @@ import { ErrorComponent } from "./error/error.component";
 export class App {
   public mtbMode : MTBAssistantMode = 'initializing';
 
-  @Input() dmesg : string = 'Debug Message Placeholder' ;
   @ViewChild('topMtbNav') topMtbNav!: MtbNav;
   @ViewChild('softwareInstaller') softwareInstaller!: SoftwareInstallerComponent;
 
   constructor(private be: BackendService) {
-    this.be.setAppComponent(this) ;
-
-    // Subscribe to navigation tab changes
     this.be.navTab.subscribe(index => {
       this.topMtbNav.selectedIndex = index;
     });

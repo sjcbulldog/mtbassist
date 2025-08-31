@@ -22,7 +22,7 @@ export class BackendService {
     private handlers_ : Map<string, (cmd: BackEndToFrontEndResponse) => void> = new Map<string, (cmd: BackEndToFrontEndResponse) => void>();
 
     // Dispay related
-    theme: BehaviorSubject<ThemeType> = new BehaviorSubject<ThemeType>('light');
+    theme: BehaviorSubject<ThemeType> = new BehaviorSubject<ThemeType>('dark');
     navTab: BehaviorSubject<number> = new BehaviorSubject<number>(0) ;
     setupTab: BehaviorSubject<number> = new BehaviorSubject<number>(0) ;
     browserFolder: BehaviorSubject<BrowseResult | null> = new BehaviorSubject<BrowseResult | null>(null);
@@ -79,7 +79,6 @@ export class BackendService {
 
     // Data members
     private allBSPExceptEAPData : BSPIdentifier[] = [] ;
-    private appComp: App | undefined;
 
     constructor() {
         this.pipe_ = this.createPipe() ;
@@ -88,11 +87,8 @@ export class BackendService {
         }
         this.projectManager_ = new ProjectManager(this);
         this.setupHandlers();   
-    }
 
-    public setAppComponent(app: App) {
-        this.appComp = app;
-        this.appComp.dmesg = 'BackendService connected' ;
+        this.sendRequestWithArgs('check-ready', null) ;
     }
 
     public registerHandler(cmd: BackEndToFrontEndType, handler: (cmd: BackEndToFrontEndResponse) => void): void {  
@@ -103,10 +99,6 @@ export class BackendService {
     }
 
     public log(message: string, type?: string) {
-        if (this.appComp) {
-            this.appComp.dmesg = message;
-        }
-
         if (this.pipe_ && this.ready_) {
             this.pipe_.sendRequest({
                 request: 'logMessage',
@@ -209,17 +201,7 @@ export class BackendService {
         this.registerHandler('setIntellisenseProject', (cmd) => { this.intellisenseProject.next(cmd.data)}) ;
         this.registerHandler('setTheme', (cmd) => { this.theme.next(cmd.data || 'dark')}) ;
         this.registerHandler('settings', (cmd) => { this.settings.next(cmd.data)}) ;
-        this.registerHandler('manifestStatus', (cmd) => {
-            if (cmd.data === true) {
-                this.manifestStatus.next('loaded');
-            } else if (cmd.data === false) {
-                this.manifestStatus.next('loading');
-            } else if (typeof cmd.data === 'string' && (cmd.data === 'loading' || cmd.data === 'loaded' || cmd.data === 'not-available')) {
-                this.manifestStatus.next(cmd.data);
-            } else {
-                this.manifestStatus.next('not-available');
-            }
-        });
+        this.registerHandler('manifestStatus', this.handleManifestStatus.bind(this));
         this.registerHandler('lcsBspsIn', this.processLcsBSPsIn.bind(this)) ;
         this.registerHandler('lcsNeedsUpdate', (cmd) => { this.lcsBusy.next(false) ; this.lcsNeedsUpdate.next(cmd.data || false) });
         this.registerHandler('lcsNeedsApply', (cmd) => { this.lcsBusy.next(false) ; this.lcsNeedsApply.next(cmd.data || false)});
@@ -230,8 +212,31 @@ export class BackendService {
         this.registerHandler('showSettingsError', (cmd) => { this.settingsErrors.next(cmd.data) ; }) ;
         this.registerHandler('setChooseMTBLocationStatus', this.handleMTBLocationStatus.bind(this));
         this.registerHandler('apikey', this.handleAPIKey.bind(this));
-        this.registerHandler('ready', (cmd) => { this.ready_ = cmd.data; this.ready.next(this.ready_); })
+        this.registerHandler('ready', this.handleReadyMessage.bind(this));
         this.registerHandler('error', this.handleErrorMessage.bind(this));
+    }
+
+    private handleManifestStatus(cmd: BackEndToFrontEndResponse) {
+            if (cmd.data === true) {
+                this.manifestStatus.next('loaded');
+            } else if (cmd.data === false) {
+                this.manifestStatus.next('loading');
+            } else if (typeof cmd.data === 'string' && (cmd.data === 'loading' || cmd.data === 'loaded' || cmd.data === 'not-available')) {
+                this.manifestStatus.next(cmd.data);
+            } else {
+                this.manifestStatus.next('not-available');
+            }
+    }
+
+    private handleReadyMessage(cmd: BackEndToFrontEndResponse) {
+        this.ready_ = true;
+        this.ready.next(this.ready_);
+        if (cmd.data && typeof cmd.data === 'string') {
+            let theme = cmd.data as string ;
+            if (theme === 'dark' || theme === 'light') {
+                this.theme.next(theme);
+            }
+        }
     }
 
     private handleErrorMessage(cmd: BackEndToFrontEndResponse) {

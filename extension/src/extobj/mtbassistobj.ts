@@ -71,6 +71,10 @@ export class MTBAssistObject {
     private statusBarItem_: vscode.StatusBarItem;
     private termRegistered_: boolean = false;
     private aimgr_: AIManager;
+    private ready_ : boolean = false ;
+    private theme_ : ThemeType = 'light';
+    private intellisenseProject_ : string | undefined ;
+    private manifestStatus_ : ManifestStatusType = 'loading';
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -123,6 +127,8 @@ export class MTBAssistObject {
         this.statusBarItem_ = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
         this.statusBarItem_.command = 'mtbassist2.mtbMainPage';
         this.updateStatusBar();
+
+        this.computeTheme() ;
     }
 
     public get toolsDir(): string | undefined {
@@ -170,11 +176,18 @@ export class MTBAssistObject {
      */
     public setIntellisenseProject(projectName?: string): void {
         if (!projectName) {
-            projectName = this.context_.globalState.get('mtbintellisense', this.env_!.appInfo!.projects[0].name);
+            this.intellisenseProject_ = this.context_.globalState.get('mtbintellisense', this.env_!.appInfo!.projects[0].name);
+        }
+        else {
+            this.intellisenseProject_ = projectName;
         }
 
-        this.context_.globalState.update('mtbintellisense', projectName);
-        this.sendMessageWithArgs('setIntellisenseProject', projectName);
+        this.context_.globalState.update('mtbintellisense', this.intellisenseProject_);
+    }
+
+    public sendIntellisenseProject() {
+        this.setIntellisenseProject() ;
+        this.sendMessageWithArgs('setIntellisenseProject', this.intellisenseProject_);
     }
 
     public bringChannelToFront() {
@@ -331,8 +344,6 @@ export class MTBAssistObject {
                             .then(() => {
                                 this.updateAllTasks();
                                 this.setIntellisenseProject();
-                                this.sendMessageWithArgs('mtbMode', this.mtbmode_);
-                                this.logger_.info('Post-initialization of managers completed successfully.');
 
                                 let parray: any[] = [];
                                 let p: Promise<void>;
@@ -341,9 +352,6 @@ export class MTBAssistObject {
                                 parray.push(p);
 
                                 p = this.intellisense_!.trySetupIntellisense();
-                                parray.push(p);
-
-                                p = this.sendGlossary();
                                 parray.push(p);
 
                                 p = this.keywords_.init(this.env_!.appInfo!);
@@ -363,8 +371,9 @@ export class MTBAssistObject {
                                         // Tell the front end we are ready to supply (most) data.  Since manifest data takes a while to 
                                         // get from the git hub servers, we handle this data independently
                                         //
-                                        this.sendMessageWithArgs('ready', true) ;
-                                        this.sendTheme() ;
+                                        this.ready_ = true ;
+                                        this.computeTheme() ;
+                                        this.sendMessageWithArgs('ready', this.theme_) ;
                                         this.mtbmode_ = 'mtb' ;
                                         this.sendMessageWithArgs('mtbMode', this.mtbmode_);
 
@@ -391,7 +400,8 @@ export class MTBAssistObject {
                     }
                     else {
                         this.updateStatusBar();
-                        this.sendMessageWithArgs('ready', true) ;
+                        this.ready_ = true ;
+                        this.sendMessageWithArgs('ready', this.theme_) ;
                         this.sendTheme() ;
                         this.mtbmode_ = 'mtb' ;
                         this.sendMessageWithArgs('mtbMode', this.mtbmode_);                        
@@ -585,14 +595,14 @@ export class MTBAssistObject {
         this.cmdhandler_.set('community', this.community.bind(this));
         this.cmdhandler_.set('browseForFolder', this.browseForFolder.bind(this));
         this.cmdhandler_.set('browseForFile', this.browseForFile.bind(this));
-        this.cmdhandler_.set('getAppStatus', this.getAppStatus.bind(this));
+        this.cmdhandler_.set('app-data', this.sendAppStatus.bind(this));
         this.cmdhandler_.set('open', this.open.bind(this));
         this.cmdhandler_.set('libmgr', this.launchLibraryManager.bind(this));
         this.cmdhandler_.set('devcfg', this.launchDeviceConfigurator.bind(this));
         this.cmdhandler_.set('tool', this.tool.bind(this));
         this.cmdhandler_.set('kit-data', this.refreshDevKits.bind(this));
         this.cmdhandler_.set('updateFirmware', this.updateFirmware.bind(this));
-        this.cmdhandler_.set('recentlyOpened', this.recentlyOpened.bind(this));
+        this.cmdhandler_.set('recent-data', this.recentlyOpened.bind(this));
         this.cmdhandler_.set('openRecent', this.openRecent.bind(this));
         this.cmdhandler_.set('openReadme', this.openReadme.bind(this));
         this.cmdhandler_.set('initSetup', this.initSetup.bind(this));
@@ -609,11 +619,59 @@ export class MTBAssistObject {
         this.cmdhandler_.set('updateDevKitBsp', this.updateDevKitBsp.bind(this));
         this.cmdhandler_.set('updateSetting', this.updateSetting.bind(this));
         this.cmdhandler_.set('lcscmd', this.lcscmd.bind(this));
-        this.cmdhandler_.set('getSettings', this.getSettings.bind(this));
+        this.cmdhandler_.set('settings-data', this.getSettings.bind(this));
         this.cmdhandler_.set('checkInstallPath', this.checkInstallPath.bind(this));
         this.cmdhandler_.set('hasAccount', this.hasAccount.bind(this));
         this.cmdhandler_.set('cproj-data', this.getCProjData.bind(this));
+        this.cmdhandler_.set('check-ready', this.checkReady.bind(this));
+        this.cmdhandler_.set('lcs-data', this.getLcsData.bind(this));
+        this.cmdhandler_.set('glossary-data', this.getGlossaryData.bind(this)) ;
     }
+
+    private getGlossaryData(_ : FrontEndToBackEndRequest) : Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.sendGlossary()
+            .then(() => {
+                resolve();
+            })
+            .catch(reject);
+        });
+    }
+
+    private getLcsData(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.manifestStatus_ === 'loaded') {
+                this.sendLCSData() ;
+            }
+        });
+    }
+
+    private sendAppStatus(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
+        });
+    }
+
+    private checkReady(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.ready_) {
+                this.sendMessageWithArgs('mtbMode', this.mtbmode_) ;
+                this.sendMessageWithArgs('ready', this.theme_) ;
+                if (this.env_ && this.env_.has(MTBLoadFlags.manifestData)) {
+                    this.sendManifestStatus() ;
+                }
+                else {
+                    this.env_?.load(MTBLoadFlags.manifestData)
+                    .then(() => {
+                        this.sendManifestStatus() ;
+                    })
+                    .catch(() => { 
+                        this.sendManifestStatus() ;
+                    }) ;
+                }
+            }
+        });
+    }   
 
     private getCProjData(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -739,7 +797,7 @@ export class MTBAssistObject {
         let ret = new Promise<void>((resolve, reject) => {
             this.lcsMgr_!.command(request.data)
                 .then(() => {
-                    this.pushBSPsInLCS();
+                    this.sendLCSData();
                     this.pushNeedsApply();
                     this.pushNeedsUpdate();
                     resolve();
@@ -1400,7 +1458,7 @@ export class MTBAssistObject {
         });
     }
 
-    private pushBSPsInLCS() {
+    private sendLCSData() {
         this.sendMessageWithArgs('lcsBspsIn', this.lcsMgr_!.bspsIn);
         this.sendMessageWithArgs('lcsToAdd', this.lcsMgr_!.toAdd);
         this.sendMessageWithArgs('lcsToDelete', this.lcsMgr_!.toDelete);
@@ -1414,27 +1472,30 @@ export class MTBAssistObject {
         this.sendMessageWithArgs('lcsNeedsApply', this.lcsMgr_!.needsApplyChanges);
     }
 
-    private sendTheme(): void {
+    private computeTheme(): void {
         let t = vscode.window.activeColorTheme;
-        let theme: ThemeType = 'dark';
         switch (t.kind) {
             case vscode.ColorThemeKind.Light:
-                theme = 'light';
+                this.theme_ = 'light';
                 break;
             case vscode.ColorThemeKind.Dark:
-                theme = 'dark';
+                this.theme_ = 'dark';
                 break;
             case vscode.ColorThemeKind.HighContrast:
-                theme = 'dark';
+                this.theme_ = 'dark';
                 break;
             case vscode.ColorThemeKind.HighContrastLight:
-                theme = 'light';
+                this.theme_ = 'light';
                 break;
             default:
-                theme = 'light';
+                this.theme_ = 'light';
                 break;
         }
-        this.sendMessageWithArgs('setTheme', theme);
+    }
+
+    private sendTheme() {
+        this.computeTheme();
+        this.sendMessageWithArgs('setTheme', this.theme_);
     }
 
     private pushNeededTools() {
@@ -1511,14 +1572,19 @@ export class MTBAssistObject {
         return bsps;
     }
 
-    private sendManifestStatus() {
-        let status: ManifestStatusType = 'loading';
+    private computeManifestStatus() {
+        this.manifestStatus_ = 'loading' ;
         if (this.env_ && this.env_.manifestDB && this.env_.manifestDB.errorLoading) {
-            status = 'not-available';
+            this.manifestStatus_ = 'not-available';
         } else if (this.env_ && !this.env_.isLoading && this.env_.has(MTBLoadFlags.manifestData)) {
-            status = 'loaded';
+            this.manifestStatus_ = 'loaded';
         }
-        this.sendMessageWithArgs('manifestStatus', status);
+
+    }
+
+    private sendManifestStatus() {
+        this.computeManifestStatus();
+        this.sendMessageWithArgs('manifestStatus', this.manifestStatus_);        
     }
 
     private updateFirmware(request: FrontEndToBackEndRequest): Promise<void> {
@@ -1587,20 +1653,6 @@ export class MTBAssistObject {
             };
         }
         return appst;
-    }
-
-    private getAppStatus(request: FrontEndToBackEndRequest): Promise<void> {
-        let ret = new Promise<void>((resolve) => {
-            if (this.env_ && this.env_.isLoading) {
-                this.env_.on('loaded', () => {
-                    resolve();
-                });
-            }
-            else {
-                resolve();
-            }
-        });
-        return ret;
     }
 
     private showLocalContent(filename: string) {
@@ -1800,13 +1852,13 @@ export class MTBAssistObject {
                         }
                     });
                     this.termRegistered_ = true;
+                    this.logger_.info('ModusToolbox shell terminal profile registered.');
+                    resolve() ;
                 }
             }
             catch (err) {
                 resolve();
-                return;
             }
-            resolve();
         });
         return ret;
     }

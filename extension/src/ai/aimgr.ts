@@ -18,6 +18,7 @@ export class AIManager extends EventEmitter {
                 this.apiKey = key ;
                 this.ext_.logger.debug('AI manager initialized sucessfully') ;
                 this.emit('apikey', this.apiKey) ;
+                resolve() ;
             })
             .catch((err) => {
                 this.ext_.logger.error(`Failed to initialize AIManager: ${err.message}`);

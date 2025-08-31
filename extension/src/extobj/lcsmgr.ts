@@ -83,6 +83,7 @@ export class LCSManager extends EventEmitter {
                     }
                     this.bsps_ = this.parseOutput(output[1]) ;
                     this.original_ = [...this.bsps_] ;
+                    this.ext_.logger.debug('LCS Manager: BSPs updated');
                     resolve();
                 })
                 .catch((error) => {

@@ -7,7 +7,6 @@ export type FrontEndToBackEndType =
     'getStarted' |
     'createProject' |
     'loadWorkspace' |
-    'getAppStatus' |
     'browseForFolder' |
     'browseForFile' |
     'updateSetting' |
@@ -22,7 +21,6 @@ export type FrontEndToBackEndType =
     'devcfg' |
     'tool' |
     'updateFirmware' |
-    'recentlyOpened' |
     'openRecent' |
     'openReadme' |
     'initSetup' |
@@ -44,7 +42,8 @@ export type FrontEndToBackEndType =
     'glossary-data' |
     'lcs-data' |
     'recent-data' |
-    'settings-data'
+    'settings-data' |
+    'check-ready'
     ;
 
 export type BackEndToFrontEndType =

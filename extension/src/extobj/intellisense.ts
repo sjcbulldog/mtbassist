@@ -44,6 +44,7 @@ export class IntelliSenseMgr extends MtbManagerBase {
                 await this.checkBasicClangdConfig();
             }
             
+            this.ext.logger.debug('Intellisense manager setup successfully') ;
             resolve() ;
         });
 
