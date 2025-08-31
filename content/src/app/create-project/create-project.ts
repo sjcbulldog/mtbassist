@@ -118,7 +118,7 @@ export class CreateProject implements OnInit, OnDestroy {
 
         // Subscribe to dev kit status
         this.subscriptions.push(this.be.devKitStatus.subscribe(kits => {
-            this.be.log(`CreateProject Component: devKitStatus: '${kits}'`, 'debug');
+            this.be.log(`CreateProject Component: devKitStatus: ${kits.length} kits detected`, 'debug');
             this.devKits = kits;
         }));
 

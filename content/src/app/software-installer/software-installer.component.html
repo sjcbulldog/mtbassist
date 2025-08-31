@@ -8,7 +8,7 @@
           <div class="tile-content">
             <span class="tile-icon">&#9888;</span>
             <h3>No Infineon Account?</h3>
-            <p>Click here if you do not have an Infineon account.  Return to this page after your account is created.</p>
+            <p>Click here if you do not have an Infineon account. The Infineon site will be opened in a browser.  Open the menu 'Log in to myInfineon' in the upper right and select register.  Return to this page after your account is created.</p>
           </div>
         </div>
         <div class="install-tile has-account" (click)="onHasAccountClick()">
@@ -37,9 +37,9 @@
               <div class="card-content">
                 <div class="card-header">
                   <mat-icon>home</mat-icon>
-                  <h3>Install Under Home Directory</h3>
+                  <h3>Install In Default Locations</h3>
                 </div>
-                <p class="card-description">Install ModusToolbox and related tools under your home directory on this machine.</p>
+                <p class="card-description">Install ModusToolbox and related tools in the default locations on this machine.</p>
               </div>
               @if (homeWarning && !homeError) { <div class="warning-text">{{ homeWarning }}</div> }
               @if (homeError) { <div class="error-text">{{ homeError }}</div> }
@@ -100,6 +100,12 @@
                         <span class="tool-status will-install">Install v{{ tool.version }}</span>
                       }
                     </div>
+                    @if (tool.featureId === 'com.ifx.tb.tool.modustoolboxprogtools' && !tool.installed) {
+                      <div class="admin-required-message">
+                        <mat-icon style="color: #f44336; vertical-align: middle;">security</mat-icon>
+                        <span style="color: #f44336; font-weight: 600; margin-left: 0.5em;">Administrative privileges will be required to install this tool.</span>
+                      </div>
+                    }
                     @if (progress[tool.featureId].message) {
                       @if (tool.installed) {
                         <div class="progress-message">Complete</div>

@@ -322,7 +322,7 @@ export class MTBAssistObject {
                 
                 // We do this again in case the setting is to show the mtb assistant only if an application is loaded                          
                 this.optionallyShowPage() ;
-                this.logger_.info('All managers initialized successfully.');
+                this.logger_.debug('All managers initialized successfully.');
 
                 // The settings depend on the loaded application, specifically the tools version, from settings
                 if (this.settings_.checkToolsVersion()) {
@@ -626,6 +626,14 @@ export class MTBAssistObject {
         this.cmdhandler_.set('check-ready', this.checkReady.bind(this));
         this.cmdhandler_.set('lcs-data', this.getLcsData.bind(this));
         this.cmdhandler_.set('glossary-data', this.getGlossaryData.bind(this)) ;
+        this.cmdhandler_.set('ai-data', this.getAIData.bind(this)) ;
+    }
+
+    private getAIData(_ : FrontEndToBackEndRequest) : Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.sendMessageWithArgs('apikey', this.aimgr_.key) ;
+            resolve() ;
+        });
     }
 
     private getGlossaryData(_ : FrontEndToBackEndRequest) : Promise<void> {
@@ -865,6 +873,7 @@ export class MTBAssistObject {
 
             ModusToolboxEnvironment.destroy();
 
+            this.sendMessageWithArgs('mtbMode', 'initializing') ;
             this.setupMgr_ = new SetupMgr(this);
             this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
             this.initialize()
@@ -1209,7 +1218,7 @@ export class MTBAssistObject {
     }
 
     private mtbMainPage(args: any[]) {
-        this.logger_.info('Showing ModusToolbox main page.');
+        this.logger_.debug('Showing ModusToolbox main page.');
         this.showLocalContent('single-dist/index.html');
     }
 
@@ -1852,7 +1861,7 @@ export class MTBAssistObject {
                         }
                     });
                     this.termRegistered_ = true;
-                    this.logger_.info('ModusToolbox shell terminal profile registered.');
+                    this.logger_.debug('ModusToolbox shell terminal profile registered.');
                     resolve() ;
                 }
             }

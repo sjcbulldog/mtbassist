@@ -83,7 +83,7 @@ export class MtbFunIndex
                     return ;
                 }
             }
-            this.logger_.info(`detected ${count} keywords in ModusToolbox application`) ;
+            this.logger_.debug(`detected ${count} keywords in ModusToolbox application`) ;
             this.keywordCount_ = count ;
             resolve() ;
         }) ;

@@ -4,6 +4,7 @@ import { MTBAssistObject } from "../extobj/mtbassistobj";
 var request = require("request");
 
 export class AIManager extends EventEmitter {
+    private static readonly refreshInterval: number = 30 * 60 * 1000; 
     private ext_ : MTBAssistObject ;
     private apiKey: any ;
     
@@ -12,12 +13,17 @@ export class AIManager extends EventEmitter {
         this.ext_ = ext;
     }
 
+    public get key() : any {
+        return this.apiKey;
+    }
+
     public initialize() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.getAPIKey().then((key) => {
                 this.apiKey = key ;
                 this.ext_.logger.debug('AI manager initialized sucessfully') ;
                 this.emit('apikey', this.apiKey) ;
+                setInterval(this.refreshToken.bind(this), AIManager.refreshInterval) ;
                 resolve() ;
             })
             .catch((err) => {
@@ -28,14 +34,25 @@ export class AIManager extends EventEmitter {
         return ret;
     }
 
+    private refreshToken() {
+        this.getAPIKey().then((key) => {
+            this.apiKey = key;
+            this.ext_.logger.debug('AI manager refreshed token successfully');
+            this.emit('apikey', this.apiKey);
+        })
+        .catch((err) => {
+            this.ext_.logger.error(`Failed to refresh AIManager token: ${err.message}`);
+        });
+    }
+
     private getAPIKey() : Promise<any> {
         let ret = new Promise<any>((resolve, reject) => {
 
             let req = {
                 // eslint-disable-next-line @typescript-eslint/naming-convention
-                client_id: "<client_id>",
+                client_id: "",
                 // eslint-disable-next-line @typescript-eslint/naming-convention
-                client_secret: "<client_secret>",
+                client_secret: "",
 
                 audience: "wss://ws.api.ept.ai",
 

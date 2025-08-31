@@ -2,7 +2,6 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } fr
 import { BackendService } from '../backend/backend-service';
 import { Subscription } from 'rxjs';
 
-
 @Component({
   selector: 'app-ai-view',
   standalone: true,
