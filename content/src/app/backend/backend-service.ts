@@ -41,6 +41,7 @@ export class BackendService {
     customError: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
     customWarning: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
     homeWarning: BehaviorSubject<string | undefined> = new BehaviorSubject<string | undefined>(undefined);
+    justNeedTools: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     // Settings related
     settings: BehaviorSubject<MTBSetting[]> = new BehaviorSubject<MTBSetting[]>([]);
@@ -214,6 +215,7 @@ export class BackendService {
         this.registerHandler('apikey', this.handleAPIKey.bind(this));
         this.registerHandler('ready', this.handleReadyMessage.bind(this));
         this.registerHandler('error', this.handleErrorMessage.bind(this));
+        this.registerHandler('justNeedTools', (cmd) => { this.justNeedTools.next(cmd.data || false) });
     }
 
     private handleManifestStatus(cmd: BackEndToFrontEndResponse) {

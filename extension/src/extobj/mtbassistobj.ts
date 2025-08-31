@@ -219,6 +219,7 @@ export class MTBAssistObject {
                 this.mtbmode_ = 'launcher';
             }
             this.sendMessageWithArgs('mtbMode', this.mtbmode_);
+            this.sendMessageWithArgs('justNeedTools', this.setupMgr_.justNeedToolsPackage);
             resolve();
             return;
         });

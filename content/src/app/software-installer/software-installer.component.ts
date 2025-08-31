@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import type { SetupProgram } from '../../comms';
+import { Subscription } from 'rxjs/internal/Subscription';
 export type InstallChoiceType = 'home' | 'custom';
 
 @Component({
@@ -33,36 +34,20 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   loadingTools = false;
   downloading: boolean = false;
   disableNext: boolean = false ;
+  justNeedTools: boolean = false ;
   neededTools: SetupProgram[] = [];
   installSelections: { [featureId: string]: boolean } = {};
   upgradeSelections: { [featureId: string]: boolean } = {};
   progress: { [featureId: string]: { message?: string, percent?: number } } = {};
 
-  private neededToolsSub?: any;
-  private browserSub?: any;
+  private subscriptions: Subscription[] = [] ;
 
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
-    this.be.setupTab.subscribe(index => {
-      this.step = index;
-      this.cdr.detectChanges();
-    }) ;
 
-    this.be.installProgress.subscribe(progress => {
-      if (progress) {
-        this.onReportProgress(progress.featureId, progress.message, progress.percent);
-      }
-    });
-
-    this.browserSub = this.be.browserFolder.subscribe(reply => {
-      if (reply && reply.tag === 'customToolInstall') {
-        this.customPath = reply.path;
-        this.cdr.detectChanges();
-      }
-    });
   }
 
   ngOnInit() : void {
-    this.neededToolsSub = this.be.neededTools.subscribe(tools => {
+    this.subscriptions.push(this.be.neededTools.subscribe(tools => {
       this.neededTools = tools || [];
 
       this.installSelections = {};
@@ -79,38 +64,58 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
       }
       this.disableNext = false ;
       this.cdr.detectChanges();
-    });
+    }));
 
-    this.be.homeError.subscribe(err => {
+    this.subscriptions.push(this.be.homeError.subscribe(err => {
       this.be.log(`Home error status updated: ${err}`);
       this.homeError = err;
       this.cdr.detectChanges();
-    });
+    }));
 
-    this.be.homeWarning.subscribe(warn => {
+    this.subscriptions.push(this.be.homeWarning.subscribe(warn => {
       this.be.log(`Home warning status updated: ${warn}`);
       this.homeWarning = warn;
       this.cdr.detectChanges();
-    });
+    }));
 
-    this.be.customError.subscribe(err => {
+    this.subscriptions.push(this.be.customError.subscribe(err => {
       this.be.log(`Custom error status updated: ${err}`);
       this.customError = err;
       this.cdr.detectChanges();
-    });
+    }));
 
-    this.be.customWarning.subscribe(warn => {
+    this.subscriptions.push(this.be.customWarning.subscribe(warn => {
       this.be.log(`Custom warning status updated: ${warn}`);
       this.customWarning = warn;
       this.cdr.detectChanges();
-    });    
+    }));
+
+    this.subscriptions.push(this.be.setupTab.subscribe(index => {
+      this.step = index;
+      this.cdr.detectChanges();
+    }));
+
+    this.subscriptions.push(this.be.installProgress.subscribe(progress => {
+      if (progress) {
+        this.onReportProgress(progress.featureId, progress.message, progress.percent);
+      }
+    }));
+
+    this.subscriptions.push(this.be.browserFolder.subscribe(reply => {
+      if (reply && reply.tag === 'customToolInstall') {
+        this.customPath = reply.path;
+        this.cdr.detectChanges();
+      }
+    }));
+
+    this.subscriptions.push(this.be.justNeedTools.subscribe(justNeed => {
+      this.justNeedTools = justNeed;
+      this.cdr.detectChanges();
+    }));
   }
 
   ngOnDestroy(): void {
-    if (this.neededToolsSub) {
-      this.neededToolsSub.unsubscribe();
-    }
-    if (this.browserSub) { this.browserSub.unsubscribe(); }
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   onNoAccountClick() {

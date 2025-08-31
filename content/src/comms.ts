@@ -82,6 +82,7 @@ export type BackEndToFrontEndType =
     'setChooseMTBLocationStatus' |
     'apikey' | 
     'error' |
+    'justNeedTools' |
     'ready' ;
     ;
 

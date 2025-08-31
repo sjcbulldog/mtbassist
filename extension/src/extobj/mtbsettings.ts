@@ -96,6 +96,7 @@ export class MTBSettings extends EventEmitter {
         this.ext_ = ext;
 
         this.readSettingsFile() ;
+        this.sanitizeSettings() ;
         this.readWorkspaceSettings() ;
         this.resolvePaths() ;
     }
@@ -160,6 +161,20 @@ export class MTBSettings extends EventEmitter {
         }
     }
 
+    private sanitizeSettings() : void {
+        let tver = this.settings_.find(s => s.name === 'toolsversion');
+        let cpath = this.settings_.find(s => s.name === 'custompath');
+
+        if (tver && tver.value === 'Custom') {
+            if (!cpath) {
+                tver.value = '' ;
+            }
+            else if (!fs.existsSync(cpath.value as string)) {
+                tver.value = '' ;
+            }
+        }
+    }
+
     private customPathOK(p: string) : boolean {
         if (!fs.existsSync(p) || !fs.lstatSync(p).isDirectory()) {
             return false;
@@ -176,14 +191,18 @@ export class MTBSettings extends EventEmitter {
 
     private computeToolsPath() : string | undefined {
         let tdir: undefined | string = '' ;
+        let custom = true ;
         let versetting = this.settings_.find(s => s.name === 'toolsversion');
+        let cuspath = this.settings_.find(s => s.name === 'custompath');
+
         if (versetting) {
             if (versetting.value !== 'Custom') {
                 tdir = this.versionToToolsDir(versetting.value as string);
+                custom = false ;
             }
             else {
-                let cuspath = this.settings_.find(s => s.name === 'custompath');
-                if (cuspath) {
+
+                if (cuspath && fs.existsSync(cuspath.value as string)) {
                     tdir = cuspath.value as string ;
                 }
             }
@@ -193,11 +212,22 @@ export class MTBSettings extends EventEmitter {
             let tools = ModusToolboxEnvironment.findToolsDirectories().sort() ; 
             if (tools.length > 0) {
                 tdir = tools[tools.length - 1];
+                custom = false ;
             }
         }
 
         if (tdir) {
             tdir = tdir.replace(/\\/g,'/');
+            if (!custom) {
+                versetting!.value = this.toolDirToVersion(tdir) ;
+                cuspath!.value = '' ;
+            }            
+            else {
+                versetting!.value = 'Custom' ;
+                cuspath!.value = tdir ;
+            }
+
+            this.writeWorkspaceSettings() ;
         }
         return tdir ;
     }

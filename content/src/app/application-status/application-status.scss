@@ -535,49 +535,29 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       }
 
-      &.build-btn {
-        background-color: #4CAF50;
-        color: white;
-
-        &:hover {
-          background-color: #45a049;
-        }
+      &.build-btn,
+      &.rebuild-btn,
+      &.clean-btn,
+      &.erase-btn,
+      &.program-btn,
+      &.readme-btn,
+      &.device-configurator-btn {
+        background-color: #e0e0e0;
+        color: #222;
+        box-shadow: none;
+        border: 1px solid #ccc;
       }
-
-      &.rebuild-btn {
-        background-color: #2196F3;
-        color: white;
-
-        &:hover {
-          background-color: #1976D2;
-        }
-      }
-
-      &.clean-btn {
-        background-color: #FF9800;
-        color: white;
-
-        &:hover {
-          background-color: #F57C00;
-        }
-      }
-
-      &.erase-btn {
-        background-color: #F44336;
-        color: white;
-
-        &:hover {
-          background-color: #D32F2F;
-        }
-      }
-
-      &.program-btn {
-        background-color: #9C27B0;
-        color: white;
-
-        &:hover {
-          background-color: #7B1FA2;
-        }
+      &.build-btn:hover,
+      &.rebuild-btn:hover,
+      &.clean-btn:hover,
+      &.erase-btn:hover,
+      &.program-btn:hover,
+      &.readme-btn:hover,
+      &.device-configurator-btn:hover {
+        background-color: #d5d5d5;
+        color: #111;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-color: #bbb;
       }
     }
   }
