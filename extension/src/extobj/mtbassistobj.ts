@@ -11,7 +11,8 @@ import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
-    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, ManifestStatusType, MemoryInfo, Middleware, MTBAssistantMode, MTBLocationStatus, MTBSetting, Project, SettingsError, ThemeType, Tool
+    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, ManifestStatusType, MemoryInfo, Middleware, MTBAssistantMode, 
+    MTBLocationStatus, Project, SettingsError, ThemeType, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
