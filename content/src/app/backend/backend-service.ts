@@ -67,12 +67,13 @@ export class BackendService {
     errorMessage: BehaviorSubject<string> = new BehaviorSubject<string>('Default Error Message');
     ready: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
-    // MISC
+    // Misc
     glossaryEntries: BehaviorSubject<GlossaryEntry[]> = new BehaviorSubject<GlossaryEntry[]>([]);
     intellisenseProject: BehaviorSubject<string> = new BehaviorSubject<string>('');
     recentlyOpened: BehaviorSubject<RecentEntry[]> = new BehaviorSubject<RecentEntry[]>([]);
     devKitStatus: BehaviorSubject<DevKitInfo[]> = new BehaviorSubject<DevKitInfo[]>([]);
     defaultProjectDir: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
+    os: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
 
     // Manfiest related
     manifestStatus: BehaviorSubject<ManifestStatusType> = new BehaviorSubject<ManifestStatusType>('loading') ;
@@ -232,6 +233,7 @@ export class BackendService {
         this.registerHandler('error', this.handleErrorMessage.bind(this));
         this.registerHandler('justNeedTools', (cmd) => { this.justNeedTools.next(cmd.data || false) });
         this.registerHandler('tools-loc-error', this.handleToolsLocError.bind(this)) ;
+        this.registerHandler('os', (cmd) => { this.os.next(cmd.data || '') });
     }
 
     private handleToolsLocError(cmd: BackEndToFrontEndResponse) {

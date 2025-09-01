@@ -98,7 +98,8 @@ export type BackEndToFrontEndType =
     'error' |
     'justNeedTools' |
     'tools-loc-error' |
-    'ready' ;
+    'ready' |
+    'os'
     ;
 
 export type ThemeType = 'dark' | 'light' ;

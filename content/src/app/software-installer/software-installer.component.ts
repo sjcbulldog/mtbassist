@@ -49,6 +49,7 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   downloading: boolean = false;
   disableNext: boolean = false ;
   justNeedTools: boolean = false ;
+  os: string = '' ;
   toolsLocError: string | undefined = undefined ;
   neededTools: SetupProgram[] = [];
   installSelections: { [featureId: string]: boolean } = {};
@@ -79,6 +80,11 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
         this.progress[tool.featureId] = { message: '', percent: 0 };
       }
       this.disableNext = false ;
+      this.cdr.detectChanges();
+    }));
+
+    this.subscriptions.push(this.be.os.subscribe(os => {
+      this.os = os;
       this.cdr.detectChanges();
     }));
 
@@ -200,6 +206,10 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
       this.progress[tool.featureId].message = 'Installing...';
       this.progress[tool.featureId].percent = 0;
     }
+  }
+
+  isCustomInstallAvailable(): boolean {
+    return this.os !== 'macOS';
   }
 
   onInstallTools(tools: SetupProgram[]) {

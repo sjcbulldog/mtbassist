@@ -1,0 +1,19 @@
+#!/bin/zsh
+
+if [ -d ~/Library/Application\ Support/Infineon_Technologies_AG/Infineon-Toolbox ] ; then
+    echo -n "Removing Infineon-Toolbox JSON files..."
+    rm -rf ~/Library/Application\ Support/Infineon_Technologies_AG/Infineon-Toolbox/*.json
+    echo " done."
+fi
+
+if [ -d ~/Library/Application\ Support/Infineon_Technologies_AG/Infineon-Toolbox/Tools ] ; then
+    echo -n "Removing Infineon-Toolbox Tools files..."
+    rm -rf ~/Library/Application\ Support/Infineon_Technologies_AG/Infineon-Toolbox/Tools
+    echo " done."
+fi
+
+if [ -d ~/Applications ]; then
+    echo -n "Removing Infineon-Toolbox application..."
+    rm -rf ~/Applications
+    echo " done."
+fi

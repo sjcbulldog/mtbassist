@@ -320,7 +320,9 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 penv['PATH'] = ModusToolboxEnvironment.filterPath('') ;
             }
 
-            let cp: exec.ChildProcess = exec.spawn(cmd, args, 
+            let cp: exec.ChildProcess ;
+
+            cp = exec.spawn(cmd, args, 
                 {
                     cwd: cwd,
                     env: penv,

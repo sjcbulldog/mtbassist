@@ -22,6 +22,8 @@ import { IDCRegistry } from "./idcreg";
 import { SetupProgram } from "../comms";
 import * as path from 'path' ;
 import * as fs from 'fs' ;
+import * as os from 'os' ;
+import { ModusToolboxEnvironment } from "../mtbenv";
 
 //
 // AppData/Local/Infineon_Technologies_AG/Infineon-Toolbox/Tools/ ...
@@ -443,6 +445,118 @@ export class SetupMgr extends MtbManagerBase {
     }
 
     private installFeature(id: string, version: string) : Promise<void> {
+        let p: Promise<void> ;
+
+        if (process.platform === 'darwin') {
+            p = this.installFeatureDarwin(id, version) ;
+        }
+        else if (process.platform === 'win32') {
+            p = this.installFeatureWin32(id, version) ;
+        }
+        else if (process.platform === 'linux') {
+            p = this.installFeatureLinux(id, version) ;
+        }
+        else {
+            throw Error('Unsupported platform');
+        }
+
+        return p;
+    }
+
+    private findUrl(v: any) : string | undefined {
+        let os : string ;
+
+        if (process.platform === 'darwin') {
+            os = 'macos';
+        } else if (process.platform === 'win32') {
+            os = 'windows';
+        } else {
+            os = 'linux';
+        }
+
+        let p : string | undefined = undefined ;
+
+        if (!v.downloadUrls) {
+            return undefined;
+        }
+
+        for(let one of v.downloadUrls) {
+            let tos: string = one.os as string ;
+            if (tos.toLowerCase() === os) {
+                p = one.url ;
+                break ;
+            }
+        }
+
+        if (!p) {
+            return undefined ;
+        }
+
+        if (!p.endsWith('/download')) {
+            return undefined ;
+        }
+
+        return path.basename(path.dirname(p)) ;
+    }
+
+    private findInstallerPath(props: SetupProgram, version: string) : string | undefined {
+        if (!props.versions) {
+            return undefined ;
+        }
+        let v = props.versions[version as keyof typeof props.versions] ;
+        if (!v) {
+            return v ;
+        }
+
+        let p = this.findUrl(v) ;
+        if (!p) {
+            return undefined ;
+        }
+
+        return path.join(os.homedir(), 'Library', 'Application Support', 'Infineon_Technologies_AG', 'Infineon-Toolbox', 'Tools', p) ;
+    }
+
+    private installFeatureDarwin(id: string, version: string) : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let props = this.toollist_.getToolByFeature(id) ;
+            if (!props) {
+                this.logger.error(`No tool found for feature ${id}`);
+                resolve() ;
+                return ;
+            }
+
+            let p = this.findInstallerPath(props, version);
+            if (p) {
+                let cmd: string = '/usr/sbin/Installer' ;
+                let args: string[] = ['-target', 'CurrentUserHomeDirectory', '-pkg', p] ;
+                ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), cmd, undefined, args)
+                .then((result) => {
+                    if (!result) {
+                        reject(new Error(`Failed to install feature ${id} - ${version}`));
+                        return;
+                    }
+                    resolve();
+                })
+                .catch((err) => {
+                    reject(err);
+                });
+            }
+            else {
+                reject(new Error(`Cannot find installer package for feature ${id} - ${version}`));
+            }
+
+        });
+        return ret;
+    }
+
+    private installFeatureLinux(id: string, version: string) : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            setTimeout(() => { resolve() }, 2000) ;
+        });
+        return ret;
+    }
+
+    private installFeatureWin32(id: string, version: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             let props = this.toollist_.getToolByFeature(id) ;
             if (!props) {

@@ -679,6 +679,7 @@ export class MTBAssistObject {
     private checkReady(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (this.ready_) {
+                this.sendMessageWithArgs('os', process.platform) ;
                 this.sendMessageWithArgs('mtbMode', this.mtbmode_) ;
                 this.sendMessageWithArgs('ready', this.theme_) ;
                 if (this.env_ && this.env_.has(MTBLoadFlags.manifestData)) {
