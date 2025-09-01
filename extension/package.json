@@ -55,7 +55,7 @@
           "group": "navigation"
         }
       ]
-    },        
+    },
     "terminal": {
       "profiles": [
         {
@@ -69,7 +69,11 @@
       "properties": {
         "mtbassist2.autodisplay": {
           "type": "string",
-          "enum" : ["Always", "When ModusToolbox Project Loaded", "Never"],
+          "enum": [
+            "Always",
+            "When ModusToolbox Project Loaded",
+            "Never"
+          ],
           "default": "Always",
           "description": "Automatically display the ModusToolbox Assistant when VSCode is opened."
         }
@@ -92,7 +96,7 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "copydist": "copyfiles ../content/single-dist/index.html content",
-    "copyshared": "C:\\cygwin64\\bin\\cp ../content/src/comms.ts src",
+    "copyshared": "cp ../content/src/comms.ts src",
     "copy": "npm run copydist && npm run copyshared",
     "content": "cd ../content && npm run build",
     "build": "npm run content && npm run copy && npm run compile"
@@ -121,6 +125,7 @@
     "open": "^9.1.0",
     "openurl": "^1.1.1",
     "os": "^0.1.2",
+    "request": "^2.88.2",
     "tmp": "^0.2.1",
     "vscode-uri": "^3.1.0",
     "winston": "^3.17.0",

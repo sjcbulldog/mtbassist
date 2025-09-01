@@ -791,8 +791,21 @@ export class MTBAssistObject {
             let mtbTools: string;
 
             if (type === 'home') {
-                mtbLocation = path.join(os.homedir(), 'ModusToolbox');
-                mtbTools = '';
+                if (process.platform === 'win32') {
+                    mtbLocation = path.join(os.homedir(), 'ModusToolbox');
+                    mtbTools = '';
+                }
+                else if (process.platform === 'darwin') {
+                    mtbLocation = path.join(os.homedir(), 'Applications', 'ModusToolbox');
+                    mtbTools = '';
+                }
+                else if (process.platform === 'linux') {
+                    mtbLocation = path.join(os.homedir(), 'ModusToolbox');
+                    mtbTools = '';
+                }
+                else {
+                    throw new Error('Unsupported platform for home directory installation');
+                }
             }
             else {
                 if (cpath === undefined) {
