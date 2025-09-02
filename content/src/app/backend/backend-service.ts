@@ -12,15 +12,14 @@
  * limitations under the License.
  */
 
-import { Injectable, OnDestroy, OnInit, Pipe } from '@angular/core';
-import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
+import { Injectable} from '@angular/core';
+import { BehaviorSubject} from 'rxjs';
 import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
 import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType } from '../../comms';
 import { ProjectManager } from './projectmgr';
-import { App } from '../app';
 
 declare var acquireVsCodeApi: any | undefined ;
 
@@ -69,6 +68,7 @@ export class BackendService {
 
     // Misc
     glossaryEntries: BehaviorSubject<GlossaryEntry[]> = new BehaviorSubject<GlossaryEntry[]>([]);
+    userGuide: BehaviorSubject<string> = new BehaviorSubject<string>('User Guide');
     intellisenseProject: BehaviorSubject<string> = new BehaviorSubject<string>('');
     recentlyOpened: BehaviorSubject<RecentEntry[]> = new BehaviorSubject<RecentEntry[]>([]);
     devKitStatus: BehaviorSubject<DevKitInfo[]> = new BehaviorSubject<DevKitInfo[]>([]);
@@ -234,6 +234,7 @@ export class BackendService {
         this.registerHandler('justNeedTools', (cmd) => { this.justNeedTools.next(cmd.data || false) });
         this.registerHandler('tools-loc-error', this.handleToolsLocError.bind(this)) ;
         this.registerHandler('os', (cmd) => { this.os.next(cmd.data || '') });
+        this.registerHandler('userguide', (cmd) => { this.userGuide.next(cmd.data || 'User Guide') });
     }
 
     private handleToolsLocError(cmd: BackEndToFrontEndResponse) {

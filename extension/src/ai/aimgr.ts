@@ -19,6 +19,9 @@ var request = require("request");
 
 export class AIManager extends EventEmitter {
     private static readonly refreshInterval: number = 30 * 60 * 1000; 
+    private static readonly clientID = 'UYet54C32fMCcbR8rWUfjC1E1IC4PW7j' ;
+    private static readonly clientSecret = '3rqt9WIBs5GHnrqt0DNoIKtiejFUpThu3lkRMsJ1Rlz7OvNflMjCSYyWNK-pi93w' ;
+
     private ext_ : MTBAssistObject ;
     private apiKey: any ;
     
@@ -64,9 +67,9 @@ export class AIManager extends EventEmitter {
 
             let req = {
                 // eslint-disable-next-line @typescript-eslint/naming-convention
-                client_id: "",
+                client_id: AIManager.clientID,
                 // eslint-disable-next-line @typescript-eslint/naming-convention
-                client_secret: "",
+                client_secret: AIManager.clientSecret,
 
                 audience: "wss://ws.api.ept.ai",
 

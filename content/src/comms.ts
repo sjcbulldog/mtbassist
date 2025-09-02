@@ -57,6 +57,7 @@ export type FrontEndToBackEndType =
     'lcs-data' |
     'recent-data' |
     'settings-data' |
+    'user-guide-data' |
     'check-ready'
     ;
 
@@ -99,7 +100,8 @@ export type BackEndToFrontEndType =
     'justNeedTools' |
     'tools-loc-error' |
     'ready' |
-    'os'
+    'os' |
+    'userguide'
     ;
 
 export type ThemeType = 'dark' | 'light' ;

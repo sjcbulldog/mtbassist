@@ -84,30 +84,27 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
     }));
 
     this.subscriptions.push(this.be.os.subscribe(os => {
+      this.be.log(`OS type sent to frontend: ${os}`); 
       this.os = os;
       this.cdr.detectChanges();
     }));
 
     this.subscriptions.push(this.be.homeError.subscribe(err => {
-      this.be.log(`Home error status updated: ${err}`);
       this.homeError = err;
       this.cdr.detectChanges();
     }));
 
     this.subscriptions.push(this.be.homeWarning.subscribe(warn => {
-      this.be.log(`Home warning status updated: ${warn}`);
       this.homeWarning = warn;
       this.cdr.detectChanges();
     }));
 
     this.subscriptions.push(this.be.customError.subscribe(err => {
-      this.be.log(`Custom error status updated: ${err}`);
       this.customError = err;
       this.cdr.detectChanges();
     }));
 
     this.subscriptions.push(this.be.customWarning.subscribe(warn => {
-      this.be.log(`Custom warning status updated: ${warn}`);
       this.customWarning = warn;
       this.cdr.detectChanges();
     }));
@@ -209,7 +206,7 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
   }
 
   isCustomInstallAvailable(): boolean {
-    return this.os !== 'macOS';
+    return this.os !== 'darwin';
   }
 
   onInstallTools(tools: SetupProgram[]) {

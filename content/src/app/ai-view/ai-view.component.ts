@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { BackendService } from '../backend/backend-service';
 import { Subscription } from 'rxjs';
 
@@ -25,6 +25,7 @@ export class AIViewComponent implements OnInit , OnDestroy {
     @ViewChild('aiAgentContainer') myContainer?: ElementRef<HTMLDivElement>;
     private apiKey: any ;
     private theme: string = 'dark' ;
+    private ival: number = 0 ;
 
     private apiKeySubscription?: Subscription;
     private themeSubscription?: Subscription;
@@ -80,13 +81,25 @@ export class AIViewComponent implements OnInit , OnDestroy {
         }
     }
 
+    private relocate() {
+        let aiwid = document.getElementById('eptai-chat-container') ;
+        if (aiwid) {
+            this.be.log('    AI widget being relocated');
+            if (this.myContainer?.nativeElement) {
+                this.be.log('    AI widget relocated');
+                this.myContainer.nativeElement.appendChild(aiwid);
+                clearInterval(this.ival);
+            }
+        }
+    }
+
     private initView() {
         if (this.myContainer) {
             let w = (window as any) ;
             w.eptAIConfig = { 
                 accessToken: this.apiKey.access_token,
                 defaultQuestions: ["What is ModusToolbox?"],
-                fullWindow: true,
+                fullWindow: false,
                 botName: 'ModusToolbox AI',
                 introText: 'Hello, I am ModusToolbox AI here to help',
                 placeholderText: 'Type your question here...',
@@ -97,15 +110,18 @@ export class AIViewComponent implements OnInit , OnDestroy {
         
             var script = document.createElement('script');
             script.src = 'https://assets.ept.ai/chat/v0/ept_chat_loader.bundle.js?v=1.0.0';
-            script.async = true;
+            script.async = false;
 
+            let container ;
             try {
-                let container = this.myContainer.nativeElement;
+                container = this.myContainer.nativeElement;
                 container.appendChild(script);
+                this.ival = setInterval(this.relocate.bind(this), 10000);
             }
             catch(err) {
                 this.be.log('    Error loading AI script: ' + err);
             }
+
         }
     }
 }

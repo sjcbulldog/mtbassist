@@ -85,15 +85,16 @@ export class App {
       component: 'SettingsEditor',
       icon: 'settings'
     },
-    {
-      label: 'AI',
-      component: 'AIViewComponent',
-      icon: 'smart_toy'
-    },    
+
     {
       label: 'Glossary',
       component: 'GlossaryComponent',
       icon: 'help'
-    }
+    },
+    // {
+    //   label: 'AI',
+    //   component: 'AIViewComponent',
+    //   icon: 'smart_toy'
+    // }
   ];
 }

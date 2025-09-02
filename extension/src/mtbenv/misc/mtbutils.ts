@@ -105,10 +105,10 @@ export class MTBUtils {
         if (process.platform === "win32") {
             ret = path.join(os.homedir(), 'ModusToolbox') ;
         } else if (process.platform === 'darwin') {
-            ret = path.join(os.homedir(), 'ModusToolbox') ;
+            ret = path.join(os.homedir(), 'Applications', 'ModusToolbox') ;
         }
         else if (process.platform === 'linux') {
-            ret = '/Applications/ModusToolbox' ;
+            throw new Error('TODO: Linux Support') ;
         }
         else {
             throw new Error('Unsupported platform') ;

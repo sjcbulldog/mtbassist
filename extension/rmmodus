@@ -17,3 +17,9 @@ if [ -d ~/Applications ]; then
     rm -rf ~/Applications
     echo " done."
 fi
+
+if [ -d /Applications/Infineon\ Developer\ Center\ Launcher.app ] ; then
+    echo -n "Removing Infineon Developer Center Launcher application..."
+    sudo rm -rf /Applications/Infineon\ Developer\ Center\ Launcher.app
+    echo " done."
+fi

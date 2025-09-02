@@ -110,8 +110,8 @@ export class MTBSettings extends EventEmitter {
         this.ext_ = ext;
 
         this.readSettingsFile() ;
-        this.sanitizeSettings() ;
         this.readWorkspaceSettings() ;
+        this.sanitizeSettings() ;
         this.resolvePaths() ;
     }
 

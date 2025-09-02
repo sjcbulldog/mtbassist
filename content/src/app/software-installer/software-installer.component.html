@@ -119,7 +119,7 @@
                         <span class="tool-status will-install">Install v{{ tool.version }}</span>
                       }
                     </div>
-                    @if (tool.featureId === 'com.ifx.tb.tool.modustoolboxprogtools' && !tool.installed) {
+                    @if (tool.featureId === 'com.ifx.tb.tool.modustoolboxprogtools' && !tool.installed && os !== 'darwin') {
                       <div class="admin-required-message">
                         <mat-icon style="color: #f44336; vertical-align: middle;">security</mat-icon>
                         <span style="color: #f44336; font-weight: 600; margin-left: 0.5em;">Administrative privileges will be required to install this tool.</span>
