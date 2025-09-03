@@ -116,7 +116,9 @@ export class MTBBoard extends MTBItem {
                 //
                 logger.error("two instances of 'board' contains the same version '" + ver.num + "'") ;
                 ret = undefined ;
+                break ;
             }
+            ret.versions.push(ver) ;
         }
 
         return ret;

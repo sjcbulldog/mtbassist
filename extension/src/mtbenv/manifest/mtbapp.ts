@@ -79,8 +79,11 @@ export class MTBApp extends MTBItem {
                     //
                     logger.error("two instances of 'app' contains the same version '" + ver.num + "'") ;
                     ret = undefined ;
+                    break ;
                 }
             }
+
+            ret.versions.push(ver) ;
         }
 
         return ret;

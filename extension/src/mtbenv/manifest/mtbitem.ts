@@ -53,10 +53,39 @@ export class MTBItem
         this.requiresv2.sort() ;
     }
 
+    private getVersionFromCommit(commit: string) : MTBVersion | undefined {
+        let i = commit.indexOf('-');
+        if (i === -1) {
+            return undefined;
+        }
+
+        let versionStr = commit.substring(i + 1);
+        return MTBVersion.fromVVersionString(versionStr);
+    }
+
     public get getLatestVersion() : MTBItemVersion | undefined {
         if (this.versions.length > 0) {
-            return this.versions[0] ;
+            let vlist = this.versions.filter((v) => v.num.toLowerCase().indexOf('latest') === -1) ;
+            let ret : MTBItemVersion | undefined = undefined ;
+            let retver : MTBVersion | undefined = undefined ;
+            for(let v of vlist) {
+                let vver = this.getVersionFromCommit(v.commit) ;
+                if (!vver) {
+                    continue;
+                }
+
+                if (ret === undefined) {
+                    ret = v ;
+                    retver = vver ;
+                }
+                else if (MTBVersion.compare(retver!, vver) < 0) {
+                    ret = v ;
+                    retver = vver ;
+                }
+            }
+            return ret ;
         }
+        return undefined ;
     }
 
     public containsVersion(num: string) : boolean {

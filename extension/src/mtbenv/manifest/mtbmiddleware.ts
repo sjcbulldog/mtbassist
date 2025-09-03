@@ -68,7 +68,9 @@ export class MTBMiddleware extends MTBItem {
                 //
                 logger.error("two instances of 'middleware' contains the same version '" + ver.num + "'") ;
                 ret = undefined ;
+                break ;
             }
+            ret.versions.push(ver) ;
         }
 
         return ret;
