@@ -20,6 +20,7 @@ import { MTBAssistantMode } from '../comms';
 import { IdcLauncherRequiredComponent } from "./idc-launcher-required/idc-launcher-required.component";
 import { InitializingComponent } from "./initializing/initializing.component";
 import { ErrorComponent } from "./error/error.component";
+import { UsersGuideComponent } from './users-guide/users-guide.component';
 
 @Component({
   selector: 'app-root',
@@ -90,6 +91,11 @@ export class App {
       label: 'Glossary',
       component: 'GlossaryComponent',
       icon: 'help'
+    },
+    {
+      label: "User's Guide",
+      component: 'UsersGuideComponent',
+      icon: 'menu_book'
     },
     // {
     //   label: 'AI',

@@ -131,7 +131,7 @@
             </div>
           }         
           
-          @case (8) {
+          <!-- @case (8) {
             <div class="tab-panel">
               @if (tab.component === 'AIViewComponent') {
                 <app-ai-view></app-ai-view>
@@ -142,7 +142,20 @@
                 </div>
               }
             </div>
-          }       
+          }        -->
+
+          @case (8) {
+            <div class="tab-panel">
+              @if (tab.component === 'UsersGuideComponent') {
+                <app-users-guide></app-users-guide>
+              } @else {
+                <div class="placeholder-content">
+                  <h2>{{ tab.label }}</h2>
+                  <h2>Component: {{ tab.component.toString() }}</h2>
+                </div>
+              }
+            </div>
+          }        
         }
         
       </div>

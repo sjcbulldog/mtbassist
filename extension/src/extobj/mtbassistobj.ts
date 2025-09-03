@@ -643,6 +643,29 @@ export class MTBAssistObject {
         this.cmdhandler_.set('lcs-data', this.getLcsData.bind(this));
         this.cmdhandler_.set('glossary-data', this.getGlossaryData.bind(this)) ;
         this.cmdhandler_.set('ai-data', this.getAIData.bind(this)) ;
+        this.cmdhandler_.set('user-guide-data', this.provideUserGuide.bind(this)) ;
+    }
+
+    private getUserGuideContent(): string {
+        let ret: string = '';
+        this.computeTheme() ;
+        let filename = 'usersguide-' + this.theme_ + '.html' ;
+        let p = path.join(__dirname, '..', 'content', filename);
+        if (fs.existsSync(p)) {
+            ret = fs.readFileSync(p, 'utf8');
+        }
+        else {
+            ret = 'File Not Found' ;
+        }
+
+        return ret;
+    }
+    private provideUserGuide(_: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+
+            this.sendMessageWithArgs('userguide', this.getUserGuideContent()) ;
+            resolve() ;
+        });
     }
 
     private getAIData(_ : FrontEndToBackEndRequest) : Promise<void> {
