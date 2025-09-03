@@ -138,7 +138,9 @@ export class IDCLauncher extends EventEmitter{
                 launcherPath = this.checkPossiblePath(path.join('/', 'Library', 'Infineon', 'LauncherService', 'idc-launcher-service.app')) ;
             }
 
-            launcherPath = path.join(launcherPath!, 'Contents', 'MacOS', 'idc-launcher-service') ;
+            if (launcherPath) {
+                launcherPath = path.join(launcherPath!, 'Contents', 'MacOS', 'idc-launcher-service') ;
+            }
         }
         else {
             throw new Error(`Unsupported platform: ${process.platform}`);

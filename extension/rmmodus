@@ -1,14 +1,20 @@
 #!/bin/zsh
 
-if [ -d ~/Library/Application\ Support/Infineon_Technologies_AG/Infineon-Toolbox ] ; then
-    echo -n "Removing Infineon-Toolbox JSON files..."
-    rm -rf ~/Library/Application\ Support/Infineon_Technologies_AG/Infineon-Toolbox/*.json
-    echo " done."
-fi
-
 if [ -d ~/Library/Application\ Support/Infineon_Technologies_AG ] ; then
     echo -n "Removing Infineon-Toolbox Tools files..."
     rm -rf ~/Library/Application\ Support/Infineon_Technologies_AG
+    echo " done."
+fi
+
+if [ -d ~/Library/Application\ Support/Infineon\ Developer\ Center\ Launcher ] ; then
+    echo -n "Removing Infineon-Toolbox Tools files..."
+    rm -rf ~/Library/Application\ Support/Infineon\ Developer\ Center\ Launcher
+    echo " done."
+fi
+
+if [ -d ~/Library/Infineon ] ; then
+    echo -n "Removing Infineon-Toolbox Tools files..."
+    rm -rf ~/Library/Infineon
     echo " done."
 fi
 
@@ -18,14 +24,14 @@ if [ -d ~/Applications ]; then
     echo " done."
 fi
 
-if [ -d /Applications/Infineon\ Developer\ Center\ Launcher.app ] ; then
-    echo -n "Removing Infineon Developer Center Launcher application..."
-    sudo rm -rf /Applications/Infineon\ Developer\ Center\ Launcher.app
+if [ -d /Library/Infineon ]; then
+    echo -n "Removing Infineon Launcher Services..."
+    sudo rm -rf /Library/Infineon
     echo " done."
 fi
 
-if [-d /Library/Infineon/Launcher\ Services ]; then
-    echo -n "Removing Infineon Launcher Services..."
-    sudo rm -rf /Library/Infineon/Launcher\ Services
+if [ -d /Library/Application\ Support/Infineon_Technologies_AG ]; then
+    echo -n "Removing Infineon Application Support files..."
+    sudo rm -rf /Library/Application\ Support/Infineon_Technologies_AG
     echo " done."
 fi
