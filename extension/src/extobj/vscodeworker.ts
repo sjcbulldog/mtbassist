@@ -23,6 +23,7 @@ import * as EventEmitter from 'events' ;
 import { MTBLoadFlags } from "../mtbenv/mtbenv/loadflags";
 import { MTBAssistObject } from "./mtbassistobj";
 import { MTBProjectInfo } from "../mtbenv/appdata/mtbprojinfo";
+import { ApplicationType } from "../mtbenv/appdata/mtbappinfo";
 
 interface OutputPercentMap {
     match: RegExp ;
@@ -260,8 +261,10 @@ export class VSCodeWorker extends EventEmitter  {
                 break ;
         }
 
-        if (ret.length > 0 && project) {
-            ret += ` ${project}`;
+        if (this.ext_.env!.appInfo!.type() !== ApplicationType.combined) {
+            if (ret.length > 0 && project) {
+                ret += ` ${project}`;
+            }
         }
 
         return ret ;

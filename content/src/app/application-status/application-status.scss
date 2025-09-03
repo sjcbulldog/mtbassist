@@ -1452,40 +1452,24 @@
     }
   }
 
-  &.build-btn {
-    background-color: #4CAF50;
-    color: white;
-
-    &:hover:not(:disabled) {
-      background-color: #45a049;
-    }
-  }
-
-  &.rebuild-btn {
-    background-color: #2196F3;
-    color: white;
-
-    &:hover:not(:disabled) {
-      background-color: #1976D2;
-    }
-  }
-
-  &.clean-btn {
-    background-color: #FF9800;
-    color: white;
-
-    &:hover:not(:disabled) {
-      background-color: #F57C00;
-    }
-  }
-
+  &.build-btn,
+  &.rebuild-btn,
+  &.clean-btn,
   &.program-btn {
-    background-color: #9C27B0;
-    color: white;
+    background-color: #e0e0e0;
+    color: #222;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
 
-    &:hover:not(:disabled) {
-      background-color: #7B1FA2;
-    }
+  &.build-btn:hover:not(:disabled),
+  &.rebuild-btn:hover:not(:disabled),
+  &.clean-btn:hover:not(:disabled),
+  &.program-btn:hover:not(:disabled) {
+    background-color: #d5d5d5;
+    color: #111;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-color: #bbb;
   }
 }
 
