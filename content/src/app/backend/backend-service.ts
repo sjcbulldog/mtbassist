@@ -44,6 +44,7 @@ export class BackendService {
     // Application related
     appStatusData: BehaviorSubject<ApplicationStatusData | null> = new BehaviorSubject<ApplicationStatusData | null>(null);
     loadedAsset: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+    needTasks: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
     // Install and setup related
     neededTools: BehaviorSubject<SetupProgram[]> = new BehaviorSubject<SetupProgram[]>([]);
@@ -235,6 +236,7 @@ export class BackendService {
         this.registerHandler('tools-loc-error', this.handleToolsLocError.bind(this)) ;
         this.registerHandler('os', (cmd) => { this.os.next(cmd.data || '') });
         this.registerHandler('userguide', (cmd) => { this.userGuide.next(cmd.data || 'User Guide') });
+        this.registerHandler('needTasks', (cmd) => { this.needTasks.next(cmd.data || false) });
     }
 
     private handleToolsLocError(cmd: BackEndToFrontEndResponse) {

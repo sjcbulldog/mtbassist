@@ -101,7 +101,8 @@ export type BackEndToFrontEndType =
     'tools-loc-error' |
     'ready' |
     'os' |
-    'userguide'
+    'userguide' |
+    'needTasks'
     ;
 
 export type ThemeType = 'dark' | 'light' ;

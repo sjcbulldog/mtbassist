@@ -232,6 +232,7 @@
                       expand_more
                     </mat-icon>
                     Enabled Components
+                    <mat-icon matTooltip="Components are a feature of the ModusToolbox middleware that enables specific features of a given middleware library." style="vertical-align: middle; cursor: help; margin-left: 0.5em;" color="primary">help_outline</mat-icon>
                   </h3>
                   <div class="enabled-components-tags" [class.collapsed]="isSectionCollapsed(project.name, 'components')">
                     @if (project.components && project.components.length > 0) {

@@ -50,7 +50,7 @@ export interface MtbNavTab {
     GlossaryComponent,
     SettingsEditor,
     LocalContentStorageComponent,
-    AIViewComponent,
+    // AIViewComponent,
     UsersGuideComponent
 ],
   templateUrl: './mtb-nav.html',
