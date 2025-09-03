@@ -336,8 +336,7 @@ export class MTBAssistObject {
                 this.updateStatusBar();
                 this.createAppStructure();
                 
-                // We do this again in case the setting is to show the mtb assistant only if an application is loaded                          
-                this.optionallyShowPage() ;
+
                 this.logger_.debug('All managers initialized successfully.');
 
                 // The settings depend on the loaded application, specifically the tools version, from settings
@@ -351,14 +350,17 @@ export class MTBAssistObject {
                 this.postInitializeManagers()
                 .then(() => {
                     if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
+                        // We do this again in case the setting is to show the mtb assistant only if an application is loaded
+                        this.optionallyShowPage();
                         this.recents_!.addToRecentProject(this.env_!.appInfo!.appdir, this.env_!.bspName || '');
+
+                        this.sendMessageWithArgs('selectTab', MTBAssistObject.applicationStatusTab) ;
 
                         let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'tasks.json');
                         this.tasks_ = new MTBTasks(this.env_!, this.logger_, p);
 
                         this.getLaunchData()
                             .then(() => {
-                                this.updateAllTasks();
                                 this.setIntellisenseProject();
 
                                 let parray: any[] = [];
@@ -600,7 +602,6 @@ export class MTBAssistObject {
         else {
             this.logger_.warn(`Task not found: ${task}`);
             vscode.window.showWarningMessage(`The requested task '${task}' does not exist.`);
-            this.updateAllTasks();
         }
     }
 
@@ -644,6 +645,16 @@ export class MTBAssistObject {
         this.cmdhandler_.set('glossary-data', this.getGlossaryData.bind(this)) ;
         this.cmdhandler_.set('ai-data', this.getAIData.bind(this)) ;
         this.cmdhandler_.set('user-guide-data', this.provideUserGuide.bind(this)) ;
+        this.cmdhandler_.set('fix-tasks', this.fixTasks.bind(this)) ;
+    }
+
+    private fixTasks(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.tasks_?.addAll() ;
+            this.tasks_?.writeTasks() ;
+            this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
+            resolve();
+        });
     }
 
     private getUserGuideContent(): string {
@@ -1705,7 +1716,8 @@ export class MTBAssistObject {
                 documentation: pinfo?.documentation || [],
                 middleware: [],
                 projects: projects,
-                tools: tools
+                tools: tools,
+                needTasks: this.tasks_?.doWeNeedTaskUpdates() || !this.tasks_?.isValid()
             };
         } else {
             appst = {
@@ -1717,6 +1729,8 @@ export class MTBAssistObject {
                 middleware: [],
                 projects: [],
                 tools: [],
+                needTasks: false
+
             };
         }
         return appst;
@@ -1866,30 +1880,6 @@ export class MTBAssistObject {
             else {
                 this.settings_.toolsPath = dir ;
                 this.doRestartExtension() ;
-            }
-        }
-    }
-
-    private updateAllTasks() {
-        if (this.tasks_) {
-            if (!this.tasks_.isValid()) {
-                vscode.window.showInformationMessage("The file 'tasks.json' is not a valid tasks file (or does not exist) and cannot be parsed as JSONC. Do you want to recreate this file with the default tasks?", "Yes", "No")
-                    .then((answer) => {
-                        if (answer === "Yes") {
-                            this.tasks_!.reset();
-                            this.tasks_!.addAll();
-                            this.tasks_!.writeTasks();
-                        }
-                    });
-            }
-            else if (this.tasks_.doWeNeedTaskUpdates()) {
-                vscode.window.showInformationMessage("The ModusToolbox Assistant works best with a specific set of tasks for the application and the projects.  This may add or change existing tasks.  Do you want to make these changes?", "Yes", "No")
-                    .then((answer) => {
-                        if (answer === "Yes") {
-                            this.tasks_!.addAll();
-                            this.tasks_!.writeTasks();
-                        }
-                    });
             }
         }
     }
@@ -2119,6 +2109,7 @@ export class MTBAssistObject {
         let ret = new Promise<void>((resolve) => {
             this.worker_?.runAction(request.data.action, request.data.project)
                 .then(() => {
+                    this.sendMessageWithArgs('buildDone', true);
                     resolve();
                 });
         });

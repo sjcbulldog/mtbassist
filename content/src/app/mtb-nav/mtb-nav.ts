@@ -84,6 +84,12 @@ export class MtbNav implements OnInit, OnDestroy {
         this.manifestStatus = status;
       })
     );
+
+    this.subscriptions.push(
+      this.be.navTab.subscribe(tab => {
+        this.selectedIndex = tab;
+      })
+    );
   }
 
   ngOnDestroy() {

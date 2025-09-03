@@ -45,42 +45,55 @@
                 <span class="status-date">Checked: {{ currentDate | date:'medium' }}</span>
               </div>
               
+              @if (applicationStatus.needTasks) {
+                <div class="tasks-warning" style="margin-top: 1em; margin-bottom: 1em; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 12px; display: flex; align-items: center;">
+                  <mat-icon color="warn" style="margin-right: 8px;">warning</mat-icon>
+                  <span style="flex: 1; font-weight: 500; color: #856404;">VS Code tasks are out of date</span>
+                  <mat-icon
+                    matTooltip="The ModusToolbox Assistant relies on specific tasks to be available in the VS Code tasks.json file.  Press the 'Fix Tasks' button to generate any of these that are missing."
+                    class="tasks-help-icon"
+                    style="cursor: pointer; margin-right: 8px; color: #856404;"
+                  >help_outline</mat-icon>
+                  <button mat-raised-button color="primary" (click)="fixTasks()" [disabled]="running">Fix Tasks</button>
+                </div>
+              }
+              
               <!-- Application Build & Tool Actions -->
               @if (applicationStatus.valid) {
                 <div class="app-build-actions app-build-actions-flex">
                   <div class="app-build-actions-left">
-                    <button mat-raised-button class="app-build-btn build-btn" (click)="buildApplication()">
+                    <button mat-raised-button class="app-build-btn build-btn" (click)="buildApplication()" [disabled]="running">
                       <mat-icon>build</mat-icon>
                       Build
                     </button>
-                    <button mat-raised-button class="app-build-btn rebuild-btn" (click)="rebuildApplication()">
+                    <button mat-raised-button class="app-build-btn rebuild-btn" (click)="rebuildApplication()" [disabled]="running">
                       <mat-icon>refresh</mat-icon>
                       Rebuild
                     </button>
-                    <button mat-raised-button class="app-build-btn clean-btn" (click)="cleanApplication()">
+                    <button mat-raised-button class="app-build-btn clean-btn" (click)="cleanApplication()" [disabled]="running">
                       <mat-icon>cleaning_services</mat-icon>
                       Clean
                     </button>
-                    <button mat-raised-button class="app-build-btn erase-btn" (click)="eraseApplication()">
+                    <button mat-raised-button class="app-build-btn erase-btn" (click)="eraseApplication()" [disabled]="running">
                       <mat-icon>delete</mat-icon>
                       Erase
                     </button>
-                    <button mat-raised-button class="app-build-btn program-btn" (click)="programApplication()">
+                    <button mat-raised-button class="app-build-btn program-btn" (click)="programApplication()" [disabled]="running">
                       <mat-icon>download</mat-icon>
                       Program
                     </button>
-                    <button mat-raised-button class="app-build-btn readme-btn" (click)="viewReadme()">
+                    <button mat-raised-button class="app-build-btn readme-btn" (click)="viewReadme()" [disabled]="running">
                       <mat-icon>description</mat-icon>
                       README.md
                     </button>
                   </div>
                   <span class="app-build-actions-spacer"></span>
                   <div class="app-build-actions-right">
-                    <button mat-raised-button class="app-build-btn device-configurator-btn" (click)="openDeviceConfigurator()">
+                    <button mat-raised-button class="app-build-btn device-configurator-btn" (click)="openDeviceConfigurator()" [disabled]="running">
                       <mat-icon>settings_input_component</mat-icon>
                       Device Configurator
                     </button>
-                    <button mat-raised-button class="app-build-btn library-manager-btn" (click)="openLibraryManager()">
+                    <button mat-raised-button class="app-build-btn library-manager-btn" (click)="openLibraryManager()" [disabled]="running">
                       <mat-icon>library_books</mat-icon>
                       Library Manager
                     </button>
@@ -177,19 +190,19 @@
               
               <!-- Project Build Actions -->
               <div class="project-build-actions">
-                <button mat-raised-button class="project-build-btn build-btn" (click)="buildProject(project)">
+                <button mat-raised-button class="project-build-btn build-btn" (click)="buildProject(project)" [disabled]="running">
                   <mat-icon>build</mat-icon>
                   Build
                 </button>
-                <button mat-raised-button class="project-build-btn rebuild-btn" (click)="rebuildProject(project)">
+                <button mat-raised-button class="project-build-btn rebuild-btn" (click)="rebuildProject(project)" [disabled]="running">
                   <mat-icon>refresh</mat-icon>
                   Rebuild
                 </button>
-                <button mat-raised-button class="project-build-btn clean-btn" (click)="cleanProject(project)">
+                <button mat-raised-button class="project-build-btn clean-btn" (click)="cleanProject(project)" [disabled]="running">
                   <mat-icon>cleaning_services</mat-icon>
                   Clean
                 </button>
-                <button mat-raised-button class="project-build-btn program-btn" (click)="programProject(project)">
+                <button mat-raised-button class="project-build-btn program-btn" (click)="programProject(project)" [disabled]="running">
                   <mat-icon>download</mat-icon>
                   Program
                 </button>

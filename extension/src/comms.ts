@@ -58,7 +58,8 @@ export type FrontEndToBackEndType =
     'recent-data' |
     'settings-data' |
     'user-guide-data' |
-    'check-ready'
+    'check-ready' |
+    'fix-tasks'
     ;
 
 export type BackEndToFrontEndType =
@@ -102,7 +103,7 @@ export type BackEndToFrontEndType =
     'ready' |
     'os' |
     'userguide' |
-    'needTasks'
+    'buildDone'
     ;
 
 export type ThemeType = 'dark' | 'light' ;
@@ -251,6 +252,7 @@ export interface ApplicationStatusData {
   valid: boolean ;
   name: string;
   toolsdir: string;
+  needTasks: boolean ;
   memory: MemoryInfo[];
   documentation: Documentation[];
   middleware: Middleware[];

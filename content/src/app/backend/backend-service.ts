@@ -34,7 +34,7 @@ export class BackendService {
     // Handler for messages from the backend
     private handlers_ : Map<string, (cmd: BackEndToFrontEndResponse) => void> = new Map<string, (cmd: BackEndToFrontEndResponse) => void>();
 
-    // Dispay related
+    // Display related
     theme: BehaviorSubject<ThemeType> = new BehaviorSubject<ThemeType>('dark');
     navTab: BehaviorSubject<number> = new BehaviorSubject<number>(0) ;
     setupTab: BehaviorSubject<number> = new BehaviorSubject<number>(0) ;
@@ -44,7 +44,7 @@ export class BackendService {
     // Application related
     appStatusData: BehaviorSubject<ApplicationStatusData | null> = new BehaviorSubject<ApplicationStatusData | null>(null);
     loadedAsset: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
-    needTasks: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    buildDone: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false) ;
 
     // Install and setup related
     neededTools: BehaviorSubject<SetupProgram[]> = new BehaviorSubject<SetupProgram[]>([]);
@@ -236,7 +236,7 @@ export class BackendService {
         this.registerHandler('tools-loc-error', this.handleToolsLocError.bind(this)) ;
         this.registerHandler('os', (cmd) => { this.os.next(cmd.data || '') });
         this.registerHandler('userguide', (cmd) => { this.userGuide.next(cmd.data || 'User Guide') });
-        this.registerHandler('needTasks', (cmd) => { this.needTasks.next(cmd.data || false) });
+        this.registerHandler('buildDone', (cmd) => { this.log(`Build done: ${JSON.stringify(cmd.data)}`, 'debug'); this.buildDone.next(cmd.data); } );
     }
 
     private handleToolsLocError(cmd: BackEndToFrontEndResponse) {
@@ -339,6 +339,7 @@ export class BackendService {
         if (str.length > maxstr) {
             str = str.substring(0, maxstr) + '...';
         }
+        this.log(`Received message: ${str}`, 'silly');
         const handler = this.handlers_.get(cmd.response);
         if (!handler) {
             this.log(`No handler found for command: ${cmd.response}`, 'debug');

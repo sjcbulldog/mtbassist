@@ -6,9 +6,9 @@ if [ -d ~/Library/Application\ Support/Infineon_Technologies_AG/Infineon-Toolbox
     echo " done."
 fi
 
-if [ -d ~/Library/Application\ Support/Infineon_Technologies_AG/Infineon-Toolbox/Tools ] ; then
+if [ -d ~/Library/Application\ Support/Infineon_Technologies_AG ] ; then
     echo -n "Removing Infineon-Toolbox Tools files..."
-    rm -rf ~/Library/Application\ Support/Infineon_Technologies_AG/Infineon-Toolbox/Tools
+    rm -rf ~/Library/Application\ Support/Infineon_Technologies_AG
     echo " done."
 fi
 
@@ -21,5 +21,11 @@ fi
 if [ -d /Applications/Infineon\ Developer\ Center\ Launcher.app ] ; then
     echo -n "Removing Infineon Developer Center Launcher application..."
     sudo rm -rf /Applications/Infineon\ Developer\ Center\ Launcher.app
+    echo " done."
+fi
+
+if [-d /Library/Infineon/Launcher\ Services ]; then
+    echo -n "Removing Infineon Launcher Services..."
+    sudo rm -rf /Library/Infineon/Launcher\ Services
     echo " done."
 fi

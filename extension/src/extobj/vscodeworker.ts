@@ -250,10 +250,10 @@ export class VSCodeWorker extends EventEmitter  {
                 ret = `Clean`;
                 break ;
             case 'program':
-                ret = `Program`;
+                ret = `Build & Program`;
                 break ;
             case 'erase':
-                ret = `Erase All`;
+                ret = `Erase`;
                 break ;
             default:
                 ret  = '' ;

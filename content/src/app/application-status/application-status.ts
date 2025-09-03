@@ -17,6 +17,7 @@ import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 import { ApplicationStatusData, Documentation } from '../../comms';
 import { BackendService } from '../backend/backend-service';
 import { Subscription } from 'rxjs';
@@ -28,7 +29,8 @@ import { Subscription } from 'rxjs';
         CommonModule,
         MatTabsModule,
         MatIconModule,
-        MatTooltipModule
+        MatTooltipModule,
+        MatButtonModule
     ],
     templateUrl: './application-status.html',
     styleUrls: ['./application-status.scss'],
@@ -40,6 +42,7 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     applicationStatus: ApplicationStatusData | null = null;
     isLoading = true;
     hasError = false;
+    running = false ;
 
     errorMessage = '';
     currentDate = new Date();
@@ -50,11 +53,7 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     // Collapsed states for project sections (projectName -> sectionName -> boolean)
     collapsedSections: Map<string, Map<string, boolean>> = new Map();
 
-    private appStatusDataSubscription?: Subscription ;
-    private loadedAssetSubscription?: Subscription ;
-    private intellisenseProjectSubscription?: Subscription ;
-    private themeSubscription?: Subscription ;
-    private readySubscription?: Subscription ;
+    private subscriptions: Subscription[] = [] ;
 
     constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
         // Subscribe to app status data
@@ -62,13 +61,13 @@ export class ApplicationStatus implements OnInit, OnDestroy {
 
     ngOnInit() : void {
 
-        this.readySubscription = this.be.ready.subscribe((ready) => {
+        this.subscriptions.push(this.be.ready.subscribe((ready) => {
             if (ready) {
                 this.be.sendRequestWithArgs('app-data', null) ;
             }
-        });
+        }));
 
-        this.appStatusDataSubscription = this.be.appStatusData.subscribe({
+        this.subscriptions.push(this.be.appStatusData.subscribe({
             next: (data) => {
                 this.be.log('Application status data received:') ;
                 this.applicationStatus = data;
@@ -94,37 +93,37 @@ export class ApplicationStatus implements OnInit, OnDestroy {
                 this.errorMessage = 'Failed to load application status: ' + error.message;
                 this.isLoading = false;
             }
-        });
+        }));
 
         // Subscribe to loaded asset updates
-        this.loadedAssetSubscription = this.be.loadedAsset.subscribe({
+        this.subscriptions.push(this.be.loadedAsset.subscribe({
             next: (asset) => {
                 if (asset) {
                     this.currentlyLoadingAsset = asset;
                 }   
             }
-        });
+        }));
 
-        this.intellisenseProjectSubscription = this.be.intellisenseProject.subscribe({
+        this.subscriptions.push(this.be.intellisenseProject.subscribe({
             next: (projectName) => {
                 this.be.log(`ApplicationStatus: intellisense = ${projectName}`);
                 this.setIntellisenseProject(projectName) ;
             }
-        });
+        }));
         
         // Subscribe to theme changes
-        this.themeSubscription = this.be.theme.subscribe(theme => {
+        this.subscriptions.push(this.be.theme.subscribe(theme => {
             this.themeType = theme as 'dark' | 'light';
-        });
+        }));
+
+        this.subscriptions.push(this.be.buildDone.subscribe((done) => {
+            this.running = !done;
+        }));
     }
 
     ngOnDestroy(): void {
         this.be.log('ApplicationStatus ngOnDestroy');
-        this.readySubscription?.unsubscribe() ;
-        this.appStatusDataSubscription?.unsubscribe();
-        this.loadedAssetSubscription?.unsubscribe();
-        this.intellisenseProjectSubscription?.unsubscribe();
-        this.themeSubscription?.unsubscribe();
+        this.subscriptions.forEach(sub => sub.unsubscribe());
     }
 
     // Called when Intellisense Project checkbox is changed
@@ -159,26 +158,6 @@ export class ApplicationStatus implements OnInit, OnDestroy {
 
     onToolClick(project: any, tool: any): void {
         this.be.sendRequestWithArgs('tool', { tool: tool, project: project }) ;
-    }
-
-    formatBytes(bytes: number): string {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    }
-
-    getMemoryColor(percentage: number): string {
-        if (percentage < 50) return 'primary';
-        if (percentage < 80) return 'accent';
-        return 'warn';
-    }
-
-    getMemoryColorHex(percentage: number): string {
-        if (percentage < 50) return '#28a745';
-        if (percentage < 80) return '#ffc107';
-        return '#dc3545';
     }
 
     getStatusColor(status: string): string {
@@ -347,39 +326,48 @@ export class ApplicationStatus implements OnInit, OnDestroy {
 
     // Build Actions
     buildApplication(): void {
+        this.running = true;
         this.be.executeBuildAction('build');
     }
 
     rebuildApplication(): void {
+        this.running = true;
         this.be.executeBuildAction('rebuild');
     }
 
     cleanApplication(): void {
+        this.running = true;
         this.be.executeBuildAction('clean');
     }
 
     eraseApplication(): void {
+        this.running = true;
         this.be.executeBuildAction('erase');
     }
 
     programApplication(): void {
+        this.running = true;
         this.be.executeBuildAction('program');
     }
 
     // Project-specific Build Actions
     buildProject(project: any): void {
+        this.running = true;
         this.be.executeBuildAction('build', project.name);
     }
 
     rebuildProject(project: any): void {
+        this.running = true;
         this.be.executeBuildAction('rebuild', project.name);
     }
 
     cleanProject(project: any): void {
+        this.running = true;
         this.be.executeBuildAction('clean', project.name);
     }
 
     programProject(project: any): void {
+        this.running = true;
         this.be.executeBuildAction('program', project.name);
     }
 
@@ -409,6 +397,10 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     // Open Library Manager
     openLibraryManager(): void {
         this.be.sendRequestWithArgs('libmgr', null);
+    }
+
+    fixTasks() {
+        this.be.sendRequestWithArgs('fix-tasks', null);
     }
 }
 
