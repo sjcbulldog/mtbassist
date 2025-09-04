@@ -900,6 +900,7 @@ export class MTBAssistObject {
             if (this.devkitMgr_) {
                 this.devkitMgr_.updateDevKitBsp(request.data.kit, request.data.bsp)
                     .then(() => {
+                        this.sendDevKitStatus();
                         resolve();
                     })
                     .catch((error: Error) => {
@@ -1630,24 +1631,6 @@ export class MTBAssistObject {
             resolve();
         });
         return ret;
-    }
-
-    private getBSPIdentifiers(bsplist: MTBBoard[]): BSPIdentifier[] {
-        let bsps: BSPIdentifier[] = [];
-        if (this.env_ && this.env_.manifestDB) {
-            for (let board of bsplist) {
-                let id: BSPIdentifier = {
-                    name: board.name,
-                    id: board.id,
-                    category: board.category,
-                    device: '',
-                    connectivity: '',
-                    description: board.description || ''
-                };
-                bsps.push(id);
-            }
-        }
-        return bsps;
     }
 
     private computeManifestStatus() {

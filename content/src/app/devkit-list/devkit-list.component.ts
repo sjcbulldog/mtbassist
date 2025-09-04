@@ -32,9 +32,7 @@ export class DevkitListComponent implements OnInit, OnDestroy {
   devkits: DevKitInfo[] = [];
   themeType: 'dark' | 'light' = 'light';
 
-  private devKitStatusSubscription?: Subscription;
-  private themeSubscription?: Subscription;
-  private readySubscription?: Subscription ;
+  private subscriptions: Subscription[] = [];
 
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
   }
@@ -42,30 +40,35 @@ export class DevkitListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.be.log('DevkitListComponent initialized');
 
-    this.readySubscription = this.be.ready.subscribe((ready) => {
-      if (ready) {
-        this.be.sendRequestWithArgs('kit-data', null);
-      }
-    });
+    this.subscriptions.push(
+      this.be.ready.subscribe((ready) => {
+        if (ready) {
+          this.be.sendRequestWithArgs('kit-data', null);
+        }
+      })
+    );
 
-    this.devKitStatusSubscription = this.be.devKitStatus.subscribe({
-      next: (data) => {
-        this.be.log('Dev Kit status data received:') ;
-        this.devkits = data ;
-        this.cdr.detectChanges();
-      }
-    }) ;
-    
+    this.subscriptions.push(
+      this.be.devKitStatus.subscribe({
+        next: (data) => {
+          this.be.log('Dev Kit status data received:');
+          this.devkits = data;
+          this.cdr.detectChanges();
+        }
+      })
+    );
+
     // Subscribe to theme changes
-    this.themeSubscription = this.be.theme.subscribe(theme => {
-      this.themeType = theme as 'dark' | 'light';
-    });    
+    this.subscriptions.push(
+      this.be.theme.subscribe(theme => {
+        this.themeType = theme as 'dark' | 'light';
+      })
+    );
   }
 
   ngOnDestroy(): void {
     this.be.log('DevkitListComponent destroyed');
-    this.devKitStatusSubscription?.unsubscribe();
-    this.themeSubscription?.unsubscribe();
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   refreshDevKits() {
