@@ -339,7 +339,7 @@ export class BackendService {
         if (str.length > maxstr) {
             str = str.substring(0, maxstr) + '...';
         }
-        this.log(`Received message: ${str}`, 'silly');
+        this.log(`Received message: ${str}`, 'debug');
         const handler = this.handlers_.get(cmd.response);
         if (!handler) {
             this.log(`No handler found for command: ${cmd.response}`, 'debug');

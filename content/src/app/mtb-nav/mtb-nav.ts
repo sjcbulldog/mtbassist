@@ -50,7 +50,6 @@ export interface MtbNavTab {
     GlossaryComponent,
     SettingsEditor,
     LocalContentStorageComponent,
-    // AIViewComponent,
     UsersGuideComponent
 ],
   templateUrl: './mtb-nav.html',
@@ -65,7 +64,6 @@ export class MtbNav implements OnInit, OnDestroy {
 
   private subscriptions: Subscription[] = [];
   lcsBusy: boolean = false;
-  manifestStatus: string = 'loading';
 
   constructor(private be: BackendService) {
   }
@@ -78,13 +76,6 @@ export class MtbNav implements OnInit, OnDestroy {
       })
     );
     
-    // Subscribe to manifest status
-    this.subscriptions.push(
-      this.be.manifestStatus.subscribe(status => {
-        this.manifestStatus = status;
-      })
-    );
-
     this.subscriptions.push(
       this.be.navTab.subscribe(tab => {
         this.selectedIndex = tab;

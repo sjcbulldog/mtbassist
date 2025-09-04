@@ -103,12 +103,21 @@ export class CreateProject implements OnInit, OnDestroy {
         this.subscriptions.push(this.be.manifestStatus.subscribe(status => {
             this.be.log(`CreateProject Component: manifestStatus: '${status}'`, 'debug');   
             this.manifestStatus = status ;
+            
+            // Enable/disable form controls based on manifest status
             if (status === 'loaded') {
+                this.projectInfoForm.get('projectName')?.enable();
+                this.projectInfoForm.get('projectLocation')?.enable();
                 // Ask for the BSPs and kits again as the manifest is loaded and we have
                 // more information
                 this.be.sendRequestWithArgs('cproj-data', null);
                 this.be.sendRequestWithArgs('kit-data', null);
+            } else {
+                this.projectInfoForm.get('projectName')?.disable();
+                this.projectInfoForm.get('projectLocation')?.disable();
             }
+            
+            this.cdr.detectChanges();
         }));
 
         this.subscriptions.push(this.be.browserFolder.subscribe(folder => {
@@ -130,7 +139,6 @@ export class CreateProject implements OnInit, OnDestroy {
             this.cdr.detectChanges() ;
         }));
 
-        // Subscribe to dev kit status
         this.subscriptions.push(this.be.devKitStatus.subscribe(kits => {
             this.be.log(`CreateProject Component: devKitStatus: ${kits.length} kits detected`, 'debug');
             this.devKits = kits;
@@ -210,8 +218,8 @@ export class CreateProject implements OnInit, OnDestroy {
 
     private initializeForms() {
         this.projectInfoForm = this.formBuilder.group({
-            projectName: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9_-]+$/), this.noSpacesValidator]],
-            projectLocation: ['', [Validators.required, this.noSpacesValidator]]
+            projectName: [{value: '', disabled: true}, [Validators.required, Validators.pattern(/^[a-zA-Z0-9_-]+$/), this.noSpacesValidator]],
+            projectLocation: [{value: '', disabled: true}, [Validators.required, this.noSpacesValidator]]
         });
 
         this.bspSelectionForm = this.formBuilder.group({

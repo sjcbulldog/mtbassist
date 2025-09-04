@@ -1,15 +1,11 @@
 <div class="create-project-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   <!-- Manifest Status Overlay -->
-  @if (manifestStatus === 'loading' || manifestStatus === 'not-available') {
+  @if (manifestStatus === 'loading') {
     <div class="manifest-overlay">
     <div class="manifest-message">
       @if (manifestStatus === 'loading') {
         <mat-spinner diameter="48"></mat-spinner>
         <span class="manifest-wait-text">Waiting on manifest data...</span>
-      }
-      @if (manifestStatus === 'not-available') {
-        <span class="manifest-wait-text">No manifest data available<br>
-          Check your internet connection or Local Content Storage configuration</span>
       }
     </div>
     </div>
@@ -44,7 +40,7 @@
       formControlName="projectName" 
       placeholder="my-modustoolbox-app"
       maxlength="50"
-  [disabled]="manifestStatus !== 'loaded'">
+      [disabled]="manifestStatus !== 'loaded'">
               <mat-hint>Use only letters, numbers, hyphens, and underscores</mat-hint>
               @if (projectInfoForm.get('projectName')?.hasError('required')) {
                 <mat-error>
@@ -72,7 +68,7 @@
       <input matInput 
         formControlName="projectLocation" 
         placeholder="C:\\workspace\\my-projects"
-  [disabled]="manifestStatus !== 'loaded'">
+        [disabled]="manifestStatus !== 'loaded'">
                 <mat-hint>Choose where to create your project</mat-hint>
                 @if (projectInfoForm.get('projectLocation')?.hasError('required')) {
                   <mat-error>
@@ -106,6 +102,14 @@
             </div>
           }
         </form>
+        
+        <!-- Manifest Status Error Message -->
+        @if (manifestStatus === 'not-available') {
+          <div class="manifest-error-message">
+            <mat-icon>error</mat-icon>
+            <span>No manifest data available, check your internet connection.</span>
+          </div>
+        }
         
   <div class="step-actions" #stepActionsSection>
           <button mat-raised-button 

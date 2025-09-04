@@ -29,6 +29,40 @@
   font-weight: 500;
   margin-top: 12px;
 }
+
+/* Manifest error message styles */
+.manifest-error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #d32f2f;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 6px;
+  
+  mat-icon {
+    font-size: 1.1rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    color: #d32f2f;
+  }
+}
+
+// Dark theme support for manifest error message
+.create-project-container.dark-theme .manifest-error-message {
+  color: #ef5350;
+  background-color: rgba(239, 83, 80, 0.1);
+  border-color: rgba(239, 83, 80, 0.3);
+  
+  mat-icon {
+    color: #ef5350;
+  }
+}
 // Dev kit BSP section styles
 .devkit-bsp-section {
   margin-bottom: 2rem;
