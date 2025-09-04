@@ -133,126 +133,143 @@
         <h2>Board Support Package</h2>
         <p class="step-description">Select the BSP category and specific board</p>
         
-        <!-- Connected Dev Kits UI -->
-        <div class="devkit-bsp-section">
-          <div class="devkit-list-header">
-            <span class="devkit-list-title"><mat-icon>usb</mat-icon> Connected Kits ({{ filteredDevKits.length }})</span>
-            <button mat-icon-button (click)="refreshKits()" [disabled]="isLoading" matTooltip="Refresh connected kits">
-              <mat-icon>refresh</mat-icon>
-            </button>
-          </div>
-          @if (filteredDevKits.length > 0) {
-            <div class="devkit-bsp-list">
-              @for (kit of filteredDevKits; track kit.serial) {
-                <div class="devkit-bsp-card" 
-                     [class.selected]="selectedDevKit?.serial === kit.serial" 
-                     [class.disabled]="kit.status !== 'Available'"
-                     (click)="kit.status === 'Available' ? onDevKitSelect(kit) : null"
-                     [style.opacity]="kit.status === 'Available' ? '1' : '0.5'"
-                     [style.cursor]="kit.status === 'Available' ? 'pointer' : 'not-allowed'">
-                  <div class="devkit-bsp-main" style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
-                    <div class="devkit-name-section" style="display: flex; align-items: center; margin-bottom: 4px;">
-                      <span class="devkit-label" style="display: inline-block; min-width: 60px;">Kit:</span>
-                      <span class="devkit-bsp-name" style="text-decoration: none;">{{ kit.name }}</span>
+        <!-- Two-column layout -->
+        <div class="bsp-two-column-layout">
+          <!-- Left Column: Controls -->
+          <div class="bsp-left-column">
+            <!-- Connected Dev Kits UI -->
+            <div class="devkit-bsp-section">
+              <div class="devkit-list-header">
+                <span class="devkit-list-title"><mat-icon>usb</mat-icon> Connected Kits ({{ filteredDevKits.length }})</span>
+                <button mat-icon-button (click)="refreshKits()" [disabled]="isLoading" matTooltip="Refresh connected kits">
+                  <mat-icon>refresh</mat-icon>
+                </button>
+              </div>
+              @if (filteredDevKits.length > 0) {
+                <div class="devkit-bsp-list">
+                  @for (kit of filteredDevKits; track kit.serial) {
+                    <div class="devkit-bsp-card" 
+                         [class.selected]="selectedDevKit?.serial === kit.serial" 
+                         [class.disabled]="kit.status !== 'Available'"
+                         (click)="kit.status === 'Available' ? onDevKitSelect(kit) : null"
+                         [style.opacity]="kit.status === 'Available' ? '1' : '0.5'"
+                         [style.cursor]="kit.status === 'Available' ? 'pointer' : 'not-allowed'">
+                      <div class="devkit-bsp-main" style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start;">
+                        <div class="devkit-name-section" style="display: flex; align-items: center; margin-bottom: 4px;">
+                          <span class="devkit-label" style="display: inline-block; min-width: 60px;">Kit:</span>
+                          <span class="devkit-bsp-name" style="text-decoration: none;">{{ kit.name }}</span>
+                        </div>
+                        <div class="devkit-bsp-section" style="display: flex; align-items: center; margin-bottom: 4px;">
+                          <span class="devkit-label" style="display: inline-block; min-width: 60px;">BSP:</span>
+                          <span class="devkit-bsp-value" style="text-decoration: none !important; border-bottom: none !important; text-decoration-line: none !important;">{{ kit.bsp || 'Not set' }}</span>
+                        </div>
+                        <div class="devkit-status-section" style="display: flex; align-items: center; margin-bottom: 4px;">
+                          <span class="devkit-label" style="display: inline-block; min-width: 60px;">Status:</span>
+                          <span class="devkit-status" [style.color]="kit.status === 'Available' ? 'green' : 'red'">{{ kit.status }}</span>
+                        </div>
+                        <div class="devkit-serial-section" style="display: flex; align-items: center;">
+                          <span class="devkit-label" style="display: inline-block; min-width: 60px;">Serial:</span>
+                          <span class="devkit-bsp-serial">{{ kit.serial }}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div class="devkit-bsp-section" style="display: flex; align-items: center; margin-bottom: 4px;">
-                      <span class="devkit-label" style="display: inline-block; min-width: 60px;">BSP:</span>
-                      <span class="devkit-bsp-value" style="text-decoration: none !important; border-bottom: none !important; text-decoration-line: none !important;">{{ kit.bsp || 'Not set' }}</span>
-                    </div>
-                    <div class="devkit-status-section" style="display: flex; align-items: center; margin-bottom: 4px;">
-                      <span class="devkit-label" style="display: inline-block; min-width: 60px;">Status:</span>
-                      <span class="devkit-status" [style.color]="kit.status === 'Available' ? 'green' : 'red'">{{ kit.status }}</span>
-                    </div>
-                    <div class="devkit-serial-section" style="display: flex; align-items: center;">
-                      <span class="devkit-label" style="display: inline-block; min-width: 60px;">Serial:</span>
-                      <span class="devkit-bsp-serial">{{ kit.serial }}</span>
-                    </div>
-                  </div>
+                  }
                 </div>
+              } @else {
+                <div class="no-kits">No development kits connected.</div>
               }
             </div>
-          } @else {
-            <div class="no-kits">No development kits connected.</div>
-          }
-        </div>
 
-        <form [formGroup]="bspSelectionForm" class="bsp-form">
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>BSP Category</mat-label>
-              <mat-select formControlName="category" 
-                         (selectionChange)="onCategoryChange()"
-                         [disabled]="isLoading"
-                         panelClass="bsp-dropdown-panel">
-                @for (category of getBSPCategories(); track category) {
-                  <mat-option [value]="category">
-                    {{ category }}
-                  </mat-option>
-                }
-              </mat-select>
-              <mat-hint>Choose the type of development board</mat-hint>
-              @if (bspSelectionForm.get('category')?.hasError('required')) {
-                <mat-error>
-                  BSP category is required
-                </mat-error>
-              }
-            </mat-form-field>
-          </div>
-          
-          @if (selectedCategory) {
-            <div class="form-row">
-              <div class="bsp-selection-container">
-                <mat-form-field appearance="outline" class="bsp-field">
-                  <mat-label>Board Support Package</mat-label>
-                  <mat-select formControlName="bsp" 
-                             (selectionChange)="onBSPChange()"
-                             [disabled]="isLoading || getBSPsForSelectedCategory().length === 0"
+            <form [formGroup]="bspSelectionForm" class="bsp-form">
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>BSP Category</mat-label>
+                  <mat-select formControlName="category" 
+                             (selectionChange)="onCategoryChange()"
+                             [disabled]="isLoading"
                              panelClass="bsp-dropdown-panel">
-                    @for (bsp of getBSPsForSelectedCategory(); track bsp.id) {
-                      <mat-option [value]="bsp.id"
-                                 (mouseenter)="onBSPHover(bsp)"
-                                 (mouseleave)="onBSPLeave()">
-                        {{ bsp.name }}
+                    @for (category of getBSPCategories(); track category) {
+                      <mat-option [value]="category">
+                        {{ category }}
                       </mat-option>
                     }
                   </mat-select>
-                  <mat-hint>Choose the specific development board</mat-hint>
-                  @if (bspSelectionForm.get('bsp')?.hasError('required')) {
+                  <mat-hint>Choose the type of development board</mat-hint>
+                  @if (bspSelectionForm.get('category')?.hasError('required')) {
                     <mat-error>
-                      BSP selection is required
+                      BSP category is required
                     </mat-error>
                   }
                 </mat-form-field>
-                
-                @if (hoveredBSP || selectedBSP) {
-                  <div class="bsp-description-panel">
-                    <div class="description-header">
-                      <mat-icon>developer_board</mat-icon>
-                      <span>{{ (hoveredBSP || selectedBSP)?.name }}</span>
-                    </div>
-                    @if ((hoveredBSP || selectedBSP)?.description) {
-                      <div class="description-content" 
-                           [innerHTML]="(hoveredBSP || selectedBSP)?.description">
-                      </div>
-                    } @else {
-                      <div class="description-content no-description">
-                        No description available for this BSP.
-                      </div>
+              </div>
+              
+              @if (selectedCategory) {
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Board Support Package</mat-label>
+                    <mat-select formControlName="bsp" 
+                               (selectionChange)="onBSPChange()"
+                               [disabled]="isLoading || getBSPsForSelectedCategory().length === 0"
+                               panelClass="bsp-dropdown-panel">
+                      @for (bsp of getBSPsForSelectedCategory(); track bsp.id) {
+                        <mat-option [value]="bsp.id"
+                                   (mouseenter)="onBSPHover(bsp)"
+                                   (mouseleave)="onBSPLeave()">
+                          {{ bsp.name }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    <mat-hint>Choose the specific development board</mat-hint>
+                    @if (bspSelectionForm.get('bsp')?.hasError('required')) {
+                      <mat-error>
+                        BSP selection is required
+                      </mat-error>
                     }
+                  </mat-form-field>
+                </div>
+              }
+
+              <!-- Loading indicator -->
+              @if (isLoading) {
+                <div class="loading-indicator">
+                  <mat-spinner diameter="30"></mat-spinner>
+                  <span>Loading BSPs...</span>
+                </div>
+              }
+            </form>
+          </div>
+          
+          <!-- Right Column: BSP Description -->
+          <div class="bsp-right-column">
+            @if (hoveredBSP || selectedBSP) {
+              <div class="bsp-description-panel full-height">
+                <div class="description-header">
+                  <mat-icon>developer_board</mat-icon>
+                  <span>{{ (hoveredBSP || selectedBSP)?.name }}</span>
+                </div>
+                @if ((hoveredBSP || selectedBSP)?.description) {
+                  <div class="description-content" 
+                       [innerHTML]="(hoveredBSP || selectedBSP)?.description">
+                  </div>
+                } @else {
+                  <div class="description-content no-description">
+                    No description available for this BSP.
                   </div>
                 }
               </div>
-            </div>
-          }
-
-          <!-- Loading indicator -->
-          @if (isLoading) {
-            <div class="loading-indicator">
-              <mat-spinner diameter="30"></mat-spinner>
-              <span>Loading BSPs...</span>
-            </div>
-          }
-        </form>
+            } @else {
+              <div class="bsp-description-panel full-height placeholder">
+                <div class="description-header">
+                  <mat-icon>info</mat-icon>
+                  <span>BSP Information</span>
+                </div>
+                <div class="description-content no-description">
+                  Select a BSP to view its description and specifications.
+                </div>
+              </div>
+            }
+          </div>
+        </div>
         
         <div class="step-actions">
           <button mat-button matStepperPrevious [disabled]="isLoading">
@@ -280,85 +297,102 @@
         <h2>Code Example</h2>
         <p class="step-description">Choose the category and specific example for your project</p>
         
-        <form [formGroup]="exampleSelectionForm" class="example-form">
-          @if (selectedBSP) {
-            <div class="form-row">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Example Category</mat-label>
-                <mat-select formControlName="exampleCategory" 
-                           (selectionChange)="onExampleCategoryChange()"
-                           [disabled]="isLoading || getExampleCategories().length === 0"
-                           panelClass="example-dropdown-panel">
-                  @for (category of getExampleCategories(); track category) {
-                    <mat-option [value]="category">
-                      {{ category }}
-                    </mat-option>
-                  }
-                </mat-select>
-                <mat-hint>Select the category of code examples</mat-hint>
-                @if (exampleSelectionForm.get('exampleCategory')?.hasError('required')) {
-                  <mat-error>
-                    Example category is required
-                  </mat-error>
-                }
-              </mat-form-field>
-            </div>
-          }
+        <!-- Two-column layout -->
+        <div class="example-two-column-layout">
+          <!-- Left Column: Controls -->
+          <div class="example-left-column">
+            <form [formGroup]="exampleSelectionForm" class="example-form">
+              @if (selectedBSP) {
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Example Category</mat-label>
+                    <mat-select formControlName="exampleCategory" 
+                               (selectionChange)="onExampleCategoryChange()"
+                               [disabled]="isLoading || getExampleCategories().length === 0"
+                               panelClass="example-dropdown-panel">
+                      @for (category of getExampleCategories(); track category) {
+                        <mat-option [value]="category">
+                          {{ category }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    <mat-hint>Select the category of code examples</mat-hint>
+                    @if (exampleSelectionForm.get('exampleCategory')?.hasError('required')) {
+                      <mat-error>
+                        Example category is required
+                      </mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+              }
+              
+              @if (selectedExampleCategory) {
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Example Code</mat-label>
+                    <mat-select formControlName="example" 
+                               (selectionChange)="onExampleChange()"
+                               [disabled]="isLoading || examples.length === 0"
+                               panelClass="example-dropdown-panel">
+                      @for (example of examples; track example.id) {
+                        <mat-option [value]="example.id"
+                                   (mouseenter)="onExampleHover(example)"
+                                   (mouseleave)="onExampleLeave()">
+                            {{ example.name }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                    <mat-hint>Select a specific code example to start with</mat-hint>
+                    @if (exampleSelectionForm.get('example')?.hasError('required')) {
+                      <mat-error>
+                        Example selection is required
+                      </mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+              }
+
+              <!-- Loading indicator -->
+              @if (isLoading) {
+                <div class="loading-indicator">
+                  <mat-spinner diameter="30"></mat-spinner>
+                  <span>Loading examples...</span>
+                </div>
+              }
+            </form>
+          </div>
           
-          @if (selectedExampleCategory) {
-            <div class="form-row">
-              <div class="example-selection-container">
-                <mat-form-field appearance="outline" class="example-field">
-                  <mat-label>Example Code</mat-label>
-                  <mat-select formControlName="example" 
-                             (selectionChange)="onExampleChange()"
-                             [disabled]="isLoading || examples.length === 0"
-                             panelClass="example-dropdown-panel">
-                    @for (example of examples; track example.id) {
-                      <mat-option [value]="example.id"
-                                 (mouseenter)="onExampleHover(example)"
-                                 (mouseleave)="onExampleLeave()">
-                          {{ example.name }}
-                      </mat-option>
-                    }
-                  </mat-select>
-                  <mat-hint>Select a specific code example to start with</mat-hint>
-                  @if (exampleSelectionForm.get('example')?.hasError('required')) {
-                    <mat-error>
-                      Example selection is required
-                    </mat-error>
-                  }
-                </mat-form-field>
-                
-                @if (hoveredExample || selectedExample) {
-                  <div class="example-description-panel">
-                    <div class="description-header">
-                      <mat-icon>info</mat-icon>
-                      <span>{{ (hoveredExample || selectedExample)?.name }}</span>
-                    </div>
-                    @if ((hoveredExample || selectedExample)?.description) {
-                      <div class="description-content" 
-                           [innerHTML]="(hoveredExample || selectedExample)?.description">
-                      </div>
-                    } @else {
-                      <div class="description-content no-description">
-                        No description available for this example.
-                      </div>
-                    }
+          <!-- Right Column: Example Description -->
+          <div class="example-right-column">
+            @if (hoveredExample || selectedExample) {
+              <div class="example-description-panel full-height">
+                <div class="description-header">
+                  <mat-icon>code</mat-icon>
+                  <span>{{ (hoveredExample || selectedExample)?.name }}</span>
+                </div>
+                @if ((hoveredExample || selectedExample)?.description) {
+                  <div class="description-content" 
+                       [innerHTML]="(hoveredExample || selectedExample)?.description">
+                  </div>
+                } @else {
+                  <div class="description-content no-description">
+                    No description available for this example.
                   </div>
                 }
               </div>
-            </div>
-          }
-
-          <!-- Loading indicator -->
-          @if (isLoading) {
-            <div class="loading-indicator">
-              <mat-spinner diameter="30"></mat-spinner>
-              <span>Loading examples...</span>
-            </div>
-          }
-        </form>
+            } @else {
+              <div class="example-description-panel full-height placeholder">
+                <div class="description-header">
+                  <mat-icon>info</mat-icon>
+                  <span>Example Information</span>
+                </div>
+                <div class="description-content no-description">
+                  Select an example to view its description and details.
+                </div>
+              </div>
+            }
+          </div>
+        </div>
         
         <div class="step-actions">
           <button mat-button matStepperPrevious [disabled]="isLoading">

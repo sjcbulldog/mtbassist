@@ -120,6 +120,7 @@ export class MtbManifestLoader {
     private loadAllContentManifests(): Promise<void[]> {
         let manifestPromiseArray: Promise<void>[] = [];
         for (let loc of this.manifestContentList) {
+            console.log('Loading content manifest from: ' + loc.uripath);
             let pro = this.loadManifestFile(loc, ManifestFileType.contentManifest);
             manifestPromiseArray.push(pro);
         }
@@ -287,6 +288,26 @@ export class MtbManifestLoader {
         };
     }
 
+    private extractRequirements(text: string) : string[] {
+        let ret: string[] = [];
+        let word = '' ;
+        for(let ch of text) {
+            if (ch === ' ' && word.length > 0 && word[0] !== '[') {
+                ret.push(word);
+                word = '';
+            }
+            else if (ch === ']' && word[0] === '[') {
+                word += ch ;
+                ret.push(word) ;
+                word = '' ;
+            }
+            else if (ch !== ' ') {
+                word += ch;
+            }
+        }
+        return ret ;
+    }
+
     private processApp(pfm: PackManifest, obj: any) {
         let name: string = obj.name as string;
         let id: string = obj.id as string;
@@ -300,9 +321,15 @@ export class MtbManifestLoader {
         if (obj.req_capabilities && typeof obj.req_capabilities === 'string') {
             reqs = (obj.req_capabilities as string).split(' ');
         }
+        else if (obj['$'] && obj['$'].req_capabilities) {
+            reqs = (obj['$'].req_capabilities as string).split(' ');
+        }
 
         if (obj.req_capabilities_v2 && typeof obj.req_capabilities_v2 === 'string') {
-            reqsv2 = (obj.req_capabilities_v2 as string).split(' ');
+            reqsv2 = this.extractRequirements(obj.req_capabilities_v2 as string);
+        }
+        else if (obj['$'] && obj['$'].req_capabilities_v2) {
+            reqsv2 = this.extractRequirements(obj['$'].req_capabilities_v2 as string);
         }
 
         if (obj.versions) {
@@ -323,7 +350,7 @@ export class MtbManifestLoader {
                     }
 
                     if (attrs.req_capabilities_per_version_v2 && typeof attrs.req_capabilities_per_version_v2 === 'string') {
-                        reqperver2 = (attrs.req_capabilities_per_version_v2 as string).split(' ');
+                        reqperver2 = this.extractRequirements(attrs.req_capabilities_per_version_v2 as string);
                     }
                 }
 
