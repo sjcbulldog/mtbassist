@@ -13,7 +13,7 @@
  */
 
 import { PlatformType } from "../comms";
-import { ModusToolboxEnvironment } from "../mtbenv/mtbenv/mtbenv";
+import { ModusToolboxEnvironment, MTBRunCommandOptions } from "../mtbenv/mtbenv/mtbenv";
 import * as path from 'path';
 import * as fs from 'fs';
 import * as winston from 'winston';
@@ -201,7 +201,15 @@ export class VSCodeWorker extends EventEmitter  {
                 this.sendProgress(`Creating project '${bspid} - ${ceid}'`, 0);
                 this.createProjectIndex_ = 0 ;
                 this.createProjectPercent_ = 0 ;
-                ModusToolboxEnvironment.runCmdCaptureOutput(projdir, cliPath, this.ext_.toolsDir, ['--use-modus-shell', '-b', bspid, '-a', ceid , '-d', projdir, '-n', appdir], this.createProjectCallback.bind(this))
+                let args: string[] = ['--use-modus-shell', '-b', bspid, '-a', ceid , '-d', projdir, '-n', appdir] ;
+                let opts: MTBRunCommandOptions = {
+                    toolspath: this.ext_.toolsDir,
+                    id: 'createproject',
+                    onOutput: this.createProjectCallback.bind(this),
+                    cwd: projdir
+                } ;
+
+                ModusToolboxEnvironment.runCmdCaptureOutput(cliPath, args, opts)
                 .then(async (result) => {
                     if (gitAutoRepoDetect) {
                         await this.setAutoRepoDetect(true) ;
@@ -290,7 +298,14 @@ export class VSCodeWorker extends EventEmitter  {
             }
             else {
                 this.makeLines_ = 0 ;
-                ModusToolboxEnvironment.runCmdCaptureOutput(p, cliPath, this.ext_.toolsDir, ['vscode'], this.makeVSCodeCallback.bind(this))
+                let args: string[] = ['vscode'];
+                let opts: MTBRunCommandOptions = {
+                    toolspath: this.ext_.toolsDir,
+                    id: 'vscode',
+                    onOutput: this.makeVSCodeCallback.bind(this),
+                    cwd: p
+                };
+                ModusToolboxEnvironment.runCmdCaptureOutput(cliPath, args, opts)
                 .then((result) => {
                     resolve([0, [``]]);
                 })
@@ -350,7 +365,14 @@ export class VSCodeWorker extends EventEmitter  {
                 if (process.platform === 'win32') {
                     cliPath += ".exe" ;
                 }
-                ModusToolboxEnvironment.runCmdCaptureOutput(p, cliPath, this.ext_.toolsDir, ['getlibs'], this.dumpMakeOutput.bind(this))
+                let args = ['getlibs'];
+                let opts: MTBRunCommandOptions = {
+                    toolspath: this.ext_.toolsDir,
+                    id: 'getlibs',
+                    onOutput: this.dumpMakeOutput.bind(this),
+                    cwd: p
+                };
+                ModusToolboxEnvironment.runCmdCaptureOutput(cliPath, args, opts)
                 .then((result) => {
                     resolve([0, [``]]);
                 })

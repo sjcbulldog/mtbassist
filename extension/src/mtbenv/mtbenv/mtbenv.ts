@@ -31,6 +31,23 @@ import * as os from 'os';
 import { URI } from 'vscode-uri';
 import { MTBSettings } from '../../extobj/mtbsettings';
 
+export interface MTBRunCommandOptions {
+    /// The directory to run the command in
+    cwd?: string ;
+
+    // The tools path to use when running the command
+    toolspath?: string ;
+
+    // Called when we get lines of output
+    onOutput?: (lines: string[], id?: any) => void ;
+
+    // The caller assigned ID for the command, returned in the onOutput callback
+    id?: string ;
+
+    // Lines of output to send to the running process
+    stdout? : string[] ;
+}
+
 export class ModusToolboxEnvironment extends EventEmitter {
     // Static variables
     private static env_? : ModusToolboxEnvironment ;
@@ -291,7 +308,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ret;
     }
 
-    public static async runCmdCaptureOutput(cwd: string, cmd: string, toolspath: string | undefined, args: string[], cb?: (lines: string[], id?: any) => void, id?: any) : Promise<[number, string[]]> {
+    public static async runCmdCaptureOutput(cmd: string, args: string[], options: MTBRunCommandOptions) : Promise<[number, string[]]> {
         let ret: Promise<[number, string[]]> = new Promise<[number, string[]]>((resolve, reject) => {
             let sofar = 0 ;
             let text: string = "" ;
@@ -303,8 +320,8 @@ export class ModusToolboxEnvironment extends EventEmitter {
                     penv['PATH'] = ModusToolboxEnvironment.filterPath(process.env[key]!) ;
                     found = true ;
                 }
-                else if (toolspath && key === 'CY_TOOLS_PATHS') {
-                    penv[key] = toolspath ;
+                else if (options.toolspath && key === 'CY_TOOLS_PATHS') {
+                    penv[key] = options.toolspath ;
                     cyfound = true ;
                 }
                 else {
@@ -313,32 +330,46 @@ export class ModusToolboxEnvironment extends EventEmitter {
             }
 
             if (!cyfound) {
-                penv['CY_TOOLS_PATHS'] = toolspath ;
+                penv['CY_TOOLS_PATHS'] = options.toolspath ;
             }
 
             if (!found) {
                 penv['PATH'] = ModusToolboxEnvironment.filterPath('') ;
             }
 
+            if (options.onOutput && !options.id) {
+                reject('If onOutput is provided, id must also be provided') ;
+                return ;
+            }
+
             let cp: exec.ChildProcess ;
 
             cp = exec.spawn(cmd, args, 
                 {
-                    cwd: cwd,
+                    cwd: options.cwd ? options.cwd : os.homedir(),
                     env: penv,
                     windowsHide: true,
                 }) ;
 
+            if (options.stdout) {
+                if (cp.stdin) {
+                    for(let line of options.stdout) {
+                        cp.stdin.write(line + '\n') ;
+                    }
+                    cp.stdin.end() ;
+                }
+            }
+
             cp.stdout?.on('data', (data) => {
                 text += (data as Buffer).toString() ;
-                if (cb) {
-                    sofar = this.sendTextToCallback(text, sofar, cb, id) ;
+                if (options.onOutput) {
+                    sofar = this.sendTextToCallback(text, sofar, options.onOutput, options.id) ;
                 }
             }) ;
             cp.stderr?.on('data', (data) => {
                 text += (data as Buffer).toString() ;      
-                if (cb) {
-                    sofar = this.sendTextToCallback(text, sofar, cb, id) ;
+                if (options.onOutput) {
+                    sofar = this.sendTextToCallback(text, sofar, options.onOutput, options.id) ;
                 }
             }) ;
             cp.on('error', (err) => {

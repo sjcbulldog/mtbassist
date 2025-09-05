@@ -87,6 +87,14 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
       this.be.log(`OS type sent to frontend: ${os}`); 
       this.os = os;
       this.cdr.detectChanges();
+
+      if (os === 'darwin') {
+        this.customPath = '/Applications' ;
+      } else if (os === 'win32') {
+        this.customPath = 'C:\\ModusToolbox' ;
+      } else {
+        this.customPath = '/opt' ;
+      }
     }));
 
     this.subscriptions.push(this.be.homeError.subscribe(err => {

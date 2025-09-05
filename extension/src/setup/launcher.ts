@@ -19,6 +19,7 @@ import * as exec from 'child_process' ;
 import * as os from 'os';
 import EventEmitter = require("events");
 import { ModusToolboxEnvironment } from '../mtbenv';
+import { MTBRunCommandOptions } from '../mtbenv/mtbenv/mtbenv';
 
 //
 // For windows
@@ -82,7 +83,11 @@ export class IDCLauncher extends EventEmitter{
                 return;
             }
 
-            ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), this.path_!, undefined, args, cb, id)
+            let opts: MTBRunCommandOptions = {
+                onOutput: cb,
+                id: id
+            } ;
+            ModusToolboxEnvironment.runCmdCaptureOutput(this.path_!, args, opts)
             .then((result) => {
                 if (result[0] !== 0) {
                     this.logger_.error(`IDC Launcher failed with exit code ${result[0]}`);

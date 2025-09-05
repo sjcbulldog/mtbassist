@@ -20,7 +20,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { VSCodeTransport } from './vscodetransport';
 import { ConsoleTransport } from './consoletransport';
-import { ModusToolboxEnvironment } from '../mtbenv/mtbenv/mtbenv';
+import { ModusToolboxEnvironment, MTBRunCommandOptions } from '../mtbenv/mtbenv/mtbenv';
 import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
@@ -1407,7 +1407,11 @@ export class MTBAssistObject {
                 return;
             }
 
-            ModusToolboxEnvironment.runCmdCaptureOutput(cwd, cmd, this.toolspath_, ['--quick', '--docs', '--app', this.env_!.appInfo!.appdir])
+            let args : string[] = ['--quick', '--docs', '--app', this.env_!.appInfo!.appdir] ;
+            let opts: MTBRunCommandOptions = {
+                toolspath: this.toolspath_,
+            } ;
+            ModusToolboxEnvironment.runCmdCaptureOutput(cmd, args, opts)
                 .then((result) => {
                     if (result[0] !== 0) {
                         this.logger_.debug(`mtblaunch output: ${result[1].join('\n')}`);

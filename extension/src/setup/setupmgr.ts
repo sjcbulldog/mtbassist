@@ -20,10 +20,12 @@ import { ToolList } from "./toollist";
 import { MTBVersion } from "../mtbenv/misc/mtbversion";
 import { IDCRegistry } from "./idcreg";
 import { SetupProgram } from "../comms";
+import * as vscode from 'vscode';
 import * as path from 'path' ;
 import * as fs from 'fs' ;
 import * as os from 'os' ;
 import { ModusToolboxEnvironment } from "../mtbenv";
+import { MTBRunCommandOptions } from "../mtbenv/mtbenv/mtbenv";
 
 //
 // AppData/Local/Infineon_Technologies_AG/Infineon-Toolbox/Tools/ ...
@@ -212,9 +214,9 @@ export class SetupMgr extends MtbManagerBase {
                         this.logger.debug('Initializing tool list...');
                         this.toollist_.initialize()
                             .then(() => {
-                                this.logger.debug('Tool list initialized successfully.');
+                                this.logger.debug('Tool list initialized successfully.');                                
                                 this.neededTools_ = this.findNeededTools();
-                                resolve(true) ;
+                                resolve(true);
                             })
                             .catch((err) => {
                                 this.logger.error('Error fetching tool manifest:', err);
@@ -367,7 +369,21 @@ export class SetupMgr extends MtbManagerBase {
     }
 
     private downloadTools(tools: SetupProgram[]) : Promise<void> {
-        let ret = new Promise<void>((resolve, reject) => {
+        let ret = new Promise<void>(async (resolve, reject) => {
+            let passwd : string | undefined = undefined ;
+            if (this.mtbLocation_?.startsWith('/Applications')) {
+                passwd = await vscode.window.showInputBox(
+                    {
+                        password: true,
+                        placeHolder: 'Enter your password'
+                    }) ;
+            }
+
+            if (!passwd && this.mtbLocation_?.startsWith('/Applications')) {
+                reject(new Error('Password is required for installation to /Applications'));
+                return ;
+            }
+
             let promises = [];
             for(let f of tools.map(t => t.featureId)) {
                 let p = this.downloadFeature(f);
@@ -444,11 +460,11 @@ export class SetupMgr extends MtbManagerBase {
         return tags[tags.length - 1] ;
     }
 
-    private installFeature(id: string, version: string) : Promise<void> {
+    private installFeature(id: string, version: string, password?: string) : Promise<void> {
         let p: Promise<void> ;
 
         if (process.platform === 'darwin') {
-            p = this.installFeatureDarwin(id, version) ;
+            p = this.installFeatureDarwin(id, version, password) ;
         }
         else if (process.platform === 'win32') {
             p = this.installFeatureWin32(id, version) ;
@@ -516,7 +532,7 @@ export class SetupMgr extends MtbManagerBase {
         return path.join(os.homedir(), 'Library', 'Application Support', 'Infineon_Technologies_AG', 'Infineon-Toolbox', 'Tools', p) ;
     }
 
-    private installFeatureDarwin(id: string, version: string) : Promise<void> {
+    private installFeatureDarwin(id: string, version: string, password?: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             let props = this.toollist_.getToolByFeature(id) ;
             if (!props) {
@@ -526,24 +542,41 @@ export class SetupMgr extends MtbManagerBase {
             }
 
             let p = this.findInstallerPath(props, version);
-            if (p) {
-                let cmd: string = '/usr/sbin/Installer' ;
-                let args: string[] = ['-target', 'CurrentUserHomeDirectory', '-pkg', p] ;
-                ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), cmd, undefined, args)
-                .then((result) => {
-                    if (!result) {
-                        reject(new Error(`Failed to install feature ${id} - ${version}`));
-                        return;
-                    }
-                    resolve();
-                })
-                .catch((err) => {
-                    reject(err);
-                });
+            if (!p) {
+                reject("cannot find installer executable") ;
+                return ;
+            }
+
+            let cmd ;
+            let sudopwd: string[] | undefined ;
+            let args: string[] ;
+
+            if (this.mtbLocation_?.startsWith('/Applications')) {
+                args = ['-S', '/usr/sbin/installer', '-target', '/Applications', '-pkg', p] ;                
+                sudopwd = [ password! ] ;
+                cmd = '/usr/bin/sudo' ;
             }
             else {
-                reject(new Error(`Cannot find installer package for feature ${id} - ${version}`));
+                args = ['-target', 'CurrentUserHomeDirectory', '-pkg', p] ;
+                sudopwd = undefined ;
+                cmd = '/usr/sbin/installer' ;
             }
+
+
+            let opts: MTBRunCommandOptions = {
+                stdout: sudopwd,
+            };
+            ModusToolboxEnvironment.runCmdCaptureOutput(cmd, args, opts)
+            .then((result) => {
+                if (!result) {
+                    reject(new Error(`Failed to install feature ${id} - ${version}`));
+                    return;
+                }
+                resolve();
+            })
+            .catch((err) => {
+                reject(err);
+            });
 
         });
         return ret;
@@ -551,7 +584,7 @@ export class SetupMgr extends MtbManagerBase {
 
     private installFeatureLinux(id: string, version: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            setTimeout(() => { resolve() }, 2000) ;
+            setTimeout(() => { resolve(); }, 2000) ;
         });
         return ret;
     }

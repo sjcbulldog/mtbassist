@@ -18,6 +18,7 @@ import * as os from 'os';
 import * as path from 'path' ;
 import { MTBAssistObject } from "./mtbassistobj";
 import { log } from "util";
+import { MTBRunCommandOptions } from "../mtbenv/mtbenv/mtbenv";
 
 export interface CommandData {
     cmd: string ;
@@ -319,7 +320,12 @@ export class LCSManager extends EventEmitter {
                 return ;
             }
             this.ext_.logger.debug(`Running lcs-cli: ${cmd} ${args.join(' ')}`) ;
-            ModusToolboxEnvironment.runCmdCaptureOutput(os.homedir(), cmd, this.ext_.toolsDir, args, cb)
+            let opts: MTBRunCommandOptions = {
+                toolspath: this.ext_.toolsDir,
+                id: 'lcsmanager',
+                onOutput: cb,
+            } ;
+            ModusToolboxEnvironment.runCmdCaptureOutput(cmd, args, opts)
                 .then((output) => {
                     resolve(output) ;
                 })
