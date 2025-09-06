@@ -16,6 +16,7 @@ import * as fs from 'fs' ;
 import { ModusToolboxEnvironment } from '../mtbenv';
 import { ApplicationType } from '../mtbenv/appdata/mtbappinfo';
 import * as winston from 'winston';
+import { MTBVSCodeTaskStatus } from '../comms';
 
 interface LooseObject {
     [key: string]: any
@@ -49,6 +50,7 @@ export class MTBTasks
     private valid_: boolean = false ;
     private env_ : ModusToolboxEnvironment ;
     private logger_ : winston.Logger ;
+    private taskFileStatus_: MTBVSCodeTaskStatus = 'good' ;
 
     private static validVersion = "2.0.0" ;
 
@@ -59,7 +61,22 @@ export class MTBTasks
 
         if (fs.existsSync(filename)) {
             this.initFromFile() ;
+            if (!this.valid_) {
+                this.taskFileStatus_ = 'corrupt' ;
+            }
+            else if (this.doWeNeedTaskUpdates()) {
+                this.taskFileStatus_ = 'needsTasks' ;
+            }
+            else {
+                this.taskFileStatus_ = 'good' ;
+            }
         }
+        else {
+            this.taskFileStatus_ = 'missing' ;
+        }
+    }
+    public get taskFileStatus() : MTBVSCodeTaskStatus {
+        return this.taskFileStatus_ ;
     }
 
     public createTaskName(task: string, project?: string) : string {
@@ -81,10 +98,6 @@ export class MTBTasks
     }
 
     public writeTasks() {
-        if (!this.valid_) {
-            return ;
-        }
-
         let taskobj = {
             "version" : "2.0.0",
             "tasks" : this.tasks_
@@ -92,6 +105,7 @@ export class MTBTasks
 
         let contents = JSON.stringify(taskobj, null, 4) ;
         fs.writeFileSync(this.filename_, contents) ;
+        this.taskFileStatus_ = 'good' ;
     }
 
     public clear() {

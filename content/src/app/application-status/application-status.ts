@@ -405,6 +405,10 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     fixTasks() {
         this.be.sendRequestWithArgs('fix-tasks', null);
     }
+
+    prepareVSCode() {
+        this.be.sendRequestWithArgs('prepareVSCode', null);
+    }
 }
 
 export default ApplicationStatus;

@@ -222,7 +222,7 @@ export class VSCodeWorker extends EventEmitter  {
                     this.logger_.info('-----------------------------------------------') ;
                     this.logger_.info('Preparing project for VSCode') ;
                     this.logger_.info('-----------------------------------------------') ;                      
-                    this.runMakeVSCodeCommand(projdir, appdir)
+                    this.runMakeVSCodeCommand(path.join(projdir, appdir))
                     .then((makeResult) => {
                         if (makeResult[0] !== 0) {
                             resolve([-1, [`Failed to create project '${bspid} - ${ceid}': ${makeResult[1].join('\n')}`]]);
@@ -289,9 +289,9 @@ export class VSCodeWorker extends EventEmitter  {
         }
     }
 
-    private runMakeVSCodeCommand(projdir: string, appdir: string): Promise<[number, string[]]> {
+    public runMakeVSCodeCommand(appdir: string): Promise<[number, string[]]> {
         return new Promise<[number, string[]]>((resolve, reject) => {
-            let p = path.join(projdir, appdir);
+            let p = appdir ;
             let cliPath = this.findMakePath();
             if (cliPath === undefined) {
                 resolve([-1, ["modus shell not found."]]) ;

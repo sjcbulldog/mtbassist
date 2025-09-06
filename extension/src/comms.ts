@@ -59,7 +59,8 @@ export type FrontEndToBackEndType =
     'settings-data' |
     'user-guide-data' |
     'check-ready' |
-    'fix-tasks'
+    'fix-tasks' |
+    'prepareVSCode'
     ;
 
 export type BackEndToFrontEndType =
@@ -106,9 +107,27 @@ export type BackEndToFrontEndType =
     'buildDone'
     ;
 
-export type ThemeType = 'dark' | 'light' ;
+export type ThemeType =
+    'dark' | 
+    'light' ;
 
-export type ManifestStatusType = 'loaded' | 'loading' | 'not-available';
+export type ManifestStatusType = 
+    'loaded' | 
+    'loading' | 
+    'not-available';
+
+export type MTBAssistantMode = 
+    'initializing' |
+    'none' |
+    'launcher' |
+    'mtb' |
+    'error' ;
+
+export type MTBVSCodeTaskStatus = 
+    'good' |
+    'corrupt' |
+    'missing' |
+    'needsTasks' ;
 
 export interface MTBLocationStatus {
   homeError?: string ;
@@ -122,12 +141,6 @@ export interface SettingsError {
   message: string ;
 } ;
 
-export type MTBAssistantMode = 
-    'initializing' |
-    'none' |
-    'launcher' |
-    'mtb' |
-    'error' ;
 
 export interface BSPIdentifier {
     name : string ;
@@ -252,7 +265,7 @@ export interface ApplicationStatusData {
   valid: boolean ;
   name: string;
   toolsdir: string;
-  needTasks: boolean ;
+  vscodeTasksStatus: MTBVSCodeTaskStatus ;
   needVSCode: boolean ;
   memory: MemoryInfo[];
   documentation: Documentation[];

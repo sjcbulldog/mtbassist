@@ -646,6 +646,25 @@ export class MTBAssistObject {
         this.cmdhandler_.set('ai-data', this.getAIData.bind(this)) ;
         this.cmdhandler_.set('user-guide-data', this.provideUserGuide.bind(this)) ;
         this.cmdhandler_.set('fix-tasks', this.fixTasks.bind(this)) ;
+        this.cmdhandler_.set('prepareVSCode', this.prepareVSCode.bind(this)) ;
+    }
+
+    private prepareVSCode(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.env_ && this.env_.appInfo) {
+                this.worker_?.runMakeVSCodeCommand(this.env_.appInfo.appdir)
+                .then((result) => {
+                    this.tasks_?.addAll() ;
+                    this.tasks_?.writeTasks() ;
+                    this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;                    
+                    resolve() ;
+                })
+                .catch((err) => {
+                    this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;  
+                    reject(err) ;
+                }) ;
+            }
+        }) ;
     }
 
     private fixTasks(request: FrontEndToBackEndRequest): Promise<void> {
@@ -1710,7 +1729,7 @@ export class MTBAssistObject {
                 middleware: [],
                 projects: projects,
                 tools: tools,
-                needTasks: this.tasks_?.doWeNeedTaskUpdates() || !this.tasks_?.isValid(),
+                vscodeTasksStatus: this.tasks_?.taskFileStatus || 'missing',
                 needVSCode: needVSCode,
             };
         } else {
@@ -1723,7 +1742,7 @@ export class MTBAssistObject {
                 middleware: [],
                 projects: [],
                 tools: [],
-                needTasks: false,
+                vscodeTasksStatus: 'good',
                 needVSCode: false
 
             };

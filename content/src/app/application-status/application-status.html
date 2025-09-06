@@ -45,10 +45,29 @@
                 <span class="status-date">Checked: {{ currentDate | date:'medium' }}</span>
               </div>
               
-              @if (applicationStatus.needTasks) {
+              @if (applicationStatus.needVSCode) {
                 <div class="tasks-warning" style="margin-top: 1em; margin-bottom: 1em; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 12px; display: flex; align-items: center;">
                   <mat-icon color="warn" style="margin-right: 8px;">warning</mat-icon>
-                  <span style="flex: 1; font-weight: 500; color: #856404;">Required VS Code tasks are missing.  Press the 'Fix Tasks' button to create these missing tasks.</span>
+                  <span style="flex: 1; font-weight: 500; color: #856404;">This application has not been setup to run in VS Code. Press the Prepare For VSCode button to prepare this application.</span>
+                  <mat-icon
+                    matTooltip="The ModusToolbox Assistant needs to prepare this application for VS Code before tasks and other features are available."
+                    class="tasks-help-icon"
+                    style="cursor: pointer; margin-right: 8px; color: #856404;"
+                  >help_outline</mat-icon>
+                  <button mat-raised-button color="primary" (click)="prepareVSCode()" [disabled]="running">Prepare For VSCode</button>
+                </div>
+              } @else if (applicationStatus.vscodeTasksStatus !== 'good') {
+                <div class="tasks-warning" style="margin-top: 1em; margin-bottom: 1em; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 12px; display: flex; align-items: center;">
+                  <mat-icon color="warn" style="margin-right: 8px;">warning</mat-icon>
+                  <span style="flex: 1; font-weight: 500; color: #856404;">
+                    @if (applicationStatus.vscodeTasksStatus === 'missing') {
+                      The VS Code tasks.json file is missing.  Press 'Fix Tasks' to create a new tasks file with the required tasks.
+                    } @else if (applicationStatus.vscodeTasksStatus === 'corrupt') {
+                      The .vscode file is corrupt and cannot be read.  Press 'Fix Tasks' to create a new tasks file.
+                    } @else {
+                      Some required VS Code tasks are missing or incorrect.  Press the 'Fix Tasks' button to add and/or update these tasks.
+                    }
+                  </span>
                   <mat-icon
                     matTooltip="The ModusToolbox Assistant relies on specific tasks to be available in the VS Code tasks.json file.  Press the 'Fix Tasks' button to generate any of these that are missing."
                     class="tasks-help-icon"
