@@ -35,3 +35,12 @@ if [ -d /Library/Application\ Support/Infineon_Technologies_AG ]; then
     sudo rm -rf /Library/Application\ Support/Infineon_Technologies_AG
     echo " done."
 fi
+
+rm -rf /Applications/Modus*
+rm -rf /Applications/dashboard.app
+rm -rf /Applications/dfuh-tool.app
+rm -rf /Applications/bsp-assistant.app
+rm -rf /Applications/mtb-gcc-arm-eabi
+rm -rf /Applications/project-creator.app
+rm -rf /Applications/secure-policy-configurator
+rm -rf /Applications/Infineon*

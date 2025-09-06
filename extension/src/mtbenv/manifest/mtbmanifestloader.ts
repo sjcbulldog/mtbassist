@@ -305,6 +305,10 @@ export class MtbManifestLoader {
                 word += ch;
             }
         }
+
+        if (word.length > 0) {
+            ret.push(word) ;
+        }
         return ret ;
     }
 

@@ -1,9 +1,12 @@
 Priorities
 ----------
 - Automatically run the 'make vscode' if the .vscode directory is not present
-- If a user name has spaces, get alternate location, details below
-- What to do if a project requires and EAP but it is not selected
+- What to do if a project requires an EAP but it is not selected - can we warn?
 - LLVM installation
+- When we fix tasks - don't delete user tasks
+- Memory View
+- What to do if download fails of a required pacakge - go back
+- If just installed launcher service, sometimes authentication/login fails with timeout to localhost
 - Lots of testing
   o Windows
   o Linux
@@ -14,6 +17,13 @@ Known Bugs
 - Thoroughly check out what BSPs are available with and without LCS.
 - Figure out the interaction of operating mode and EAP
 - Selecting code examples based on capabilities has bugs, look at the Control C3 BSPs, look at Edge and Hello World (not PSOC Edge Hello World)
+
+Mac Testing
+-----------
+- Me Me
+- Me All
+- All Me
+- All All
 
 TODO
 -------------------------------------------------------------------------------------------

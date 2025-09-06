@@ -1690,6 +1690,12 @@ export class MTBAssistObject {
                 }
             }
 
+            let needVSCode = false;
+            let vscodePath = path.join(this.env_!.appInfo!.appdir, '.vscode');
+            if (!fs.existsSync(vscodePath)) {
+                needVSCode = true;
+            }
+
             this.logger_.debug(`Found ${projects.length} projects in the application.`);
             let tools: Tool[] = [];
             if (pinfo && pinfo.tools) {
@@ -1704,7 +1710,8 @@ export class MTBAssistObject {
                 middleware: [],
                 projects: projects,
                 tools: tools,
-                needTasks: this.tasks_?.doWeNeedTaskUpdates() || !this.tasks_?.isValid()
+                needTasks: this.tasks_?.doWeNeedTaskUpdates() || !this.tasks_?.isValid(),
+                needVSCode: needVSCode,
             };
         } else {
             appst = {
@@ -1716,7 +1723,8 @@ export class MTBAssistObject {
                 middleware: [],
                 projects: [],
                 tools: [],
-                needTasks: false
+                needTasks: false,
+                needVSCode: false
 
             };
         }

@@ -253,6 +253,7 @@ export interface ApplicationStatusData {
   name: string;
   toolsdir: string;
   needTasks: boolean ;
+  needVSCode: boolean ;
   memory: MemoryInfo[];
   documentation: Documentation[];
   middleware: Middleware[];
