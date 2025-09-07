@@ -400,13 +400,13 @@ export class SetupMgr extends MtbManagerBase {
                 for(let s of status) {
                     if (!s.success) {
                         if (msg.length > 0) {
-                            msg += '<br>' ;
+                            msg += '<br><br>' ;
                         }
                         msg += s.error ;
                     }
                 }
                 if (msg.length > 0) {
-                    reject(new Error('Some required tools did not install correctly<br>' + msg)) ;
+                    reject(new Error('Some required tools did not install correctly<br><br>' + msg)) ;
                     return ;
                 }
                 resolve();
@@ -591,6 +591,7 @@ export class SetupMgr extends MtbManagerBase {
                     else {
                         reject(new Error(`Failed to install feature ${id} - ${version}`));
                     }
+                    this.emit('downloadProgress', id, 'Installation Error', 100);                       
                     return;
                 }
                 resolve();

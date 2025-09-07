@@ -31,9 +31,6 @@ export class ErrorComponent implements OnInit, OnDestroy {
   
   themeType: 'dark' | 'light' = 'dark';
 
-  extensionReady(): void {
-  }
-
   private errmsgSubscription?: Subscription;
   private themeSubscription?: Subscription;
 
@@ -43,6 +40,7 @@ export class ErrorComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.be.log('ErrorComponent ngOnInit', 'debug') ;
+
     this.themeSubscription = this.be.theme.subscribe(theme => {
       this.themeType = theme as 'dark' | 'light';
     });
