@@ -1,11 +1,9 @@
 Priorities
 ----------
-- Automatically run the 'make vscode' if the .vscode directory is not present
+- What to do if download fails of a required pacakge - go back
 - What to do if a project requires an EAP but it is not selected - can we warn?
 - LLVM installation
-- When we fix tasks - don't delete user tasks
 - Memory View
-- What to do if download fails of a required pacakge - go back
 - If just installed launcher service, sometimes authentication/login fails with timeout to localhost
 - Lots of testing
   o Windows

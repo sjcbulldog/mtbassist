@@ -1506,3 +1506,43 @@
 ::ng-deep .mat-mdc-tab-label .missing-assets-tab-icon {
   color: #f44336 !important;
 }
+
+// Refresh button styling
+.application-title-row button[mat-icon-button] {
+  color: var(--text-color);
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  
+  &:hover:not(:disabled) {
+    background-color: var(--hover-background);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  mat-icon {
+    color: inherit;
+  }
+}
+
+// Enhanced dark theme visibility for refresh button
+.application-status.dark-theme .application-title-row button[mat-icon-button] {
+  border-color: #666;
+  background-color: rgba(255, 255, 255, 0.05);
+  
+  &:hover:not(:disabled) {
+    background-color: rgba(79, 195, 247, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(79, 195, 247, 0.2);
+  }
+  
+  mat-icon {
+    color: #ffffff;
+  }
+}

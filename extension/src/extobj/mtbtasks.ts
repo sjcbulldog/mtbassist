@@ -25,14 +25,11 @@ interface LooseObject {
 export class MTBTasks
 {
     public static taskNameBuild = "Build" ;
-    public static taskNameBuildNinja = "Build/Ninja" ;
     public static taskNameRebuild = "Rebuild" ;
-    public static taskNameRebuildNinja = "Rebuild/Ninja" ;    
     public static taskNameErase = "Erase" ;
     public static taskNameQuickProgram = "Quick Program" ;
     public static taskNameClean = "Clean" ;
     public static taskNameBuildProgram = "Build & Program" ;
-    public static taskNameBuildProgramNinja = "Build/Ninja & Program" ;
 
     private static appTaskNames: any[] = [ 
         MTBTasks.taskNameRebuild,
@@ -40,10 +37,8 @@ export class MTBTasks
         MTBTasks.taskNameBuild,
         MTBTasks.taskNameErase,                     // Skip if in a project
         MTBTasks.taskNameBuildProgram,
-        MTBTasks.taskNameQuickProgram,
-        MTBTasks.taskNameRebuildNinja,              // Skip if NINJA is off
-        MTBTasks.taskNameBuildNinja,                // Skip if NINJA is off
-        MTBTasks.taskNameBuildProgramNinja] ;       // Skip if NINJA is off
+        MTBTasks.taskNameQuickProgram
+    ] ;
 
     private filename_ : string ;
     private tasks_ : any [] = [] ;
@@ -58,8 +53,11 @@ export class MTBTasks
         this.filename_ = filename ;
         this.env_ = env ;
         this.logger_ = logger ;
+        this.processTasksFile() ;
+    }
 
-        if (fs.existsSync(filename)) {
+    private processTasksFile() : void {
+        if (fs.existsSync(this.filename_)) {
             this.initFromFile() ;
             if (!this.valid_) {
                 this.taskFileStatus_ = 'corrupt' ;
@@ -75,7 +73,9 @@ export class MTBTasks
             this.taskFileStatus_ = 'missing' ;
         }
     }
+
     public get taskFileStatus() : MTBVSCodeTaskStatus {
+        this.processTasksFile() ;
         return this.taskFileStatus_ ;
     }
 
@@ -117,26 +117,16 @@ export class MTBTasks
             return;
         }
 
-        let ninja = true ;
         for(let taskname of MTBTasks.appTaskNames) {
-            if (taskname.indexOf("ninja") !== -1 && !ninja) {
-                continue ;
-            }
-
             this.addTask(taskname) ;
         }        
 
         if (this.env_.appInfo.type() === ApplicationType.application) {
             for(let project of this.env_.appInfo.projects) {
                 for(let taskname of MTBTasks.appTaskNames) {                
-                    if (taskname.indexOf("ninja") !== -1 && !ninja) {
-                        continue ;
-                    }                 
-
                     if (taskname.indexOf(MTBTasks.taskNameErase) !== -1) {
                         continue ;
                     }
-
                     this.addTask(taskname, project.name) ;
                 }
             }
@@ -255,58 +245,6 @@ export class MTBTasks
 
         return task ;
     }     
-
-    private generateBuildNinja() : any {
-        let labelstr: string ;
-
-        let depends: any[] = [] ;
-        for(let project of this.env_.appInfo!.projects) {
-            let taskname = this.createTaskName(MTBTasks.taskNameBuildNinja, project.name) ;
-            depends.push(taskname) ;
-        }
-
-        //
-        // The dependcies so far are just project, so order does not matter.  Sort
-        // so the order is consistent.
-        //
-        depends.sort() ;
-
-        let task =  {
-            "label": MTBTasks.taskNameBuildNinja,
-            "dependsOrder": "sequence",
-            "dependsOn": depends,
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        } ;
-
-        return task ;
-    }     
-
-    private generateRebuildNinja(project?: string) : any {
-        let labelstr: string ;
-
-        labelstr = this.createTaskName(MTBTasks.taskNameRebuildNinja, project) ;
-
-        let cleanstr = this.createTaskName(MTBTasks.taskNameClean, project) ;
-        let buildstr = this.createTaskName(MTBTasks.taskNameBuildNinja, project) ;
-        let task =  {
-            "label": labelstr,
-            "dependsOrder": "sequence",
-            "dependsOn": [ cleanstr, buildstr],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        } ;
-        if (project) {
-            let loose: LooseObject = task ;
-            loose.hide = true ;
-        }
-
-        return task ;
-    }    
 
     private generateRebuild(project?: string) : any {
         let labelstr: string  = this.createTaskName(MTBTasks.taskNameRebuild, project) ;
@@ -473,21 +411,6 @@ export class MTBTasks
         }
         else if (taskname === MTBTasks.taskNameQuickProgram) {
             task =  this.generateMakeTask(false, MTBTasks.taskNameQuickProgram, "qprogram", "", false, project, true, true) ;            
-        }
-        else if (taskname === MTBTasks.taskNameRebuildNinja) {
-            task = this.generateRebuildNinja(project) ;
-        }
-        else if (taskname === MTBTasks.taskNameBuildNinja) {
-            if (project === undefined && this.env_.appInfo?.type() === ApplicationType.application) {
-                task = this.generateMakeTask(true, MTBTasks.taskNameBuildNinja, "build", "NINJA=1", true, project, false, false) ;
-                // task = this.generateBuildNinja() ;
-            }
-            else {
-                task = this.generateMakeTask(true, MTBTasks.taskNameBuildNinja, "build", "NINJA=1", true, project, false, false) ;
-            }
-        }
-        else if (taskname === MTBTasks.taskNameBuildProgramNinja) {
-            task = this.generateMakeTask(false, MTBTasks.taskNameBuildProgramNinja, "program", "NINJA=1", true, project, true, false) ;            
         }
         
         return task ;

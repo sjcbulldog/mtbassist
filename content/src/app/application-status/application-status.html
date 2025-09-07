@@ -19,6 +19,9 @@
         <!-- Application Tab Title Row with Right-Aligned Help Icon -->
         <div class="application-title-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
           <span class="application-title" style="font-size: 1.5em; font-weight: bold;">Application Status</span>
+          <button mat-icon-button (click)="refreshApplicationData()" [disabled]="isLoading" matTooltip="Refresh application data">
+            <mat-icon>refresh</mat-icon>
+          </button>
         </div>
 
         <div class="tab-content">

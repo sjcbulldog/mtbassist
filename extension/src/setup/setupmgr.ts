@@ -48,6 +48,7 @@ export class SetupMgr extends MtbManagerBase {
     private static readonly mtbFeatureId = 'com.ifx.tb.tool.modustoolbox';
     private static readonly mtbSetupId = 'com.ifx.tb.tool.modustoolboxsetup';
     private static readonly downloadRatio = 0.8;
+    private static readonly localIDCServiceRequestTimeout = 30000; // 30 seconds
 
     private static readonly requiredFeatures : string[] = [
         'com.ifx.tb.tool.modustoolboxedgeprotectsecuritysuite',
@@ -75,6 +76,7 @@ export class SetupMgr extends MtbManagerBase {
     private neededTools_ : SetupProgram[] = [] ;
     private mtbLocation_ : string | undefined = undefined ;
     private mtbTools_ : string | undefined = undefined ;
+    private downloadErrors_ : string[] = [] ;
 
     constructor(ext: MTBAssistObject) {
         super(ext);
@@ -370,6 +372,7 @@ export class SetupMgr extends MtbManagerBase {
 
     private downloadTools(tools: SetupProgram[]) : Promise<void> {
         let ret = new Promise<void>(async (resolve, reject) => {
+            this.downloadErrors_ = [] ;
             let passwd : string | undefined = undefined ;
             if (this.mtbLocation_?.startsWith('/Applications')) {
                 passwd = await vscode.window.showInputBox(
@@ -672,11 +675,13 @@ export class SetupMgr extends MtbManagerBase {
                             })
                             .catch((err) => {
                                 this.logger.error(`Error installing feature ${id} version ${version}:`, err);
+                                this.downloadErrors_.push(id) ;
                                 reject(err);
                             });
                         }
                     })
                     .catch((err) => {
+                        this.downloadErrors_.push(id) ;
                         reject(err);
                     });
                 }
@@ -756,6 +761,7 @@ export class SetupMgr extends MtbManagerBase {
 
     private fetchPageFromService(page: string) : Promise<string | undefined> {
         let ret = new Promise<string | undefined>((resolve, reject) => {
+            let timer = setTimeout(() => { reject(new Error('Timeout waiting for IDC service')); }, SetupMgr.localIDCServiceRequestTimeout) ;
             let uristr = 'http://127.0.0.1:' + this.port_ + page;
             fetch(uristr)
                 .then((resp: Response) => {

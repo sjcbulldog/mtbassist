@@ -409,6 +409,12 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     prepareVSCode() {
         this.be.sendRequestWithArgs('prepareVSCode', null);
     }
+
+    refreshApplicationData() {
+        this.isLoading = true;
+        this.hasError = false;
+        this.be.sendRequestWithArgs('app-data', null);
+    }
 }
 
 export default ApplicationStatus;

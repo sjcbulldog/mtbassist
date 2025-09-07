@@ -1019,12 +1019,17 @@ export class MTBAssistObject {
                             this.pushNeededTools();
                         }
                         resolve();
-                    }).catch((error) => {
+                    })
+                    .catch((error) => {
+                        this.sendMessageWithArgs('error', `Error: ${error.message}`) ;
+                        this.sendMessageWithArgs('mtbMode', 'error') ;
                         reject(error);
                     });
                 })
-                .catch((err) => {
-                    reject(err);
+                .catch((error) => {
+                    this.sendMessageWithArgs('error', `Error: ${error.message}`) ;
+                    this.sendMessageWithArgs('mtbMode', 'error') ;                    
+                    reject(error);
                 });
         });
         return ret;
