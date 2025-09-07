@@ -20,12 +20,11 @@ import { ToolList } from "./toollist";
 import { MTBVersion } from "../mtbenv/misc/mtbversion";
 import { IDCRegistry } from "./idcreg";
 import { SetupProgram } from "../comms";
-import * as vscode from 'vscode';
+import { ModusToolboxEnvironment } from "../mtbenv";
+import { MTBRunCommandOptions } from "../mtbenv/mtbenv/mtbenv";
 import * as path from 'path' ;
 import * as fs from 'fs' ;
 import * as os from 'os' ;
-import { ModusToolboxEnvironment } from "../mtbenv";
-import { MTBRunCommandOptions } from "../mtbenv/mtbenv/mtbenv";
 
 //
 // AppData/Local/Infineon_Technologies_AG/Infineon-Toolbox/Tools/ ...
@@ -42,6 +41,11 @@ export interface AccessTokenResponse {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     received_at: string;
     response: string;
+}
+
+export interface DownloadInstallStatus {
+    success: boolean;
+    error: string | undefined;
 }
 
 export class SetupMgr extends MtbManagerBase {
@@ -76,7 +80,6 @@ export class SetupMgr extends MtbManagerBase {
     private neededTools_ : SetupProgram[] = [] ;
     private mtbLocation_ : string | undefined = undefined ;
     private mtbTools_ : string | undefined = undefined ;
-    private downloadErrors_ : string[] = [] ;
 
     constructor(ext: MTBAssistObject) {
         super(ext);
@@ -372,10 +375,12 @@ export class SetupMgr extends MtbManagerBase {
 
     private downloadTools(tools: SetupProgram[]) : Promise<void> {
         let ret = new Promise<void>(async (resolve, reject) => {
-            this.downloadErrors_ = [] ;
             let passwd : string | undefined = undefined ;
             if (this.mtbLocation_?.startsWith('/Applications')) {
                 passwd = await this.ext.getPasswordFromUser() ;
+                if (passwd === undefined) {
+                    reject(new Error('Password is required for installation to /Applications'));
+                }
             }
 
             if (!passwd && this.mtbLocation_?.startsWith('/Applications')) {
@@ -385,12 +390,25 @@ export class SetupMgr extends MtbManagerBase {
 
             let promises = [];
             for(let f of tools.map(t => t.featureId)) {
-                let p = this.downloadFeature(f);
+                let p = this.downloadAndInstallFeature(f, passwd);
                 promises.push(p);
             }
 
             Promise.all(promises)
-            .then(() => {
+            .then((status: DownloadInstallStatus[]) => {
+                let msg = '' ;
+                for(let s of status) {
+                    if (!s.success) {
+                        if (msg.length > 0) {
+                            msg += '<br>' ;
+                        }
+                        msg += s.error ;
+                    }
+                }
+                if (msg.length > 0) {
+                    reject(new Error('Some required tools did not install correctly<br>' + msg)) ;
+                    return ;
+                }
                 resolve();
             })
             .catch((err) => {
@@ -561,24 +579,45 @@ export class SetupMgr extends MtbManagerBase {
                 cmd = '/usr/sbin/installer' ;
             }
 
-
             let opts: MTBRunCommandOptions = {
                 stdout: sudopwd,
             };
             ModusToolboxEnvironment.runCmdCaptureOutput(cmd, args, opts)
             .then((result) => {
-                if (!result) {
-                    reject(new Error(`Failed to install feature ${id} - ${version}`));
+                if (!result || this.wasSucessful(result[1]) === false) {
+                    if (result && this.isPasswordError(result[1])) {
+                        reject(new Error('Installation failed due to incorrect password')) ;
+                    }
+                    else {
+                        reject(new Error(`Failed to install feature ${id} - ${version}`));
+                    }
                     return;
                 }
                 resolve();
             })
             .catch((err) => {
-                reject(err);
+                reject(new Error(`Failed to install feature ${id} - ${version} - ${err.message}`));
             });
-
         });
         return ret;
+    }
+
+    private isPasswordError(text: string[]) : boolean { 
+        for(let line of text) {
+            if (line.includes('Sorry, try again.')) {
+                return true ;
+            }
+        }
+        return false ;
+    }
+
+    private wasSucessful(text: string[]) : boolean {
+        for(let line of text) {
+            if (line.includes('was successful')) {
+                return true ;
+            }
+        }
+        return false ;
     }
 
     private installFeatureLinux(id: string, version: string) : Promise<void> {
@@ -633,19 +672,21 @@ export class SetupMgr extends MtbManagerBase {
         return ret;      
     }
 
-    private downloadFeature(id: string)  : Promise<void> {
-        let ret = new Promise<void>((resolve, reject) => {
+    private downloadAndInstallFeature(id: string, password: string | undefined)  : Promise<DownloadInstallStatus> {
+        let ret = new Promise<DownloadInstallStatus>((resolve, reject) => {
             this.emit('downloadProgress', id, 'Preparing...', 0);   
             let tool = this.toollist_.getToolByFeature(id);
             let version = this.findLatestVersion(tool) ;
             if (!version) {
-                this.logger.error(`For feature ${id} no versions were detected}`);
-                resolve() ;
+                let msg = `For feature ${id} no versions were detected` ;
+                this.logger.error(msg);
+                resolve({ success: false, error: msg }) ;
             }
             else {
                 if (!this.accessToken_) {
-                    this.logger.error('No access token available for downloading feature');
-                    resolve() ;
+                    let msg = 'No access token available for downloading feature' ;
+                    this.logger.error(msg);
+                    resolve({ success: false, error: msg }) ;
                 }
                 else {
                     let cmdstr = 'downloadOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
@@ -655,30 +696,33 @@ export class SetupMgr extends MtbManagerBase {
                             //
                             // Report the error - then resolve
                             //
-                            this.logger.error(`Failed to download feature ${id} - ${version}`);
+                            let msg = `Failed to download feature ${id} - ${version}` ;
+                            this.logger.error(msg);
                             this.emit('downloadProgress', id, 'Download Error', 100);   
-                            resolve();
+                            resolve({ success: false, error: msg }) ;
                         }
                         else {
                             this.logger.debug(`Feature ${id} version ${version} downloaded successfully.`);
                             this.logger.debug(`Installing feature ${id} version ${version}...`);
                             this.emit('downloadProgress', id, 'Installing...', SetupMgr.downloadRatio * 100 );
-                            this.installFeature(id, version!.toString())
+                            this.installFeature(id, version!.toString(), password)
                             .then(() => {
                                 this.emit('downloadProgress', id, 'Complete', 100) ;
-                                this.logger.debug(`Feature ${id} version ${version} installed successfully.`);
-                                resolve();
+                                let msg = `Feature ${id} version ${version} installed successfully.` ;
+                                this.logger.debug(msg);
+                                resolve({ success: true, error: msg });
                             })
                             .catch((err) => {
-                                this.logger.error(`Error installing feature ${id} version ${version}:`, err);
-                                this.downloadErrors_.push(id) ;
-                                reject(err);
+                                let msg = `Error installing feature ${id} version ${version} - ${err.message}` ;
+                                this.logger.error(msg, err);
+                                resolve({ success: false, error: msg });
                             });
                         }
                     })
                     .catch((err) => {
-                        this.downloadErrors_.push(id) ;
-                        reject(err);
+                        let msg = `Error downloading feature ${id} - ${version}` ;
+                        this.logger.error(msg, err);
+                        resolve({ success: false, error: msg });
                     });
                 }
             }

@@ -13,11 +13,35 @@
     },
     {
         "name" : "CAT1",
-        "description" : "Indicates this device is a category 1 device. The categories are defined by Infineon and are used to group similiar devices together."
+        "description" : "Indicates this device is a category 1 device. The categories are defined by Infineon and are used to group similiar devices or device families together."
     },
+    {
+        "name" : "CAT1A",
+        "description" : "Indicates this device is a category 1 device from the PSOC 6 family."
+    },    
     {
         "name" : "CAT1D",
         "description" : "Indicates this device is a category 1 device from the PSOC Edge family."
+    },
+    {
+        "name" : "CM0P_SLEEP",
+        "description" : "Indicates this is application is running on a PSOC 6 device but is only using the Cortex M4 processor.  After initialization of the system, the Cortex M0+ processor is in sleep mode."
+    },    
+    {
+        "name" : "CM4",
+        "description" : "Indicates this is code running on the CM4 processor"
+    },
+    {
+        "name" : "CM4_0",
+        "description" : "Indicates this is code running on the first CM4 processor if there are multiple CM4 processors."
+    },
+    {
+        "name" : "HCI-UART",
+        "description" : "Indicates this code is using the HCI-UART protocol to communicate with a BLE/Bluetooth wireless device."
+    },
+    {
+        "name" : "MURATA-1YN",
+        "description" : "Indicates this code assuming the use of the Murata 1Y module, which support both BLE and Wi-Fi."
     },
     {
         "name" : "LWIP",
@@ -50,5 +74,9 @@
     {
         "name": "4343W",
         "description": "Indicates this code is being built to work with a 4343W wireless device."
+    },
+    {
+        "name": "43439",
+        "description": "Indicates this code is being built to work with a 43439 wireless device."
     }
 ]

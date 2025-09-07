@@ -40,13 +40,13 @@
                   @if (os === 'win32') {
                     <h3>Install In Default Location</h3>
                   } @else if (os === 'darwin') {
-                    <h3>Install In Home Directory</h3>
+                    <h3>Install In User's Application Directory</h3>
                   } @else {
                   <h3>Install In Home Directory</h3>
                   }
                 </div>
                 @if (os === 'darwin') {
-                  <p class="card-description">Install ModusToolbox and related tools in the user's home directory. This is the recommended option for macOS.</p>
+                  <p class="card-description">Install ModusToolbox and related tools in the user Application directory. <br><br>This is the recommended option for macOS.</p>
                 } @else if (os === 'win32') {
                   <p class="card-description">Install ModusToolbox and related tools in the default locations on this machine.</p>
                 } @else {
@@ -63,13 +63,13 @@
                     @if (os === 'win32') {
                       <h3>Install In Custom Directory</h3>
                     } @else if (os === 'darwin') {
-                      <h3>Install In Global /Application Directory</h3>
+                      <h3>Install In Global Application Directory</h3>
                     } @else {
-                      <h3>Install In Custom Dßirectory</h3>
+                      <h3>Install In Custom Directory</h3>
                     }
                   </div>
                   @if (os === 'darwin') {
-                    <p class="card-description">Install ModusToolbox and related tools in the global /Applications directory. Administrative privileges will be required.</p>
+                    <p class="card-description">Install ModusToolbox and related tools in the global Applications directory. <br><br>Administrative privileges will be required.</p>
                   } @else if (os === 'win32') {
                     <p class="card-description">Install ModusToolbox and related tools in a directory of your choosing. This directory should not contain any spaces.</p>
                   } @else {
@@ -117,7 +117,7 @@
           <h3>Confirm Tools to Download & Install</h3>
           @if (neededTools.length === 0) {
             <div class="login-message">
-              <h4>Logging in to Infineon.com, a browser window may appear.</h4>
+              <h3 style="font-size: 1.4rem; font-weight: 600; margin-bottom: 1.5rem;">Logging in to Infineon.com, a browser window may appear.</h3>
               <div class="spinner"></div>
             </div>
           } @else {
@@ -181,11 +181,6 @@
               Install Now
             }
           </button>
-          }
-          @if (disableNext && !downloading) {
-            <div style="display: flex; justify-content: center; margin-top: 1.5rem;">
-              <div class="spinner"></div>
-            </div>
           }
           @if (downloading) {
             <div class="downloading-message">

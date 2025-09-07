@@ -90,7 +90,7 @@ export class MTBAssistObject {
     private theme_ : ThemeType = 'light';
     private intellisenseProject_ : string | undefined ;
     private manifestStatus_ : ManifestStatusType = 'loading';
-    private pendingPasswordPromise: ((pass: string) => void) | undefined = undefined ;
+    private pendingPasswordPromise: ((pass: string | undefined) => void) | undefined = undefined ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -218,12 +218,12 @@ export class MTBAssistObject {
         return this.envLoaded_;
     }
 
-    public getPasswordFromUser(): Promise<string> {
+    public getPasswordFromUser(): Promise<string | undefined > {
         if (this.pendingPasswordPromise) {
             throw new Error('new password request while another is pending');
         }
 
-        let ret = new Promise<string>((resolve, reject) => {
+        let ret = new Promise<string | undefined >((resolve, reject) => {
             this.pendingPasswordPromise = resolve ;
             this.sendMessageWithArgs('getPassword', true);
         });
@@ -670,7 +670,7 @@ export class MTBAssistObject {
                 let p = this.pendingPasswordPromise ;
                 this.pendingPasswordPromise = undefined ;
                 this.sendMessageWithArgs('getPassword', false);
-                p(data.data) ;
+                p(data.data ? data.data : undefined) ;
             }
         });
     }
@@ -1026,6 +1026,8 @@ export class MTBAssistObject {
                     })
                     .catch((error: Error) => {
                         this.logger_.error('Failed to install tools:', error.message);
+                        this.sendMessageWithArgs('error', `Error: ${error.message}`) ;
+                        this.sendMessageWithArgs('mtbMode', 'error') ;
                         reject(error);
                     });
             } else {
