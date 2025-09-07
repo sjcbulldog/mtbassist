@@ -60,7 +60,8 @@ export type FrontEndToBackEndType =
     'user-guide-data' |
     'check-ready' |
     'fix-tasks' |
-    'prepareVSCode'
+    'prepareVSCode' |
+    'password'
     ;
 
 export type BackEndToFrontEndType =
@@ -104,7 +105,8 @@ export type BackEndToFrontEndType =
     'ready' |
     'os' |
     'userguide' |
-    'buildDone'
+    'buildDone' | 
+    'getPassword'
     ;
 
 export type ThemeType =

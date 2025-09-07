@@ -75,6 +75,7 @@ export class BackendService {
     devKitStatus: BehaviorSubject<DevKitInfo[]> = new BehaviorSubject<DevKitInfo[]>([]);
     defaultProjectDir: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
     os: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
+    isPasswordVisible: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false) ;
 
     // Manfiest related
     manifestStatus: BehaviorSubject<ManifestStatusType> = new BehaviorSubject<ManifestStatusType>('loading') ;
@@ -237,6 +238,11 @@ export class BackendService {
         this.registerHandler('os', (cmd) => { this.os.next(cmd.data || '') });
         this.registerHandler('userguide', (cmd) => { this.userGuide.next(cmd.data || 'User Guide') });
         this.registerHandler('buildDone', (cmd) => { this.log(`Build done: ${JSON.stringify(cmd.data)}`, 'debug'); this.buildDone.next(cmd.data); } );
+        this.registerHandler('getPassword', this.getPassword.bind(this));
+    }
+
+    private getPassword(cmd: BackEndToFrontEndResponse) {
+        this.isPasswordVisible.next(cmd.data) ;
     }
 
     private handleToolsLocError(cmd: BackEndToFrontEndResponse) {

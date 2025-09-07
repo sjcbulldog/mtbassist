@@ -90,6 +90,7 @@ export class MTBAssistObject {
     private theme_ : ThemeType = 'light';
     private intellisenseProject_ : string | undefined ;
     private manifestStatus_ : ManifestStatusType = 'loading';
+    private pendingPasswordPromise: ((pass: string) => void) | undefined = undefined ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -215,6 +216,19 @@ export class MTBAssistObject {
 
     public get mtbEnvLoaded(): boolean {
         return this.envLoaded_;
+    }
+
+    public getPasswordFromUser(): Promise<string> {
+        if (this.pendingPasswordPromise) {
+            throw new Error('new password request while another is pending');
+        }
+
+        let ret = new Promise<string>((resolve, reject) => {
+            this.pendingPasswordPromise = resolve ;
+            this.sendMessageWithArgs('getPassword', true);
+        });
+    
+        return ret ;
     }
 
     private sendMessageWithArgs(type: BackEndToFrontEndType, data: any) {
@@ -647,6 +661,18 @@ export class MTBAssistObject {
         this.cmdhandler_.set('user-guide-data', this.provideUserGuide.bind(this)) ;
         this.cmdhandler_.set('fix-tasks', this.fixTasks.bind(this)) ;
         this.cmdhandler_.set('prepareVSCode', this.prepareVSCode.bind(this)) ;
+        this.cmdhandler_.set('password', this.processPasswordResponse.bind(this)) ;
+    }
+
+    private processPasswordResponse(data: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.pendingPasswordPromise) {
+                let p = this.pendingPasswordPromise ;
+                this.pendingPasswordPromise = undefined ;
+                this.sendMessageWithArgs('getPassword', false);
+                p(data.data) ;
+            }
+        });
     }
 
     private prepareVSCode(request: FrontEndToBackEndRequest): Promise<void> {

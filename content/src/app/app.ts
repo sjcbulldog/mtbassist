@@ -12,19 +12,20 @@
  * limitations under the License.
  */
 
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { SoftwareInstallerComponent } from './software-installer/software-installer.component';
 import { MtbNav, MtbNavTab } from './mtb-nav/mtb-nav';
 import { BackendService } from './backend/backend-service';
-import { MTBAssistantMode } from '../comms';
+import { MTBAssistantMode, ThemeType } from '../comms';
 import { IdcLauncherRequiredComponent } from "./idc-launcher-required/idc-launcher-required.component";
 import { InitializingComponent } from "./initializing/initializing.component";
 import { ErrorComponent } from "./error/error.component";
-import { UsersGuideComponent } from './users-guide/users-guide.component';
+import { PasswordOverlayComponent } from './password-overlay/password-overlay.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent, InitializingComponent, ErrorComponent],
+  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent, InitializingComponent, ErrorComponent, PasswordOverlayComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -35,18 +36,31 @@ export class App {
   @ViewChild('topMtbNav') topMtbNav!: MtbNav;
   @ViewChild('softwareInstaller') softwareInstaller!: SoftwareInstallerComponent;
 
+  isPasswordVisible: boolean = false;
+  theme: ThemeType = 'dark';
+
+  subscriptions: Subscription[] = [];
+
   constructor(private be: BackendService) {
-    this.be.navTab.subscribe(index => {
+    this.subscriptions.push(this.be.navTab.subscribe(index => {
       this.topMtbNav.selectedIndex = index;
-    });
+    }));
 
-    this.be.mtbMode.subscribe(isInstalled => {
+    this.subscriptions.push(this.be.isPasswordVisible.subscribe(visible => {
+      this.isPasswordVisible = visible;
+    }));
+
+    this.subscriptions.push(this.be.mtbMode.subscribe(isInstalled => {
       this.mtbMode = isInstalled;
-    });
+    }));
 
-    this.be.setupTab.subscribe(index => {
+    this.subscriptions.push(this.be.setupTab.subscribe(index => {
       this.softwareInstaller.step = index;
-    });
+    }));
+
+    this.subscriptions.push(this.be.theme.subscribe(theme => {
+      this.theme = theme ;
+    }));
   }
 
   // Define the tabs for the navigation

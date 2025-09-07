@@ -115,12 +115,18 @@
       @case (1) {
         <div class="confirm-tools">
           <h3>Confirm Tools to Download & Install</h3>
-          <div class="tool-section">
-            <h4 style="text-align: center; width: 100%;">Required Software</h4>
-            <div style="text-align: center; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">
-              This list is the required minimum list of software for ModusToolbox ecosystem.  Additional software can be installed as needed from the ModusToolbox Setup program.
+          @if (neededTools.length === 0) {
+            <div class="login-message">
+              <h4>Logging in to Infineon.com, a browser window may appear.</h4>
+              <div class="spinner"></div>
             </div>
-            <ul class="tool-list">
+          } @else {
+            <div class="tool-section">
+              <h4 style="text-align: center; width: 100%;">Required Software</h4>
+              <div style="text-align: center; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">
+                This list is the required minimum list of software for ModusToolbox ecosystem.  Additional software can be installed as needed from the ModusToolbox Setup program.
+              </div>
+              <ul class="tool-list">
               @for (tool of neededTools; track tool.featureId) {
                 @if (tool.required && (!downloading || activeInstallSet.has(tool.featureId))) {
                   <li>
@@ -175,6 +181,7 @@
               Install Now
             }
           </button>
+          }
           @if (disableNext && !downloading) {
             <div style="display: flex; justify-content: center; margin-top: 1.5rem;">
               <div class="spinner"></div>

@@ -10,3 +10,11 @@
 @else {
   <mtb-nav #topMtbNav [tabs]="navigationTabs" backgroundColor="primary" alignment="center"></mtb-nav>
 }
+
+<app-password-overlay
+  [isVisible]="isPasswordVisible"
+  [title]="'Enter Your Local Password'"
+  [message]="'Enter your local password to install software components.'"
+  [placeholder]="'password'"
+  [themeType]="theme">
+</app-password-overlay>

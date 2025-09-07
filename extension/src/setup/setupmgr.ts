@@ -375,11 +375,7 @@ export class SetupMgr extends MtbManagerBase {
             this.downloadErrors_ = [] ;
             let passwd : string | undefined = undefined ;
             if (this.mtbLocation_?.startsWith('/Applications')) {
-                passwd = await vscode.window.showInputBox(
-                    {
-                        password: true,
-                        placeHolder: 'Enter your password'
-                    }) ;
+                passwd = await this.ext.getPasswordFromUser() ;
             }
 
             if (!passwd && this.mtbLocation_?.startsWith('/Applications')) {
