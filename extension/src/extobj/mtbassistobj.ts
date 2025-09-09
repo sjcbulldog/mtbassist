@@ -695,6 +695,14 @@ export class MTBAssistObject {
         this.cmdhandler_.set('fix-tasks', this.fixTasks.bind(this)) ;
         this.cmdhandler_.set('prepareVSCode', this.prepareVSCode.bind(this)) ;
         this.cmdhandler_.set('password', this.processPasswordResponse.bind(this)) ;
+        this.cmdhandler_.set('memory-data', this.sendMemoryInfo.bind(this)) ;   
+    }
+
+    private sendMemoryInfo(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;
+            resolve() ;
+        });
     }
 
     private processPasswordResponse(data: FrontEndToBackEndRequest): Promise<void> {

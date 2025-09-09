@@ -18,7 +18,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType } from '../../comms';
+import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, MemoryUsageData } from '../../comms';
 import { ProjectManager } from './projectmgr';
 
 declare var acquireVsCodeApi: any | undefined ;
@@ -95,6 +95,9 @@ export class BackendService {
 
     // AI related
     aiApiKey : BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
+
+    // Memory Usage related
+    memoryUsage: BehaviorSubject<MemoryUsageData[]> = new BehaviorSubject<MemoryUsageData[]>([]);
 
     // Data members
     private allBSPExceptEAPData : BSPIdentifier[] = [] ;
@@ -239,6 +242,7 @@ export class BackendService {
         this.registerHandler('userguide', (cmd) => { this.userGuide.next(cmd.data || 'User Guide') });
         this.registerHandler('buildDone', (cmd) => { this.log(`Build done: ${JSON.stringify(cmd.data)}`, 'debug'); this.buildDone.next(cmd.data); } );
         this.registerHandler('getPassword', this.getPassword.bind(this));
+        this.registerHandler('memoryUsage', (cmd) => { this.memoryUsage.next(cmd.data || []) });
     }
 
     private getPassword(cmd: BackEndToFrontEndResponse) {

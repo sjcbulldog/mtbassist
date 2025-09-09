@@ -60,6 +60,7 @@ export type FrontEndToBackEndType =
     'user-guide-data' |
     'check-ready' |
     'fix-tasks' |
+    'memory-data' |
     'prepareVSCode' |
     'password'
     ;
@@ -106,7 +107,8 @@ export type BackEndToFrontEndType =
     'os' |
     'userguide' |
     'buildDone' | 
-    'getPassword'
+    'getPassword' |
+    'memoryUsage'
     ;
 
 export type ThemeType =
@@ -348,4 +350,5 @@ export interface MemoryUsageData {
   start: number ;
   size: number ;
   percent: number ;
+  segments: MemoryUsageSegment[] ;
 }

@@ -1,11 +1,10 @@
 import { MTBAssistObject } from "../extobj/mtbassistobj";
-import * as path from 'path' ;
-import * as fs from 'fs' ;
-import { IntelHexFile } from "./intelhexreader";
 import { DeviceMemorySegment, MemoryMap } from "./memmap";
 import { MTBProjectInfo } from "../mtbenv/appdata/mtbprojinfo";
 import { ModusToolboxEnvironment } from "../mtbenv";
 import { MemoryUsageData, MemoryUsageSegment } from "../comms";
+import * as path from 'path' ;
+import * as fs from 'fs' ;
 
 class MemorySegments {
     private sections_ : string[] = [] ;
@@ -70,7 +69,8 @@ export class MemoryUsageMgr {
             this.getSegmentsFromProjects()
             .then((result) => {
                 this.map_ = MemoryMap.getMemoryMap(app!.projects[0].device) ;   
-                this.computeMemoryUsage() ;          
+                this.computeMemoryUsage() ;
+                resolve(true) ;
             })
             .catch((err) => {
                 this.ext_.logger.error(`MemoryUsageMgr: Error updating memory info: ${err}`) ;
@@ -87,11 +87,30 @@ export class MemoryUsageMgr {
         this.segments_.clear() ;
     }
 
-    public computeMemoryUsage() {
+    public get usage() : MemoryUsageData[] {
+        return this.usage_ ;
+    }
+
+    private computeMemoryUsage() {
         this.usage_ = [] ;
 
+        let memgroups: DeviceMemorySegment[][] = [] ;
+
         for(let mem of this.map_) {
-            let segs = this.findSegmentsForMemory(mem) ;
+            if (!mem.main) {
+                let one : DeviceMemorySegment[] = [ mem ] ;
+                for (let mem2 of this.map_) {
+                    if (mem2.main && mem2.main === mem.name) {
+                        one.push(mem2) ;
+                    }
+                }
+                memgroups.push(one) ;
+            }
+        }
+
+        for(let group of memgroups) {
+            let mem = group[0] ;
+            let segs = this.findSegmentsForMemory(group) ;
             let used = segs.reduce((acc, seg) => acc + seg.memsize, 0) ;
             let percent = (mem.size === 0) ? 0 : Math.round((used / mem.size) * 100) ;
 
@@ -115,11 +134,43 @@ export class MemoryUsageMgr {
         }
     }
 
-    private findSegmentsForMemory(mem: DeviceMemorySegment) : MemorySegments[] {
+    private segmentInGroup(seg: MemorySegments, group: DeviceMemorySegment[]) : MemoryUsageSegment | undefined {
+        for(let mem of group) {
+            if (seg.virtaddr >= mem.start && seg.virtaddr + seg.memsize < mem.start + mem.size) {
+                let offset = 0 ;
+                if (mem.main) {
+                    offset = mem.start - group[0].start ;
+                }
+
+                return {
+                    start: seg.virtaddr - offset,
+                    size: seg.memsize,
+                    sections: seg.sections
+                } ;
+            }
+
+            if (seg.physaddr >= mem.start && seg.physaddr + seg.memsize < mem.start + mem.size) {
+                let offset = 0 ;
+                if (mem.main) {
+                    offset = mem.start - group[0].start ;
+                }
+
+                return {
+                    start: seg.virtaddr - offset,
+                    size: seg.memsize,
+                    sections: seg.sections
+                } ;
+            }
+        }
+
+        return undefined ;
+    }
+
+    private findSegmentsForMemory(group: DeviceMemorySegment[]) : MemorySegments[] {
         let ret: MemorySegments[] = [] ;
         for(let [projname, segs] of this.segments_) {
             for(let seg of segs) {
-                if (seg.virtaddr >= mem.start && (seg.virtaddr + seg.memsize) <= (mem.start + mem.size)) {
+                if (this.segmentInGroup(seg, group)) {
                     ret.push(seg) ;
                 }
             }
@@ -268,7 +319,7 @@ export class MemoryUsageMgr {
                 if (tokens.length > 1) {
                     let num = parseInt(tokens[0]) ;
                     if (!isNaN(num)) {
-                        this.addSectionsToSegment(name, num, tokens.slice(1, tokens.length)) ;
+                        this.addSectionsToSegment(name, num - 1, tokens.slice(1, tokens.length)) ;
                     }
                 }
             }
