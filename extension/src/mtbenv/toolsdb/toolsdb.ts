@@ -95,10 +95,12 @@ export class ToolsDB {
     }
 
     private scanForTools(logger: winston.Logger, dir: MTBToolDir) {
-        for(let one of fs.readdirSync(dir.dir)) {
-            let fullpath = path.join(dir.dir, one) ;
-            if (fs.statSync(fullpath).isDirectory()) {
-                this.scanForTool(logger, fullpath, dir.source) ;
+        if (fs.existsSync(dir.dir) && fs.statSync(dir.dir).isDirectory()) {
+            for(let one of fs.readdirSync(dir.dir)) {
+                let fullpath = path.join(dir.dir, one) ;
+                if (fs.statSync(fullpath).isDirectory()) {
+                    this.scanForTool(logger, fullpath, dir.source) ;
+                }
             }
         }
     }

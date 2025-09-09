@@ -303,6 +303,7 @@ export interface MTBSetting {
     type: 'string' | 'number' | 'boolean' | 'choice' | 'uri' | 'dirpath' | 'filepath' | 'toolspath' ;
     value: string | number | boolean ;
     choices? : string[] ;
+    mapping? : { [key: string]: string } ;
     description: string ;
     disabledMessage? : string ;
 }
@@ -334,4 +335,17 @@ export interface GlossaryEntry {
 export interface BrowseResult {
   tag: string ;
   path: string ;
+}
+
+export interface MemoryUsageSegment {
+  start: number ;
+  size: number ;
+  sections: string[] ;
+}
+
+export interface MemoryUsageData {
+  name: string ;
+  start: number ;
+  size: number ;
+  percent: number ;
 }

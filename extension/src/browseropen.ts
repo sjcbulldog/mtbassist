@@ -51,7 +51,7 @@ function createJumpFile(url: string) : string {
 export async function browseropen(url: string) {
     let purl = vscode.Uri.parse(url) ;
 
-    if (purl.scheme === 'http' || purl.scheme === 'https') {
+    if (purl.scheme === 'http' || purl.scheme === 'https' || purl.scheme === 'file') {
         vscode.env.openExternal(purl) ;
     }
     else {

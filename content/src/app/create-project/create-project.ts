@@ -430,7 +430,7 @@ export class CreateProject implements OnInit, OnDestroy {
         const location = this.projectInfoForm.value.projectLocation;
         const name = this.projectInfoForm.value.projectName;
         if (location && name) {
-            return `${location}\\${name}`;
+            return `${location}/${name}`;
         }
         return '';
     }

@@ -615,16 +615,27 @@ export class ModusToolboxEnvironment extends EventEmitter {
     }
 
     public static findToolsDirectories(basedir?: string | undefined) : string[] {
+        let dirs: string[] = [] ;
         let choices = [] ;
-        let dir = basedir ? basedir : MTBUtils.getCommonInstallLocation() ;
-        if (dir !== undefined && fs.existsSync(dir)) {
-            for(let one of fs.readdirSync(dir)) {
-                let fullpath = path.join(dir, one) ;
-                if (one.match(MTBUtils.toolsRegex1) || one.match(MTBUtils.toolsRegex2)) {
-                    choices.push(fullpath) ;
+
+        if (basedir) {
+            dirs.push(basedir) ;
+        }
+        else {
+            dirs = MTBUtils.getCommonInstallLocation() ;
+        }
+
+        for(let dir of dirs) {
+            if (dir !== undefined && fs.existsSync(dir)) {
+                for(let one of fs.readdirSync(dir)) {
+                    let fullpath = path.join(dir, one) ;
+                    if (one.match(MTBUtils.toolsRegex1) || one.match(MTBUtils.toolsRegex2)) {
+                        choices.push(fullpath) ;
+                    }
                 }
             }
         }
+        choices.sort() ;
         return choices;
     }
 
@@ -705,7 +716,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         // First priority is the LCS manifest if it should be enabled.
         //
         let opmode = this.settings_.settingByName('operating_mode')?.value;
-        if (opmode && typeof opmode === 'string' && (opmode as string) === 'Local Content Mode') {
+        if (opmode && typeof opmode === 'string' && (opmode as string) === MTBSettings.operatingModeLocalContent) {
             let lcspath = this.settings_.settingByName('lcs_path')?.value ;
             if (!lcspath) {
                 this.logger_.warn('Local Content Mode is enabled but lcs_path is not set - using default location');

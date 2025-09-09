@@ -46,7 +46,9 @@
             <mat-label>{{ setting.displayName }}</mat-label>
             <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)" [disabled]="isSettingDisabled(setting)">
               @for (choice of setting.choices; track choice) {
-                <mat-option [value]="choice">{{ choice }}</mat-option>
+                <mat-option [value]="choice">
+                  {{ setting.mapping ? (setting.mapping[choice] || choice) : choice }}
+                </mat-option>
               }
             </mat-select>
           </mat-form-field>

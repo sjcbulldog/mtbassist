@@ -14,11 +14,9 @@
 
 import EventEmitter = require("events");
 import { ModusToolboxEnvironment } from "../mtbenv";
-import * as os from 'os';
-import * as path from 'path' ;
 import { MTBAssistObject } from "./mtbassistobj";
-import { log } from "util";
 import { MTBRunCommandOptions } from "../mtbenv/mtbenv/mtbenv";
+import * as path from 'path' ;
 
 export interface CommandData {
     cmd: string ;
@@ -117,10 +115,12 @@ export class LCSManager extends EventEmitter {
                     this.todel_ = [] ;
                     resolve() ;
                     break ;
+
                 case 'togglebsp':
                     this.toggleBSP(data.bsp);
                     resolve() ;
                     break;
+
                 case 'update':
                     this.updateExistingContent()
                     .then(() => {
@@ -129,7 +129,8 @@ export class LCSManager extends EventEmitter {
                     .catch((err) => {
                         reject(err);
                     });
-                break;
+                    break;
+
                 case 'check':
                     this.updateNeedsUpdate()
                     .then(() => {
@@ -148,6 +149,7 @@ export class LCSManager extends EventEmitter {
                         reject(error);
                     });
                     break;
+
                 case 'moveAllToLocal':
                     // Move all BSPs from "Not In Local Storage" to "In Local Storage"
                     // Get BSPs that are currently not in local storage (excluding those already queued to be added)
@@ -170,6 +172,7 @@ export class LCSManager extends EventEmitter {
                     this.toadd_ = this.toadd_.filter(bsp => !bspsToRemove.includes(bsp));
                     resolve();
                     break;
+                    
                 default:
                     break;
             }

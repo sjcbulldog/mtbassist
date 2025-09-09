@@ -99,13 +99,14 @@ export class MTBUtils {
         return ret ;        
     }
 
-    public static getCommonInstallLocation() : string | undefined {
-        let ret: string | undefined ;
+    public static getCommonInstallLocation() : string[] {
+        let ret: string[] = [] ;
 
         if (process.platform === "win32") {
-            ret = path.join(os.homedir(), 'ModusToolbox') ;
+            ret.push(path.join(os.homedir(), 'ModusToolbox')) ;
         } else if (process.platform === 'darwin') {
-            ret = path.join(os.homedir(), 'Applications', 'ModusToolbox') ;
+            ret.push(path.join(os.homedir(), 'Applications', 'ModusToolbox')) ;
+            ret.push('/Applications/ModusToolbox') ;
         }
         else if (process.platform === 'linux') {
             throw new Error('TODO: Linux Support') ;

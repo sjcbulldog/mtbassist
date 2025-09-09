@@ -43,6 +43,7 @@ import { MTBSettings } from './mtbsettings';
 import { LCSManager } from './lcsmgr';
 import { MTBBoard } from '../mtbenv/manifest/mtbboard';
 import { AIManager } from '../ai/aimgr';
+import { MemoryUsageMgr } from '../memory/memusage';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -69,6 +70,7 @@ export class MTBAssistObject {
     private postInitDone_: boolean = false;
     private envLoaded_: boolean = false;
     private cmdhandler_: Map<FrontEndToBackEndType, (data: any) => Promise<void>> = new Map();
+    private memusage_ : MemoryUsageMgr ;
     private projectInfo_: Map<string, Project> = new Map();
     private meminfo_: MemoryInfo[] = [];
     private tasks_: MTBTasks | undefined = undefined;
@@ -132,6 +134,12 @@ export class MTBAssistObject {
         this.settings_.on('restartWorkspace', this.doRestartExtension.bind(this));
         this.settings_.on('showError', this.showSettingsError.bind(this));
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
+
+        this.memusage_ = new MemoryUsageMgr(this) ;
+
+        vscode.tasks.onDidEndTask((e) => { 
+            this.memusage_.updateMemoryInfo() ;
+        }) ;
 
         this.toolspath_ = this.settings_.toolsPath ? this.settings_.toolsPath : '';
         this.bindCommandHandlers();
@@ -316,6 +324,42 @@ export class MTBAssistObject {
         return list.length > 0 ? list[0] : undefined;
     }
 
+    private setupAuxiliaryStuff() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let parray: any[] = [];
+            let p: Promise<void>;
+
+            p = this.createModusShellTerminal();
+            parray.push(p);
+
+            if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
+                p = this.intellisense_!.trySetupIntellisense();
+                parray.push(p);
+
+                p = this.keywords_.init(this.env_!.appInfo!);
+                parray.push(p);
+            }
+
+            p = this.lcsMgr_!.updateBSPS();
+            parray.push(p);
+
+            p = this.aimgr_.initialize();
+            parray.push(p);
+            
+            Promise.all(parray)
+                .then(() => {
+                    this.logger_.debug('All auxiliary setup completed successfully.');
+                    resolve();
+                })
+                .catch((error: Error) => {
+                    this.logger_.error('Failed to complete auxiliary setup:', error.message);
+                    reject(error) ;
+                });                
+
+        });
+        return ret;
+    }
+
     private initWithTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
@@ -369,6 +413,7 @@ export class MTBAssistObject {
                         this.recents_!.addToRecentProject(this.env_!.appInfo!.appdir, this.env_!.bspName || '');
 
                         this.sendMessageWithArgs('selectTab', MTBAssistObject.applicationStatusTab) ;
+                        this.memusage_.updateMemoryInfo() ;
 
                         let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'tasks.json');
                         this.tasks_ = new MTBTasks(this.env_!, this.logger_, p);
@@ -376,55 +421,36 @@ export class MTBAssistObject {
                         this.getLaunchData()
                             .then(() => {
                                 this.setIntellisenseProject();
+                                this.setupAuxiliaryStuff()
+                                .then(() => {
+                                    this.logger_.debug('All managers post-initialization completed successfully.');
 
-                                let parray: any[] = [];
-                                let p: Promise<void>;
+                                    //
+                                    // Tell the front end we are ready to supply (most) data.  Since manifest data takes a while to 
+                                    // get from the git hub servers, we handle this data independently
+                                    //
+                                    this.ready_ = true ;
+                                    this.computeTheme() ;
+                                    this.sendMessageWithArgs('ready', this.theme_) ;
+                                    this.mtbmode_ = 'mtb' ;
+                                    this.sendMessageWithArgs('mtbMode', this.mtbmode_);
 
-                                p = this.createModusShellTerminal();
-                                parray.push(p);
-
-                                p = this.intellisense_!.trySetupIntellisense();
-                                parray.push(p);
-
-                                p = this.keywords_.init(this.env_!.appInfo!);
-                                parray.push(p);
-
-                                p = this.lcsMgr_!.updateBSPS();
-                                parray.push(p);
-
-                                p = this.aimgr_.initialize();
-                                parray.push(p);
-
-                                Promise.all(parray)
-                                    .then(() => {
-                                        this.logger_.debug('All managers post-initialization completed successfully.');
-
-                                        //
-                                        // Tell the front end we are ready to supply (most) data.  Since manifest data takes a while to 
-                                        // get from the git hub servers, we handle this data independently
-                                        //
-                                        this.ready_ = true ;
-                                        this.computeTheme() ;
-                                        this.sendMessageWithArgs('ready', this.theme_) ;
-                                        this.mtbmode_ = 'mtb' ;
-                                        this.sendMessageWithArgs('mtbMode', this.mtbmode_);
-
-                                        this.updateStatusBar();
-                                        this.env?.load(MTBLoadFlags.manifestData)
-                                            .then(() => {
-                                                this.sendManifestStatus() ;
-                                                this.updateStatusBar();
-                                            })
-                                            .catch((err) => {
-                                                this.sendManifestStatus();
-                                                this.updateStatusBar();
-                                                reject(err);
-                                            });
-                                    })
-                                    .catch((error: Error) => {
-                                        this.logger_.error('Failed to load manifest files:', error.message);
-                                        resolve();
-                                    });
+                                    this.updateStatusBar();
+                                    this.env?.load(MTBLoadFlags.manifestData)
+                                        .then(() => {
+                                            this.sendManifestStatus() ;
+                                            this.updateStatusBar();
+                                        })
+                                        .catch((err) => {
+                                            this.sendManifestStatus();
+                                            this.updateStatusBar();
+                                            reject(err);
+                                        });
+                                })
+                                .catch((error: Error) => {
+                                    this.logger_.error('Failed to load manifest files:', error.message);
+                                    resolve();
+                                });
                             })
                             .catch((error: Error) => {
                                 this.logger_.error('Error during post-initialization of managers:', error.message);
@@ -436,8 +462,10 @@ export class MTBAssistObject {
                         this.sendMessageWithArgs('ready', this.theme_) ;
                         this.sendTheme() ;
                         this.mtbmode_ = 'mtb' ;
-                        this.sendMessageWithArgs('mtbMode', this.mtbmode_);                        
-                        this.env?.load(MTBLoadFlags.manifestData)
+                        this.sendMessageWithArgs('mtbMode', this.mtbmode_);
+                        this.setupAuxiliaryStuff()
+                        .then(() => {
+                            this.env?.load(MTBLoadFlags.manifestData)
                             .then(() => {
                                 this.sendManifestStatus() ;
                                 this.updateStatusBar();
@@ -450,6 +478,11 @@ export class MTBAssistObject {
                                 this.logger_.error('Failed to load ModusToolbox manifests:', error.message);
                                 reject(error) ;
                             });
+                        })
+                        .catch((error: Error) => {
+                            this.logger_.error('Failed to load manifest files:', error.message);
+                            resolve();
+                        });
                     }
                 })
                 .catch((err) => {
@@ -1983,6 +2016,9 @@ export class MTBAssistObject {
                     });
                     this.termRegistered_ = true;
                     this.logger_.debug('ModusToolbox shell terminal profile registered.');
+                    resolve() ;
+                }
+                else {
                     resolve() ;
                 }
             }

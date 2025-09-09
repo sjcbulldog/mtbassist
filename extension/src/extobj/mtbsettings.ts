@@ -14,14 +14,18 @@
 
 import { MTBSetting } from "../comms";
 import { MTBAssistObject } from "./mtbassistobj";
-import * as path from 'path' ;
-import * as os from 'os' ;
-import * as fs from 'fs' ;
+
 import EventEmitter = require("events");
 import { ModusToolboxEnvironment } from "../mtbenv";
 import { MTBUtils } from "../mtbenv/misc/mtbutils";
+import * as path from 'path' ;
+import * as os from 'os' ;
+import * as fs from 'fs' ;
 
 export class MTBSettings extends EventEmitter {
+    public static operatingModeOnline = 'direct' ;
+    public static operatingModeLocalContent = 'local' ;
+
     private static defaultSettings : MTBSetting[] = [
         {
             name: 'toolsversion',
@@ -95,13 +99,15 @@ export class MTBSettings extends EventEmitter {
             displayName: 'Operating Mode',
             owner: 'modus',
             type: 'choice',
-            value: 'Online Mode',
-            choices: ['Online Mode', 'Local Content Mode'],
+            value: 'direct',
+            choices: ['direct', 'local'],
+            mapping: { 'direct': 'Online Mode', 'local': 'Local Content Mode' },
             description: 'The operating mode for ModusToolbox.  This determines how the tool interacts with the file system and network resources.  Online Mode dynamically retrieves content from the internet, while Local Content Mode uses only locally available content.'
         },
     ] ;
 
     private settings_: MTBSetting[];
+    private extra_ : Map<string, any> = new Map<string, any>() ;
     private ext_: MTBAssistObject ;
 
     constructor(ext: MTBAssistObject) {
@@ -161,6 +167,7 @@ export class MTBSettings extends EventEmitter {
                 }
                 else {
                     this.writeWorkspaceSettings() ;
+                    this.writeSettingsFile() ;
                     this.emit('restartWorkspace', this.computeToolsPath()) ;
                 }
                 this.emit('refresh') ;                
@@ -316,9 +323,13 @@ export class MTBSettings extends EventEmitter {
             try {
                 let data = JSON.parse(fs.readFileSync(settings, 'utf8')) ;
                 if (data && data.mtb) {
-                    for(let setting of this.settings_) {
-                        if (data.mtb[setting.name] !== undefined) {
-                            setting.value = data.mtb[setting.name];
+                    for(let key of Object.keys(data.mtb)) {
+                        let setting = this.settings_.find(s => s.name === key && s.owner === 'modus');
+                        if (setting) {
+                            setting.value = data.mtb[key];
+                        }
+                        else {
+                            this.extra_.set(key, data.mtb[key]) ;
                         }
                     }
                 }
@@ -335,7 +346,11 @@ export class MTBSettings extends EventEmitter {
             if (setting.owner === 'modus') {
                 data[setting.name] = setting.value;
             }
-        }   
+        }
+
+        for(let [key, value] of this.extra_) {
+            data[key] = value ;
+        }
         let contents = {
             mtb: data
         };
@@ -361,22 +376,22 @@ export class MTBSettings extends EventEmitter {
     }
 
     private toolDirToVersion(tdir: string) : string {
+        let rege = /^tools_([0-9]+.[0-9]+).*$/ ;
         let hdir = MTBUtils.getCommonInstallLocation() ;
-        if (!hdir) {
+        if (hdir.length === 0) {
             return tdir ;
         }
         
-        hdir = hdir.replace(/\\/g,'/');
         let ret = tdir ;
-        if (hdir && tdir.startsWith(hdir)) {
-            if (tdir.includes('3.2')) {
-                ret = 'ModusToolbox 3.2';
-            } else if (tdir.includes('3.3')) {
-                ret = 'ModusToolbox 3.3';
-            } else if (tdir.includes('3.4')) {
-                ret = 'ModusToolbox 3.4';
-            } else if (tdir.includes('3.5')) {
-                ret = 'ModusToolbox 3.5';
+        for(let h of hdir) {
+            h = h.replace(/\\/g,'/');
+            if (h && tdir.startsWith(h)) {
+
+                let m = rege.exec(tdir.substring(h.length + 1)) ;
+                if (m && m.length > 1) {
+                    ret = 'ModusToolbox ' + m[1] ;
+                    break ;
+                }
             }
         }
         return ret ;

@@ -67,7 +67,6 @@ export class MTBProjectInfo {
         [MTBNames.MTB_APP_PATH, ''],
         [MTBNames.MTB_CORE_CONFIG, ''],
         [MTBNames.MTB_GLOBAL_DIR, ''],
-        [MTBNames.MTB_DEVICE_PROGRAM_IDS, ''],
         [MTBNames.MTB_CORE_TYPE, ''],
         [MTBNames.MTB_CORE_NAME, ''],
         [MTBNames.MTB_BUILD_SUPPORT, 'UNKNOWN'],
@@ -115,6 +114,10 @@ export class MTBProjectInfo {
 
     public ignorePath() : string[] {
         return this.ignorePath_ ;
+    }
+
+    public get device() : string {
+        return this.vars_.get(MTBNames.MTB_DEVICE)! ;
     }
 
     public get target() : string {
