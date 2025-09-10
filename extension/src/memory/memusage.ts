@@ -10,6 +10,7 @@ class MemorySegments {
     private sections_ : string[] = [] ;
 
     constructor(
+        public project: string,
         public offset: number,
         public virtaddr: number,
         public physaddr: number,
@@ -31,7 +32,7 @@ export class MemoryUsageMgr {
     private static readonly gccFeatureId = '8472a194-a4ec-4c1b-bfda-b6fca90b3f0d' ;
 
     private ext_ : MTBAssistObject ;
-    private map_ : DeviceMemorySegment[] = [] ;
+    private deviceMemoryMap_ : DeviceMemorySegment[] = [] ;
     private segments_ : Map<string, MemorySegments[]> = new Map() ;
     private gccReadElfTool_ : string | undefined = undefined ;
     private usage_ : MemoryUsageData[] = [] ;
@@ -68,7 +69,7 @@ export class MemoryUsageMgr {
 
             this.getSegmentsFromProjects()
             .then((result) => {
-                this.map_ = MemoryMap.getMemoryMap(app!.projects[0].device) ;   
+                this.deviceMemoryMap_ = MemoryMap.getMemoryMap(app!.projects[0].device) ;   
                 this.computeMemoryUsage() ;
                 resolve(true) ;
             })
@@ -96,10 +97,10 @@ export class MemoryUsageMgr {
 
         let memgroups: DeviceMemorySegment[][] = [] ;
 
-        for(let mem of this.map_) {
+        for(let mem of this.deviceMemoryMap_) {
             if (!mem.main) {
                 let one : DeviceMemorySegment[] = [ mem ] ;
-                for (let mem2 of this.map_) {
+                for (let mem2 of this.deviceMemoryMap_) {
                     if (mem2.main && mem2.main === mem.name) {
                         one.push(mem2) ;
                     }
@@ -261,7 +262,7 @@ export class MemoryUsageMgr {
         return tokens ;
     }
 
-    private createMemorySegmentFromParts(name: string, parts: string[]) {
+    private createMemorySegmentFromParts(projname: string, parts: string[]) {
         if (parts[0] === 'LOAD') {
             let offset = parseInt(parts[1], 16) ;
             let virtaddr = parseInt(parts[2], 16) ;
@@ -274,11 +275,11 @@ export class MemoryUsageMgr {
                 return ;
             }
 
-            let seg = new MemorySegments(offset, virtaddr, physaddr, filesize, memsize, flags) ;
-            if (!this.segments_.has(name)) {
-                this.segments_.set(name, []);
+            let seg = new MemorySegments(projname, offset, virtaddr, physaddr, filesize, memsize, flags) ;
+            if (!this.segments_.has(projname)) {
+                this.segments_.set(projname, []);
             }
-            this.segments_.get(name)!.push(seg);
+            this.segments_.get(projname)!.push(seg);
         }
     }
 

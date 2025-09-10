@@ -18,7 +18,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
-import { ApplicationStatusData, Documentation } from '../../comms';
+import { ApplicationStatusData, Documentation, MemoryUsageData } from '../../comms';
 import { BackendService } from '../backend/backend-service';
 import { Subscription } from 'rxjs';
 
@@ -40,6 +40,7 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     intellisenseProject: string | null = null;
 
     applicationStatus: ApplicationStatusData | null = null;
+    memoryUsageData: MemoryUsageData[] = [];
     isLoading = true;
     hasError = false;
     running = false ;
@@ -52,6 +53,9 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     
     // Collapsed states for project sections (projectName -> sectionName -> boolean)
     collapsedSections: Map<string, Map<string, boolean>> = new Map();
+    
+    // Collapsed states for memory usage sections
+    memoryCollapsedStates: Map<string, boolean> = new Map();
 
     private subscriptions: Subscription[] = [] ;
 
@@ -64,6 +68,7 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         this.subscriptions.push(this.be.ready.subscribe((ready) => {
             if (ready) {
                 this.be.sendRequestWithArgs('app-data', null) ;
+                this.be.sendRequestWithArgs('memory-data', null) ;
             }
         }));
 
@@ -120,6 +125,16 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         this.subscriptions.push(this.be.buildDone.subscribe((done) => {
             this.be.log(`ApplicationStatus: build done = ${done}`);
             this.running = !done;
+            this.cdr.detectChanges();
+        }));
+        
+        // Subscribe to memory usage data
+        this.subscriptions.push(this.be.memoryUsage.subscribe(data => {
+            this.memoryUsageData = data;
+            // Set all memory sections to collapsed by default
+            for (const memory of data) {
+                this.memoryCollapsedStates.set(memory.name, true);
+            }
             this.cdr.detectChanges();
         }));
     }
@@ -390,6 +405,21 @@ export class ApplicationStatus implements OnInit, OnDestroy {
             return false; // Default to expanded
         }
         return projectSections.get(sectionName) || false;
+    }
+    
+    // Memory usage collapsible section methods
+    toggleMemorySection(memoryName: string): void {
+        const currentState = this.memoryCollapsedStates.get(memoryName) || false;
+        this.memoryCollapsedStates.set(memoryName, !currentState);
+    }
+
+    isMemorySectionCollapsed(memoryName: string): boolean {
+        return this.memoryCollapsedStates.get(memoryName) || false;
+    }
+    
+    // Helper method to format hex numbers
+    formatHex(value: number): string {
+        return '0x' + value.toString(16).toUpperCase().padStart(8, '0');
     }
 
     // Open Device Configurator
