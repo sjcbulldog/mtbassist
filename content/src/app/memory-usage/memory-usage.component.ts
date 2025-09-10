@@ -13,9 +13,15 @@ import { MemoryUsageData } from '../../comms';
 export class MemoryUsage {
   @Input() memoryUsageData: MemoryUsageData[] = [];
   @Input() collapsedStates: Map<string, boolean> = new Map();
+  
+  isMainSectionCollapsed = false;
 
   formatHex(value: number): string {
     return '0x' + value.toString(16).toUpperCase().padStart(8, '0');
+  }
+
+  toggleMainSection(): void {
+    this.isMainSectionCollapsed = !this.isMainSectionCollapsed;
   }
 
   toggleMemorySection(memoryName: string): void {

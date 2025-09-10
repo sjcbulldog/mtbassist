@@ -112,67 +112,71 @@ export class MemoryUsageMgr {
         for(let group of memgroups) {
             let mem = group[0] ;
             let segs = this.findSegmentsForMemory(group) ;
-            let used = segs.reduce((acc, seg) => acc + seg.memsize, 0) ;
+            let used = segs.reduce((acc, seg) => acc + seg.size, 0) ;
             let percent = (mem.size === 0) ? 0 : Math.round((used / mem.size) * 100) ;
 
-            let segsused: MemoryUsageSegment[] = segs.map(seg => {
-                return {
-                    start: seg.virtaddr,
-                    size: seg.memsize,
-                    sections: seg.sections
-                } ;
-            }) ;
-
+            segs = segs.sort((a, b) => a.start - b.start) ;
 
             let one : MemoryUsageData = {
                 name: mem.name,
                 start: mem.start,
                 size: mem.size,
                 percent: percent,
-                segments: segsused
+                segments: segs
             } ;
             this.usage_.push(one) ;
         }
     }
 
     private segmentInGroup(seg: MemorySegments, group: DeviceMemorySegment[]) : MemoryUsageSegment | undefined {
+        let ret : MemoryUsageSegment | undefined = undefined ;
+
         for(let mem of group) {
             if (seg.virtaddr >= mem.start && seg.virtaddr + seg.memsize < mem.start + mem.size) {
                 let offset = 0 ;
                 if (mem.main) {
-                    offset = mem.start - group[0].start ;
+                    offset = group[0].start - mem.start;
                 }
 
-                return {
-                    start: seg.virtaddr - offset,
+                ret = {
+                    start: seg.virtaddr + offset,
                     size: seg.memsize,
-                    sections: seg.sections
+                    sections: seg.sections.map( s => s + ` (${seg.project})` )
                 } ;
+
+                break ;
             }
 
             if (seg.physaddr >= mem.start && seg.physaddr + seg.memsize < mem.start + mem.size) {
                 let offset = 0 ;
                 if (mem.main) {
-                    offset = mem.start - group[0].start ;
+                    offset = group[0].start - mem.start;
                 }
 
-                return {
-                    start: seg.virtaddr - offset,
+                ret = {
+                    start: seg.physaddr + offset,
                     size: seg.memsize,
-                    sections: seg.sections
+                    sections: seg.sections.map( s => s + ` (${seg.project})` )
                 } ;
+
+                break ;
             }
         }
 
-        return undefined ;
+        if (group[0].name === 'xip-0' && ret) {
+            console.log(`Found segment in xip-0: start 0x${ret.start.toString(16)}, size 0x${ret.size.toString(16)}`) ;
+        }
+
+        return ret ;
     }
 
-    private findSegmentsForMemory(group: DeviceMemorySegment[]) : MemorySegments[] {
-        let ret: MemorySegments[] = [] ;
+    private findSegmentsForMemory(group: DeviceMemorySegment[]) : MemoryUsageSegment[] {
+        let ret: MemoryUsageSegment[] = [] ;
         for(let [projname, segs] of this.segments_) {
             for(let seg of segs) {
-                if (this.segmentInGroup(seg, group)) {
-                    ret.push(seg) ;
+                let s = this.segmentInGroup(seg, group) ;
+                if (s) {
+                    ret.push(s) ;
                 }
             }
         }

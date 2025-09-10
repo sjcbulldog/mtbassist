@@ -1,10 +1,10 @@
 <div class="memory-usage-section">
   <div class="memory-usage-card">
-    <h3 class="collapsible-header">
-      <mat-icon class="collapse-icon">expand_more</mat-icon>
+    <h3 class="collapsible-header" (click)="toggleMainSection()">
+      <mat-icon class="collapse-icon" [class.collapsed]="isMainSectionCollapsed">expand_more</mat-icon>
       Memory Usage
     </h3>
-    <div class="memory-usage-container">
+    <div class="memory-usage-container" [class.collapsed]="isMainSectionCollapsed">
       <table class="memory-table">
         <thead>
           <tr>
