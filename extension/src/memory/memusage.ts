@@ -212,7 +212,7 @@ export class MemoryUsageMgr {
 
     private getMemorySegmentsFromOneProject(proj: MTBProjectInfo) : Promise<boolean> {
         let ret = new Promise<boolean>((resolve, reject) => {
-            let elffile = path.join(this.ext_.env!.appInfo!.appdir, 'build', 'project_hex', proj.name) + '.elf' ;
+            let elffile = path.join(proj.path, 'build', 'last_config', proj.name + '.elf') ;
             if (!fs.existsSync(elffile)) {
                 this.ext_.logger.warn(`MemoryUsageMgr: ELF file ${elffile} does not exist`) ;
                 resolve(false) ;
