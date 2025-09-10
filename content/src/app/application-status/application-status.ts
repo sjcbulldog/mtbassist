@@ -19,6 +19,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { ApplicationStatusData, Documentation, MemoryUsageData } from '../../comms';
+import { MemoryUsage } from '../memory-usage/memory-usage.component';
 import { BackendService } from '../backend/backend-service';
 import { Subscription } from 'rxjs';
 
@@ -30,7 +31,8 @@ import { Subscription } from 'rxjs';
         MatTabsModule,
         MatIconModule,
         MatTooltipModule,
-        MatButtonModule
+    MatButtonModule,
+    MemoryUsage
     ],
     templateUrl: './application-status.html',
     styleUrls: ['./application-status.scss'],
