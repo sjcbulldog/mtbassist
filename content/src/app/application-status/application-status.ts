@@ -83,13 +83,26 @@ export class ApplicationStatus implements OnInit, OnDestroy {
                 this.hasError = false;
                 this.fixingAssetsProjects.clear() ;
 
-                // Start components section collapsed for each project
+                // Initialize application-level sections
+                if (!this.collapsedSections.has('application')) {
+                    this.collapsedSections.set('application', new Map());
+                }
+                // Set application sections to expanded by default
+                this.collapsedSections.get('application')!.set('documentation', false);
+                this.collapsedSections.get('application')!.set('tools', false);
+                this.collapsedSections.get('application')!.set('memory', false);
+
+                // Initialize project sections
                 if (data && data.projects) {
                     for (const project of data.projects) {
                         if (!this.collapsedSections.has(project.name)) {
                             this.collapsedSections.set(project.name, new Map());
                         }
-                        this.collapsedSections.get(project.name)!.set('components', true);
+                        // Set default states for all project sections
+                        this.collapsedSections.get(project.name)!.set('components', true);  // Start collapsed
+                        this.collapsedSections.get(project.name)!.set('documentation', false);  // Start expanded
+                        this.collapsedSections.get(project.name)!.set('middleware', false);  // Start expanded
+                        this.collapsedSections.get(project.name)!.set('tools', false);  // Start expanded
                     }
                 }
 

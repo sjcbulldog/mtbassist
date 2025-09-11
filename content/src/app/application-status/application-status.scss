@@ -610,7 +610,7 @@
       transition: transform 0.3s ease;
 
       &.collapsed {
-        transform: rotate(-90deg);
+        transform: rotate(-90deg) !important;
       }
     }
   }
