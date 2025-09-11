@@ -25,7 +25,7 @@ export class MTBAssetInstStore {
         this.assetInstances_.set(inst.rootdir, inst) ;
     }
 
-    public getAssetInstance(fpath: string) : MTBAssetInstance | undefined {
+    public findAssetInstanceByPath(fpath: string) : MTBAssetInstance | undefined {
         return this.assetInstances_.get(fpath) ;
     }
 
@@ -35,5 +35,18 @@ export class MTBAssetInstStore {
 
     public clear() : void {
         this.assetInstances_.clear() ;
+    }
+
+    public get assetInstances() : IterableIterator<MTBAssetInstance> {
+        return this.assetInstances_.values() ;
+    }
+
+    public findAssetInstanceByName(name: string) : MTBAssetInstance | undefined {
+        for (let inst of this.assetInstances_.values()) {
+            if (inst.name === name) {
+                return inst ;
+            }
+        }
+        return undefined ;
     }
 }

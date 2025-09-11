@@ -108,6 +108,14 @@ export class MTBProjectInfo {
         return this.dirList_ ;
     }
 
+    public findAssetInstanceByPath(fpath: string) : MTBAssetInstance | undefined {
+        return this.assetInstances_.findAssetInstanceByPath(fpath) ;
+    }
+
+    public findAssetInstanceByName(name: string) : MTBAssetInstance | undefined {
+        return this.assetInstances_.findAssetInstanceByName(name) ;
+    }
+
     public searchPath() : string[] {
         return [ ... this.userSearchPath_, ...this.assetSearchPath_ ] ;
     }
@@ -529,7 +537,7 @@ export class MTBProjectInfo {
             let found = false ;
             let fpath = req.fullPath(this.dirList_!) ;
             if (fs.existsSync(fpath)) {
-                let inst = this.assetInstances_.getAssetInstance(fpath) ;
+                let inst = this.assetInstances_.findAssetInstanceByPath(fpath) ;
                 if (!inst) {
                     this.assetInstances_.addAssetInstance(new MTBAssetInstance(fpath)) ;
                     found = true ;

@@ -44,6 +44,7 @@ import { LCSManager } from './lcsmgr';
 import { MTBBoard } from '../mtbenv/manifest/mtbboard';
 import { AIManager } from '../ai/aimgr';
 import { MemoryUsageMgr } from '../memory/memusage';
+import { DeviceDBManager } from '../devdb/devdbmgr';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -71,6 +72,7 @@ export class MTBAssistObject {
     private envLoaded_: boolean = false;
     private cmdhandler_: Map<FrontEndToBackEndType, (data: any) => Promise<void>> = new Map();
     private memusage_ : MemoryUsageMgr ;
+    private devicedb_ : DeviceDBManager | undefined = undefined ;
     private projectInfo_: Map<string, Project> = new Map();
     private meminfo_: MemoryInfo[] = [];
     private tasks_: MTBTasks | undefined = undefined;
@@ -161,6 +163,10 @@ export class MTBAssistObject {
 
     public get lcsMgr(): LCSManager | undefined {
         return this.lcsMgr_;
+    }
+
+    public get deviceDB(): DeviceDBManager | undefined {
+        return this.devicedb_;
     }
 
     private showSettingsError(name: string, message: string) {
@@ -360,6 +366,33 @@ export class MTBAssistObject {
         return ret;
     }
 
+    private initDeviceDB() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let asset = this.env_?.appInfo?.projects[0].findAssetInstanceByName('device-db') ;
+            if (!asset) {
+                this.logger_.error('Failed to find device-db asset instance.');
+                reject(new Error('Failed to find device-db asset instance.'));
+                return ;
+            }
+
+            if (!asset.rootdir) {
+                this.logger_.error('Device-db asset instance does not have a root directory.');
+                reject(new Error('Device-db asset instance does not have a root directory.'));
+                return ;
+            }
+
+            this.devicedb_ = new DeviceDBManager(asset.rootdir!) ;
+            this.devicedb_.initialize()
+            .then(() => { 
+                resolve() ;
+            })
+            .catch((error: Error) => {
+                reject(error) ;
+            }) ;
+        });
+        return ret;
+    }
+
     private initWithTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
@@ -413,7 +446,7 @@ export class MTBAssistObject {
                         this.recents_!.addToRecentProject(this.env_!.appInfo!.appdir, this.env_!.bspName || '');
 
                         this.sendMessageWithArgs('selectTab', MTBAssistObject.applicationStatusTab) ;
-                        this.memusage_.updateMemoryInfo() ;
+
 
                         let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'tasks.json');
                         this.tasks_ = new MTBTasks(this.env_!, this.logger_, p);
@@ -421,34 +454,42 @@ export class MTBAssistObject {
                         this.getLaunchData()
                             .then(() => {
                                 this.setIntellisenseProject();
-                                this.setupAuxiliaryStuff()
+                                this.initDeviceDB() 
                                 .then(() => {
-                                    this.logger_.debug('All managers post-initialization completed successfully.');
+                                    this.memusage_.updateMemoryInfo() ;                                    
+                                    this.setupAuxiliaryStuff()
+                                    .then(() => {
+                                        this.logger_.debug('All managers post-initialization completed successfully.');
 
-                                    //
-                                    // Tell the front end we are ready to supply (most) data.  Since manifest data takes a while to 
-                                    // get from the git hub servers, we handle this data independently
-                                    //
-                                    this.ready_ = true ;
-                                    this.computeTheme() ;
-                                    this.sendMessageWithArgs('ready', this.theme_) ;
-                                    this.mtbmode_ = 'mtb' ;
-                                    this.sendMessageWithArgs('mtbMode', this.mtbmode_);
+                                        //
+                                        // Tell the front end we are ready to supply (most) data.  Since manifest data takes a while to 
+                                        // get from the git hub servers, we handle this data independently
+                                        //
+                                        this.ready_ = true ;
+                                        this.computeTheme() ;
+                                        this.sendMessageWithArgs('ready', this.theme_) ;
+                                        this.mtbmode_ = 'mtb' ;
+                                        this.sendMessageWithArgs('mtbMode', this.mtbmode_);
 
-                                    this.updateStatusBar();
-                                    this.env?.load(MTBLoadFlags.manifestData)
-                                        .then(() => {
-                                            this.sendManifestStatus() ;
-                                            this.updateStatusBar();
-                                        })
-                                        .catch((err) => {
-                                            this.sendManifestStatus();
-                                            this.updateStatusBar();
-                                            reject(err);
-                                        });
+                                        this.updateStatusBar();
+                                        this.env?.load(MTBLoadFlags.manifestData)
+                                            .then(() => {
+                                                this.sendManifestStatus() ;
+                                                this.updateStatusBar();
+                                            })
+                                            .catch((err) => {
+                                                this.sendManifestStatus();
+                                                this.updateStatusBar();
+                                                reject(err);
+                                            });
+                                    })
+                                    .catch((error: Error) => {
+                                        this.logger_.error('Failed to load manifest files:', error.message);
+                                        resolve();
+                                    });
                                 })
                                 .catch((error: Error) => {
-                                    this.logger_.error('Failed to load manifest files:', error.message);
+                                    this.logger_.error('Failed to initialize device database:', error.message);
                                     resolve();
                                 });
                             })

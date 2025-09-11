@@ -43,6 +43,12 @@ export class MemoryUsageMgr {
 
     public updateMemoryInfo() : Promise<boolean> {
         let ret = new Promise<boolean>((resolve, reject) => {
+            if (!this.ext_.deviceDB) {
+                this.clear() ;
+                resolve(false) ;
+                return ;
+            }
+
             let app = this.ext_.env?.appInfo ;
             if (!app) {
                 this.clear() ;
@@ -69,9 +75,22 @@ export class MemoryUsageMgr {
 
             this.getSegmentsFromProjects()
             .then((result) => {
-                this.deviceMemoryMap_ = MemoryMap.getMemoryMap(app!.projects[0].device) ;   
-                this.computeMemoryUsage() ;
-                resolve(true) ;
+                MemoryMap.getMemoryMap(this.ext_.deviceDB!,app!.projects[0].device)
+                .then((memmap) => {
+                    if (memmap) {
+                        this.deviceMemoryMap_ = memmap ;
+                        this.computeMemoryUsage() ;
+                    }
+                    else {
+                        this.clear() ;
+                    }
+                    resolve(true) ;
+                })
+                .catch((err) => {
+                    this.ext_.logger.error(`MemoryUsageMgr: Error getting memory map: ${err}`) ;
+                    this.clear() ;
+                    resolve(false) ;
+                }) ;
             })
             .catch((err) => {
                 this.ext_.logger.error(`MemoryUsageMgr: Error updating memory info: ${err}`) ;
