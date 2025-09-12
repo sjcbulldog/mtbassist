@@ -196,7 +196,80 @@
       @case (2) {
         <div class="install-complete">
           <h3>Installation Complete!</h3>
-          <p>All selected tools have been downloaded and installed.</p>
+          <p>The following software packages have been successfully installed:</p>
+          
+          <div class="installed-software-list">
+            @for (tool of neededTools; track tool.featureId) {
+              @if (tool.required && progress[tool.featureId].percent === 100) {
+                <div class="installed-item">
+                  <div class="installed-item-content">
+                    <mat-icon class="installed-icon">check_circle</mat-icon>
+                    <div class="installed-details">
+                      <div class="installed-name">{{ tool.name }}</div>
+                      <div class="installed-version">Version {{ tool.version }}</div>
+                    </div>
+                  </div>
+                </div>
+              }
+              @if (!tool.required && installSelections[tool.featureId] && progress[tool.featureId].percent === 100) {
+                <div class="installed-item">
+                  <div class="installed-item-content">
+                    <mat-icon class="installed-icon">check_circle</mat-icon>
+                    <div class="installed-details">
+                      <div class="installed-name">{{ tool.name }}</div>
+                      <div class="installed-version">Version {{ tool.version }}</div>
+                    </div>
+                  </div>
+                </div>
+              }
+              @if (tool.installed && tool.upgradable && upgradeSelections[tool.featureId] && progress[tool.featureId].percent === 100) {
+                <div class="installed-item">
+                  <div class="installed-item-content">
+                    <mat-icon class="installed-icon">upgrade</mat-icon>
+                    <div class="installed-details">
+                      <div class="installed-name">{{ tool.name }} (Upgraded)</div>
+                      <div class="installed-version">Version {{ tool.version }}</div>
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+          
+          <button class="reinit-btn" (click)="onReinit()">Reinitialize Extension</button>
+        </div>
+      }
+      @case (3) {
+        <div class="install-complete">
+          <h3>Installation Summary</h3>
+          <p>The following software packages were processed:</p>
+          
+          <div class="installed-software-list">
+            @for (tool of neededTools; track tool.featureId) {
+              @if ((tool.required || installSelections[tool.featureId] || (tool.upgradable && upgradeSelections[tool.featureId])) && progress[tool.featureId].message) {
+                <div class="installed-item" [class.success]="progress[tool.featureId].percent === 100" [class.failed]="progress[tool.featureId].percent! < 100 && progress[tool.featureId].message !== ''">
+                  <div class="installed-item-content">
+                    @if (progress[tool.featureId].percent === 100) {
+                      <mat-icon class="installed-icon success">check_circle</mat-icon>
+                    } @else {
+                      <mat-icon class="installed-icon failed">error</mat-icon>
+                    }
+                    <div class="installed-details">
+                      <div class="installed-name">{{ tool.name }}</div>
+                      <div class="installed-version">
+                        @if (progress[tool.featureId].percent === 100) {
+                          Successfully installed version {{ tool.version }}
+                        } @else {
+                          Installation failed: {{ progress[tool.featureId].message }}
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+          
           <button class="reinit-btn" (click)="onReinit()">Reinitialize Extension</button>
         </div>
       }

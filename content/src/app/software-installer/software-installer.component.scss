@@ -461,3 +461,106 @@
     border-color: #ffb3b3; 
   }
 }
+
+// Installed software list styles
+.installed-software-list {
+  margin: 1.5rem 0;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.installed-item {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s ease;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &:hover {
+    background-color: #f0f0f0;
+  }
+  
+  &.success {
+    background-color: #e8f5e8;
+    border-color: #c8e6c9;
+  }
+  
+  &.failed {
+    background-color: #ffebee;
+    border-color: #ffcdd2;
+  }
+}
+
+.installed-item-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.installed-icon {
+  font-size: 1.5rem;
+  color: #4caf50;
+  
+  &.success {
+    color: #4caf50;
+  }
+  
+  &.failed {
+    color: #f44336;
+  }
+}
+
+.installed-details {
+  flex: 1;
+}
+
+.installed-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.installed-version {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+// Dark theme support for installed software list
+.dark-theme {
+  .installed-software-list {
+    background: #2d2d2d;
+    border-color: #404040;
+  }
+  
+  .installed-item {
+    border-color: #404040;
+    
+    &:hover {
+      background-color: #3a3a3a;
+    }
+    
+    &.success {
+      background-color: #1b2e1b;
+      border-color: #2e5d2e;
+    }
+    
+    &.failed {
+      background-color: #2e1b1b;
+      border-color: #5d2e2e;
+    }
+  }
+  
+  .installed-name {
+    color: #ffffff;
+  }
+  
+  .installed-version {
+    color: #cccccc;
+  }
+}

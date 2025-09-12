@@ -162,9 +162,18 @@ export class SetupMgr extends MtbManagerBase {
         if (this.mtbLocation_) {
             instlist.push(this.mtbLocation_!) ;
             instlist = [...new Set(instlist)] ;
+
+            // Filter out any where the directory does not exist
+            let final : string[] = [] ;
+            for(let d of instlist) {
+                if (fs.existsSync(d)) {
+                    final.push(d) ;
+                }
+            }
+            
             instlist.sort(this.compareToolsDirs.bind(this)) ;
             try {
-                fs.writeFileSync(f, JSON.stringify(instlist), { encoding: 'utf8' }) ;
+                fs.writeFileSync(f, JSON.stringify(final), { encoding: 'utf8' }) ;
             } catch {
                 // Ignore errors
             }
