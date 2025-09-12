@@ -120,24 +120,55 @@ export class SetupMgr extends MtbManagerBase {
         this.mtbTools_ = loc ;
     }
 
-    public get mtbLocations() : string[] {
-        let ret : string[] = [] ;
+    public toolsFromIDCRegistry() : string[] {
+        return [] ;
+    }
 
-        let tools = this.registry_.getToolsByFeatureId(SetupMgr.mtbFeatureId) ;
-        if (tools.length > 0) {
-            for (let tool of tools) {
-                if (tool.path && fs.existsSync(tool.path)) {
-                    let p = path.normalize(tool.path) ;
-                    let toolsDir = this.findToolsDirFromPath(p);
-                    if (toolsDir) {
-                        ret.push(toolsDir);
-                    }
-                }
+    public get mtbInstallDirs() : string[] {
+        let ret: string[] = [] ;
+        let p = path.join(this.ext.context.globalStorageUri.fsPath, 'installpaths.json') ;
+        if (fs.existsSync(p)) {
+            try {
+                let content = fs.readFileSync(p, { encoding: 'utf8' }) ;
+                ret = JSON.parse(content) as string[] ;
+            } catch {
+                // Ignore errors
+            }
+        }   
+
+        return ret ;
+    }
+
+    private remeberInstallPath() : void {
+        let p = this.ext.context.globalStorageUri.fsPath ;
+        if (!fs.existsSync(p)) {
+            fs.mkdirSync(p) ;
+            if (!fs.existsSync(p)) {
+                return ;
             }
         }
 
-        ret.sort(this.compareToolsDirs.bind(this)) ;
-        return ret ;
+        let instlist : string[] = [] ;
+        let f = path.join(p, 'installpaths.json') ;
+        if (fs.existsSync(f)) {
+            try {
+                let content = fs.readFileSync(f, { encoding: 'utf8' }) ;
+                instlist = JSON.parse(content) as string[] ;
+            } catch {
+                // Ignore errors
+            }
+        }
+
+        if (this.mtbLocation_) {
+            instlist.push(this.mtbLocation_!) ;
+            instlist = [...new Set(instlist)] ;
+            instlist.sort(this.compareToolsDirs.bind(this)) ;
+            try {
+                fs.writeFileSync(f, JSON.stringify(instlist), { encoding: 'utf8' }) ;
+            } catch {
+                // Ignore errors
+            }
+        }                
     }
 
     private compareToolsDirs(a: string, b: string) : number {
@@ -259,8 +290,9 @@ export class SetupMgr extends MtbManagerBase {
                 return;
             }
 
-            this.downloadTools(tools)
+            this.downloadAndInstallAllTools(tools)
             .then(() => {
+                this.remeberInstallPath() ;
                 this.logger.debug('All tools downloaded successfully.');
                 resolve();
             })
@@ -373,7 +405,7 @@ export class SetupMgr extends MtbManagerBase {
         return ret;
     }
 
-    private downloadTools(tools: SetupProgram[]) : Promise<void> {
+    private downloadAndInstallAllTools(tools: SetupProgram[]) : Promise<void> {
         let ret = new Promise<void>(async (resolve, reject) => {
             let passwd : string | undefined = undefined ;
             if (this.mtbLocation_?.startsWith('/Applications')) {

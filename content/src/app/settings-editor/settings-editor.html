@@ -71,7 +71,7 @@
                    [disabled]="isCustomPathDisabled()"
                    (ngModelChange)="onCustomPathDisplayValueChange($event)" />
           </mat-form-field>
-          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder" [disabled]="isCustomPathDisabled()">
+          <button mat-icon-button (click)="onBrowseForFolder(setting, 'Custom Tools Path')" matTooltip="Browse for folder" [disabled]="isCustomPathDisabled()">
             <mat-icon>more_horiz</mat-icon>
           </button>
         </div>
@@ -87,7 +87,7 @@
                    (ngModelChange)="onValueChange(setting, $event)" 
                    [disabled]="isSettingDisabled(setting)" />
           </mat-form-field>
-          <button mat-icon-button (click)="onBrowseForFolder(setting)" matTooltip="Browse for folder" [disabled]="isSettingDisabled(setting)">
+          <button mat-icon-button (click)="onBrowseForFolder(setting, 'Select Folder')" matTooltip="Browse for folder" [disabled]="isSettingDisabled(setting)">
             <mat-icon>more_horiz</mat-icon>
           </button>
         </div>

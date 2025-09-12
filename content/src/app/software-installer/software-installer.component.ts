@@ -177,7 +177,7 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
     if (this.customError) { return; }
     // Automatically select the custom path card when browse is clicked
     this.installChoice = 'custom';
-    this.be.browseForFolder('customToolInstall');
+    this.be.browseForFolder('customToolInstall', 'Custom Tools Path') ;
   }
 
   locationNext() {

@@ -45,6 +45,8 @@ import { MTBBoard } from '../mtbenv/manifest/mtbboard';
 import { AIManager } from '../ai/aimgr';
 import { MemoryUsageMgr } from '../memory/memusage';
 import { DeviceDBManager } from '../devdb/devdbmgr';
+import { MTBVSCodeSettings } from './mtbvscodesettings';
+import { MTBVersion } from '../mtbenv/misc/mtbversion';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -76,6 +78,7 @@ export class MTBAssistObject {
     private projectInfo_: Map<string, Project> = new Map();
     private meminfo_: MemoryInfo[] = [];
     private tasks_: MTBTasks | undefined = undefined;
+    private vscodeSettings_ : MTBVSCodeSettings | undefined = undefined;
     private recents_: RecentAppManager | undefined = undefined;
     private intellisense_: IntelliSenseMgr | undefined = undefined;
     private setupMgr_: SetupMgr;
@@ -178,7 +181,10 @@ export class MTBAssistObject {
     private updateStatusBar(): void {
         let st: string = 'Init';
         let tip: string = 'Initializing';
-        if (this.env_) {
+        if (!this.setupMgr_ || this.setupMgr_.doWeNeedTools()) {
+            st = 'No Tools';
+        }
+        else if (this.env_) {
             if (this.env_.isLoading === false && !this.env_.has(MTBLoadFlags.appInfo)) {
                 st = 'No App';
             }
@@ -255,6 +261,7 @@ export class MTBAssistObject {
 
     private initNoTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
+            this.optionallyShowPage(true) ;
             if (!this.setupMgr_.isLauncherAvailable) {
                 this.mtbmode_ = 'none';
             }
@@ -325,11 +332,6 @@ export class MTBAssistObject {
         this.sendMessageWithArgs('sendAllBSPsExceptEAP', this.getAllBspExceptEAPInfo());
     }
 
-    private getToolsFromIDCRegistry(): string | undefined {
-        let list = this.setupMgr_.mtbLocations;
-        return list.length > 0 ? list[0] : undefined;
-    }
-
     private setupAuxiliaryStuff() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             let parray: any[] = [];
@@ -393,6 +395,44 @@ export class MTBAssistObject {
         return ret;
     }
 
+    private toolsSortFunc(a: string, b: string): number {
+        let reg = /(tools_\d+\.\d+)/ ;
+        let aloc = a.toLowerCase();
+        let bloc = b.toLowerCase();
+
+        let am = aloc.match(reg) ;
+        let bm = bloc.match(reg) ;
+
+        if (am && am.length > 1 && bm && bm.length > 1) {
+            let av = MTBVersion.fromToolsVersionString(am[1]) ;
+            let bv = MTBVersion.fromToolsVersionString(bm[1]) ;
+            if (av && bv) {
+                return MTBVersion.compare(av, bv) ;
+            }
+        }
+
+        return 0 ;
+    }
+
+    private getAllToolsPaths() : string[] {
+        let ret : string[] = ModusToolboxEnvironment.findToolsDirectories() ;
+
+        // Search the various directories that we have used to install tools
+        for(let dir of this.setupMgr_.mtbInstallDirs) {
+            let dirlist = ModusToolboxEnvironment.findToolsDirectories(dir) ;
+            ret = ret.concat(dirlist) ;
+        }
+
+        let dirlist = this.setupMgr_.toolsFromIDCRegistry() ;
+        ret = ret.concat(dirlist) ;
+        return ret.sort(this.toolsSortFunc.bind(this));
+    }
+
+    private findToolsPath() : string | undefined {
+        let tools = this.getAllToolsPaths() ;
+        return tools[0] ;
+    }
+
     private initWithTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
@@ -403,7 +443,7 @@ export class MTBAssistObject {
 
             this.toolspath_ = this.settings_.toolsPath;
             if (!this.toolspath_ || this.toolspath_.length === 0) {
-                this.toolspath_ = this.getToolsFromIDCRegistry();
+                this.toolspath_ = this.findToolsPath() ;
             }
 
             this.lcsMgr_ = new LCSManager(this);
@@ -447,9 +487,11 @@ export class MTBAssistObject {
 
                         this.sendMessageWithArgs('selectTab', MTBAssistObject.applicationStatusTab) ;
 
-
                         let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'tasks.json');
                         this.tasks_ = new MTBTasks(this.env_!, this.logger_, p);
+
+                        p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'settings.json');
+                        this.vscodeSettings_ = new MTBVSCodeSettings(this.env_!, this.logger_, p);
 
                         this.getLaunchData()
                             .then(() => {
@@ -614,7 +656,7 @@ export class MTBAssistObject {
                     if (this.setupMgr_!.doWeNeedTools()) {
                         this.initNoTools()
                             .then(() => {
-                                if (!this.setupMgr_!.isLauncherAvailable) {
+                                if (!this.setupMgr_!.isLauncherAvailable && !this.launchTimer) {
                                     this.launchTimer = setInterval(this.waitForLauncherTimer.bind(this), 1000);
                                 }
                                 resolve();
@@ -737,7 +779,23 @@ export class MTBAssistObject {
         this.cmdhandler_.set('prepareVSCode', this.prepareVSCode.bind(this)) ;
         this.cmdhandler_.set('password', this.processPasswordResponse.bind(this)) ;
         this.cmdhandler_.set('memory-data', this.sendMemoryInfo.bind(this)) ;   
+        this.cmdhandler_.set('refreshApp', this.refreshApp.bind(this)) ;
+        this.cmdhandler_.set('fix-settings', this.fixSettings.bind(this)) ;
     }
+
+    private refreshApp(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.env_ && this.env_.appInfo) {
+                this.doRestartExtension()
+                .then(() => {
+                    resolve() ;
+                })
+                .catch((err) => {
+                    reject(err) ;
+                }) ;
+            }
+        });
+    }   
 
     private sendMemoryInfo(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -771,6 +829,15 @@ export class MTBAssistObject {
                     this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;  
                     reject(err) ;
                 }) ;
+            }
+        }) ;
+    }
+
+    private fixSettings(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.env_ && this.env_.appInfo) {
+                this.vscodeSettings_?.fix() ;
+                this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;                
             }
         }) ;
     }
@@ -984,6 +1051,7 @@ export class MTBAssistObject {
 
             this.setupMgr_.mtbLocation = mtbLocation;
             this.setupMgr_.mtbTools = mtbTools;
+
             resolve();
         });
         return ret;
@@ -1426,36 +1494,39 @@ export class MTBAssistObject {
         this.showLocalContent('single-dist/index.html');
     }
 
-    private showWebContentEmbedded(uri: vscode.Uri) {
-        if (!this.content_) {
-            this.content_ = vscode.window.createWebviewPanel(
-                'mtbassist.content',
-                'ModusToolbox Assistant',
-                vscode.ViewColumn.One,
-                {
-                    enableScripts: true,
-                }
-            );
-        }
+    //
+    // Save: maybe use this later.  This shows web content in a vscode webview panel
+    //       There are display issues that need to be figure out before it is usable.
+    //
+    // private showWebContentEmbedded(uri: vscode.Uri) {
+    //     if (!this.content_) {
+    //         this.content_ = vscode.window.createWebviewPanel(
+    //             'mtbassist.content',
+    //             'ModusToolbox Assistant',
+    //             vscode.ViewColumn.One,
+    //             {
+    //                 enableScripts: true,
+    //             }
+    //         );
+    //     }
 
-        let str = `<!DOCTYPE html>
-                    <html lang='en'>
-                        <head>
-                            <meta charset='UTF-8'>
-                            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                            <meta http-equiv="Content-Security-Policy" content="default-src 'none';">                            
-                            <title>ModusToolbox Content</title>
-                        </head>
-                        <body>
-                            <iframe src='${uri.toString()}' style='width: 100%; height: 100vh; border: none;'></iframe>
-                        </body>
-                    </html>`;
-        this.content_.webview.html = str;
-
-        this.content_.onDidDispose(() => {
-            this.content_ = undefined;
-        }, null, this.context_.subscriptions);
-    }
+    //     let str = `<!DOCTYPE html>
+    //                 <html lang='en'>
+    //                     <head>
+    //                         <meta charset='UTF-8'>
+    //                         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    //                         <meta http-equiv="Content-Security-Policy" content="default-src 'none';">                            
+    //                         <title>ModusToolbox Content</title>
+    //                     </head>
+    //                     <body>
+    //                         <iframe src='${uri.toString()}' style='width: 100%; height: 100vh; border: none;'></iframe>
+    //                     </body>
+    //                 </html>`;
+    //     this.content_.webview.html = str;
+    //     this.content_.onDidDispose(() => {
+    //         this.content_ = undefined;
+    //     }, null, this.context_.subscriptions);
+    // }
 
     private showWebContentExternal(uri: vscode.Uri) {
         vscode.env.openExternal(uri);
@@ -1845,6 +1916,7 @@ export class MTBAssistObject {
                 projects: projects,
                 tools: tools,
                 vscodeTasksStatus: this.tasks_?.taskFileStatus || 'missing',
+                vscodeSettingsStatus: this.vscodeSettings_?.status || 'missing',
                 needVSCode: needVSCode,
             };
         } else {
@@ -1858,6 +1930,7 @@ export class MTBAssistObject {
                 projects: [],
                 tools: [],
                 vscodeTasksStatus: 'good',
+                vscodeSettingsStatus: 'good',
                 needVSCode: false
 
             };
@@ -1943,9 +2016,10 @@ export class MTBAssistObject {
 
     private browseForFolder(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve) => {
+            let txt : string = request.data.button ? request.data.button : 'Select Folder' ;
             vscode.window.showOpenDialog({
                 canSelectMany: false,
-                openLabel: 'Select Folder For New Project',
+                openLabel: txt,
                 canSelectFiles: false,
                 canSelectFolders: true
             }).then((uri) => {
@@ -1960,7 +2034,7 @@ export class MTBAssistObject {
                         this.findToolsLocation(uri[0].fsPath);
                     }
                     else {
-                        this.sendMessageWithArgs('browseForFolderResult', { tag: request.data, path: uri[0].fsPath });
+                        this.sendMessageWithArgs('browseForFolderResult', { tag: request.data.tag, path: uri[0].fsPath });
                     }
                 }
 

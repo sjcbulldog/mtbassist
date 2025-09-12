@@ -192,6 +192,7 @@ export class MTBSettings extends EventEmitter {
             }
             else if (!fs.existsSync(cpath.value as string)) {
                 tver.value = '' ;
+                cpath.value = '' ;
             }
         }
     }

@@ -366,8 +366,9 @@ export class VSCodeWorker extends EventEmitter  {
                     cliPath += ".exe" ;
                 }
                 let args = ['getlibs'];
+                let tools = this.ext_.toolsDir?.replace(/\\/g, '/') ;
                 let opts: MTBRunCommandOptions = {
-                    toolspath: this.ext_.toolsDir,
+                    toolspath: tools,
                     id: 'getlibs',
                     onOutput: this.dumpMakeOutput.bind(this),
                     cwd: p

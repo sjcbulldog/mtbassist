@@ -166,12 +166,15 @@ export class BackendService {
         this.setupTab.next(index);
     }
 
-    public browseForFolder(tag: string): void{
+    public browseForFolder(tag: string, button: string): void{
         this.log('Requesting browser for folder');
             if (this.pipe_) {
                 this.pipe_.sendRequest({
                     request: 'browseForFolder',
-                    data: tag
+                    data: {
+                        tag: tag,
+                        button: button
+                    }
                 });
             }
     }

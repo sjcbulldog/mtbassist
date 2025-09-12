@@ -451,6 +451,10 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         this.be.sendRequestWithArgs('fix-tasks', null);
     }
 
+    fixSettings() {
+        this.be.sendRequestWithArgs('fix-settings', null);
+    }
+
     prepareVSCode() {
         this.be.sendRequestWithArgs('prepareVSCode', null);
     }
@@ -458,7 +462,7 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     refreshApplicationData() {
         this.isLoading = true;
         this.hasError = false;
-        this.be.sendRequestWithArgs('app-data', null);
+        this.be.sendRequestWithArgs('refreshApp', null);
     }
 }
 

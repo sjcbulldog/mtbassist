@@ -56,24 +56,6 @@ export class MTBTasks
         this.processTasksFile() ;
     }
 
-    private processTasksFile() : void {
-        if (fs.existsSync(this.filename_)) {
-            this.initFromFile() ;
-            if (!this.valid_) {
-                this.taskFileStatus_ = 'corrupt' ;
-            }
-            else if (this.doWeNeedTaskUpdates()) {
-                this.taskFileStatus_ = 'needsTasks' ;
-            }
-            else {
-                this.taskFileStatus_ = 'good' ;
-            }
-        }
-        else {
-            this.taskFileStatus_ = 'missing' ;
-        }
-    }
-
     public get taskFileStatus() : MTBVSCodeTaskStatus {
         this.processTasksFile() ;
         return this.taskFileStatus_ ;
@@ -200,7 +182,25 @@ export class MTBTasks
 
         return ret ;
     }
-    
+
+    private processTasksFile() : void {
+        if (fs.existsSync(this.filename_)) {
+            this.initFromFile() ;
+            if (!this.valid_) {
+                this.taskFileStatus_ = 'corrupt' ;
+            }
+            else if (this.doWeNeedTaskUpdates()) {
+                this.taskFileStatus_ = 'needsTasks' ;
+            }
+            else {
+                this.taskFileStatus_ = 'good' ;
+            }
+        }
+        else {
+            this.taskFileStatus_ = 'missing' ;
+        }
+    }    
+
     private initFromFile() {
         let taskdata = fs.readFileSync(this.filename_, 'utf8') ;
         taskdata = taskdata.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m);
@@ -270,10 +270,7 @@ export class MTBTasks
     }
 
     private genToolsPath() : string {
-        if (this.env_.toolsDir) {
-            return `export CY_TOOLS_PATHS=${this.env_.toolsDir} ; ` ;
-        }
-        return '' ;
+        return `export CY_TOOLS_PATHS=\${config:modustoolbox.toolsPath} ;` ;
     }
 
     //

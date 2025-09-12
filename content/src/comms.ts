@@ -60,9 +60,11 @@ export type FrontEndToBackEndType =
     'user-guide-data' |
     'check-ready' |
     'fix-tasks' |
+    'fix-settings' |
     'memory-data' |
     'prepareVSCode' |
-    'password'
+    'password' | 
+    'refreshApp'
     ;
 
 export type BackEndToFrontEndType =
@@ -132,6 +134,12 @@ export type MTBVSCodeTaskStatus =
     'corrupt' |
     'missing' |
     'needsTasks' ;
+
+export type MTBVSCodeSettingsStatus =
+    'good' |
+    'corrupt' |
+    'missing' |
+    'needsSettings' ;
 
 export interface MTBLocationStatus {
   homeError?: string ;
@@ -270,6 +278,7 @@ export interface ApplicationStatusData {
   name: string;
   toolsdir: string;
   vscodeTasksStatus: MTBVSCodeTaskStatus ;
+  vscodeSettingsStatus: MTBVSCodeSettingsStatus ;
   needVSCode: boolean ;
   memory: MemoryInfo[];
   documentation: Documentation[];

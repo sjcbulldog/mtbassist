@@ -144,8 +144,12 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return this.appInfo_ ;
     }
 
-    public get toolsDir() : string | undefined {
+    public getToolsDirRaw() : string | undefined {
         return this.toolsDir_ ;
+    }
+
+    public get toolsDir() : string | undefined {
+        return this.toolsDir_?.replace(/\\/g, '/') ;
     }
 
     public get defaultToolsDir() : string | undefined {
@@ -776,4 +780,3 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ret ;
     }
 }
-

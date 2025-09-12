@@ -242,7 +242,7 @@ export class CreateProject implements OnInit, OnDestroy {
     }
 
     async browseForDirectory() {
-        this.be.browseForFolder('create-project');
+        this.be.browseForFolder('create-project', 'Select Project Location') ;
     }
 
     async onCategoryChange() {

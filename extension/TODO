@@ -1,94 +1,18 @@
-Priorities
+Open Issues
 ----------
-- What to do if download fails of a required pacakge - go back
-- What to do if a project requires an EAP but it is not selected - can we warn?
-- LLVM installation
-- Memory View
-- If just installed launcher service, sometimes authentication/login fails with timeout to localhost
-- Lots of testing
-  o Windows
-  o Linux
-  o Mac OS
+- What to do if a project requires an EAP but it is not selected - can we warn
 
-Known Bugs
+Bugs
 ----------
-- Thoroughly check out what BSPs are available with and without LCS.
-- Figure out the interaction of operating mode and EAP
-- Selecting code examples based on capabilities has bugs, look at the Control C3 BSPs, look at Edge and Hello World (not PSOC Edge Hello World)
+- The refresh application does not reload the application in the ModusToolboxEnvironment
+- The tools collaspable does not rotate the icon when collasped
 
-Mac Testing
------------
-- Me Me
-- Me All
-- All Me
-- All All
-
-TODO
+Features
 -------------------------------------------------------------------------------------------
-o Setup
-  - If user name has spaces, get alternate location
-  - Prompt for three choices
-    o Tools already installed - ask for where they are
-    o Common directory to install tools and store LCS, settings, etc.
-    o Seperate directories for tools and LCS, settings, etc.
-
-o Getting Started Component                                                                       done
-  - add reference to recent project page                                                              done
-
-o Create Project Component                                                                        done
-  - when EAP is enabled only show EAP valid BSPs                                                      done
-  - when create is pressed, scroll to the bottom of the create project component                      done
-
-o Application Status Component                                                                    done
-  - launch document view from application status page (apps & projects)                               done
-  - launch tool from application status page (apps & projects)                                        done
-  - launch library manager when click on middleware tile                                              done
-  - flag middleware that may have a newer version - click launches library manager                    done
-  - make documents and tools collapsable on app                                                       done
-  - make documents, tools, middleware collapsable on projects                                         done
-  - change invalid to No ModusToolbox Project Loaded                                                  done
-  - hide the action bar if the appliation status is invalid                                           done
-  - hide the documents and tools on the app status when app is not valid                              done
-  - link to show readme.md                                                                            done
-  - display components associated with each projecdt                                                  done
-
-o Memory usage
-  - feasbility to work across all devices
-
-o Recent Projects Component                                                                       done
-  - Divide into last day, last week, and per month after                                              done
-  
-o Dev Kits Component                                                                              done
-  - Basic component                                                                                   done
-  - Add info button if kit is unknown                                                                 done
-  - If dev kit is unknown, allow the user to select the associated bsp and remember it                done
-
-o Settings                                                                                        done
-  - Use VSCode settings (where possible)                                                              done
-  - Control what the environment sees based on settings TOOL_PATH, EAP, etc.                          done
-
-o Outside of main GUI                                                                             
-  - Intellisense: port over current intellisense support                                              done
-  - Port over task generation support                                                                 done
-  - Port over keyword based documentation                                                             done
-  - Port over, check run make vscode (generate launch configs)
-
-0 Install software component                                                                      done
-  - List of required software                                                                         done
-  - List of optional software                                                                         done
-  - Download/Install via IDC Launcher showing progress in extension                                   done
-  - Alert users if launcher is not installed and take them to the right page                          done
-
-o Help component                                                                                  done
-  - index on the left like a book                                                                     done
-
-o Dark vs Light vs High Contrast theme support                                                    done
-
-o LCS Support
-  - LCS GUI
-    - Busy overlay                                                                                    done
-    - Reset after apply                                                                               done
-    - Show changes                                                                                    done
-    - Revert changes                                                                                  done
-  - Change how manifests are read
+- Manage the settings.json file under .vscode
+- Install LLVM
+- Mimic memory information for P6
+- Memory Display
+  o display memory information not available if ELF files not present
+  o make sure that the customer understands what the memory is reporting
 

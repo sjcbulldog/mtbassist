@@ -175,8 +175,8 @@ export class SettingsEditor implements OnInit, OnDestroy {
     this.be.sendRequestWithArgs('updateSetting', setting) ;
   }
 
-  onBrowseForFolder(setting: MTBSetting) {
-    this.be.browseForFolder(setting.name) ;
+  onBrowseForFolder(setting: MTBSetting, button: string) {
+    this.be.browseForFolder(setting.name, button) ;
   }
 
   onBrowseForFile(setting: MTBSetting) {

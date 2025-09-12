@@ -80,6 +80,27 @@
                 </div>
               }
               
+              @if (applicationStatus.vscodeSettingsStatus !== 'good') {
+                <div class="settings-warning" style="margin-top: 1em; margin-bottom: 1em; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 12px; display: flex; align-items: center;">
+                  <mat-icon color="warn" style="margin-right: 8px;">warning</mat-icon>
+                  <span style="flex: 1; font-weight: 500; color: #856404;">
+                    @if (applicationStatus.vscodeSettingsStatus === 'missing') {
+                      The VS Code settings.json file is missing.  Press 'Fix Settings' to create a new settings file with the required settings.
+                    } @else if (applicationStatus.vscodeSettingsStatus === 'corrupt') {
+                      The .vscode settings file is corrupt and cannot be read.  Press 'Fix Settings' to create a new settings file.
+                    } @else {
+                      Some required VS Code settings are missing or incorrect.  Press the 'Fix Settings' button to add and/or update these settings.
+                    }
+                  </span>
+                  <mat-icon
+                    matTooltip="The ModusToolbox Assistant relies on specific settings to be available in the VS Code settings.json file.  Press the 'Fix Settings' button to generate any of these that are missing."
+                    class="settings-help-icon"
+                    style="cursor: pointer; margin-right: 8px; color: #856404;"
+                  >help_outline</mat-icon>
+                  <button mat-raised-button color="primary" (click)="fixSettings()" [disabled]="running">Fix Settings</button>
+                </div>
+              }
+              
               <!-- Application Build & Tool Actions -->
               @if (applicationStatus.valid) {
                 <div class="app-build-actions app-build-actions-flex">
@@ -257,7 +278,7 @@
                     @if (isFixingAssets(project) && getCurrentlyLoadingAsset(project)) {
                       <div class="loading-asset-indicator">
                         <div class="loading-spinner"></div>
-                        <span class="loading-text">Loading: {{ getCurrentlyLoadingAsset(project) }}</span>
+                        <span class="loading-text">Loaded: {{ getCurrentlyLoadingAsset(project) }}</span>
                       </div>
                     }
                   </div>
