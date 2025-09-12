@@ -1,3 +1,0 @@
-Load Single-Core Project
-
-Load Multi-Core Project

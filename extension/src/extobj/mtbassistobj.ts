@@ -144,6 +144,7 @@ export class MTBAssistObject {
 
         vscode.tasks.onDidEndTask((e) => { 
             this.memusage_.updateMemoryInfo() ;
+            this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;            
         }) ;
 
         this.toolspath_ = this.settings_.toolsPath ? this.settings_.toolsPath : '';
@@ -414,7 +415,7 @@ export class MTBAssistObject {
         return 0 ;
     }
 
-    private getAllToolsPaths() : string[] {
+    public getAllToolsPaths() : string[] {
         let ret : string[] = ModusToolboxEnvironment.findToolsDirectories() ;
 
         // Search the various directories that we have used to install tools
@@ -425,6 +426,10 @@ export class MTBAssistObject {
 
         let dirlist = this.setupMgr_.toolsFromIDCRegistry() ;
         ret = ret.concat(dirlist) ;
+
+        
+        // Remove duplicates
+        ret = Array.from(new Set(ret)) ;
         return ret.sort(this.toolsSortFunc.bind(this));
     }
 
@@ -442,6 +447,7 @@ export class MTBAssistObject {
             }
 
             this.toolspath_ = this.settings_.toolsPath;
+            let x = this.findToolsPath() ;
             if (!this.toolspath_ || this.toolspath_.length === 0) {
                 this.toolspath_ = this.findToolsPath() ;
             }

@@ -313,7 +313,9 @@ export interface MTBSetting {
     owner: 'modus' | 'extension' | 'workspace' ;
     type: 'string' | 'number' | 'boolean' | 'choice' | 'uri' | 'dirpath' | 'filepath' | 'toolspath' ;
     value: string | number | boolean ;
+    tip?: string ;
     choices? : string[] ;
+    tips?: string[] ;
     mapping? : { [key: string]: string } ;
     description: string ;
     disabledMessage? : string ;

@@ -137,6 +137,7 @@ export class MTBSettings extends EventEmitter {
         this.updateEAPChoices() ;
         this.updateToolPathChoices() ;
         this.checkLCSandEAP() ;
+        this.updateTips();
         return this.settings_;
     }
 
@@ -161,7 +162,6 @@ export class MTBSettings extends EventEmitter {
             }
             else if (setting.name === 'operating_mode') {
                 if (!this.ext_.lcsMgr || !this.ext_.lcsMgr.isLCSReady && setting.value === 'Local Content Mode') {
-                    // We don't have a valid ESP setup - refuse to change the setting and tell the user
                     this.settings[index].value = 'Online Mode';
                     this.emit('showError', setting.name, 'The local content storeage has not been initialized.  See the LCS tab to initialize LCS content') ;
                 }
@@ -170,7 +170,7 @@ export class MTBSettings extends EventEmitter {
                     this.writeSettingsFile() ;
                     this.emit('restartWorkspace', this.computeToolsPath()) ;
                 }
-                this.emit('refresh') ;                
+                this.emit('refresh') ;
             }
             else {
                 this.writeSettingsFile() ;
@@ -217,39 +217,17 @@ export class MTBSettings extends EventEmitter {
         let versetting = this.settings_.find(s => s.name === 'toolsversion');
         let cuspath = this.settings_.find(s => s.name === 'custompath');
 
-        if (versetting) {
-            if (versetting.value !== 'Custom') {
-                tdir = this.versionToToolsDir(versetting.value as string);
-                custom = false ;
-            }
-            else {
-
-                if (cuspath && fs.existsSync(cuspath.value as string)) {
-                    tdir = cuspath.value as string ;
-                }
-            }
+        if (!versetting && !cuspath) {
+            return undefined ;
         }
 
-        if (tdir === '' || tdir === undefined) {
-            let tools = ModusToolboxEnvironment.findToolsDirectories().sort() ; 
-            if (tools.length > 0) {
-                tdir = tools[tools.length - 1];
-                custom = false ;
+        if (versetting && versetting.value === 'Custom') {
+            if (cuspath && fs.existsSync(cuspath.value as string)) {
+                tdir = cuspath.value as string ;
             }
         }
-
-        if (tdir) {
-            tdir = tdir.replace(/\\/g,'/');
-            if (!custom) {
-                versetting!.value = this.toolDirToVersion(tdir) ;
-                cuspath!.value = '' ;
-            }            
-            else {
-                versetting!.value = 'Custom' ;
-                cuspath!.value = tdir ;
-            }
-
-            this.writeWorkspaceSettings() ;
+        else {
+            
         }
         return tdir ;
     }
@@ -390,7 +368,7 @@ export class MTBSettings extends EventEmitter {
 
                 let m = rege.exec(tdir.substring(h.length + 1)) ;
                 if (m && m.length > 1) {
-                    ret = 'ModusToolbox ' + m[1] ;
+                    ret = `ModusToolbox ${m[1]}` ;
                     break ;
                 }
             }
@@ -399,16 +377,20 @@ export class MTBSettings extends EventEmitter {
     }
 
     private updateToolPathChoices() : void {
-        let tools = ModusToolboxEnvironment.findToolsDirectories();   
+        let tools = this.ext_.getAllToolsPaths().sort() ;
         let choices: string[] = [];
+        let tips: string[] = [];
         for (let tool of tools) {
             let fixtool = tool.replace(/\\/g,'/');
             choices.push(this.toolDirToVersion(fixtool));
+            tips.push(`${fixtool}`);
         }
         choices.push('Custom') ;
+        tips.push('Specify a custom path to ModusToolbox');
         let setting = this.settings_.find(s => s.name === 'toolsversion');
         if (setting) {
             setting.choices = choices;
+            setting.tips = tips;
         }
     }
 

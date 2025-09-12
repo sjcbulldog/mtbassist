@@ -1,6 +1,6 @@
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ ret* you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
@@ -121,7 +121,34 @@ export class SetupMgr extends MtbManagerBase {
     }
 
     public toolsFromIDCRegistry() : string[] {
-        return [] ;
+        let tlist = this.registry_.getToolsByFeatureId('com.ifx.tb.tool.modustoolbox') ;
+        let dirlist = tlist.map(tool => tool.path!).filter(p => p !== undefined) ;
+
+        let final : string[] = [] ;
+        for(let d of dirlist) {
+            let p = this.trimPath(d) ;
+            if (p && fs.existsSync(p)) {
+                final.push(p) ;
+            }
+        }
+
+        return final ;
+    }
+
+    private trimPath(p: string) : string | undefined {
+        while (true) {
+            let base = path.basename(p) ;
+            if (/^tools_[0-9]+.[0-9]+$/.test(base)) {
+                return p ;
+            }
+
+            p = path.dirname(p) ;
+            if (p === '/' || /^[A-Za-z]:[\\\/]$/.test(p)) {
+                break ;
+            }            
+        }
+
+        return undefined ;
     }
 
     public get mtbInstallDirs() : string[] {

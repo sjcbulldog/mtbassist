@@ -1,0 +1,15 @@
+Setup component
+- keeps track of every parent directory used for install that exists
+
+Priority (loading workspace)
+- If workspace has tools setting and the tools directory exists
+  o Use the specified tools directory
+
+- If workspace has tools setting and the tools directory does not exist
+  o Extract the version
+  o Search all possible tools for a matching version, use first match
+  o If no match, search for latest tools version
+
+Settings changing
+- If the version changes and is not custom, search all for version that matches
+- 

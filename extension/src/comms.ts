@@ -314,6 +314,7 @@ export interface MTBSetting {
     type: 'string' | 'number' | 'boolean' | 'choice' | 'uri' | 'dirpath' | 'filepath' | 'toolspath' ;
     value: string | number | boolean ;
     choices? : string[] ;
+    tips?: string[] ;
     mapping? : { [key: string]: string } ;
     description: string ;
     disabledMessage? : string ;

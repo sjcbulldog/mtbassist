@@ -69,6 +69,18 @@ export class SettingsEditor implements OnInit, OnDestroy {
       this.be.settings.subscribe(settings => {
         this.settings = settings;
         this.settingsErrors = [];
+        
+        // Initialize tip values for choice settings
+        this.settings.forEach(setting => {
+          if (setting.type === 'choice' && setting.choices && setting.tips && 
+              setting.tips.length === setting.choices.length) {
+            const choiceIndex = setting.choices.indexOf(String(setting.value));
+            if (choiceIndex >= 0) {
+              setting.tip = setting.tips[choiceIndex];
+            }
+          }
+        });
+        
         this.cdr.detectChanges();
       })
     );
@@ -171,8 +183,20 @@ export class SettingsEditor implements OnInit, OnDestroy {
   }
 
   onValueChange(setting: MTBSetting, value: any) {
-    setting.value = value ;
-    this.be.sendRequestWithArgs('updateSetting', setting) ;
+    setting.value = value;
+    
+    // If this is a choice setting with tips, update the tip property
+    if (setting.type === 'choice' && setting.choices && setting.tips && 
+        setting.tips.length === setting.choices.length) {
+      const choiceIndex = setting.choices.indexOf(String(value));
+      if (choiceIndex >= 0) {
+        setting.tip = setting.tips[choiceIndex];
+      } else {
+        setting.tip = undefined;
+      }
+    }
+    
+    this.be.sendRequestWithArgs('updateSetting', setting);
   }
 
   onBrowseForFolder(setting: MTBSetting, button: string) {
@@ -189,5 +213,16 @@ export class SettingsEditor implements OnInit, OnDestroy {
 
   isSettingDisabled(setting: MTBSetting): boolean {
     return !!setting.disabledMessage;
+  }
+
+  getChoiceTipPairs(setting: MTBSetting): { choice: string, tip: string }[] {
+    if (setting.choices && Array.isArray(setting.choices)) {
+      if (setting.tips && Array.isArray(setting.tips) && setting.tips.length === setting.choices.length) {
+        return setting.choices.map((choice, i) => ({ choice, tip: setting.tips![i] }));
+      } else {
+        return setting.choices.map((choice) => ({ choice, tip: '' }));
+      }
+    }
+    return [];
   }
 }
