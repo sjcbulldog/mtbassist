@@ -149,6 +149,10 @@ export class MTBUtils {
         let env: NodeJS.ProcessEnv = { ...process.env } ;
 
         if (process.platform === 'win32' && toolspath) {
+            //
+            // Turn backslashes into forward slashes for Windows.  This should already be true if the
+            // toolspath came from the extension code, but just in case it came from somewhere else...
+            //
             toolspath = toolspath.replace(/\\/g,'/');
         }
 

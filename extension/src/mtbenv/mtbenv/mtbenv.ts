@@ -149,7 +149,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
     }
 
     public get toolsDir() : string | undefined {
-        return this.toolsDir_?.replace(/\\/g, '/') ;
+        return this.toolsDir_! ;
     }
 
     public get defaultToolsDir() : string | undefined {

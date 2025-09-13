@@ -430,6 +430,11 @@ export class MTBAssistObject {
         // Remove duplicates
         ret = Array.from(new Set(ret)) ;
         ret = ret.sort(this.toolsSortFunc.bind(this));
+
+        for(let i = 0 ; i < ret.length ; i++) {
+            let p = ret[i].replace(/\\/g, '/') ;
+            ret[i] = p ;
+        }
         return ret ;
     }
 
@@ -439,8 +444,6 @@ export class MTBAssistObject {
     }
 
     private initWithTools(): Promise<void> {
-        let hasTools = false ;
-
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
             if (!this.env_) {
@@ -450,14 +453,14 @@ export class MTBAssistObject {
 
             this.toolspath_ = this.settings_.toolsPath;
             if (!this.toolspath_ || this.toolspath_.length === 0 || !fs.existsSync(this.toolspath_)) {
+                //
+                // The workspace does not have a tools path setting, find a valid one
+                //
                 this.toolspath_ = this.findToolsPath() ;
                 this.settings_.toolsPath = this.toolspath_ ;
-                this.sendMessageWithArgs('settings', this.settings_.settings);
-            }
 
-            // If we have a workspace, but it does not have a
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 && this.toolspath_ && this.toolspath_.length > 0 && !hasTools) {
-                this.settings_.toolsPath = this.toolspath_ ;
+                // Update the GUI
+                this.sendMessageWithArgs('settings', this.settings_.settings);
             }
 
             this.lcsMgr_ = new LCSManager(this);

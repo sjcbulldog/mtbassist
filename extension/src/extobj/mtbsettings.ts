@@ -21,6 +21,7 @@ import { MTBUtils } from "../mtbenv/misc/mtbutils";
 import * as path from 'path' ;
 import * as os from 'os' ;
 import * as fs from 'fs' ;
+import * as vscode from 'vscode';
 
 export class MTBSettings extends EventEmitter {
     public static operatingModeOnline = 'direct' ;
@@ -34,7 +35,7 @@ export class MTBSettings extends EventEmitter {
             type: 'choice',
             choices: [],
             value: '',
-            description: 'The version of ModusToolbox to use if using a version in a standard location.'
+            description: 'The version of ModusToolbox to use if using a version in a standard location. (Workspace scope: applies only to this open workspace)'
         },
         {
             name: 'custompath',
@@ -42,7 +43,7 @@ export class MTBSettings extends EventEmitter {
             owner: 'workspace',
             type: 'dirpath',
             value: '',
-            description: `The location of ModusToolbox if it is located in a custom location.  This is only used if the Tools Version setting is 'Custom'.`
+            description: `The location of ModusToolbox if it is located in a custom location.  This is only used if the Tools Version setting is 'Custom'. (Workspace scope: applies only to this open workspace)`
         },
         {
             name: 'enabled_eap',
@@ -51,7 +52,7 @@ export class MTBSettings extends EventEmitter {
             type: 'choice',
             choices: [],                // Choices will be injected at runtime
             value: '',
-            description: 'This is the early access pack that is enabled for the current user.  This is a global settings and will apply to all ModusToolbox application.'
+            description: 'This is the early access pack that is enabled for the current user. (Global scope: applies globally)'
         },
         {
             name: 'global_path',
@@ -59,7 +60,7 @@ export class MTBSettings extends EventEmitter {
             owner: 'modus',
             type: 'dirpath',
             value: '~/.modustoolbox/global',
-            description: 'This is the path to the global storage location.  This location is shared across all ModusToolboxcl applications.'
+            description: 'This is the path to the global storage location.  This location is shared across all ModusToolbox applications. (Global scope: applies globally)'
         },
         {
             name: 'information_level',
@@ -68,7 +69,7 @@ export class MTBSettings extends EventEmitter {
             type: 'choice',
             value: 'low',
             choices: ['low', 'medium', 'high'],
-            description: 'The amount of information displayed in ModusToolbox applications'
+            description: 'The amount of information displayed in ModusToolbox applications. (Global scope: applies globally)'
         },
         {
             name: 'lcs_path',
@@ -76,7 +77,7 @@ export class MTBSettings extends EventEmitter {
             owner: 'modus',
             type: 'dirpath',
             value: '~/.modustoolbox/lcs',
-            description: 'The path for storing local content when working without an internet connection'
+            description: 'The path for storing local content when working without an internet connection. (Global scope: applies globally)'
         },
         {
             name: 'manifest_loc_path',
@@ -84,7 +85,7 @@ export class MTBSettings extends EventEmitter {
             owner: 'modus',
             type: 'filepath',
             value: '~/.modustoolbox/manifest.loc',
-            description: 'The path to the local manifest file that can be used to add additional content into ModusToolbox.'
+            description: 'The path to the local manifest file that can be used to add additional content into ModusToolbox. (Global scope: applies globally)'
         },
         {
             name: 'manifestdb_system_url',
@@ -92,7 +93,7 @@ export class MTBSettings extends EventEmitter {
             owner: 'modus',
             type: 'uri',
             value: '',
-            description: 'The URL for top level super manifest containing ModusToolbox content.  This should generally left empty unless you are using an alternate set of manifest files due to internet restrictions.'
+            description: 'The URL for top level super manifest containing ModusToolbox content. This should generally left empty unless you are using an alternate set of manifest files due to internet restrictions. (Global scope: applies globally)'
         },
         {
             name: 'operating_mode',
@@ -102,7 +103,7 @@ export class MTBSettings extends EventEmitter {
             value: 'direct',
             choices: ['direct', 'local'],
             mapping: { 'direct': 'Online Mode', 'local': 'Local Content Mode' },
-            description: 'The operating mode for ModusToolbox.  This determines how the tool interacts with the file system and network resources.  Online Mode dynamically retrieves content from the internet, while Local Content Mode uses only locally available content.'
+            description: 'The operating mode for ModusToolbox. This determines how the tool interacts with the file system and network resources. Online Mode dynamically retrieves content from the internet, while Local Content Mode uses only locally available content. (Global scope: applies globally)'
         },
     ] ;
 
@@ -122,9 +123,6 @@ export class MTBSettings extends EventEmitter {
         this.resolvePaths() ;
 
         this.alltools_ = this.ext_.getAllToolsPaths() ;
-        for(let i = 0 ; i < this.alltools_.length ; i++) {  
-            this.alltools_[i] = this.alltools_[i].replace(/\\/g,'/');
-        }
     }
 
     public get toolsPath() : string | undefined {
@@ -132,8 +130,7 @@ export class MTBSettings extends EventEmitter {
     }
 
     public set toolsPath(p: string | undefined) {
-        p = p?.replace(/\\/g,'/');
-        if (p) {
+        if (p && vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
             if (this.alltools_.indexOf(p) !== -1) {
                 this.settings_.find(s => s.name === 'toolsversion')!.value = p ;
                 this.settings_.find(s => s.name === 'custompath')!.value = '';
@@ -250,6 +247,12 @@ export class MTBSettings extends EventEmitter {
                             tdir = this.alltools_[index] ;
                         }   
                     }
+                    else { 
+                        let t = versetting.value as string ;
+                        if (t && t.length > 0) {
+                            tdir = t ;
+                        }
+                    }
                 }
             }
         }
@@ -303,17 +306,21 @@ export class MTBSettings extends EventEmitter {
     }
 
     private readWorkspaceSettings() {
-        for(let setting of this.settings_) {
-            if (setting.owner === 'workspace') {
-                setting.value = this.ext_.context.workspaceState.get(setting.name, setting.value);
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+            for(let setting of this.settings_) {
+                if (setting.owner === 'workspace') {
+                    setting.value = this.ext_.context.workspaceState.get(setting.name, setting.value);
+                }
             }
         }
     }
 
     private writeWorkspaceSettings() : void {
-        for(let setting of this.settings_) {
-            if (setting.owner === 'workspace') {
-                this.ext_.context.workspaceState.update(setting.name, setting.value);
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 0) {
+            for(let setting of this.settings_) {
+                if (setting.owner === 'workspace') {
+                    this.ext_.context.workspaceState.update(setting.name, setting.value);
+                }
             }
         }
     }
@@ -379,8 +386,6 @@ export class MTBSettings extends EventEmitter {
     }
 
     private toolDirToVersion(tdir: string) : string {
-        tdir = tdir.replace(/\\/g,'/');
-
         let rege = /^tools_([0-9]+.[0-9]+).*$/ ;
 
         let index = this.alltools_.indexOf(tdir) ;
