@@ -9,10 +9,9 @@ Bugs
 
 Features
 -------------------------------------------------------------------------------------------
-- Manage the settings.json file under .vscode
 - Install LLVM
 - Mimic memory information for P6
-- Memory Display
-  o display memory information not available if ELF files not present
-  o make sure that the customer understands what the memory is reporting
+- Support DEBUG vs RELEASE builds
+- Support toolchains
+
 
