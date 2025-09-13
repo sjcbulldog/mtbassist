@@ -149,6 +149,29 @@
           <!-- Memory Usage Section -->
           @if (applicationStatus.valid && memoryUsageData.length > 0) {
             <app-memory-usage [memoryUsageData]="memoryUsageData" [collapsedStates]="memoryCollapsedStates"></app-memory-usage>
+          } @else if (applicationStatus.valid && memoryUsageData.length === 0) {
+            <div class="memory-usage-section">
+              <div class="memory-usage-card">
+                <div class="memory-header-container" style="display: flex; align-items: center;">
+                  <h3 class="collapsible-header" style="flex: 1; margin: 0; cursor: pointer;" (click)="noMemoryCollapsed = !noMemoryCollapsed">
+                    <mat-icon class="collapse-icon" [class.collapsed]="noMemoryCollapsed">expand_more</mat-icon>
+                    Memory Usage
+                  </h3>
+                  <mat-icon
+                    matTooltip="This shows the combined memory usage across all of the projects using the latest build. This means if a latest build was a DEBUG build that will be used. This is per project so there can be a mix of DEBUG and RELEASE builds depending on what was built last."
+                    class="memory-help-icon"
+                    style="cursor: pointer; margin-left: 8px;"
+                  >help_outline</mat-icon>
+                </div>
+                <div class="memory-usage-container" [class.collapsed]="noMemoryCollapsed">
+                  <ng-container *ngIf="!noMemoryCollapsed">
+                    <div class="no-memory-data">
+                      <p>A sucessful build is needed to display memory usage.</p>
+                    </div>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
           }
 
           <!-- Application Documentation Section -->
@@ -288,7 +311,7 @@
                 <!-- Components Section (Collapsible) -->
                 <div class="components-section">
                   <h3 class="collapsible-header" (click)="toggleSection(project.name, 'components')">
-                    <mat-icon class="collapse-icon" [class.collapsed]="!isSectionCollapsed(project.name, 'components')">
+                    <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed(project.name, 'components')">
                       expand_more
                     </mat-icon>
                     Enabled Components

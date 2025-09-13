@@ -68,7 +68,7 @@ export class MTBAssistObject {
     private commandsInited_: boolean = false;
     private env_: ModusToolboxEnvironment | null = null;
     private panel_: vscode.WebviewPanel | undefined = undefined;
-    private content_: vscode.WebviewPanel | undefined = undefined;
+    // private content_: vscode.WebviewPanel | undefined = undefined;
     private postInitDone_: boolean = false;
     private envLoaded_: boolean = false;
     private cmdhandler_: Map<FrontEndToBackEndType, (data: any) => Promise<void>> = new Map();
@@ -142,8 +142,12 @@ export class MTBAssistObject {
         this.memusage_ = new MemoryUsageMgr(this) ;
 
         vscode.tasks.onDidEndTask((e) => { 
-            this.memusage_.updateMemoryInfo() ;
-            this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;            
+            this.memusage_.updateMemoryInfo()
+            .then((ret) => {
+                if (ret) {
+                    this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;
+                }
+            });
         }) ;
 
         this.toolspath_ = this.findToolsPath() ;
@@ -816,6 +820,7 @@ export class MTBAssistObject {
 
     private sendMemoryInfo(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            this.memusage_.updateMemoryInfo() ;
             this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;
             resolve() ;
         });

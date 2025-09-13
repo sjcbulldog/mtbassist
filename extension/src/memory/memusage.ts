@@ -114,6 +114,10 @@ export class MemoryUsageMgr {
     private computeMemoryUsage() {
         this.usage_ = [] ;
 
+        if (this.segments_.size === 0 || this.deviceMemoryMap_.length === 0) {
+            return ;
+        }
+
         let memgroups: DeviceMemorySegment[][] = [] ;
 
         for(let mem of this.deviceMemoryMap_) {

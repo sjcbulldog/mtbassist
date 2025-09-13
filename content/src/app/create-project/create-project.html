@@ -540,13 +540,6 @@
               {{ isLoading ? 'Creating Project...' : 'Create Project' }}
             </button>
           }
-          <button mat-button 
-                  (click)="resetForm()" 
-                  [disabled]="isLoading"
-                  class="reset-button">
-            <mat-icon>refresh</mat-icon>
-            Start Over
-          </button>
         </div>
       </div>
     </mat-step>

@@ -1,3 +1,8 @@
+// Ensure collapse icon rotates globally when collapsed
+.collapse-icon.collapsed {
+  transform: rotate(-90deg) !important;
+  transition: transform 0.3s ease;
+}
 .app-dir {
   font-family: monospace;
   color: var(--primary-color, #007bff);

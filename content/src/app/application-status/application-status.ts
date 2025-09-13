@@ -59,6 +59,9 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     // Collapsed states for memory usage sections
     memoryCollapsedStates: Map<string, boolean> = new Map();
 
+    // Collapsed state for empty memory usage section
+    noMemoryCollapsed: boolean = false;
+
     private subscriptions: Subscription[] = [] ;
 
     constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
