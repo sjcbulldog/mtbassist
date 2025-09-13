@@ -22,6 +22,7 @@ import { IDCRegistry } from "./idcreg";
 import { SetupProgram } from "../comms";
 import { ModusToolboxEnvironment } from "../mtbenv";
 import { MTBRunCommandOptions } from "../mtbenv/mtbenv/mtbenv";
+import { InstalledFeature } from "./installedfeature";
 import * as path from 'path' ;
 import * as fs from 'fs' ;
 import * as os from 'os' ;
@@ -63,13 +64,6 @@ export class SetupMgr extends MtbManagerBase {
 
     ] ;
 
-    private static readonly optionalFeatures : string[] = [
-        'com.ifx.tb.tool.modustoolboxpackmachinelearning',
-        'com.ifx.tb.tool.modustoolboxpackmultisense',
-        'com.ifx.tb.tool.ifxmotorsolutions',
-        'com.ifx.tb.tool.modustoolboxpacksmartinductioncooktop'
-    ] ;
-
     private static readonly progressRegEx = /(\d+(?:\.\d+)?)% completed/;
 
     private launcher_ : IDCLauncher ;
@@ -80,6 +74,7 @@ export class SetupMgr extends MtbManagerBase {
     private neededTools_ : SetupProgram[] = [] ;
     private mtbLocation_ : string | undefined = undefined ;
     private mtbTools_ : string | undefined = undefined ;
+    private installed_ : Map<string, InstalledFeature[]> = new Map<string, InstalledFeature[]>() ;
 
     constructor(ext: MTBAssistObject) {
         super(ext);
@@ -148,6 +143,15 @@ export class SetupMgr extends MtbManagerBase {
             }            
         }
 
+        return undefined ;
+    }
+
+    private getMTBDirectoryVersion(p : string) : MTBVersion | undefined {
+        let bname = path.basename(p) ;
+        let m = /^(tools_[0-9]+\.[0-9]+)$/.exec(bname) ;
+        if (m) {
+            return MTBVersion.fromToolsVersionString(m[1]) ;
+        }
         return undefined ;
     }
 
@@ -233,6 +237,7 @@ export class SetupMgr extends MtbManagerBase {
         let ret = new Promise<void>((resolve, reject) => {
             this.registry_.initialize()
             .then(() => {
+                this.findInstalledPrograms() ;
                 resolve();
             })
             .catch((err) => {
@@ -245,7 +250,7 @@ export class SetupMgr extends MtbManagerBase {
 
     public doWeNeedTools() : boolean {
         for(let f of SetupMgr.requiredFeatures) {
-            if (!this.registry_.hasTool(f)) {
+            if (!this.installed_.has(f)) {
                 this.logger.warn(`Missing required feature: ${f}`);
                 return true;
             }
@@ -365,13 +370,13 @@ export class SetupMgr extends MtbManagerBase {
                 continue ;
             }
 
-            if (this.registry_.hasTool(f)) {
+            if (this.installed_.has(f)) {
                 //
                 // We have this required tool, see if there is a newer version
                 //
                 let latest = this.findLatestVersion(pgm);
-                let inst = this.registry_.getLatestToolByFeatureId(f) ;
-                if (latest && latest.isGreaterThen(MTBVersion.fromVersionString(inst!.version))) {
+                let inst = this.findLatestInstalledVersion(f) ;
+                if (inst && latest && latest.isGreaterThen(inst!.version)) {
                     ret.push({
                         featureId: f,
                         name: this.getName(f),
@@ -379,7 +384,7 @@ export class SetupMgr extends MtbManagerBase {
                         required: required,
                         upgradable: true,
                         installed: true,
-                        current: inst!.version,
+                        current: inst!.version.toString(),
                         versions: []
                     });
                 }
@@ -391,7 +396,7 @@ export class SetupMgr extends MtbManagerBase {
                         required: required,
                         upgradable: false,
                         installed: true,
-                        current: inst!.version,
+                        current: inst!.version.toString(),
                         versions: []                
                     });
                 }
@@ -888,5 +893,63 @@ export class SetupMgr extends MtbManagerBase {
         });
 
         return ret;
+    }
+
+    private addTool(tool : InstalledFeature) {
+        let arr = this.installed_.get(tool.featureId) ;
+        if (!arr) {
+            arr = [] ;
+            this.installed_.set(tool.featureId, arr) ;
+        }
+        arr.push(tool);
+        arr.sort((a, b) => {
+            return MTBVersion.compare(b.version, a.version) ;
+        });
+    }
+
+    private findLatestInstalledVersion(fid: string) : InstalledFeature | undefined {
+        let arr = this.installed_.get(fid) ;
+        if (!arr || arr.length === 0) {
+            return undefined ;
+        }
+        return arr[0] ;
+    }
+
+    private findInstalledPrograms() {
+        // Search via the registry
+        for(let fid of SetupMgr.requiredFeatures) {
+            let list = this.registry_.getToolsByFeatureId (fid) ;
+            for(let entry of list) {
+                if (entry) {
+                    let ver = MTBVersion.fromVersionString(entry.version) ;
+                    let p = entry.path ;
+                    if (p && fid === SetupMgr.mtbFeatureId) {
+                        p = this.trimPath(p) ;
+                    }
+
+                    if (p) {
+                        this.addTool(new InstalledFeature(fid, ver, p));
+                    }
+                }
+            }
+        }
+
+        // Search standard location
+        for(let dir of ModusToolboxEnvironment.findToolsDirectories()) {
+            let v = this.getMTBDirectoryVersion(dir) ;
+            if (v) {
+                this.addTool(new InstalledFeature(SetupMgr.mtbFeatureId, v, dir));
+            }
+        }
+
+        // Search other directories we know about that were using via the extension installation screen
+        for(let instdir of this.mtbInstallDirs) {
+            for(let dir of ModusToolboxEnvironment.findToolsDirectories(instdir)) {
+                let v = this.getMTBDirectoryVersion(dir) ;
+                if (v) {
+                    this.addTool(new InstalledFeature(SetupMgr.mtbFeatureId, v, dir));
+                }
+            }
+        }
     }
 }

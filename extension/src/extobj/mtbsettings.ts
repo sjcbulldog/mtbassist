@@ -109,6 +109,7 @@ export class MTBSettings extends EventEmitter {
     private settings_: MTBSetting[];
     private extra_ : Map<string, any> = new Map<string, any>() ;
     private ext_: MTBAssistObject ;
+    private alltools_ : string[] = [] ;
 
     constructor(ext: MTBAssistObject) {
         super();
@@ -119,6 +120,11 @@ export class MTBSettings extends EventEmitter {
         this.readWorkspaceSettings() ;
         this.sanitizeSettings() ;
         this.resolvePaths() ;
+
+        this.alltools_ = this.ext_.getAllToolsPaths() ;
+        for(let i = 0 ; i < this.alltools_.length ; i++) {  
+            this.alltools_[i] = this.alltools_[i].replace(/\\/g,'/');
+        }
     }
 
     public get toolsPath() : string | undefined {
@@ -126,19 +132,26 @@ export class MTBSettings extends EventEmitter {
     }
 
     public set toolsPath(p: string | undefined) {
+        p = p?.replace(/\\/g,'/');
         if (p) {
-            this.settings_.find(s => s.name === 'toolsversion')!.value = 'Custom';
-            this.settings_.find(s => s.name === 'custompath')!.value = p;
+            if (this.alltools_.indexOf(p) !== -1) {
+                this.settings_.find(s => s.name === 'toolsversion')!.value = p ;
+                this.settings_.find(s => s.name === 'custompath')!.value = '';
+            }
+            else {
+                this.settings_.find(s => s.name === 'toolsversion')!.value = 'Custom';
+                this.settings_.find(s => s.name === 'custompath')!.value = p;
+            }
             this.writeWorkspaceSettings() ;
         }
     }
 
     public get settings(): MTBSetting[] {
-        this.updateEAPChoices() ;
-        this.updateToolPathChoices() ;
-        this.checkLCSandEAP() ;
-        this.updateTips();
-        return this.settings_;
+        let settings = JSON.parse(JSON.stringify(this.settings_)) as MTBSetting[] ;
+        this.updateEAPChoices(settings) ;
+        this.updateToolPathChoices(settings) ;
+        this.checkLCSandEAP(settings) ;
+        return settings ;
     }
 
     public settingByName(name: string) : MTBSetting | undefined {
@@ -146,10 +159,17 @@ export class MTBSettings extends EventEmitter {
     }
 
     public update(setting: MTBSetting) {
-        let index = this.settings.findIndex(s => s.name === setting.name);
+        let index = this.settings_.findIndex(s => s.name === setting.name);
         if (index !== -1) {
-            this.settings[index].value = setting.value;            
+            this.settings_[index].value = setting.value;            
             if (setting.name === 'toolsversion') {
+                if (setting.value !== 'Custom') {
+                    let index = parseInt((setting.value as string).split(':')[0].trim()) - 1 ;
+                    if (index >= 0 && index < this.alltools_.length) {
+                        let tdir = this.alltools_[index] ;
+                        this.settings_[index].value = tdir ;
+                    }
+                }
                 this.writeWorkspaceSettings() ;
                 this.emit('toolsPathChanged', this.computeToolsPath()) ;
             }
@@ -211,23 +231,27 @@ export class MTBSettings extends EventEmitter {
         return false;
     }
 
-    private computeToolsPath() : string | undefined {
+    private computeToolsPath() : string {
         let tdir: undefined | string = '' ;
-        let custom = true ;
         let versetting = this.settings_.find(s => s.name === 'toolsversion');
         let cuspath = this.settings_.find(s => s.name === 'custompath');
 
-        if (!versetting && !cuspath) {
-            return undefined ;
-        }
-
-        if (versetting && versetting.value === 'Custom') {
-            if (cuspath && fs.existsSync(cuspath.value as string)) {
-                tdir = cuspath.value as string ;
+        if (versetting && cuspath) {
+            if (versetting.value === 'Custom') {
+                if (fs.existsSync(cuspath.value as string)) {
+                    tdir = cuspath.value as string ;
+                }
             }
-        }
-        else {
-            
+            else {
+                if (versetting.value) {
+                    let index = parseInt((versetting.value as string).split(':')[0].trim()) - 1 ;
+                    if (!isNaN(index)) {
+                        if (index >= 0 && index < this.alltools_.length) {
+                            tdir = this.alltools_[index] ;
+                        }   
+                    }
+                }
+            }
         }
         return tdir ;
     }
@@ -336,7 +360,7 @@ export class MTBSettings extends EventEmitter {
         fs.writeFileSync(settings, JSON.stringify(contents, null, 4));
     }
 
-    private updateEAPChoices() : void {
+    private updateEAPChoices(settings: MTBSetting[]) : void {
         let eapChoices: string[] = [];
         eapChoices.push('None') ;
         if (this.ext_.env?.packDB) {
@@ -345,7 +369,7 @@ export class MTBSettings extends EventEmitter {
             }
         }
 
-        let setting = this.settings_.find(s => s.name === 'enabled_eap');
+        let setting = settings.find(s => s.name === 'enabled_eap');
         if (setting) {
             setting.choices = eapChoices;
             if (eapChoices.length > 0 && !eapChoices.includes(setting.value as string)) {
@@ -355,48 +379,45 @@ export class MTBSettings extends EventEmitter {
     }
 
     private toolDirToVersion(tdir: string) : string {
-        let rege = /^tools_([0-9]+.[0-9]+).*$/ ;
-        let hdir = MTBUtils.getCommonInstallLocation() ;
-        if (hdir.length === 0) {
-            return tdir ;
-        }
-        
-        let ret = tdir ;
-        for(let h of hdir) {
-            h = h.replace(/\\/g,'/');
-            if (h && tdir.startsWith(h)) {
+        tdir = tdir.replace(/\\/g,'/');
 
-                let m = rege.exec(tdir.substring(h.length + 1)) ;
-                if (m && m.length > 1) {
-                    ret = `ModusToolbox ${m[1]}` ;
-                    break ;
-                }
+        let rege = /^tools_([0-9]+.[0-9]+).*$/ ;
+
+        let index = this.alltools_.indexOf(tdir) ;
+        if (index !== -1) {
+            let b = path.basename(tdir) ;
+            let m = rege.exec(b) ;
+            if (m && m.length > 1) {
+                tdir = `${index + 1}: ModusToolbox ${m[1]}` ;
             }
         }
-        return ret ;
+        return tdir ;
     }
 
-    private updateToolPathChoices() : void {
-        let tools = this.ext_.getAllToolsPaths().sort() ;
+    private updateToolPathChoices(settings: MTBSetting[]) : void {
         let choices: string[] = [];
         let tips: string[] = [];
-        for (let tool of tools) {
-            let fixtool = tool.replace(/\\/g,'/');
-            choices.push(this.toolDirToVersion(fixtool));
-            tips.push(`${fixtool}`);
+        let index = 1 ;
+
+        for (let tool of this.alltools_) {
+            choices.push(this.toolDirToVersion(tool));
+            tips.push(tool);
         }
         choices.push('Custom') ;
         tips.push('Specify a custom path to ModusToolbox');
-        let setting = this.settings_.find(s => s.name === 'toolsversion');
+        let setting = settings.find(s => s.name === 'toolsversion');
         if (setting) {
             setting.choices = choices;
             setting.tips = tips;
+            if (setting.value !== 'Custom') {
+                setting.value = this.toolDirToVersion(setting.value as string) ;
+            }
         }
     }
 
-    private checkLCSandEAP() : void {
-        let opmode = this.settings_.find(s => s.name === 'operating_mode');
-        let eap = this.settings_.find(s => s.name === 'enabled_eap');
+    private checkLCSandEAP(settings: MTBSetting[]) : void {
+        let opmode = settings.find(s => s.name === 'operating_mode');
+        let eap = settings.find(s => s.name === 'enabled_eap');
 
         if (opmode && eap) {
             if (opmode.value === 'Local Content Mode' && eap.value !== 'None') {

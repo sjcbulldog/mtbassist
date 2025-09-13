@@ -41,7 +41,6 @@ import { VSCodeWorker } from './vscodeworker';
 import { MtbFunIndex } from '../keywords/mtbfunindex';
 import { MTBSettings } from './mtbsettings';
 import { LCSManager } from './lcsmgr';
-import { MTBBoard } from '../mtbenv/manifest/mtbboard';
 import { AIManager } from '../ai/aimgr';
 import { MemoryUsageMgr } from '../memory/memusage';
 import { DeviceDBManager } from '../devdb/devdbmgr';
@@ -147,7 +146,7 @@ export class MTBAssistObject {
             this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;            
         }) ;
 
-        this.toolspath_ = this.settings_.toolsPath ? this.settings_.toolsPath : '';
+        this.toolspath_ = this.findToolsPath() ;
         this.bindCommandHandlers();
 
         vscode.window.onDidChangeActiveColorTheme(e => {
@@ -408,7 +407,7 @@ export class MTBAssistObject {
             let av = MTBVersion.fromToolsVersionString(am[1]) ;
             let bv = MTBVersion.fromToolsVersionString(bm[1]) ;
             if (av && bv) {
-                return MTBVersion.compare(av, bv) ;
+                return MTBVersion.compare(bv, av) ;
             }
         }
 
@@ -430,7 +429,8 @@ export class MTBAssistObject {
         
         // Remove duplicates
         ret = Array.from(new Set(ret)) ;
-        return ret.sort(this.toolsSortFunc.bind(this));
+        ret = ret.sort(this.toolsSortFunc.bind(this));
+        return ret ;
     }
 
     private findToolsPath() : string | undefined {
@@ -439,6 +439,8 @@ export class MTBAssistObject {
     }
 
     private initWithTools(): Promise<void> {
+        let hasTools = false ;
+
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
             if (!this.env_) {
@@ -447,9 +449,15 @@ export class MTBAssistObject {
             }
 
             this.toolspath_ = this.settings_.toolsPath;
-            let x = this.findToolsPath() ;
-            if (!this.toolspath_ || this.toolspath_.length === 0) {
+            if (!this.toolspath_ || this.toolspath_.length === 0 || !fs.existsSync(this.toolspath_)) {
                 this.toolspath_ = this.findToolsPath() ;
+                this.settings_.toolsPath = this.toolspath_ ;
+                this.sendMessageWithArgs('settings', this.settings_.settings);
+            }
+
+            // If we have a workspace, but it does not have a
+            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 && this.toolspath_ && this.toolspath_.length > 0 && !hasTools) {
+                this.settings_.toolsPath = this.toolspath_ ;
             }
 
             this.lcsMgr_ = new LCSManager(this);
@@ -1739,6 +1747,7 @@ export class MTBAssistObject {
                         this.tasks_?.clear();
                         this.tasks_?.addAll();
                         this.tasks_?.writeTasks();
+                        this.vscodeSettings_?.fix() ;
                         this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv());
                         this.sendMessageWithArgs('settings', this.settings_.settings);
                         resolve();
