@@ -38,8 +38,6 @@ export class DevkitListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.be.log('DevkitListComponent initialized');
-
     this.subscriptions.push(
       this.be.ready.subscribe((ready) => {
         if (ready) {
@@ -51,7 +49,6 @@ export class DevkitListComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.be.devKitStatus.subscribe({
         next: (data) => {
-          this.be.log('Dev Kit status data received:');
           this.devkits = data;
           this.cdr.detectChanges();
         }
@@ -67,7 +64,6 @@ export class DevkitListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.be.log('DevkitListComponent destroyed');
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
@@ -76,16 +72,12 @@ export class DevkitListComponent implements OnInit, OnDestroy {
   }
 
   updateFirmware(kit: DevKitInfo) {
-    this.be.log(`Requesting firmware update for ${kit.name} (${kit.serial})`);
     this.be.sendRequestWithArgs('updateFirmware', kit);
   }
 
   onBspChange(kit: DevKitInfo, event: Event) {
     const selectElement = event.target as HTMLSelectElement;
     const selectedBsp = selectElement.value;
-    this.be.log(`BSP changed for kit ${kit.name} (${kit.serial}): ${selectedBsp}`);
-    // You can add additional logic here to handle the BSP change
-    // For example, send a request to the backend to update the kit's BSP
     this.be.sendRequestWithArgs('updateDevKitBsp', { kit, bsp: selectedBsp });
   }
 }

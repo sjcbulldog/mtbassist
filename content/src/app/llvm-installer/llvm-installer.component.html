@@ -1,0 +1,131 @@
+<div class="llvm-installer-overlay" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
+  <div class="overlay-backdrop"></div>
+  <div class="installer-container">
+    <div class="installer-header">
+      <h2>
+        <mat-icon>download</mat-icon>
+        Install LLVM Compiler from ARM
+      </h2>
+      <button mat-icon-button (click)="onCloseInstaller()" class="close-button">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="installer-content">
+      <form [formGroup]="installerForm" class="installer-form">
+        <!-- Installation Directory -->
+        <div class="form-section">
+          <h3>Installation Directory</h3>
+          <div class="directory-input-container">
+            <mat-form-field appearance="outline" class="directory-field">
+              <mat-label>Installation Path</mat-label>
+              <input matInput 
+                     formControlName="installPath" 
+                     placeholder="C:\Program Files\LLVM"
+                     readonly
+                     [disabled]="isInstalling">
+              <mat-hint>Choose where to install the LLVM compiler</mat-hint>
+              @if (installerForm.get('installPath')?.hasError('required')) {
+                <mat-error>Installation path is required</mat-error>
+              }
+              @if (installerForm.get('installPath')?.hasError('hasSpaces')) {
+                <mat-error>Installation path cannot contain spaces</mat-error>
+              }
+              @if (installerForm.get('installPath')?.hasError('invalidCharacters')) {
+                <mat-error>Installation path contains invalid characters</mat-error>
+              }
+            </mat-form-field>
+            <button mat-raised-button 
+                    type="button"
+                    color="accent"
+                    class="browse-button"
+                    (click)="browseForInstallDirectory()"
+                    [disabled]="isInstalling">
+              <mat-icon>folder_open</mat-icon>
+              Browse
+            </button>
+          </div>
+        </div>
+
+        <!-- Version Selection -->
+        <div class="form-section">
+          <h3>LLVM Version</h3>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Select Version</mat-label>
+            <mat-select formControlName="version" 
+                       [disabled]="isInstalling || llvmVersions.length === 0">
+              @for (version of llvmVersions; track version) {
+                <mat-option [value]="version">
+                  {{ version }}
+                </mat-option>
+              }
+            </mat-select>
+            <mat-hint>Choose the LLVM compiler version to install</mat-hint>
+            @if (installerForm.get('version')?.hasError('required')) {
+              <mat-error>Version selection is required</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <!-- Loading indicator for versions -->
+        @if (loadingVersions) {
+          <div class="loading-versions">
+            <mat-spinner diameter="24"></mat-spinner>
+            <span>Loading available versions...</span>
+          </div>
+        }
+      </form>
+    </div>
+
+    <!-- Installation Progress -->
+    @if (isInstalling) {
+      <div class="install-progress">
+        <mat-card class="progress-card">
+          <mat-card-header>
+            <div mat-card-avatar class="progress-avatar">
+              <mat-icon>download</mat-icon>
+            </div>
+            <mat-card-title>Installing LLVM Compiler</mat-card-title>
+            <mat-card-subtitle>{{ installProgressMessage }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="progress-container">
+              <mat-progress-bar 
+                mode="indeterminate" 
+                color="primary">
+              </mat-progress-bar>
+              <div class="progress-text">
+                Please wait while the LLVM compiler is being installed...
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    }
+
+    <!-- Action Buttons -->
+    <div class="installer-actions">
+      <button mat-button 
+              (click)="onCloseInstaller()" 
+              [disabled]="isInstalling">
+        Cancel
+      </button>
+      <button mat-raised-button 
+              color="primary" 
+              (click)="installLLVM()"
+              [disabled]="!installerForm.valid || isInstalling">
+        @if (isInstalling) {
+          <ng-container>
+            <mat-icon>hourglass_empty</mat-icon>
+            Installing...
+          </ng-container>
+        } @else {
+          <ng-container>
+            <mat-icon>download</mat-icon>
+            Install LLVM
+          </ng-container>
+        }
+      </button>
+    </div>
+  </div>
+</div>

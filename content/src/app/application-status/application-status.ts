@@ -20,6 +20,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { ApplicationStatusData, Documentation, MemoryUsageData } from '../../comms';
 import { MemoryUsage } from '../memory-usage/memory-usage.component';
+import { LlvmInstallerComponent } from '../llvm-installer/llvm-installer.component';
 import { BackendService } from '../backend/backend-service';
 import { Subscription } from 'rxjs';
 
@@ -31,8 +32,9 @@ import { Subscription } from 'rxjs';
         MatTabsModule,
         MatIconModule,
         MatTooltipModule,
-    MatButtonModule,
-    MemoryUsage
+        MatButtonModule,
+        MemoryUsage,
+        LlvmInstallerComponent
     ],
     templateUrl: './application-status.html',
     styleUrls: ['./application-status.scss'],
@@ -62,6 +64,8 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     // Collapsed state for empty memory usage section
     noMemoryCollapsed: boolean = false;
 
+    displayLLVMInstallControl: boolean = false;
+
     private subscriptions: Subscription[] = [] ;
 
     constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
@@ -69,6 +73,11 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     }
 
     ngOnInit() : void {
+
+        this.subscriptions.push(this.be.isLLVMInstalling.subscribe((installing) => {
+            this.displayLLVMInstallControl = installing;
+            this.cdr.detectChanges();
+        }));
 
         this.subscriptions.push(this.be.ready.subscribe((ready) => {
             if (ready) {
@@ -79,7 +88,6 @@ export class ApplicationStatus implements OnInit, OnDestroy {
 
         this.subscriptions.push(this.be.appStatusData.subscribe({
             next: (data) => {
-                this.be.log('Application status data received:') ;
                 this.running = false ;
                 this.applicationStatus = data;
                 this.isLoading = false;
@@ -130,7 +138,6 @@ export class ApplicationStatus implements OnInit, OnDestroy {
 
         this.subscriptions.push(this.be.intellisenseProject.subscribe({
             next: (projectName) => {
-                this.be.log(`ApplicationStatus: intellisense = ${projectName}`);
                 this.setIntellisenseProject(projectName) ;
             }
         }));
@@ -141,7 +148,6 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         }));
 
         this.subscriptions.push(this.be.buildDone.subscribe((done) => {
-            this.be.log(`ApplicationStatus: build done = ${done}`);
             this.running = !done;
             this.cdr.detectChanges();
         }));
@@ -158,9 +164,21 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.be.log('ApplicationStatus ngOnDestroy');
         this.subscriptions.forEach(sub => sub.unsubscribe());
     }
+
+    // Handle general message button click
+    handleGeneralMessageButton(): void {
+        if (this.applicationStatus && typeof this.applicationStatus.generalMessageRequest === 'string') {
+            this.be.sendRequestWithArgs(this.applicationStatus.generalMessageRequest, null);
+        }
+    }
+
+    // Handle closing the LLVM installer
+    closeLLVMInstaller(): void {
+        this.displayLLVMInstallControl = false;
+        this.cdr.detectChanges();
+    }    
 
     // Called when Intellisense Project checkbox is changed
     onIntellisenseProjectChange(projectName: string): void {

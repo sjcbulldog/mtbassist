@@ -47,7 +47,7 @@ export class SettingsEditor implements OnInit, OnDestroy {
   settings: MTBSetting[] = [];
   themeType: 'dark' | 'light' = 'light';
   manifestStatus: 'loading' | 'loaded' | 'not-available' = 'loading';
-  settingsErrors: SettingsError[] = [] ;
+  settingsErrors: Map<string, string> = new Map<string, string>();
 
   private subscriptions: Subscription[] = [];
 
@@ -56,7 +56,6 @@ export class SettingsEditor implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.be.log('SettingsEditor: ngOnInit called');
     this.subscriptions.push(
       this.be.ready.subscribe(ready => {
         if (ready) {
@@ -68,7 +67,6 @@ export class SettingsEditor implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.be.settings.subscribe(settings => {
         this.settings = settings;
-        this.settingsErrors = [];
         
         // Initialize tip values for choice settings
         this.settings.forEach(setting => {
@@ -87,7 +85,10 @@ export class SettingsEditor implements OnInit, OnDestroy {
 
     this.subscriptions.push(
       this.be.settingsErrors.subscribe(errors => {
-        this.settingsErrors.push(...errors);
+        this.be.debug(`SettingsEditor received ${JSON.stringify(errors) }`);
+        for(let error of errors) {
+          this.settingsErrors.set(error.setting, error.message);
+        }
         this.cdr.detectChanges();
       })
     );
@@ -207,8 +208,8 @@ export class SettingsEditor implements OnInit, OnDestroy {
     this.be.browseForFile(setting.name) ;
   }
 
-  getErrorsForSetting(settingName: string): SettingsError[] {
-    return this.settingsErrors.filter(error => error.setting === settingName);
+  getErrorsForSetting(settingName: string): string | undefined {
+    return this.settingsErrors.get(settingName) ;
   }
 
   isSettingDisabled(setting: MTBSetting): boolean {

@@ -84,7 +84,6 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
     }));
 
     this.subscriptions.push(this.be.os.subscribe(os => {
-      this.be.log(`OS type sent to frontend: ${os}`); 
       this.os = os;
       this.cdr.detectChanges();
 

@@ -1,0 +1,448 @@
+.llvm-installer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  // Global override for all mat-labels within this component
+  ::ng-deep {
+    mat-label,
+    .mat-mdc-form-field-label,
+    .mdc-floating-label,
+    .mat-form-field-label {
+      color: #333333 !important;
+      opacity: 1 !important;
+    }
+
+    .mat-focused mat-label,
+    .mat-focused .mat-mdc-form-field-label,
+    .mat-focused .mdc-floating-label {
+      color: #007bff !important;
+    }
+
+    // Default input text styling
+    input,
+    .mat-input-element,
+    .mat-mdc-input-element,
+    .mat-select-value,
+    .mat-select-value-text {
+      color: #333333 !important;
+    }
+  }
+
+  .overlay-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+  }
+
+  .installer-container {
+    position: relative;
+    background: var(--background-color, #ffffff);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 10001;
+  }
+
+  .installer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+
+    h2 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-primary, #333);
+      font-size: 1.25rem;
+      font-weight: 600;
+
+      mat-icon {
+        color: var(--primary-color, #007bff);
+      }
+    }
+
+    .close-button {
+      color: var(--text-secondary, #666);
+
+      &:hover {
+        color: var(--text-primary, #333);
+      }
+    }
+  }
+
+  .installer-content {
+    padding: 1.5rem;
+
+    .installer-form {
+      .form-section {
+        margin-bottom: 2rem;
+
+        h3 {
+          margin: 0 0 1rem 0;
+          color: var(--text-primary, #333);
+          font-size: 1.1rem;
+          font-weight: 500;
+        }
+
+        .directory-input-container {
+          display: flex;
+          gap: 1rem;
+          align-items: flex-start;
+
+          .directory-field {
+            flex: 1;
+          }
+
+          .browse-button {
+            margin-top: 8px;
+            min-width: 100px;
+          }
+        }
+
+        .full-width {
+          width: 100%;
+        }
+
+        // Ensure form field labels are readable
+        ::ng-deep mat-form-field {
+          .mat-form-field-label,
+          .mat-mdc-form-field-label,
+          .mdc-floating-label {
+            color: var(--text-primary, #333) !important;
+            opacity: 1 !important;
+          }
+
+          &.mat-focused .mat-form-field-label,
+          &.mat-focused .mat-mdc-form-field-label,
+          &.mat-focused .mdc-floating-label {
+            color: var(--primary-color, #007bff) !important;
+          }
+
+          // For outline appearance
+          &.mat-form-field-appearance-outline {
+            .mat-form-field-label,
+            .mat-mdc-form-field-label {
+              color: var(--text-primary, #333) !important;
+            }
+          }
+        }
+      }
+
+      .loading-versions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary, #666);
+        font-size: 0.9rem;
+        margin-top: 1rem;
+      }
+    }
+  }
+
+  .install-progress {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+
+    .progress-card {
+      background: var(--secondary-background, #f8f9fa);
+      border: 1px solid var(--border-color, #e0e0e0);
+
+      .progress-avatar {
+        background: var(--primary-color, #007bff);
+        color: white;
+      }
+
+      .progress-container {
+        margin-top: 1rem;
+
+        .progress-text {
+          margin-top: 0.5rem;
+          font-size: 0.9rem;
+          color: var(--text-secondary, #666);
+          text-align: center;
+        }
+      }
+    }
+  }
+
+  .installer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+    background: var(--secondary-background, #f8f9fa);
+    border-radius: 0 0 12px 12px;
+
+    button {
+      min-width: 120px;
+    }
+  }
+
+  // Dark theme support
+  &.dark-theme {
+    // Global override for dark theme labels
+    ::ng-deep {
+      mat-label,
+      .mat-mdc-form-field-label,
+      .mdc-floating-label,
+      .mat-form-field-label {
+        color: #ffffff !important;
+        opacity: 1 !important;
+      }
+
+      .mat-focused mat-label,
+      .mat-focused .mat-mdc-form-field-label,
+      .mat-focused .mdc-floating-label {
+        color: #007bff !important;
+      }
+
+      // Input text color for dark theme
+      input,
+      .mat-input-element,
+      .mat-mdc-input-element,
+      .mat-select-value,
+      .mat-select-value-text {
+        color: #ffffff !important;
+      }
+
+      // Select dropdown specific styling
+      .mat-select-trigger,
+      .mat-select-arrow,
+      .mat-select .mat-select-trigger {
+        color: #ffffff !important;
+      }
+
+      // Select label in all states
+      .mat-select mat-label,
+      .mat-select .mat-mdc-form-field-label,
+      .mat-select .mdc-floating-label,
+      .mat-mdc-select mat-label,
+      .mat-mdc-select .mat-mdc-form-field-label,
+      .mat-mdc-select .mdc-floating-label {
+        color: #ffffff !important;
+        opacity: 1 !important;
+      }
+
+      // Placeholder text
+      input::placeholder,
+      .mat-input-element::placeholder {
+        color: #cccccc !important;
+      }
+    }
+    .installer-container {
+      background: var(--dark-background, #2d2d2d);
+      border: 1px solid var(--dark-border, #444);
+    }
+
+    .installer-header {
+      border-bottom-color: var(--dark-border, #444);
+
+      h2 {
+        color: var(--dark-text-primary, #ffffff);
+      }
+
+      .close-button {
+        color: var(--dark-text-secondary, #ccc);
+
+        &:hover {
+          color: var(--dark-text-primary, #ffffff);
+        }
+      }
+    }
+
+    .installer-content {
+      .form-section h3 {
+        color: var(--dark-text-primary, #ffffff);
+      }
+
+      .loading-versions {
+        color: var(--dark-text-secondary, #ccc);
+      }
+
+      // Dark theme form field labels
+      ::ng-deep mat-form-field {
+        .mat-form-field-label,
+        .mat-mdc-form-field-label,
+        .mdc-floating-label {
+          color: var(--dark-text-primary, #ffffff) !important;
+          opacity: 1 !important;
+        }
+
+        &.mat-focused .mat-form-field-label,
+        &.mat-focused .mat-mdc-form-field-label,
+        &.mat-focused .mdc-floating-label {
+          color: var(--primary-color, #007bff) !important;
+        }
+
+        // For outline appearance in dark theme
+        &.mat-form-field-appearance-outline {
+          .mat-form-field-label,
+          .mat-mdc-form-field-label {
+            color: var(--dark-text-primary, #ffffff) !important;
+          }
+        }
+      }
+    }
+
+    .install-progress {
+      border-top-color: var(--dark-border, #444);
+
+      .progress-card {
+        background: var(--dark-secondary-background, #3d3d3d);
+        border-color: var(--dark-border, #444);
+
+        .progress-text {
+          color: var(--dark-text-secondary, #ccc);
+        }
+      }
+    }
+
+    .installer-actions {
+      border-top-color: var(--dark-border, #444);
+      background: var(--dark-secondary-background, #3d3d3d);
+    }
+  }
+
+  // Light theme support
+  &.light-theme {
+    // Global override for light theme labels
+    ::ng-deep {
+      mat-label,
+      .mat-mdc-form-field-label,
+      .mdc-floating-label,
+      .mat-form-field-label {
+        color: #333333 !important;
+        opacity: 1 !important;
+      }
+
+      .mat-focused mat-label,
+      .mat-focused .mat-mdc-form-field-label,
+      .mat-focused .mdc-floating-label {
+        color: #007bff !important;
+      }
+
+      // Input text color for light theme
+      input,
+      .mat-input-element,
+      .mat-mdc-input-element,
+      .mat-select-value,
+      .mat-select-value-text {
+        color: #333333 !important;
+      }
+
+      // Select dropdown specific styling
+      .mat-select-trigger,
+      .mat-select-arrow,
+      .mat-select .mat-select-trigger {
+        color: #333333 !important;
+      }
+
+      // Select label in all states
+      .mat-select mat-label,
+      .mat-select .mat-mdc-form-field-label,
+      .mat-select .mdc-floating-label,
+      .mat-mdc-select mat-label,
+      .mat-mdc-select .mat-mdc-form-field-label,
+      .mat-mdc-select .mdc-floating-label {
+        color: #333333 !important;
+        opacity: 1 !important;
+      }
+
+      // Placeholder text
+      input::placeholder,
+      .mat-input-element::placeholder {
+        color: #666666 !important;
+      }
+    }
+    .installer-container {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+    }
+
+    .installer-header {
+      border-bottom-color: #e0e0e0;
+
+      h2 {
+        color: #333333;
+      }
+
+      .close-button {
+        color: #666666;
+
+        &:hover {
+          color: #333333;
+        }
+      }
+    }
+
+    .installer-content {
+      .form-section h3 {
+        color: #333333;
+      }
+
+      .loading-versions {
+        color: #666666;
+      }
+
+      // Light theme form field labels
+      ::ng-deep mat-form-field {
+        .mat-form-field-label,
+        .mat-mdc-form-field-label,
+        .mdc-floating-label {
+          color: #333333 !important;
+          opacity: 1 !important;
+        }
+
+        &.mat-focused .mat-form-field-label,
+        &.mat-focused .mat-mdc-form-field-label,
+        &.mat-focused .mdc-floating-label {
+          color: #007bff !important;
+        }
+
+        // For outline appearance in light theme
+        &.mat-form-field-appearance-outline {
+          .mat-form-field-label,
+          .mat-mdc-form-field-label {
+            color: #333333 !important;
+          }
+        }
+      }
+    }
+
+    .install-progress {
+      border-top-color: #e0e0e0;
+
+      .progress-card {
+        background: #f8f9fa;
+        border-color: #e0e0e0;
+
+        .progress-text {
+          color: #666666;
+        }
+      }
+    }
+
+    .installer-actions {
+      border-top-color: #e0e0e0;
+      background: #f8f9fa;
+    }
+  }
+}

@@ -46,6 +46,7 @@ import { MemoryUsageMgr } from '../memory/memusage';
 import { DeviceDBManager } from '../devdb/devdbmgr';
 import { MTBVSCodeSettings } from './mtbvscodesettings';
 import { MTBVersion } from '../mtbenv/misc/mtbversion';
+import { LLVMInstaller } from './llvminstaller';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -72,6 +73,7 @@ export class MTBAssistObject {
     private postInitDone_: boolean = false;
     private envLoaded_: boolean = false;
     private cmdhandler_: Map<FrontEndToBackEndType, (data: any) => Promise<void>> = new Map();
+    private llvminstaller_: LLVMInstaller ;
     private memusage_ : MemoryUsageMgr ;
     private devicedb_ : DeviceDBManager | undefined = undefined ;
     private projectInfo_: Map<string, Project> = new Map();
@@ -119,6 +121,7 @@ export class MTBAssistObject {
             ]
         });
 
+        this.llvminstaller_ = new LLVMInstaller(this.logger_) ;
         this.recents_ = new RecentAppManager(this);
 
         this.aimgr_ = new AIManager(this);
@@ -138,6 +141,7 @@ export class MTBAssistObject {
         this.settings_.on('restartWorkspace', this.doRestartExtension.bind(this));
         this.settings_.on('showError', this.showSettingsError.bind(this));
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
+        this.settings_.on('updateTasks', () => { this.tasks_?.addAll() ; this.tasks_?.writeTasks() ; }) ;
 
         this.memusage_ = new MemoryUsageMgr(this) ;
 
@@ -509,7 +513,7 @@ export class MTBAssistObject {
                         this.sendMessageWithArgs('selectTab', MTBAssistObject.applicationStatusTab) ;
 
                         let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'tasks.json');
-                        this.tasks_ = new MTBTasks(this.env_!, this.logger_, p);
+                        this.tasks_ = new MTBTasks(this.env_!, this.settings_, this.logger_, p);
 
                         p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'settings.json');
                         this.vscodeSettings_ = new MTBVSCodeSettings(this.env_!, this.logger_, p);
@@ -802,6 +806,34 @@ export class MTBAssistObject {
         this.cmdhandler_.set('memory-data', this.sendMemoryInfo.bind(this)) ;   
         this.cmdhandler_.set('refreshApp', this.refreshApp.bind(this)) ;
         this.cmdhandler_.set('fix-settings', this.fixSettings.bind(this)) ;
+        this.cmdhandler_.set('install-llvm', this.installLLVM.bind(this)) ;
+    }
+
+    private installLLVM(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (!request.data) {
+                // Just bring up the install page
+                this.sendMessageWithArgs('installLLVM', {
+                    enabled: true,
+                    versions: LLVMInstaller.getAvailableVersions()
+                }) ;
+                resolve() ;
+            }
+            else {
+                // Actually do the install
+                this.llvminstaller_.install(request.data.version, request.data.installPath)
+                .then(() => {
+                    this.settings_.llvmPath = this.llvminstaller_.installPath ;
+                    this.sendMessageWithArgs('installLLVM', {
+                        enabled: false,
+                        versions: []
+                    }) ;
+                    this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
+                    vscode.window.showInformationMessage(`LLVM ${request.data.version} installed successfully.`);
+                    resolve() ;
+                }) ;
+            }
+        }) ;
     }
 
     private refreshApp(request: FrontEndToBackEndRequest): Promise<void> {
@@ -1929,6 +1961,21 @@ export class MTBAssistObject {
             if (pinfo && pinfo.tools) {
                 tools = pinfo.tools.filter((tool) => (tool.id !== MTBAssistObject.libmgrProgUUID && tool.id !== MTBAssistObject.devcfgProgUUID));
             }
+
+            let msg : string | undefined = undefined ;
+            let msgButton : string | undefined = undefined ;
+            let msgRequest : FrontEndToBackEndType | undefined = undefined ;
+
+            if (this.isPSOCEdge() && !this.settings_.hasLLVM) {
+                //
+                // See if we need to install the LLVM compiler
+                //
+                msg = 'The LLVM compiler is recommended for PSOC Edge projects. Do you want to install it?' ;
+                msgButton = 'Install LLVM' ;
+                msgRequest = 'install-llvm' ;
+            }
+            
+
             appst = {
                 valid: true,
                 name: this.env_.appInfo?.appdir || '',
@@ -1938,9 +1985,12 @@ export class MTBAssistObject {
                 middleware: [],
                 projects: projects,
                 tools: tools,
-                vscodeTasksStatus: this.tasks_?.taskFileStatus || 'missing',
-                vscodeSettingsStatus: this.vscodeSettings_?.status || 'missing',
+                vscodeTasksStatus: needVSCode ? 'good' : (this.tasks_?.taskFileStatus || 'missing'),
+                vscodeSettingsStatus: needVSCode ? 'good' : (this.vscodeSettings_?.status || 'missing'),
                 needVSCode: needVSCode,
+                generalMessage: msg,
+                generalMessageButtonText: msgButton,
+                generalMessageRequest: msgRequest
             };
         } else {
             appst = {
@@ -2343,6 +2393,14 @@ export class MTBAssistObject {
                 });
         });
         return ret;
+    }
+
+    private isPSOCEdge() {
+        if (!this.env_ || !this.env_.appInfo || this.env_.appInfo.projects.length === 0) {
+            return false ;
+        }
+
+        return this.env_.appInfo.projects[0].device.startsWith('PSE') ;
     }
 
 }

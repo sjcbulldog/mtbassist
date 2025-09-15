@@ -32,7 +32,6 @@ export class AIViewComponent implements OnInit , OnDestroy {
     private readySubscription?: Subscription;
 
     constructor(private be: BackendService) {
-        this.be.log('AIViewComponent constructor called');
     }
 
     ngOnInit(): void {
@@ -47,18 +46,15 @@ export class AIViewComponent implements OnInit , OnDestroy {
         });        
 
         this.themeSubscription = this.be.theme.subscribe((theme) => {
-            this.be.log('AIViewComponent: theme received');
             this.theme = theme;
         });
 
         this.be.ready.subscribe(() => {
-            this.be.log('AIViewComponent: backend ready');
             this.be.sendRequestWithArgs('ai-data', null) ;
         });
     }
 
     ngOnDestroy(): void {
-        this.be.log('AIViewComponent ngOnDestroy');
         if (this.apiKeySubscription) {
             this.apiKeySubscription.unsubscribe();
         }
@@ -84,9 +80,7 @@ export class AIViewComponent implements OnInit , OnDestroy {
     private relocate() {
         let aiwid = document.getElementById('eptai-chat-container') ;
         if (aiwid) {
-            this.be.log('    AI widget being relocated');
             if (this.myContainer?.nativeElement) {
-                this.be.log('    AI widget relocated');
                 this.myContainer.nativeElement.appendChild(aiwid);
                 clearInterval(this.ival);
             }
@@ -119,9 +113,7 @@ export class AIViewComponent implements OnInit , OnDestroy {
                 this.ival = setInterval(this.relocate.bind(this), 10000);
             }
             catch(err) {
-                this.be.log('    Error loading AI script: ' + err);
             }
-
         }
     }
 }

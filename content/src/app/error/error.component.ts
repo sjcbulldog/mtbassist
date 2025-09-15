@@ -35,18 +35,14 @@ export class ErrorComponent implements OnInit, OnDestroy {
   private themeSubscription?: Subscription;
 
   constructor(private be: BackendService) {
-    this.be.log('ErrorComponent initialized', 'debug') ;
   }
 
   ngOnInit() {
-    this.be.log('ErrorComponent ngOnInit', 'debug') ;
-
     this.themeSubscription = this.be.theme.subscribe(theme => {
       this.themeType = theme as 'dark' | 'light';
     });
 
     this.errmsgSubscription = this.be.errorMessage.subscribe(msg => {
-      this.be.log(`ErrorComponent received error message: ${msg}`, 'debug') ;
       if (msg) {
         this.message = msg;
       }
@@ -54,7 +50,6 @@ export class ErrorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.be.log('ErrorComponent ngOnDestroy', 'debug') ;
     if (this.themeSubscription) {
       this.themeSubscription.unsubscribe();
     }

@@ -64,7 +64,9 @@ export type FrontEndToBackEndType =
     'memory-data' |
     'prepareVSCode' |
     'password' | 
-    'refreshApp'
+    'refreshApp' |
+    'install-llvm' |
+    'llvm-versions'
     ;
 
 export type BackEndToFrontEndType =
@@ -110,7 +112,8 @@ export type BackEndToFrontEndType =
     'userguide' |
     'buildDone' | 
     'getPassword' |
-    'memoryUsage'
+    'memoryUsage' |
+    'installLLVM'
     ;
 
 export type ThemeType =
@@ -140,6 +143,11 @@ export type MTBVSCodeSettingsStatus =
     'corrupt' |
     'missing' |
     'needsSettings' ;
+
+export interface InstallLLVMData {
+  enabled: boolean ;
+  versions: string[] ;
+}
 
 export interface MTBLocationStatus {
   homeError?: string ;
@@ -285,6 +293,9 @@ export interface ApplicationStatusData {
   middleware: Middleware[];
   projects: Project[];
   tools: Tool[];
+  generalMessage? : string ;
+  generalMessageButtonText? : string ;
+  generalMessageRequest? : FrontEndToBackEndType ;
 }
 
 export interface DevKitInfo {

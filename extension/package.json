@@ -120,6 +120,7 @@
   },
   "dependencies": {
     "@vscode/vsce": "^2.32.0",
+    "adm-zip": "^0.5.16",
     "copyfile": "^0.1.2",
     "is-wsl": "^2.2.0",
     "node-fetch": "^3.3.2",

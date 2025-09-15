@@ -11,7 +11,6 @@ Features
 -------------------------------------------------------------------------------------------
 - Install LLVM
 - Mimic memory information for P6
-- Support DEBUG vs RELEASE builds
-- Support toolchains
+- Support DEBUG vs RELEASE builds & TOOLCHAINS
 
 

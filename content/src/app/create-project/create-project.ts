@@ -91,17 +91,14 @@ export class CreateProject implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        this.be.log('CreateProject component initialized');
         this.initializeForms();
 
         this.subscriptions.push(this.be.ready.subscribe((ready) => {
-            this.be.log(`CreateProject Component: ready: '${ready}'`, 'debug');
             this.be.sendRequestWithArgs('cproj-data', null);
             this.be.sendRequestWithArgs('kit-data', null);
         }));
 
         this.subscriptions.push(this.be.manifestStatus.subscribe(status => {
-            this.be.log(`CreateProject Component: manifestStatus: '${status}'`, 'debug');   
             this.manifestStatus = status ;
             
             // Enable/disable form controls based on manifest status
@@ -122,40 +119,33 @@ export class CreateProject implements OnInit, OnDestroy {
 
         this.subscriptions.push(this.be.browserFolder.subscribe(folder => {
             if (folder && folder.tag === 'create-project') {
-                this.be.log(`CreateProject Component: browserFolder: '${folder.path}'`, 'debug');
                 this.projectInfoForm.patchValue({ projectLocation: folder.path });
             }
         }));
 
         this.subscriptions.push(this.be.defaultProjectDir.subscribe(path => {
-            this.be.log(`CreateProject Component: defaultProjectDir: '${path}'`, 'debug');             
             this.defaultProjectPath = path ;
             this.projectInfoForm.patchValue({ projectLocation: this.defaultProjectPath });  
         })) ;
 
         this.subscriptions.push(this.be.theme.subscribe(theme => {
-            this.be.log(`CreateProject Component: theme: '${theme}'`, 'debug'); 
             this.themeType = theme;
             this.cdr.detectChanges() ;
         }));
 
         this.subscriptions.push(this.be.devKitStatus.subscribe(kits => {
-            this.be.log(`CreateProject Component: devKitStatus: ${kits.length} kits detected`, 'debug');
             this.devKits = kits;
         }));
 
         this.subscriptions.push(this.be.allBSPs.subscribe(bsps => {
-            this.be.log(`CreateProject Component: allBSPs: '${bsps.length} BSPs'`, 'debug');
             this.allBSPs = bsps;
         })); 
 
         this.subscriptions.push(this.be.activeBSPs.subscribe(bsps => {
-            this.be.log(`CreateProject Component: activeBSPs: '${bsps.length} BSPS'`, 'debug');
             this.activeBSPs = bsps;
         }));
 
         this.subscriptions.push(this.be.codeExample.subscribe(examples => {
-            this.be.log(`CreateProject Component: codeExamples: '${examples.length} Examples'`, 'debug');
             this.allexamples = examples;
         }));
 
@@ -169,7 +159,6 @@ export class CreateProject implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.be.log('CreateProject component destroyed');
         this.subscriptions.forEach(sub => sub.unsubscribe());
     }
 
@@ -185,12 +174,10 @@ export class CreateProject implements OnInit, OnDestroy {
     // Called when a dev kit is selected from the UI
     onDevKitSelect(kit: DevKitInfo) {
         this.selectedDevKit = kit;
-        this.be.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;
 
         let found = false;
         for(let bsp of this.allBSPs) {
             if (bsp.name === kit.bsp) {
-                this.be.log(`Dev Kit Selected: ${JSON.stringify(kit)}`, 'debug') ;
                 this.bspSelectionForm.patchValue({ category: bsp.category});
                 this.selectedCategory = bsp.category;
                 this.onCategoryChange();
@@ -202,7 +189,6 @@ export class CreateProject implements OnInit, OnDestroy {
         if (!found) {
             let cats : string[] = [] ;
             for(let bsp of this.allBSPs) {
-                this.be.log(`Checking BSP ${bsp.name} starts with dev kit ${kit.name}`) ;
                 if (bsp.name.startsWith(kit.name)) {
                     cats.push(bsp.category);
                 }
@@ -403,7 +389,6 @@ export class CreateProject implements OnInit, OnDestroy {
 
     async loadProject() {
         this.snackBar.open(`Loading project from: ${this.projectPath}`, 'Close', { duration: 3000 });
-        this.be.log(`Loading workspace ${JSON.stringify(this.exampleSelectionForm.value)}`);
         await this.be.loadWorkspace(this.projectInfoForm.value.projectLocation, this.projectInfoForm.value.projectName, this.exampleSelectionForm.value.example) ;
     }
 

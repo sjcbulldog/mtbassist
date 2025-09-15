@@ -27,13 +27,11 @@ export class UsersGuideComponent implements OnInit {
   constructor(private backend: BackendService, private sanitizer: DomSanitizer) {}
 
   ngOnInit(): void {
-    this.backend.log('user guide ngOnInit');
     this.backend.userGuide.subscribe(html => {
       this.userGuideHtml = this.sanitizer.bypassSecurityTrustHtml(html || '');
     });
 
     this.backend.ready.subscribe(ready => {
-        this.backend.log(`user guide ready seen ${ready}`);
         if (ready) {
             this.backend.sendRequestWithArgs('user-guide-data', null) ;
         }

@@ -105,8 +105,10 @@
       }
       </div>
       <!-- Display errors for this setting -->
-      @for (error of getErrorsForSetting(setting.name); track error.message) {
-        <div class="setting-error">{{ error.message }}</div>
+      @if (getErrorsForSetting(setting.name)) {
+        <div class="setting-error" style="color: #d32f2f; font-size: 0.875em; margin-top: 4px;">
+          {{ getErrorsForSetting(setting.name) }}
+        </div>
       }
       <!-- Display disabled message if setting is disabled -->
       @if (setting.disabledMessage) {

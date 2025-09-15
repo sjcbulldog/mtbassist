@@ -76,6 +76,8 @@ export class BackendService {
     defaultProjectDir: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
     os: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
     isPasswordVisible: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false) ;
+    llvmVersions: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
+    isLLVMInstalling: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false) ;
 
     // Manfiest related
     manifestStatus: BehaviorSubject<ManifestStatusType> = new BehaviorSubject<ManifestStatusType>('loading') ;
@@ -104,7 +106,6 @@ export class BackendService {
 
     constructor() {
         this.pipe_ = this.createPipe() ;
-        this.log('BackendService constructor called', 'debug') ;
         if (this.pipe_) {
             this.pipe_.registerResponseHandler(this.messageProc.bind(this));
             this.setupHandlers();
@@ -115,12 +116,12 @@ export class BackendService {
 
     public registerHandler(cmd: BackEndToFrontEndType, handler: (cmd: BackEndToFrontEndResponse) => void): void {  
         if (this.handlers_.has(cmd)) {
-            this.log(`Warning: Overriding existing handler for command: ${cmd}`) ;
+            this.warning(`overriding existing handler for command: ${cmd}`) ;
         }
         this.handlers_.set(cmd, handler);
     }
 
-    public log(message: string, type?: string) {
+    private log(message: string, type: string) {
         if (this.pipe_) {
             this.pipe_.sendRequest({
                 request: 'logMessage',
@@ -132,10 +133,24 @@ export class BackendService {
         }
     }
 
+    public debug(message: string) {
+        this.log(message, 'debug');
+    }
+
+    public info(message: string) {
+        this.log(message, 'info');
+    }
+
+    public error(message: string) {
+        this.log(message, 'error');
+    }
+
+    public warning(message: string) {
+        this.log(message, 'warning');
+    }
+
     public fixMissingAssets(project: any): void { 
-        this.log('Requesting fix for missing assets ${project.name}');
         if (this.pipe_) {
-            this.log(`Sending request to fix missing assets for project: ${JSON.stringify(project)}`);
             this.pipe_.sendRequest({
                 request: 'fixMissingAssets',
                 data: project.name
@@ -167,7 +182,7 @@ export class BackendService {
     }
 
     public browseForFolder(tag: string, button: string): void{
-        this.log('Requesting browser for folder');
+        this.debug(`Requesting browser for folder, tag: ${tag}, button: ${button}`);
             if (this.pipe_) {
                 this.pipe_.sendRequest({
                     request: 'browseForFolder',
@@ -180,7 +195,7 @@ export class BackendService {
     }
 
     public browseForFile(tag: string): void{
-        this.log('Requesting browser for file');
+        this.debug(`Requesting browser for file, tag: ${tag}`);
             if (this.pipe_) {
                 this.pipe_.sendRequest({
                     request: 'browseForFile',
@@ -243,9 +258,17 @@ export class BackendService {
         this.registerHandler('tools-loc-error', this.handleToolsLocError.bind(this)) ;
         this.registerHandler('os', (cmd) => { this.os.next(cmd.data || '') });
         this.registerHandler('userguide', (cmd) => { this.userGuide.next(cmd.data || 'User Guide') });
-        this.registerHandler('buildDone', (cmd) => { this.log(`Build done: ${JSON.stringify(cmd.data)}`, 'debug'); this.buildDone.next(cmd.data); } );
+        this.registerHandler('buildDone', (cmd) => { this.buildDone.next(cmd.data); } );
         this.registerHandler('getPassword', this.getPassword.bind(this));
         this.registerHandler('memoryUsage', (cmd) => { this.memoryUsage.next(cmd.data || []) });
+        this.registerHandler('installLLVM', this.handleInstallLLVM.bind(this));
+    }
+
+    private handleInstallLLVM(cmd: BackEndToFrontEndResponse) {
+        if (cmd.data) {
+            this.isLLVMInstalling.next(cmd.data.enabled || false);
+            this.llvmVersions.next(cmd.data.versions || []);
+        }
     }
 
     private getPassword(cmd: BackEndToFrontEndResponse) {
@@ -253,7 +276,7 @@ export class BackendService {
     }
 
     private handleToolsLocError(cmd: BackEndToFrontEndResponse) {
-        this.log(`Tools location error: ${JSON.stringify(cmd.data)}`, 'debug');
+        this.debug(`Tools location error: ${JSON.stringify(cmd.data)}`);
         this.toolsLocError.next(cmd.data);
     }
 
@@ -286,7 +309,6 @@ export class BackendService {
     }
 
     private handleAPIKey(cmd: BackEndToFrontEndResponse) {
-        this.log(`API key received: ${JSON.stringify(cmd.data)}`);
         this.aiApiKey.next(cmd.data) ;
     }   
 
@@ -352,10 +374,9 @@ export class BackendService {
         if (str.length > maxstr) {
             str = str.substring(0, maxstr) + '...';
         }
-        this.log(`Received message: ${str}`, 'debug');
         const handler = this.handlers_.get(cmd.response);
         if (!handler) {
-            this.log(`No handler found for command: ${cmd.response}`, 'debug');
+            this.error(`No handler found for command: ${cmd.response}`);
             return;
         }
         handler(cmd);

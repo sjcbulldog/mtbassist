@@ -16,7 +16,8 @@ import * as fs from 'fs' ;
 import { ModusToolboxEnvironment } from '../mtbenv';
 import { ApplicationType } from '../mtbenv/appdata/mtbappinfo';
 import * as winston from 'winston';
-import { MTBVSCodeTaskStatus } from '../comms';
+import { MTBSetting, MTBVSCodeTaskStatus } from '../comms';
+import { MTBSettings } from './mtbsettings';
 
 interface LooseObject {
     [key: string]: any
@@ -44,14 +45,16 @@ export class MTBTasks
     private tasks_ : any [] = [] ;
     private valid_: boolean = false ;
     private env_ : ModusToolboxEnvironment ;
+    private settings_ : MTBSettings ;
     private logger_ : winston.Logger ;
     private taskFileStatus_: MTBVSCodeTaskStatus = 'good' ;
 
     private static validVersion = "2.0.0" ;
 
-    constructor(env: ModusToolboxEnvironment, logger: winston.Logger, filename: string) {
+    constructor(env: ModusToolboxEnvironment, settings: MTBSettings, logger: winston.Logger, filename: string) {
         this.filename_ = filename ;
         this.env_ = env ;
+        this.settings_ = settings ;
         this.logger_ = logger ;
         this.processTasksFile() ;
     }
@@ -383,6 +386,48 @@ export class MTBTasks
         }
     }
 
+    private genArgs(taskname: string, project?: string) : string {
+        let args: string = "" ;
+        let p : string ;
+
+        let setting = this.settings_.settingByName('toolchain') ;
+        if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0) {
+            args = 'TOOLCHAIN=' + setting.value ;
+
+            switch(setting.value) {
+            case 'GCC_ARM':
+                let gccsetting: MTBSetting | undefined = this.settings_.settingByName('gccpath') ;
+                p = (gccsetting!.value as string).replace(/\\/g, '/') ;                  
+                if (gccsetting && gccsetting.value && typeof gccsetting.value === 'string' && gccsetting.value.length > 0) {
+                    args += ` CY_COMPILER_GCC_ARM_DIR=${p}` ;
+                }
+                break ;
+            case 'IAR':
+                let iarsetting: MTBSetting | undefined = this.settings_.settingByName('iarpath') ;
+                p = (iarsetting!.value as string).replace(/\\/g, '/') ;
+                if (iarsetting && iarsetting.value && typeof iarsetting.value === 'string' && iarsetting.value.length > 0) {
+                    args += ` CY_COMPILER_IAR_DIR=${p}` ;
+                }
+                break ;
+            case 'ARM':
+                let armccsetting: MTBSetting | undefined = this.settings_.settingByName('armccpath') ;
+                p = (armccsetting!.value as string).replace(/\\/g, '/') ;
+                if (armccsetting && armccsetting.value && typeof armccsetting.value === 'string' && armccsetting.value.length > 0) {
+                    args += ` CY_COMPILER_ARM_DIR=${p}` ;
+                }
+                break ;
+            case 'LLVM_ARM':
+                let llvmsetting: MTBSetting | undefined = this.settings_.settingByName('llvmpath') ;
+                p = (llvmsetting!.value as string).replace(/\\/g, '/') ;
+                if (llvmsetting && llvmsetting.value && typeof llvmsetting.value === 'string' && llvmsetting.value.length > 0) {
+                    args += ` CY_COMPILER_LLVM_ARM_DIR=${p}` ;
+                }
+                break ;
+            }
+        }
+        return args ;
+    }
+
     private generateTask(taskname: string, project?: string) : any | undefined {
         let task: any | undefined ;
 
@@ -390,24 +435,24 @@ export class MTBTasks
             task = this.generateRebuild(project) ;
         }
         else if (taskname === MTBTasks.taskNameClean) {
-            task = this.generateMakeTask(false, MTBTasks.taskNameClean, "clean", "", false, project, false, false) ;
+            task = this.generateMakeTask(false, MTBTasks.taskNameClean, "clean", this.genArgs(taskname, project), false, project, false, false) ;
         }
         else if (taskname === MTBTasks.taskNameBuild) {
             if (project === undefined && this.env_.appInfo?.type() === ApplicationType.application) {
-                task = this.generateMakeTask(true, MTBTasks.taskNameBuild, "-j build", "", true, project, false, false) ;
+                task = this.generateMakeTask(true, MTBTasks.taskNameBuild, "-j build", this.genArgs(taskname, project), true, project, false, false) ;
             }
             else {
-                task = this.generateMakeTask(true, MTBTasks.taskNameBuild, "-j build", "", true, project, false, false) ;
+                task = this.generateMakeTask(true, MTBTasks.taskNameBuild, "-j build", this.genArgs(taskname, project), true, project, false, false) ;
             }
         }
         else if (taskname === MTBTasks.taskNameErase) {
-            task =  this.generateMakeTask(false, MTBTasks.taskNameErase, "erase", "", false, project, true, true) ;
+            task =  this.generateMakeTask(false, MTBTasks.taskNameErase, "erase", this.genArgs(taskname, project), false, project, true, true) ;
         }
         else if (taskname === MTBTasks.taskNameBuildProgram) {
-            task = this.generateMakeTask(false, MTBTasks.taskNameBuildProgram, "-j program", "", true, project, true, false) ;
+            task = this.generateMakeTask(false, MTBTasks.taskNameBuildProgram, "-j program", this.genArgs(taskname, project), true, project, true, false) ;
         }
         else if (taskname === MTBTasks.taskNameQuickProgram) {
-            task =  this.generateMakeTask(false, MTBTasks.taskNameQuickProgram, "qprogram", "", false, project, true, true) ;            
+            task =  this.generateMakeTask(false, MTBTasks.taskNameQuickProgram, "qprogram", this.genArgs(taskname, project), false, project, true, true) ;            
         }
         
         return task ;

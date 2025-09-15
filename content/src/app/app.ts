@@ -51,7 +51,6 @@ export class App {
     }));
 
     this.subscriptions.push(this.be.mtbMode.subscribe(mode => {
-      this.be.log(`App component updated - ${mode}`);
       this.mtbMode = mode;
     }));
 
@@ -62,8 +61,6 @@ export class App {
     this.subscriptions.push(this.be.theme.subscribe(theme => {
       this.theme = theme ;
     }));
-
-    this.be.log(`App component initialized - ${this.mtbMode}`);
   }
 
   // Define the tabs for the navigation

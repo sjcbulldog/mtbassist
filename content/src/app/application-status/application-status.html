@@ -48,6 +48,21 @@
                 <span class="status-date">Checked: {{ currentDate | date:'medium' }}</span>
               </div>
               
+              @if (applicationStatus.generalMessage && typeof applicationStatus.generalMessage === 'string') {
+                <div class="tasks-warning" style="margin-top: 1em; margin-bottom: 1em; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 12px; display: flex; align-items: center;">
+                  <mat-icon color="warn" style="margin-right: 8px;">warning</mat-icon>
+                  <span style="flex: 1; font-weight: 500; color: #856404;">{{ applicationStatus.generalMessage }}</span>
+                  <mat-icon
+                    matTooltip="This is an important message related to your application."
+                    class="tasks-help-icon"
+                    style="cursor: pointer; margin-right: 8px; color: #856404;"
+                  >help_outline</mat-icon>
+                  <button mat-raised-button color="primary" (click)="handleGeneralMessageButton()" [disabled]="running">
+                    {{ applicationStatus.generalMessageButtonText || 'Take Action' }}
+                  </button>
+                </div>
+              }
+              
               @if (applicationStatus.needVSCode) {
                 <div class="tasks-warning" style="margin-top: 1em; margin-bottom: 1em; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 12px; display: flex; align-items: center;">
                   <mat-icon color="warn" style="margin-right: 8px;">warning</mat-icon>
@@ -422,5 +437,10 @@
       <mat-icon>info</mat-icon>
       <p>No application status available.</p>
     </div>
+  }
+
+  <!-- LLVM Installer Overlay -->
+  @if (displayLLVMInstallControl) {
+    <app-llvm-installer (close)="closeLLVMInstaller()"></app-llvm-installer>
   }
 </div>

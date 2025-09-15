@@ -37,7 +37,6 @@ export class ProjectManager {
 
     public createProjectResponse(response: BackEndToFrontEndResponse): void {
         let respdata : CreateProjectResponse = response.data as CreateProjectResponse;
-        this.backendService.log(`Project creation status: ${JSON.stringify(response)}`);
         const resolver = this.bspResolvers.get(respdata.uuid);
         if (resolver) {
             this.bspResolvers.delete(respdata.uuid);                

@@ -17,7 +17,6 @@ import { MTBAssistObject } from "./mtbassistobj";
 
 import EventEmitter = require("events");
 import { ModusToolboxEnvironment } from "../mtbenv";
-import { MTBUtils } from "../mtbenv/misc/mtbutils";
 import * as path from 'path' ;
 import * as os from 'os' ;
 import * as fs from 'fs' ;
@@ -45,6 +44,47 @@ export class MTBSettings extends EventEmitter {
             value: '',
             description: `The location of ModusToolbox if it is located in a custom location.  This is only used if the Tools Version setting is 'Custom'. (Workspace scope: applies only to this open workspace)`
         },
+        {
+            name: 'toolchain',
+            displayName: 'Toolchain',
+            owner: 'workspace',
+            type: 'choice',
+            choices: [ 'GCC_ARM', 'ARM', 'IAR', 'LLVM_ARM'],
+            value: 'GCC_ARM',
+            description: 'This is the early access pack that is enabled for the current user. (Global scope: applies globally)'
+        },   
+        {
+            name: 'gccpath',
+            displayName: 'GCC Compiler Path',
+            owner: 'extension',
+            type: 'dirpath',
+            value: '',
+            description: `The location of the GCC compiler installation. If this path is empty, the default GCC installation will be used. (Extension scope: applies globally)`
+        },
+        {
+            name: 'llvmpath',
+            displayName: 'LLVM Compiler Path',
+            owner: 'extension',
+            type: 'dirpath',
+            value: '',
+            description: `The location of the ARM LLVM compiler installation. (Extension scope: applies globally)`
+        },
+        {
+            name: 'iarpath',
+            displayName: 'IAR Compiler Path',
+            owner: 'extension',
+            type: 'dirpath',
+            value: '',
+            description: `The location of the IAR compiler installation. If this path is empty, ModusToolbox will attempt to find the IAR compiler in standard installation directories. (Extension scope: applies globally)`
+        },
+        {
+            name: 'armccpath',
+            displayName: 'ARM Compiler Path',
+            owner: 'extension',
+            type: 'dirpath',
+            value: '',
+            description: `The location of the ARM Compiler installation. (Extension scope: applies globally)`
+        },                        
         {
             name: 'enabled_eap',
             displayName: 'Early Access Pack',
@@ -119,6 +159,7 @@ export class MTBSettings extends EventEmitter {
 
         this.readSettingsFile() ;
         this.readWorkspaceSettings() ;
+        this.readExtensionSettings() ;
         this.sanitizeSettings() ;
         this.resolvePaths() ;
 
@@ -127,6 +168,15 @@ export class MTBSettings extends EventEmitter {
 
     public get toolsPath() : string | undefined {
         return this.computeToolsPath() ;
+    }
+
+    public get hasLLVM() : boolean {
+        let setting = this.settings_.find(s => s.name === 'llvmpath');
+        if (setting && setting.value && fs.existsSync(setting.value as string)) {
+            return true ;
+        }
+
+        return false ;
     }
 
     public set toolsPath(p: string | undefined) {
@@ -141,6 +191,11 @@ export class MTBSettings extends EventEmitter {
             }
             this.writeWorkspaceSettings() ;
         }
+    }
+
+    public set llvmPath(p: string) {
+        this.settings_.find(s => s.name === 'llvmpath')!.value = p ;
+        this.writeExtensionSettings() ;
     }
 
     public get settings(): MTBSetting[] {
@@ -189,6 +244,61 @@ export class MTBSettings extends EventEmitter {
                 }
                 this.emit('refresh') ;
             }
+            else if (setting.name === 'toolchain') {
+                if (setting.value === 'LLVM_ARM') {
+                    let llvmsetting = this.settingByName('llvmpath') ;
+                    if(!llvmsetting || !llvmsetting.value || !fs.existsSync(llvmsetting.value as string)) {
+                        this.emit('showError', setting.name, 'The LLVM toolchain was selected but the LLVM path is not set correctly.  Please update the LLVM path setting or the build will not be successful.') ;
+                    }
+                    else {
+                        this.emit('showError', 'llvmpath', undefined) ;
+                    }
+                }
+                else if (setting.value === 'ARM') {
+                    let armsetting = this.settingByName('armccpath') ;
+                    if(!armsetting || !armsetting.value || !fs.existsSync(armsetting.value as string)) {
+                        this.emit('showError', setting.name, 'The ARM toolchain was selected but the ARM path is not set correctly.  Please update the ARM path setting before selecting the ARM toolchain.') ;
+                    }
+                    else {
+                        this.emit('showError', 'armccpath', undefined) ;
+                    }
+                }
+                else {
+                    this.emit('showError', 'toolchain', undefined) ;
+                }
+                this.emit('updateTasks', null) ;
+                this.writeWorkspaceSettings() ;
+            }
+            else if (setting.name === 'llvmpath') {
+                if (setting.value && !fs.existsSync(setting.value as string)) {
+                    this.emit('showError', setting.name, 'The LLVM path is not valid.  Please update the LLVM path setting before selecting the LLVM toolchain.') ;
+                }
+                else {
+                    this.emit('showError', 'llvmpath', undefined) ;
+                    this.emit('showError', 'toolchain', undefined) ;
+                    this.emit('updateTasks', null) ;
+                    this.writeExtensionSettings() ;
+                }
+            }
+            else if (setting.name === 'gccpath') {
+                this.emit('updateTasks', null) ;
+                this.writeExtensionSettings() ;
+            }
+            else if (setting.name === 'iarpath') {
+                this.emit('updateTasks', null) ;
+                this.writeExtensionSettings() ;
+            }
+            else if (setting.name === 'armccpath') {
+                if (setting.value && !fs.existsSync(setting.value as string)) {
+                    this.emit('showError', setting.name, 'The ARM path is not valid.  Please update the ARM path setting before selecting the ARM toolchain.') ;
+                }
+                else {  
+                    this.emit('showError', 'armccpath', undefined) ;
+                    this.emit('showError', 'toolchain', undefined) ;
+                    this.emit('updateTasks', null) ;
+                    this.writeExtensionSettings() ;
+                }
+            }
             else {
                 this.writeSettingsFile() ;
                 if (setting.name === 'enabled_eap') {
@@ -210,6 +320,22 @@ export class MTBSettings extends EventEmitter {
             else if (!fs.existsSync(cpath.value as string)) {
                 tver.value = '' ;
                 cpath.value = '' ;
+            }
+        }
+
+        let toolchain = this.settings_.find(s => s.name === 'toolchain');
+        if (toolchain) {
+            if (toolchain.value === 'LLVM_ARM') {
+                let llvmpath = this.settings_.find(s => s.name === 'llvmpath');
+                if (!llvmpath || !llvmpath.value || !fs.existsSync(llvmpath.value as string)) {
+                    this.emit('showError', 'llvmpath', 'The LLVM path is not valid.  Please update the LLVM path setting before selecting the LLVM toolchain.');
+                }
+            }
+            else if (toolchain.value === 'ARM') {
+                let armpath = this.settings_.find(s => s.name === 'armccpath');
+                if (!armpath || !armpath.value || !fs.existsSync(armpath.value as string)) {
+                    this.emit('showError', 'armccpath', 'The ARM path is not valid.  Please update the ARM path setting before selecting the ARM toolchain.');
+                }
             }
         }
     }
@@ -316,11 +442,27 @@ export class MTBSettings extends EventEmitter {
     }
 
     private writeWorkspaceSettings() : void {
-        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 0) {
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
             for(let setting of this.settings_) {
                 if (setting.owner === 'workspace') {
                     this.ext_.context.workspaceState.update(setting.name, setting.value);
                 }
+            }
+        }
+    }
+
+    private readExtensionSettings() : void {
+        for(let setting of this.settings_) {
+            if (setting.owner === 'extension') {
+                setting.value = this.ext_.context.globalState.get(setting.name, setting.value);
+            }
+        }
+    }
+
+    private writeExtensionSettings() : void {
+        for(let setting of this.settings_) {
+            if (setting.owner === 'extension') {
+                this.ext_.context.globalState.update(setting.name, setting.value);
             }
         }
     }

@@ -185,11 +185,6 @@ export class MemoryUsageMgr {
                 break ;
             }
         }
-
-        if (group[0].name === 'xip-0' && ret) {
-            console.log(`Found segment in xip-0: start 0x${ret.start.toString(16)}, size 0x${ret.size.toString(16)}`) ;
-        }
-
         return ret ;
     }
 
@@ -202,6 +197,13 @@ export class MemoryUsageMgr {
                     ret.push(s) ;
                 }
             }
+        }
+        ret.sort((a, b) => a.start - b.start) ;
+
+        for(let i = 0; i < ret.length ; i++) {
+            let st = ret[i].start ;
+            let end = ret[i].start + ret[i].size - 1 ;
+            this.ext_.logger.debug(`MemoryUsageMgr: Memory ${group[0].name} Segment ${i} start 0x${st.toString(16)}, end 0x${end.toString(16)}, size ${ret[i].size.toString(10)}`) ;
         }
         return ret ;
     }
