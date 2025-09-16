@@ -495,7 +495,6 @@ export class MTBAssistObject {
             this.loadMTBApplication().then(() => {
                 this.updateStatusBar();
                 this.createAppStructure();
-                
 
                 this.logger_.debug('All managers initialized successfully.');
 
@@ -507,6 +506,10 @@ export class MTBAssistObject {
                 if (this.env_ && this.env_.appInfo) {
                     this.sendMessageWithArgs('sendDefaultProjectDir', path.dirname(this.env_!.appInfo!.appdir));
                 }
+
+                this.mtbmode_ = 'mtb' ;
+                this.sendMessageWithArgs('mtbMode', this.mtbmode_);
+
                 this.postInitializeManagers()
                 .then(() => {
                     if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
@@ -677,7 +680,7 @@ export class MTBAssistObject {
 
     public async initialize(): Promise<void> {
         this.initializeCommands() ;
-        this.optionallyShowPage() ; 
+        this.optionallyShowPage() ;                     // Shows initialization page
         
         let ret = new Promise<void>((resolve, reject) => {
             this.setupMgr_?.initializeLocal()
@@ -1978,8 +1981,7 @@ export class MTBAssistObject {
                 msgButton = 'Install LLVM' ;
                 msgRequest = 'install-llvm' ;
             }
-            
-
+        
             appst = {
                 valid: true,
                 name: this.env_.appInfo?.appdir || '',

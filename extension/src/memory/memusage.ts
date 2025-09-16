@@ -73,6 +73,7 @@ export class MemoryUsageMgr {
                 return ;
             }
 
+            this.segments_.clear() ;
             this.getSegmentsFromProjects()
             .then((result) => {
                 MemoryMap.getMemoryMap(this.ext_.deviceDB!,app!.projects[0].device)

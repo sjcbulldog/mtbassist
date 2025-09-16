@@ -86,6 +86,7 @@ export class LLVMInstaller extends EventEmitter {
                 }) ;
             })
             .catch(err => {
+                msg = { error: true, messages: ['Installation failed. See log for details.'] } ;
                 this.logger_.error(`LLVM download failed: ${err}`);
                 reject(err);
             }) ;
@@ -291,7 +292,7 @@ export class LLVMInstaller extends EventEmitter {
         return new Promise<string[]>((resolve, reject) => {
             let ret: string[] = [] ;
             logger.debug(`Starting LLVM download: version=${version}, path=${path}`);
-            let msg : InstallLLVMProgressMsg = { error: false, messages: ['Starting download...'] } ;
+            let msg : InstallLLVMProgressMsg = { error: false, messages: ['Downloading compiler and newlib runtime library...'] } ;
             this.emit('progress', msg) ;
 
             let arr: Promise<void>[] = [] ;
