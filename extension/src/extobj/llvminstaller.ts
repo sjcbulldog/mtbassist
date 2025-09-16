@@ -4,6 +4,8 @@ import * as fs from 'fs' ;
 import * as os from 'os' ;
 import * as path from 'path' ;
 import { EventEmitter } from 'stream';
+import { ModusToolboxEnvironment } from '../mtbenv';
+import { InstallLLVMProgressMsg } from '../comms';
 
 //
 // TODO: read a JSON file from mewserver.org to add possible new versions and URLs.
@@ -61,7 +63,8 @@ export class LLVMInstaller extends EventEmitter {
 
     public install(version: string, path: string) : Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.emit('install-start', { version: version, path: path }) ;
+            let msg : InstallLLVMProgressMsg = { error: false, messages: ['Starting installation...'] } ;
+            this.emit('progress', msg) ;
             this.logger_.debug(`Starting LLVM installation: version=${version}, path=${path}`);
             this.logger_.debug(`    Platform: ${process.platform}, Arch: ${process.arch}`);
             for(let url of this.getURLsForVersion(version)) {
@@ -72,7 +75,8 @@ export class LLVMInstaller extends EventEmitter {
             .then((files) => {
                 this.installLLVM(this.logger_, version, path, files)
                 .then(() => {
-                    this.emit('install-complete', { version: version, path: path }) ;
+                    msg = { error: false, messages: ['Installation completed successfully.'] } ;
+                    this.emit('progress', msg) ;
                     this.logger_.info(`LLVM installation completed: version=${version}, path=${path}`);
                     resolve();
                 })
@@ -105,8 +109,6 @@ export class LLVMInstaller extends EventEmitter {
         return new Promise<void>((resolve, reject) => {
             let name = path.basename(destPath) ;
             this.logger_.debug(`Starting download from ${url} to ${destPath}`);
-
-            this.emit('start', { file: name }) ;
             fetch(url).then(response => {
                 if (!response.ok) {
                     this.logger_.error(`Failed to download ${url}: ${response.statusText}`);
@@ -174,10 +176,13 @@ export class LLVMInstaller extends EventEmitter {
                 return ;
             }
 
-            
+            let msg : InstallLLVMProgressMsg = { error: false, messages: ['Installing LLVM compiler ...'] } ;
+            this.emit('progress', msg) ;            
             zip.extractAllTo(tpath, true) ;
             this.logger_.debug(`LLVM compiler installation on Windows completed to ${tpath}`);
 
+            msg  = { error: false, messages: ['Installing LLVM newlib library ...'] } ;
+            this.emit('progress', msg) ;             
             zip = new admZip(files[1]) ;
             this.installPath_ = path.join(tpath, targetDir) ;
             zip.extractAllTo(this.installPath_, true) ;
@@ -187,9 +192,79 @@ export class LLVMInstaller extends EventEmitter {
         }) ;
     }
 
-    private installLLVMMacOs(path: string, files: string[]) : Promise<void> {
+    private installLLVMMacOs(ppath: string, files: string[]) : Promise<void> {
+        let msg : InstallLLVMProgressMsg ;
         return new Promise<void>((resolve, reject) => {
-            resolve() ;
+            msg = { error: false, messages: ['Installing LLVM compiler ...'] } ;
+            this.emit('progress', msg) ;
+            ModusToolboxEnvironment.runCmdCaptureOutput('hdiutil', ['attach', '-nobrowse', '-readonly', files[0]], {})
+            .then(result => {
+                if (result[0] !== 0) {
+                    let msg = result[1].join('\n') ;
+                    reject(new Error(`Failed to mount DMG: ${msg}`)) ;
+                    return ;
+                }
+
+                let i = -1 ;
+                let line: string | undefined ;
+                for(let index = result[1].length - 1 ; index >= 0 ; --index) {
+                    line = result[1][index] ;
+                    i = line.indexOf('/Volumes/') ;
+                    if (i !== -1 ) {
+                        break ;
+                    }
+                }
+
+                if (!line) {
+                    reject(new Error('Invalid output from hdiutil command')) ;
+                    return ;
+                }
+
+                let mountPoint = line.substring(i).trim() ;
+                this.logger_.debug(`Mounted DMG at ${mountPoint}`) ;
+                let dirname = path.basename(mountPoint) ;
+                let tpath = path.join(ppath, dirname) ;
+                let srcdir = path.join(mountPoint, dirname) ;
+                ModusToolboxEnvironment.runCmdCaptureOutput('cp', ['-R', srcdir, ppath], {})
+                .then(result => {
+                    if (result[0] !== 0) {
+                        let msg = result[1].join('\n') ;
+                        reject(new Error(`Failed to copy files from DMG: ${msg}`)) ;
+                        return ;
+                    }
+                    this.installPath_ = tpath ;
+                    this.logger_.debug(`LLVM compiler installation on MacOS completed to ${this.installPath_}`);
+                    ModusToolboxEnvironment.runCmdCaptureOutput('hdiutil', ['detach', mountPoint], {})
+                    .then(result => {
+                        if (result[0] !== 0) {
+                            let msg = result[1].join('\n') ;
+                            reject(new Error(`Failed to unmount DMG: ${msg}`)) ;
+                            return ;
+                        }
+                        msg = { error: false, messages: ['Installing LLVM newlib library ...'] } ;
+                        this.emit('progress', msg) ;                        
+                        this.logger_.debug(`Unmounted DMG at ${mountPoint}`) ;
+                        // Now install the newlib overlay
+                        let admZip = require('adm-zip') ;
+                        let zip = new admZip(files[1]) ;
+                        zip.extractAllTo(this.installPath_, true) ;
+                        this.logger_.debug(`LLVM newlib overlay installation on MacOS completed to ${this.installPath_}`);
+                        resolve() ;
+                    })
+                    .catch(err => {
+                        reject(err) ;
+                        return ;
+                    }) ;
+                })
+                .catch((err) => {
+                    reject(err) ;
+                    return ;
+                }) ;
+            })
+            .catch(err => {
+                reject(err) ;
+                return ;
+            }) ;
         }) ;
     }
 
@@ -216,6 +291,8 @@ export class LLVMInstaller extends EventEmitter {
         return new Promise<string[]>((resolve, reject) => {
             let ret: string[] = [] ;
             logger.debug(`Starting LLVM download: version=${version}, path=${path}`);
+            let msg : InstallLLVMProgressMsg = { error: false, messages: ['Starting download...'] } ;
+            this.emit('progress', msg) ;
 
             let arr: Promise<void>[] = [] ;
             for(let url of this.getURLsForVersion(version)) {
@@ -228,6 +305,8 @@ export class LLVMInstaller extends EventEmitter {
             }
 
             Promise.all(arr).then(() => {
+                msg = { error: false, messages: ['Download completed successfully.'] } ;
+                this.emit('progress', msg) ;
                 resolve(ret);
             }).catch(err => {
                 reject(err);

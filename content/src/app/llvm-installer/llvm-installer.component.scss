@@ -177,6 +177,19 @@
           font-size: 0.9rem;
           color: var(--text-secondary, #666);
           text-align: center;
+
+          .message-line {
+            margin-bottom: 0.25rem;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            &.error-text {
+              color: var(--error-color, #d32f2f);
+              font-weight: 500;
+            }
+          }
         }
       }
     }
@@ -311,6 +324,19 @@
 
         .progress-text {
           color: var(--dark-text-secondary, #ccc);
+
+          .message-line {
+            margin-bottom: 0.25rem;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            &.error-text {
+              color: var(--dark-error-color, #f44336);
+              font-weight: 500;
+            }
+          }
         }
       }
     }
@@ -436,6 +462,19 @@
 
         .progress-text {
           color: #666666;
+
+          .message-line {
+            margin-bottom: 0.25rem;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            &.error-text {
+              color: #d32f2f;
+              font-weight: 500;
+            }
+          }
         }
       }
     }

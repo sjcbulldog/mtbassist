@@ -122,6 +122,10 @@ export class MTBAssistObject {
         });
 
         this.llvminstaller_ = new LLVMInstaller(this.logger_) ;
+        this.llvminstaller_.on('progress', (msg) => {
+            this.sendMessageWithArgs('installLLVMMessage', msg);
+        });
+
         this.recents_ = new RecentAppManager(this);
 
         this.aimgr_ = new AIManager(this);

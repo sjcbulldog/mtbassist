@@ -90,12 +90,24 @@
           </mat-card-header>
           <mat-card-content>
             <div class="progress-container">
-              <mat-progress-bar 
-                mode="indeterminate" 
-                color="primary">
-              </mat-progress-bar>
+              @if (!installMessages || !installMessages.error) {
+                <mat-progress-bar 
+                  mode="indeterminate" 
+                  color="primary">
+                </mat-progress-bar>
+              }
               <div class="progress-text">
-                Please wait while the LLVM compiler is being installed...
+                @if (installMessages && installMessages.messages.length > 0) {
+                  @for (message of installMessages.messages; track message) {
+                    <div 
+                      class="message-line"
+                      [class.error-text]="installMessages.error">
+                      {{ message }}
+                    </div>
+                  }
+                } @else {
+                  Please wait while the LLVM compiler is being installed...
+                }
               </div>
             </div>
           </mat-card-content>

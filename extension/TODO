@@ -9,7 +9,7 @@ Bugs
 
 Features
 -------------------------------------------------------------------------------------------
-- Install LLVM
+- Install LLVM - make robust to errors, provide more status
 - Mimic memory information for P6
 - Support DEBUG vs RELEASE builds & TOOLCHAINS
 

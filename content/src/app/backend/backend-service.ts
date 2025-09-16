@@ -18,7 +18,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, MemoryUsageData } from '../../comms';
+import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, MemoryUsageData, InstallLLVMProgressMsg } from '../../comms';
 import { ProjectManager } from './projectmgr';
 
 declare var acquireVsCodeApi: any | undefined ;
@@ -76,8 +76,11 @@ export class BackendService {
     defaultProjectDir: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
     os: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
     isPasswordVisible: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false) ;
+
+    // LLVM installer related
     llvmVersions: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
     isLLVMInstalling: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false) ;
+    llvmProgressMessages: BehaviorSubject<InstallLLVMProgressMsg | null> = new BehaviorSubject<InstallLLVMProgressMsg | null>(null) ;
 
     // Manfiest related
     manifestStatus: BehaviorSubject<ManifestStatusType> = new BehaviorSubject<ManifestStatusType>('loading') ;
@@ -262,6 +265,13 @@ export class BackendService {
         this.registerHandler('getPassword', this.getPassword.bind(this));
         this.registerHandler('memoryUsage', (cmd) => { this.memoryUsage.next(cmd.data || []) });
         this.registerHandler('installLLVM', this.handleInstallLLVM.bind(this));
+        this.registerHandler('installLLVMMessage', this.handleInstallLLVMMessage.bind(this));
+    }
+
+    private handleInstallLLVMMessage(cmd: BackEndToFrontEndResponse) {
+        if (cmd.data) {
+            this.llvmProgressMessages.next(cmd.data as InstallLLVMProgressMsg) ;
+        }
     }
 
     private handleInstallLLVM(cmd: BackEndToFrontEndResponse) {

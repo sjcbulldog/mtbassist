@@ -11,7 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Subscription } from 'rxjs';
 import { BackendService } from '../backend/backend-service';
-import { ThemeType } from '../../comms';
+import { InstallLLVMProgressMsg, ThemeType } from '../../comms';
 
 @Component({
   selector: 'app-llvm-installer',
@@ -40,6 +40,7 @@ export class LlvmInstallerComponent implements OnInit, OnDestroy {
   isInstalling = false;
   installProgressMessage = '';
   themeType: ThemeType = 'light';
+  installMessages : InstallLLVMProgressMsg | null = null ;
 
   private subscriptions: Subscription[] = [];
 
@@ -75,6 +76,12 @@ export class LlvmInstallerComponent implements OnInit, OnDestroy {
         if (result && result.path) {
           this.installerForm.patchValue({ installPath: result.path });
         }
+      })
+    );
+
+    this.subscriptions.push(
+      this.backendService.llvmProgressMessages.subscribe(msg => {
+        this.installMessages = msg ;
       })
     );
   }

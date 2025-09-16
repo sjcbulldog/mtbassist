@@ -113,7 +113,8 @@ export type BackEndToFrontEndType =
     'buildDone' | 
     'getPassword' |
     'memoryUsage' |
-    'installLLVM'
+    'installLLVM' |
+    'installLLVMMessage' 
     ;
 
 export type ThemeType =
@@ -143,6 +144,11 @@ export type MTBVSCodeSettingsStatus =
     'corrupt' |
     'missing' |
     'needsSettings' ;
+
+export interface InstallLLVMProgressMsg {
+  error: boolean ;
+  messages: string[] ;
+}
 
 export interface InstallLLVMData {
   enabled: boolean ;

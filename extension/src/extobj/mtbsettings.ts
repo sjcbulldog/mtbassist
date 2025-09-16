@@ -196,6 +196,7 @@ export class MTBSettings extends EventEmitter {
     public set llvmPath(p: string) {
         this.settings_.find(s => s.name === 'llvmpath')!.value = p ;
         this.writeExtensionSettings() ;
+        this.emit('refresh') ;               
     }
 
     public get settings(): MTBSetting[] {
