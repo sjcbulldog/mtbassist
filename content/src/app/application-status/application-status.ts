@@ -74,14 +74,6 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     selectedConfiguration: string = 'Debug';
     configurationOptions: string[] = ['Debug', 'Release'];
 
-    // Alt key state for Quick Program functionality
-    isAltKeyPressed: boolean = false;
-
-    // Event listener references for cleanup
-    private keydownListener?: (event: KeyboardEvent) => void;
-    private keyupListener?: (event: KeyboardEvent) => void;
-    private blurListener?: () => void;
-
     private subscriptions: Subscription[] = [] ;
 
     constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
@@ -182,53 +174,10 @@ export class ApplicationStatus implements OnInit, OnDestroy {
             }
             this.cdr.detectChanges();
         }));
-
-        // Add keyboard event listeners for Alt key detection
-        this.addKeyboardListeners();
-    }
-
-    private addKeyboardListeners(): void {
-        // Create listener functions and store references for cleanup
-        this.keydownListener = (event: KeyboardEvent) => {
-            if (event.altKey && !this.isAltKeyPressed) {
-                this.isAltKeyPressed = true;
-                this.cdr.detectChanges();
-            }
-        };
-
-        this.keyupListener = (event: KeyboardEvent) => {
-            if (!event.altKey && this.isAltKeyPressed) {
-                this.isAltKeyPressed = false;
-                this.cdr.detectChanges();
-            }
-        };
-
-        this.blurListener = () => {
-            if (this.isAltKeyPressed) {
-                this.isAltKeyPressed = false;
-                this.cdr.detectChanges();
-            }
-        };
-
-        // Add event listeners
-        document.addEventListener('keydown', this.keydownListener);
-        document.addEventListener('keyup', this.keyupListener);
-        window.addEventListener('blur', this.blurListener);
     }
 
     ngOnDestroy(): void {
         this.subscriptions.forEach(sub => sub.unsubscribe());
-        
-        // Clean up keyboard event listeners
-        if (this.keydownListener) {
-            document.removeEventListener('keydown', this.keydownListener);
-        }
-        if (this.keyupListener) {
-            document.removeEventListener('keyup', this.keyupListener);
-        }
-        if (this.blurListener) {
-            window.removeEventListener('blur', this.blurListener);
-        }
     }
 
     // Handle general message button click
@@ -487,17 +436,6 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     programProject(project: any): void {
         this.running = true;
         this.be.executeBuildAction('program', project.name);
-    }
-
-    // Quick Program Actions (when Alt key is pressed)
-    quickProgramApplication(): void {
-        this.running = true;
-        this.be.executeBuildAction('qprogram');
-    }
-
-    quickProgramProject(project: any): void {
-        this.running = true;
-        this.be.executeBuildAction('qprogram', project.name);
     }
 
     // Collapsible section methods

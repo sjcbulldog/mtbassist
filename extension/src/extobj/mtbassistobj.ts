@@ -755,6 +755,7 @@ export class MTBAssistObject {
         else {
             this.logger_.warn(`Task not found: ${task}`);
             vscode.window.showWarningMessage(`The requested task '${task}' does not exist.`);
+            this.sendMessageWithArgs('buildDone', true) ;
         }
     }
 
@@ -2389,7 +2390,6 @@ export class MTBAssistObject {
         let ret = new Promise<void>((resolve) => {
             this.worker_?.runAction(request.data.action, request.data.project)
                 .then(() => {
-                    this.sendMessageWithArgs('buildDone', true);
                     resolve();
                 });
         });

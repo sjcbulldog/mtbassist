@@ -154,10 +154,10 @@
                       Erase
                     </button>
                     <button mat-raised-button class="app-build-btn program-btn" 
-                            (click)="isAltKeyPressed ? quickProgramApplication() : programApplication()" 
+                            (click)="programApplication()" 
                             [disabled]="running">
                       <mat-icon>download</mat-icon>
-                      {{ isAltKeyPressed ? 'Quick Program' : 'Program' }}
+                      Program
                     </button>
                     <button mat-raised-button class="app-build-btn readme-btn" (click)="viewReadme()" [disabled]="running">
                       <mat-icon>description</mat-icon>
@@ -307,10 +307,10 @@
                   Clean
                 </button>
                 <button mat-raised-button class="project-build-btn program-btn" 
-                        (click)="isAltKeyPressed ? quickProgramProject(project) : programProject(project)" 
+                        (click)="programProject(project)" 
                         [disabled]="running">
                   <mat-icon>download</mat-icon>
-                  {{ isAltKeyPressed ? 'Quick Program' : 'Program' }}
+                  Program
                 </button>
               </div>
               
