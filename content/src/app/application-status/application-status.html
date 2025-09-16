@@ -37,7 +37,7 @@
                   style="vertical-align: middle; cursor: pointer; margin-left: 8px;"
                 >help_outline</mat-icon>
               </div>
-              <div class="app-status-row">
+              <div class="app-status-row" style="display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 16px;">
                 <span class="status-label">Status:</span>
                 <span class="status-badge" [ngClass]="applicationStatus.valid ? 'status-valid' : 'status-invalid'">
                   <mat-icon class="status-icon" [ngClass]="applicationStatus.valid ? 'icon-valid' : 'icon-invalid'">
@@ -46,6 +46,23 @@
                   <span class="status-text">{{ applicationStatus.valid ? 'ModusToolbox Project Loaded' : 'No ModusToolbox Project Loaded' }}</span>
                 </span>
                 <span class="status-date">Checked: {{ currentDate | date:'medium' }}</span>
+                
+                <!-- Configuration Selector aligned to the right -->
+                <div class="config-selector" style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+                  <mat-form-field appearance="outline" style="width: 120px; font-size: 0.875rem;">
+                    <mat-label>Config</mat-label>
+                    <mat-select [value]="applicationStatus.configuration" (selectionChange)="onConfigurationChange($event.value)">
+                      @for (config of configurationOptions; track config) {
+                        <mat-option [value]="config">{{ config }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-icon
+                    matTooltip="Selecting a configuration causes the complete application to be built with that configuration. The configuration can either be Debug or Release. Selecting None causes no configuration to be specified. Therefore, the default from the make files will be used. Select none, and then edit the CONFIG value in each make file to get a mix of Debug and Release builds."
+                    class="config-help-icon"
+                    style="cursor: pointer; color: #666; font-size: 20px; margin-left: 4px;"
+                  >help_outline</mat-icon>
+                </div>
               </div>
               
               @if (applicationStatus.generalMessage && typeof applicationStatus.generalMessage === 'string') {

@@ -66,7 +66,8 @@ export type FrontEndToBackEndType =
     'password' | 
     'refreshApp' |
     'install-llvm' |
-    'llvm-versions'
+    'llvm-versions' |
+    'set-config'
     ;
 
 export type BackEndToFrontEndType =
@@ -299,6 +300,7 @@ export interface ApplicationStatusData {
   middleware: Middleware[];
   projects: Project[];
   tools: Tool[];
+  configuration: string ;
   generalMessage? : string ;
   generalMessageButtonText? : string ;
   generalMessageRequest? : FrontEndToBackEndType ;

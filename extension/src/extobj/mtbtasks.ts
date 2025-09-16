@@ -425,6 +425,11 @@ export class MTBTasks
                 break ;
             }
         }
+
+        setting = this.settings_.settingByName('configuration') ;
+        if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0 && setting.value !== 'None') {
+            args += ` CONFIG=${setting.value}` ;
+        }
         return args ;
     }
 

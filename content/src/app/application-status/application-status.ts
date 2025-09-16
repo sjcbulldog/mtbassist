@@ -18,6 +18,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { ApplicationStatusData, Documentation, MemoryUsageData } from '../../comms';
 import { MemoryUsage } from '../memory-usage/memory-usage.component';
 import { LlvmInstallerComponent } from '../llvm-installer/llvm-installer.component';
@@ -33,6 +35,8 @@ import { Subscription } from 'rxjs';
         MatIconModule,
         MatTooltipModule,
         MatButtonModule,
+        MatSelectModule,
+        MatFormFieldModule,
         MemoryUsage,
         LlvmInstallerComponent
     ],
@@ -66,6 +70,10 @@ export class ApplicationStatus implements OnInit, OnDestroy {
 
     displayLLVMInstallControl: boolean = false;
 
+    // Configuration selector
+    selectedConfiguration: string = 'Debug';
+    configurationOptions: string[] = ['Debug', 'Release', 'None'];
+
     private subscriptions: Subscription[] = [] ;
 
     constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
@@ -93,6 +101,11 @@ export class ApplicationStatus implements OnInit, OnDestroy {
                 this.isLoading = false;
                 this.hasError = false;
                 this.fixingAssetsProjects.clear() ;
+
+                // Update configuration from backend data
+                if (data && data.configuration) {
+                    this.selectedConfiguration = data.configuration;
+                }
 
                 // Initialize application-level sections
                 if (!this.collapsedSections.has('application')) {
@@ -484,6 +497,14 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         this.isLoading = true;
         this.hasError = false;
         this.be.sendRequestWithArgs('refreshApp', null);
+    }
+
+    onConfigurationChange(configuration: string) {
+        this.selectedConfiguration = configuration;
+        if (this.applicationStatus) {
+            this.applicationStatus.configuration = configuration;
+        }
+        this.be.sendRequestWithArgs('set-config', configuration);
     }
 }
 

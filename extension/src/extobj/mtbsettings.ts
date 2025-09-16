@@ -45,13 +45,22 @@ export class MTBSettings extends EventEmitter {
             description: `The location of ModusToolbox if it is located in a custom location.  This is only used if the Tools Version setting is 'Custom'. (Workspace scope: applies only to this open workspace)`
         },
         {
+            name: 'configuration',
+            displayName: 'Configuration',
+            owner: 'workspace',
+            type: 'choice',
+            choices: [ 'Debug', 'Release', 'None'],
+            value: 'Debug',
+            description: 'This is the configuration to use when building the application. (Workspace scope: applies only to this open workspace)'
+        },           
+        {
             name: 'toolchain',
             displayName: 'Toolchain',
             owner: 'workspace',
             type: 'choice',
             choices: [ 'GCC_ARM', 'ARM', 'IAR', 'LLVM_ARM'],
             value: 'GCC_ARM',
-            description: 'This is the early access pack that is enabled for the current user. (Global scope: applies globally)'
+            description: 'This is the toolchain to use when building the application. (Workspace scope: applies only to this open workspace)'
         },   
         {
             name: 'gccpath',
@@ -199,6 +208,19 @@ export class MTBSettings extends EventEmitter {
         this.emit('refresh') ;               
     }
 
+    public get configuration() : string {
+        let setting = this.settings_.find(s => s.name === 'configuration');
+        return setting ? String(setting.value || '') : '' ;
+    }
+
+    public set configuration(c: string) {
+        let setting = this.settings_.find(s => s.name === 'configuration');
+        if (setting) {
+            setting.value = c;
+            this.writeWorkspaceSettings();
+        }
+    }
+
     public get settings(): MTBSetting[] {
         let settings = JSON.parse(JSON.stringify(this.settings_)) as MTBSetting[] ;
         this.updateEAPChoices(settings) ;
@@ -269,6 +291,10 @@ export class MTBSettings extends EventEmitter {
                 }
                 this.emit('updateTasks', null) ;
                 this.writeWorkspaceSettings() ;
+            }
+            else if (setting.name === 'configuration') {
+                this.emit('updateApp') ;
+                this.writeExtensionSettings() ;
             }
             else if (setting.name === 'llvmpath') {
                 if (setting.value && !fs.existsSync(setting.value as string)) {

@@ -146,6 +146,7 @@ export class MTBAssistObject {
         this.settings_.on('showError', this.showSettingsError.bind(this));
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
         this.settings_.on('updateTasks', () => { this.tasks_?.addAll() ; this.tasks_?.writeTasks() ; }) ;
+        this.settings_.on('updateApp', () => { this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ; }) ;
 
         this.memusage_ = new MemoryUsageMgr(this) ;
 
@@ -814,6 +815,19 @@ export class MTBAssistObject {
         this.cmdhandler_.set('refreshApp', this.refreshApp.bind(this)) ;
         this.cmdhandler_.set('fix-settings', this.fixSettings.bind(this)) ;
         this.cmdhandler_.set('install-llvm', this.installLLVM.bind(this)) ;
+        this.cmdhandler_.set('set-config', this.setConfig.bind(this)) ;
+    }
+
+    private setConfig(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (request.data) {
+                this.settings_.configuration = request.data ;
+                this.tasks_?.addAll() ;
+                this.tasks_?.writeTasks() ;
+                this.sendMessageWithArgs('settings', this.settings_.settings);
+            }
+            resolve() ;
+        });
     }
 
     private installLLVM(request: FrontEndToBackEndRequest): Promise<void> {
@@ -1996,7 +2010,8 @@ export class MTBAssistObject {
                 needVSCode: needVSCode,
                 generalMessage: msg,
                 generalMessageButtonText: msgButton,
-                generalMessageRequest: msgRequest
+                generalMessageRequest: msgRequest,
+                configuration: this.settings_.configuration
             };
         } else {
             appst = {
@@ -2010,8 +2025,8 @@ export class MTBAssistObject {
                 tools: [],
                 vscodeTasksStatus: 'good',
                 vscodeSettingsStatus: 'good',
-                needVSCode: false
-
+                needVSCode: false,
+                configuration: 'Debug'
             };
         }
         return appst;
