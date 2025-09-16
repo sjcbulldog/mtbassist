@@ -72,7 +72,7 @@ export class ApplicationStatus implements OnInit, OnDestroy {
 
     // Configuration selector
     selectedConfiguration: string = 'Debug';
-    configurationOptions: string[] = ['Debug', 'Release', 'None'];
+    configurationOptions: string[] = ['Debug', 'Release'];
 
     private subscriptions: Subscription[] = [] ;
 

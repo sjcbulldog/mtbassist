@@ -292,10 +292,6 @@ export class MTBSettings extends EventEmitter {
                 this.emit('updateTasks', null) ;
                 this.writeWorkspaceSettings() ;
             }
-            else if (setting.name === 'configuration') {
-                this.emit('updateApp') ;
-                this.writeExtensionSettings() ;
-            }
             else if (setting.name === 'llvmpath') {
                 if (setting.value && !fs.existsSync(setting.value as string)) {
                     this.emit('showError', setting.name, 'The LLVM path is not valid.  Please update the LLVM path setting before selecting the LLVM toolchain.') ;

@@ -41,7 +41,6 @@ import { VSCodeWorker } from './vscodeworker';
 import { MtbFunIndex } from '../keywords/mtbfunindex';
 import { MTBSettings } from './mtbsettings';
 import { LCSManager } from './lcsmgr';
-import { AIManager } from '../ai/aimgr';
 import { MemoryUsageMgr } from '../memory/memusage';
 import { DeviceDBManager } from '../devdb/devdbmgr';
 import { MTBVSCodeSettings } from './mtbvscodesettings';
@@ -93,7 +92,6 @@ export class MTBAssistObject {
     private settings_: MTBSettings;
     private statusBarItem_: vscode.StatusBarItem;
     private termRegistered_: boolean = false;
-    private aimgr_: AIManager;
     private ready_ : boolean = false ;
     private theme_ : ThemeType = 'light';
     private intellisenseProject_ : string | undefined ;
@@ -128,11 +126,6 @@ export class MTBAssistObject {
 
         this.recents_ = new RecentAppManager(this);
 
-        this.aimgr_ = new AIManager(this);
-        this.aimgr_.on('apikey', (apikey) => {
-            this.sendMessageWithArgs('apikey', apikey);
-        });
-
         this.intellisense_ = new IntelliSenseMgr(this);
 
         this.setupMgr_ = new SetupMgr(this);
@@ -146,7 +139,6 @@ export class MTBAssistObject {
         this.settings_.on('showError', this.showSettingsError.bind(this));
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
         this.settings_.on('updateTasks', () => { this.tasks_?.addAll() ; this.tasks_?.writeTasks() ; }) ;
-        this.settings_.on('updateApp', () => { this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ; }) ;
 
         this.memusage_ = new MemoryUsageMgr(this) ;
 
@@ -364,9 +356,6 @@ export class MTBAssistObject {
             p = this.lcsMgr_!.updateBSPS();
             parray.push(p);
 
-            p = this.aimgr_.initialize();
-            parray.push(p);
-            
             Promise.all(parray)
                 .then(() => {
                     this.logger_.debug('All auxiliary setup completed successfully.');
@@ -806,7 +795,6 @@ export class MTBAssistObject {
         this.cmdhandler_.set('check-ready', this.checkReady.bind(this));
         this.cmdhandler_.set('lcs-data', this.getLcsData.bind(this));
         this.cmdhandler_.set('glossary-data', this.getGlossaryData.bind(this)) ;
-        this.cmdhandler_.set('ai-data', this.getAIData.bind(this)) ;
         this.cmdhandler_.set('user-guide-data', this.provideUserGuide.bind(this)) ;
         this.cmdhandler_.set('fix-tasks', this.fixTasks.bind(this)) ;
         this.cmdhandler_.set('prepareVSCode', this.prepareVSCode.bind(this)) ;
@@ -821,12 +809,10 @@ export class MTBAssistObject {
     private setConfig(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (request.data) {
-                this.settings_.configuration = request.data ;
+                this.settings_.configuration = request.data.configuration ;
                 this.tasks_?.addAll() ;
                 this.tasks_?.writeTasks() ;
-                this.sendMessageWithArgs('settings', this.settings_.settings);
             }
-            resolve() ;
         });
     }
 
@@ -944,13 +930,6 @@ export class MTBAssistObject {
         return new Promise<void>((resolve, reject) => {
 
             this.sendMessageWithArgs('userguide', this.getUserGuideContent()) ;
-            resolve() ;
-        });
-    }
-
-    private getAIData(_ : FrontEndToBackEndRequest) : Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            this.sendMessageWithArgs('apikey', this.aimgr_.key) ;
             resolve() ;
         });
     }

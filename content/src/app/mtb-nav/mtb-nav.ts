@@ -26,7 +26,6 @@ import { RecentlyOpenedComponent } from "../recently-opened/recently-opened.comp
 import { GlossaryComponent } from "../glossary/glossary.component";
 import { SettingsEditor } from "../settings-editor/settings-editor";
 import { LocalContentStorageComponent } from "../local-content-storage/local-content-storage";
-import { AIViewComponent } from "../ai-view/ai-view.component";
 import { UsersGuideComponent } from "../users-guide/users-guide.component";
 
 export interface MtbNavTab {

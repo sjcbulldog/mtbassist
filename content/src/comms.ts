@@ -49,7 +49,6 @@ export type FrontEndToBackEndType =
     'chooseMTBLocation' |
     'hasAccount' |
     'checkInstallPath' |
-    'ai-data' |
     'app-data' |
     'cproj-data' |
     'kit-data' |
