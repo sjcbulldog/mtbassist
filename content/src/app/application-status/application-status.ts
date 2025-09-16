@@ -104,7 +104,6 @@ export class ApplicationStatus implements OnInit, OnDestroy {
 
         this.subscriptions.push(this.be.appStatusData.subscribe({
             next: (data) => {
-                this.running = false ;
                 this.applicationStatus = data;
                 this.isLoading = false;
                 this.hasError = false;
@@ -169,6 +168,7 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         }));
 
         this.subscriptions.push(this.be.buildDone.subscribe((done) => {
+            this.be.debug(`Component level build done status received: ${done}`);
             this.running = !done;
             this.cdr.detectChanges();
         }));

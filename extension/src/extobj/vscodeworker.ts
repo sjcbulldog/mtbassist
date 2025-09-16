@@ -242,7 +242,6 @@ export class VSCodeWorker extends EventEmitter  {
         return new Promise<void>((resolve, reject) => {
             let task = this.mapActionToTask(action, project);
             this.emit('runtask', task) ;
-            resolve() ;
         });
     }
 

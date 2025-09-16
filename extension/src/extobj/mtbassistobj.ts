@@ -147,6 +147,7 @@ export class MTBAssistObject {
             .then((ret) => {
                 if (ret) {
                     this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;
+                    this.sendMessageWithArgs('buildDone', true) ;
                 }
             });
         }) ;

@@ -44,7 +44,7 @@ export class BackendService {
     // Application related
     appStatusData: BehaviorSubject<ApplicationStatusData | null> = new BehaviorSubject<ApplicationStatusData | null>(null);
     loadedAsset: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
-    buildDone: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false) ;
+    buildDone: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true) ;
 
     // Install and setup related
     neededTools: BehaviorSubject<SetupProgram[]> = new BehaviorSubject<SetupProgram[]>([]);
@@ -261,7 +261,7 @@ export class BackendService {
         this.registerHandler('tools-loc-error', this.handleToolsLocError.bind(this)) ;
         this.registerHandler('os', (cmd) => { this.os.next(cmd.data || '') });
         this.registerHandler('userguide', (cmd) => { this.userGuide.next(cmd.data || 'User Guide') });
-        this.registerHandler('buildDone', (cmd) => { this.buildDone.next(cmd.data); } );
+        this.registerHandler('buildDone', (cmd) => { this.debug('Received Build Done') ;this.buildDone.next(cmd.data); } );
         this.registerHandler('getPassword', this.getPassword.bind(this));
         this.registerHandler('memoryUsage', (cmd) => { this.memoryUsage.next(cmd.data || []) });
         this.registerHandler('installLLVM', this.handleInstallLLVM.bind(this));
