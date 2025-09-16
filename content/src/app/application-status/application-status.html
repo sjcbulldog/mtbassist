@@ -153,9 +153,11 @@
                       <mat-icon>delete</mat-icon>
                       Erase
                     </button>
-                    <button mat-raised-button class="app-build-btn program-btn" (click)="programApplication()" [disabled]="running">
+                    <button mat-raised-button class="app-build-btn program-btn" 
+                            (click)="isAltKeyPressed ? quickProgramApplication() : programApplication()" 
+                            [disabled]="running">
                       <mat-icon>download</mat-icon>
-                      Program
+                      {{ isAltKeyPressed ? 'Quick Program' : 'Program' }}
                     </button>
                     <button mat-raised-button class="app-build-btn readme-btn" (click)="viewReadme()" [disabled]="running">
                       <mat-icon>description</mat-icon>
@@ -304,9 +306,11 @@
                   <mat-icon>cleaning_services</mat-icon>
                   Clean
                 </button>
-                <button mat-raised-button class="project-build-btn program-btn" (click)="programProject(project)" [disabled]="running">
+                <button mat-raised-button class="project-build-btn program-btn" 
+                        (click)="isAltKeyPressed ? quickProgramProject(project) : programProject(project)" 
+                        [disabled]="running">
                   <mat-icon>download</mat-icon>
-                  Program
+                  {{ isAltKeyPressed ? 'Quick Program' : 'Program' }}
                 </button>
               </div>
               
