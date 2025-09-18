@@ -109,7 +109,7 @@ export class MTBUtils {
             ret.push('/Applications/ModusToolbox') ;
         }
         else if (process.platform === 'linux') {
-            throw new Error('TODO: Linux Support') ;
+            ret.push(path.join('/opt', 'Tools', 'ModusToolbox')) ;
         }
         else {
             throw new Error('Unsupported platform') ;
@@ -122,7 +122,7 @@ export class MTBUtils {
         let data ;
         try {
             data = fs.readFileSync(file) ;
-            if (data.length >= 3 && data[0] == 0xef && data[1] == 0xbb && data[2] == 0xbf) {
+            if (data.length >= 3 && data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf) {
                 data = data.subarray(3) ;
             }
         }

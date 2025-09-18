@@ -97,7 +97,7 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "copydist": "copyfiles ../content/single-dist/index.html content",
-    "copyshared": "/cygwin64/bin/cp ../content/src/comms.ts src",
+    "copyshared": "cp ../content/src/comms.ts src",
     "copy": "npm run copydist && npm run copyshared",
     "content": "cd ../content && npm run build",
     "build": "npm run content && npm run copy && npm run compile"
@@ -122,6 +122,7 @@
     "@vscode/vsce": "^2.32.0",
     "adm-zip": "^0.5.16",
     "copyfile": "^0.1.2",
+    "copyfiles": "^2.4.1",
     "is-wsl": "^2.2.0",
     "node-fetch": "^3.3.2",
     "open": "^9.1.0",

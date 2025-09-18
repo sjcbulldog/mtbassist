@@ -16,9 +16,30 @@ export interface DeviceMemorySegment {
     main?: string ;
 }
 
+export class BusMaster {
+
+}
+
+export class PhysicalMemory {
+
+}
+
+export class ReferencedMemory {
+
+}
+
+export class MemoryView {
+
+}
+
 export class MemoryMap {
     private static readonly dbFileTag = 'PSOCCREATORDATAFILE' ;
     private static readonly keyString = 'Cypress' ;
+
+    private static memviews: MemoryView[] = [] ;
+    private static physicalMemories: PhysicalMemory[] = [] ;
+    private static referencedMemory: ReferencedMemory[] = [] ;
+    private static busMasters: BusMaster[] = [] ;
 
     static getMemoryMap(devdb: DeviceDBManager, device: string): Promise<DeviceMemorySegment[] | null> {
         let ret = new Promise<DeviceMemorySegment[] | null>( (resolve, reject) => {
@@ -86,8 +107,8 @@ export class MemoryMap {
             let existing = mems.find( (em) => { return (em.name === m[0]) ; } ) ;
             if (existing) {
                 for(let alt of mems) {
-                    if (alt.name.startsWith(m) && alt.name.length > m.length) {
-                        alt.main = m ;
+                    if (alt.name.startsWith(m[0]) && alt.name.length > m.length) {
+                        alt.main = m[0] ;
                     }
                 }
             }
@@ -166,7 +187,7 @@ export class MemoryMap {
         return ret ;
     }
 
-    private static extractExternalMemories(extmems: any): Array<[string, string] {
+    private static extractExternalMemories(extmems: any): Array<[string, string]> {
         let ret: Array<[string, string]> = [] ;
         for(let em of extmems) {
             if (em.$ && em.$.reservationId) {
