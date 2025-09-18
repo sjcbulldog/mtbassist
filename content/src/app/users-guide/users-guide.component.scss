@@ -7,18 +7,111 @@
   padding: 2rem;
   max-width: 900px;
   margin: 0 auto;
-  background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 
-.users-guide-container h2 {
-  margin-bottom: 1.5rem;
-  font-size: 2rem;
-  color: #1976d2;
-}
+  h2 {
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    transition: color 0.3s ease;
+  }
 
-.users-guide-container div[innerHTML] {
-  font-size: 1.1rem;
-  line-height: 1.7;
+  div[innerHTML] {
+    font-size: 1.1rem;
+    line-height: 1.7;
+  }
+
+  // Light theme styles
+  &.light-theme {
+    background: #ffffff;
+    color: #333333;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+    h2 {
+      color: #1976d2;
+    }
+
+    // Deep selectors for injected HTML content
+    :deep(.note) {
+      background: rgba(25,118,210,0.1);
+      border-left: 4px solid #1976d2;
+    }
+
+    :deep(.warn) {
+      background: rgba(245,124,0,0.1);
+      border: 1px dashed #f57c00;
+    }
+
+    :deep(.card) {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+    }
+
+    :deep(code) {
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      color: #d81b60;
+    }
+
+    :deep(pre) {
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      color: #333333;
+    }
+  }
+
+  // Dark theme styles
+  &.dark-theme {
+    background: #252526;
+    color: #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+    h2 {
+      color: #42a5f5;
+    }
+
+    // Deep selectors for injected HTML content
+    :deep(.note) {
+      background: rgba(25,118,210,0.15);
+      border-left: 4px solid #42a5f5;
+    }
+
+    :deep(.warn) {
+      background: rgba(245,124,0,0.15);
+      border: 1px dashed #ffb74d;
+    }
+
+    :deep(.card) {
+      background: #2d2d30;
+      border: 1px solid #3e3e42;
+    }
+
+    :deep(code) {
+      background: #2d2d30;
+      border: 1px solid #3e3e42;
+      color: #f48fb1;
+    }
+
+    :deep(pre) {
+      background: #2d2d30;
+      border: 1px solid #3e3e42;
+      color: #e0e0e0;
+    }
+
+    :deep(.header) {
+      color: #ffffff !important;
+    }
+
+    :deep(h2, h3, h4) {
+      color: #42a5f5;
+    }
+
+    :deep(a) {
+      color: #42a5f5;
+
+      &:hover {
+        color: #64b5f6;
+      }
+    }
+  }
 }

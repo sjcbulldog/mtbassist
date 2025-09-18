@@ -1,718 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ModusToolbox Assistant - User Guide</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #1976d2, #42a5f5);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            margin: -20px -20px 30px -20px;
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-        }
-        
-        .header p {
-            margin: 10px 0 0 0;
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-        
-        .toc {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .toc h3 {
-            margin-top: 0;
-            color: #1976d2;
-        }
-        
-        .toc ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        
-        .toc li {
-            margin: 8px 0;
-        }
-        
-        .toc a {
-            color: #1976d2;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .toc a:hover {
-            text-decoration: underline;
-        }
-        
-        .section {
-            margin: 40px 0;
-            padding: 20px 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .section:last-child {
-            border-bottom: none;
-        }
-        
-        h2 {
-            color: #1976d2;
-            font-size: 1.8em;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e3f2fd;
-        }
-        
-        h3 {
-            color: #1565c0;
-            font-size: 1.4em;
-            margin-top: 25px;
-            margin-bottom: 15px;
-        }
-        
-        h4 {
-            color: #0d47a1;
-            font-size: 1.2em;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-        
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        
-        .feature-card {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .feature-card h4 {
-            margin-top: 0;
-            color: #1976d2;
-        }
-        
-        .step-list {
-            background-color: #e3f2fd;
-            border-left: 4px solid #1976d2;
-            padding: 15px 20px;
-            margin: 20px 0;
-        }
-        
-        .step-list ol {
-            margin: 0;
-            padding-left: 20px;
-        }
-        
-        .step-list li {
-            margin: 8px 0;
-            font-weight: 500;
-        }
-        
-        .warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        
-        .warning h4 {
-            color: #856404;
-            margin-top: 0;
-        }
-        
-        .info {
-            background-color: #d1ecf1;
-            border: 1px solid #b8daff;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        
-        .info h4 {
-            color: #0c5460;
-            margin-top: 0;
-        }
-        
-        .screenshot {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            max-width: 100%;
-            margin: 20px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        code {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 3px;
-            padding: 2px 6px;
-            font-family: 'Courier New', monospace;
-            color: #e83e8c;
-        }
-        
-        .code-block {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 5px;
-            padding: 15px;
-            margin: 20px 0;
-            overflow-x: auto;
-        }
-        
-        .breadcrumb {
-            background-color: #e9ecef;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-family: monospace;
-            color: #495057;
-            margin: 10px 0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ModusToolbox Assistant – User Manual</title>
+  <style>
+    :root { --bg: #1e1e1e; --bg2:#252526; --text:#e0e0e0; --muted:#c7c7c7; --card:#2d2d30; --line:#3e3e42; --pri:#1976d2; --pri2:#42a5f5; --acc:#64b5f6; --ok:#81c784; --warn:#ffb74d; --bad:#ef5350; }
+    @media (prefers-color-scheme: light) {
+      :root { --bg:#ffffff; --bg2:#f7f7f7; --text:#333333; --muted:#555; --card:#ffffff; --line:#ddd; --pri:#1976d2; --pri2:#42a5f5; --acc:#1565c0; --ok:#2e7d32; --warn:#f57c00; --bad:#c62828; }
+      .header { color:#fff; }
+    }
+    body { margin:0; font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif; background:var(--bg); color:var(--text); }
+    .container { max-width:1200px; margin:0 auto; padding:24px; background:var(--bg2); }
+    .header { background:linear-gradient(135deg,var(--pri),var(--pri2)); padding:28px 24px; margin:-24px -24px 24px -24px; }
+    .header h1 { margin:0; font-size:2.2rem; }
+    .header p { margin:8px 0 0 0; opacity:.9; }
+    .toc { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px 20px; margin:16px 0 28px; }
+    .toc h3 { margin:0 0 8px; color:var(--pri2); }
+    .toc ul { list-style:none; padding-left:0; columns:2; gap:24px; }
+    .toc li { margin:6px 0; }
+    .toc a { color:var(--pri2); text-decoration:none; }
+    .toc a:hover { text-decoration:underline; color:var(--acc); }
+    .section { padding:16px 0 8px; border-bottom:1px solid var(--line); }
+    .section:last-child { border-bottom:none; }
+    h2 { color:var(--pri2); border-bottom:2px solid var(--pri); padding-bottom:8px; }
+    h3 { color:var(--acc); margin-top:20px; }
+    h4 { color:var(--ok); margin-top:14px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; }
+    .note { background:rgba(25,118,210,.10); border-left:4px solid var(--pri2); padding:10px 14px; margin:12px 0; }
+    .warn { background:rgba(245,124,0,.10); border:1px dashed var(--warn); padding:12px 14px; border-radius:6px; }
+    .kbd { font-family:Consolas,monospace; background:var(--card); border:1px solid var(--line); border-radius:4px; padding:2px 6px; }
+    code, pre { background:var(--card); border:1px solid var(--line); border-radius:6px; }
+    code { padding:2px 6px; }
+    pre { padding:12px; overflow:auto; }
+    .pill { display:inline-block; background:var(--card); border:1px solid var(--line); padding:2px 8px; border-radius:999px; margin-right:6px; }
+    table { border-collapse:collapse; width:100%; }
+    th, td { border:1px solid var(--line); padding:8px 10px; text-align:left; }
+    th { background:var(--card); }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 ModusToolbox Assistant</h1>
-            <p>Comprehensive User Guide for VSCode Extension</p>
-        </div>
-
-        <div class="toc">
-            <h3>📋 Table of Contents</h3>
-            <ul>
-                <li><a href="#overview">1. Overview</a></li>
-                <li><a href="#installation">2. Installation & Setup</a></li>
-                <li><a href="#navigation">3. Navigation Interface</a></li>
-                <li><a href="#project-creation">4. Creating Projects</a></li>
-                <li><a href="#content-management">5. Local Content Storage</a></li>
-                <li><a href="#software-installer">6. Software Installation</a></li>
-                <li><a href="#settings">7. Settings Configuration</a></li>
-                <li><a href="#app-status">8. Application Status</a></li>
-                <li><a href="#troubleshooting">9. Troubleshooting</a></li>
-                <li><a href="#advanced">10. Advanced Features</a></li>
-            </ul>
-        </div>
-
-        <section id="overview" class="section">
-            <h2>1. 🎯 Overview</h2>
-            <p>The ModusToolbox Assistant is a comprehensive VSCode extension designed to streamline embedded development workflows using Infineon's ModusToolbox ecosystem. This extension provides an intuitive interface for project creation, BSP management, software installation, and development environment configuration.</p>
-            
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h4>🔧 Project Management</h4>
-                    <p>Create new ModusToolbox projects with guided wizard interface, BSP selection, and example code integration.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>📦 Content Storage</h4>
-                    <p>Manage Board Support Packages (BSPs) locally for offline development and faster project creation.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>⚙️ Software Installation</h4>
-                    <p>Automated installation of required ModusToolbox tools and dependencies with progress tracking.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>🎨 Theme Support</h4>
-                    <p>Full dark and light theme support with Infineon design system integration.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="installation" class="section">
-            <h2>2. 🚀 Installation & Setup</h2>
-            
-            <h3>Prerequisites</h3>
-            <ul>
-                <li>Visual Studio Code 1.74.0 or later</li>
-                <li>Internet connection for initial setup and content downloads</li>
-                <li>Windows, macOS, or Linux operating system</li>
-            </ul>
-
-            <h3>Installation Steps</h3>
-            <div class="step-list">
-                <ol>
-                    <li>Open VSCode and navigate to the Extensions panel (Ctrl+Shift+X)</li>
-                    <li>Search for "ModusToolbox Assistant"</li>
-                    <li>Click "Install" on the extension</li>
-                    <li>Restart VSCode when prompted</li>
-                    <li>The extension will appear in the Activity Bar with the ModusToolbox icon</li>
-                </ol>
-            </div>
-
-            <div class="info">
-                <h4>ℹ️ First Launch</h4>
-                <p>On first launch, the extension will check for manifest data and may prompt you to configure your internet connection settings if you're behind a corporate firewall.</p>
-            </div>
-        </section>
-
-        <section id="navigation" class="section">
-            <h2>3. 🧭 Navigation Interface</h2>
-            
-            <p>The ModusToolbox Assistant uses a tabbed interface for easy navigation between different features. The main navigation bar includes:</p>
-
-            <h3>Main Tabs</h3>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h4>📝 Create Project</h4>
-                    <p>Step-by-step wizard for creating new ModusToolbox projects with BSP and example selection.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>📊 Application Status</h4>
-                    <p>Monitor running applications, view project status, and manage connected development kits.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>📂 Local Content Storage</h4>
-                    <p>Manage offline BSP storage, download packages, and configure local content preferences.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>⚙️ Software Installer</h4>
-                    <p>Install and update ModusToolbox tools, compilers, and development dependencies.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>🔧 Settings</h4>
-                    <p>Configure extension preferences, tool paths, and development environment settings.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>🤖 AI View</h4>
-                    <p>AI-powered development assistance and code generation features (coming soon).</p>
-                </div>
-            </div>
-
-            <div class="warning">
-                <h4>⚠️ Tab Restrictions</h4>
-                <p>Some tabs may be disabled during active operations (like software installation) to prevent conflicts. Wait for operations to complete before switching tabs.</p>
-            </div>
-        </section>
-
-        <section id="project-creation" class="section">
-            <h2>4. 🛠️ Creating Projects</h2>
-            
-            <p>The Create Project wizard guides you through a 4-step process to set up new ModusToolbox projects.</p>
-
-            <h3>Step 1: Project Information</h3>
-            <div class="step-list">
-                <ol>
-                    <li><strong>Project Name:</strong> Enter a unique project name (no spaces allowed)</li>
-                    <li><strong>Project Location:</strong> Choose or browse to your desired project directory</li>
-                    <li>The extension will show a preview of the full project path</li>
-                    <li>Click "Next: Select BSP" to continue</li>
-                </ol>
-            </div>
-
-            <div class="warning">
-                <h4>⚠️ Naming Restrictions</h4>
-                <p>Project names and paths cannot contain spaces. Use hyphens (-) or underscores (_) instead.</p>
-            </div>
-
-            <h3>Step 2: BSP Selection</h3>
-            <p>Choose your Board Support Package based on your target hardware:</p>
-            
-            <h4>Connected Development Kits</h4>
-            <ul>
-                <li>The extension automatically detects connected development kits</li>
-                <li>Click "Refresh" to scan for newly connected devices</li>
-                <li>Select from available connected kits for automatic BSP selection</li>
-            </ul>
-
-            <h4>Manual BSP Selection</h4>
-            <div class="step-list">
-                <ol>
-                    <li>Choose a <strong>BSP Category</strong> from the dropdown</li>
-                    <li>Select a specific <strong>Board Support Package</strong></li>
-                    <li>Hover over BSPs to see detailed descriptions</li>
-                    <li>The description panel shows device specifications and connectivity options</li>
-                </ol>
-            </div>
-
-            <h3>Step 3: Example Selection</h3>
-            <div class="step-list">
-                <ol>
-                    <li>Choose an <strong>Example Category</strong> (e.g., "Getting Started", "Connectivity", "Security")</li>
-                    <li>Select a specific <strong>Code Example</strong> to use as your project template</li>
-                    <li>Review the example description to understand its functionality</li>
-                    <li>Click "Review & Create" to proceed</li>
-                </ol>
-            </div>
-
-            <h3>Step 4: Review & Create</h3>
-            <ul>
-                <li>Review all your selections in the project summary</li>
-                <li>Verify the project path and configuration</li>
-                <li>Click "Create Project" to begin the creation process</li>
-                <li>Monitor progress with the real-time progress bar</li>
-                <li>Once complete, click "Load Project" to open in VSCode</li>
-            </ul>
-
-            <div class="info">
-                <h4>ℹ️ Manifest Data Required</h4>
-                <p>Project creation requires manifest data to be available. If you see a "Waiting on manifest data" message, check your internet connection or Local Content Storage configuration.</p>
-            </div>
-        </section>
-
-        <section id="content-management" class="section">
-            <h2>5. 📦 Local Content Storage</h2>
-            
-            <p>The Local Content Storage feature allows you to download and manage BSPs locally for offline development.</p>
-
-            <h3>Interface Overview</h3>
-            <p>The Local Content Storage interface consists of two main panels:</p>
-            
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h4>📋 Not Available Locally</h4>
-                    <p>Lists all BSPs available for download from the remote repository. Use the filter box to search for specific packages.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>💾 Available Locally</h4>
-                    <p>Shows BSPs already downloaded and stored locally on your machine for offline use.</p>
-                </div>
-            </div>
-
-            <h3>Managing BSPs</h3>
-            
-            <h4>Adding BSPs to Local Storage</h4>
-            <ul>
-                <li><strong>Drag & Drop:</strong> Drag BSPs from the left panel to the right panel</li>
-                <li><strong>Add All:</strong> Click the "Add All" button to download all available BSPs</li>
-                <li><strong>Individual Selection:</strong> Select specific BSPs for targeted downloads</li>
-            </ul>
-
-            <h4>Removing BSPs from Local Storage</h4>
-            <ul>
-                <li><strong>Drag & Drop:</strong> Drag BSPs from the right panel back to the left panel</li>
-                <li><strong>Remove All:</strong> Click the "Remove All" button to clear local storage</li>
-            </ul>
-
-            <h3>Advanced Features</h3>
-            
-            <h4>Show Changes Filter</h4>
-            <ul>
-                <li>Check "Show Changes" to view only BSPs with pending add/remove operations</li>
-                <li>When enabled, the filter box is automatically disabled and cleared</li>
-                <li>Use this to review changes before applying them</li>
-            </ul>
-
-            <h4>Apply and Revert</h4>
-            <ul>
-                <li><strong>Apply:</strong> Commits all pending changes (downloads/deletions)</li>
-                <li><strong>Revert:</strong> Cancels all pending changes and returns to the previous state</li>
-                <li>The "Show Changes" filter is automatically unchecked after applying changes</li>
-            </ul>
-
-            <div class="warning">
-                <h4>⚠️ Storage Space</h4>
-                <p>BSPs can be large (several hundred MB each). Ensure you have adequate disk space before downloading multiple packages.</p>
-            </div>
-        </section>
-
-        <section id="software-installer" class="section">
-            <h2>6. ⚙️ Software Installation</h2>
-            
-            <p>The Software Installer automates the installation of ModusToolbox and related development tools.</p>
-
-            <h3>Installation Process</h3>
-            
-            <h4>Step 1: Account Verification</h4>
-            <p>The installer checks your Infineon account status:</p>
-            <ul>
-                <li><strong>No Infineon Account:</strong> Opens browser to create a new account</li>
-                <li><strong>Have an Account:</strong> Proceeds with authentication</li>
-            </ul>
-
-            <h4>Step 2: Installation Location</h4>
-            <p>Choose where to install ModusToolbox:</p>
-            
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h4>🏠 Home Directory</h4>
-                    <p>Install under your user home directory for single-user access.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>📁 Custom Directory</h4>
-                    <p>Choose a custom location. Directory must not contain spaces.</p>
-                </div>
-            </div>
-
-            <div class="warning">
-                <h4>⚠️ Path Requirements</h4>
-                <p>Installation paths cannot contain spaces as ModusToolbox does not work properly with spaces in the path.</p>
-            </div>
-
-            <h4>Step 3: Required Software</h4>
-            <p>Review and confirm installation of required components:</p>
-            <ul>
-                <li>View the minimum required software list</li>
-                <li>See installation status for each component</li>
-                <li>Components already installed show "Complete" with 100% progress</li>
-                <li>Missing components show "Install" with version information</li>
-            </ul>
-
-            <h4>Step 4: Installation Progress</h4>
-            <ul>
-                <li>Monitor real-time installation progress</li>
-                <li>View detailed status messages</li>
-                <li>Wait for completion before using ModusToolbox features</li>
-            </ul>
-
-            <h3>Installation Controls</h3>
-            <ul>
-                <li><strong>Browse Button:</strong> Automatically selects the custom directory card</li>
-                <li><strong>Install Now:</strong> Begins the installation process</li>
-                <li><strong>Progress Indicator:</strong> Shows installation status and completion percentage</li>
-            </ul>
-        </section>
-
-        <section id="settings" class="section">
-            <h2>7. 🔧 Settings Configuration</h2>
-            
-            <p>The Settings panel allows you to configure various aspects of the ModusToolbox Assistant.</p>
-
-            <h3>Setting Types</h3>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h4>📝 Text Settings</h4>
-                    <p>String and numeric inputs for paths, URLs, and configuration values.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>☑️ Boolean Settings</h4>
-                    <p>Checkbox controls for enabling/disabling features.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>📋 Choice Settings</h4>
-                    <p>Dropdown menus for selecting from predefined options.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>📂 Path Settings</h4>
-                    <p>File and directory path inputs with browse buttons.</p>
-                </div>
-            </div>
-
-            <h3>Key Settings Categories</h3>
-            
-            <h4>Tools Version</h4>
-            <ul>
-                <li>Select the ModusToolbox version to use</li>
-                <li>Choose "Custom" to specify a custom installation path</li>
-                <li>Custom path field only appears when "Custom" is selected</li>
-            </ul>
-
-            <h4>Path Configuration</h4>
-            <ul>
-                <li><strong>Custom Path:</strong> Specify custom tool installation directory</li>
-                <li><strong>Directory Paths:</strong> Configure workspace and project directories</li>
-                <li><strong>File Paths:</strong> Set paths to specific configuration files</li>
-            </ul>
-
-            <h3>Setting States</h3>
-            
-            <h4>Error States</h4>
-            <ul>
-                <li>Settings with errors display red error messages below the control</li>
-                <li>Error messages explain what needs to be corrected</li>
-                <li>Settings with errors are disabled until resolved</li>
-            </ul>
-
-            <h4>Disabled Settings</h4>
-            <ul>
-                <li>Some settings may be disabled based on other configurations</li>
-                <li>Disabled settings show explanatory messages in small gray text</li>
-                <li>Settings remain disabled until dependencies are satisfied</li>
-            </ul>
-
-            <h4>Warning States</h4>
-            <ul>
-                <li>Settings with warnings display yellow warning messages</li>
-                <li>Warnings indicate potential issues but don't disable the setting</li>
-                <li>Review warnings carefully before applying changes</li>
-            </ul>
-        </section>
-
-        <section id="app-status" class="section">
-            <h2>8. 📊 Application Status</h2>
-            
-            <p>The Application Status panel provides real-time monitoring of your ModusToolbox projects and development environment.</p>
-
-            <h3>Project Monitoring</h3>
-            <ul>
-                <li>View all active ModusToolbox projects in tabbed interface</li>
-                <li>Each project tab shows the project name with 📦 emoji</li>
-                <li>Projects with missing assets display a red warning icon</li>
-                <li>Click on project tabs to view detailed project information</li>
-            </ul>
-
-            <h3>Project Status Indicators</h3>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h4>✅ Healthy Projects</h4>
-                    <p>Projects with all required assets and proper configuration.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>⚠️ Warning Projects</h4>
-                    <p>Projects with missing assets or configuration issues that need attention.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>🔄 Active Projects</h4>
-                    <p>Projects currently being built, debugged, or modified.</p>
-                </div>
-            </div>
-
-            <h3>Development Kit Status</h3>
-            <ul>
-                <li>View connected development kits and their status</li>
-                <li>See device information, BSP assignments, and connection status</li>
-                <li>Monitor development kit availability for project deployment</li>
-            </ul>
-
-            <div class="info">
-                <h4>ℹ️ Real-time Updates</h4>
-                <p>The Application Status panel updates in real-time as you work with projects and connect/disconnect development hardware.</p>
-            </div>
-        </section>
-
-        <section id="troubleshooting" class="section">
-            <h2>9. 🔧 Troubleshooting</h2>
-            
-            <h3>Common Issues</h3>
-            
-            <h4>Manifest Data Not Available</h4>
-            <div class="step-list">
-                <ol>
-                    <li>Check your internet connection</li>
-                    <li>Verify firewall settings allow VSCode extension communication</li>
-                    <li>Try refreshing the extension by reloading VSCode</li>
-                    <li>Check Local Content Storage configuration</li>
-                </ol>
-            </div>
-
-            <h4>Project Creation Fails</h4>
-            <ul>
-                <li>Ensure project name and path don't contain spaces</li>
-                <li>Verify the target directory is writable</li>
-                <li>Check that BSP and example selections are valid</li>
-                <li>Ensure sufficient disk space for project creation</li>
-            </ul>
-
-            <h4>BSP Download Issues</h4>
-            <ul>
-                <li>Verify internet connectivity</li>
-                <li>Check available disk space for local storage</li>
-                <li>Try downloading BSPs individually instead of using "Add All"</li>
-                <li>Clear browser cache if using web-based authentication</li>
-            </ul>
-
-            <h4>Software Installation Problems</h4>
-            <ul>
-                <li>Ensure installation path doesn't contain spaces</li>
-                <li>Run VSCode as administrator (Windows) if permission errors occur</li>
-                <li>Check that installation directory is writable</li>
-                <li>Verify Infineon account credentials are correct</li>
-            </ul>
-
-            <h3>Performance Optimization</h3>
-            
-            <h4>Improving Extension Performance</h4>
-            <ul>
-                <li>Close unused project tabs in Application Status</li>
-                <li>Limit the number of BSPs stored locally</li>
-                <li>Use filtering in Local Content Storage to find specific packages</li>
-                <li>Restart VSCode periodically to clear cached data</li>
-            </ul>
-
-            <h3>Getting Help</h3>
-            <ul>
-                <li>Check the VSCode Developer Console for error messages</li>
-                <li>Review extension logs in the Output panel</li>
-                <li>Contact Infineon support through official channels</li>
-                <li>Report issues through the VSCode extension marketplace</li>
-            </ul>
-        </section>
-
-        <section id="advanced" class="section">
-            <h2>10. 🚀 Advanced Features</h2>
-            
-            <h3>Dark/Light Theme Support</h3>
-            <ul>
-                <li>Extension automatically adapts to VSCode theme settings</li>
-                <li>Full Infineon design system integration</li>
-                <li>High contrast mode support for accessibility</li>
-                <li>Consistent theming across all extension panels</li>
-            </ul>
-
-            <h3>Keyboard Shortcuts</h3>
-            <div class="code-block">
-                <strong>Navigation:</strong><br>
-                Ctrl+Shift+P → "ModusToolbox: Open Create Project"<br>
-                Ctrl+Shift+P → "ModusToolbox: Open Settings"<br>
-                Ctrl+Shift+P → "ModusToolbox: Refresh Content"
-            </div>
-
-            <h3>Offline Development</h3>
-            <ul>
-                <li>Download BSPs to Local Content Storage for offline use</li>
-                <li>Create projects without internet connection once BSPs are cached</li>
-                <li>Manage local content to optimize storage usage</li>
-            </ul>
-
-            <h3>Integration Features</h3>
-            <ul>
-                <li>Automatic detection of connected development kits</li>
-                <li>Integration with ModusToolbox build system</li>
-                <li>Support for custom BSP repositories</li>
-                <li>Extensible settings framework for future features</li>
-            </ul>
-
-            <h3>Future Enhancements</h3>
-            <ul>
-                <li><strong>AI View:</strong> AI-powered code assistance and project optimization</li>
-                <li><strong>Advanced Debugging:</strong> Enhanced debugging tools and visualizations</li>
-                <li><strong>Team Collaboration:</strong> Shared project configurations and BSP libraries</li>
-                <li><strong>Cloud Integration:</strong> Remote build and testing capabilities</li>
-            </ul>
-
-            <div class="info">
-                <h4>ℹ️ Version Updates</h4>
-                <p>The ModusToolbox Assistant is actively developed. Check for updates regularly through the VSCode Extensions panel to access new features and improvements.</p>
-            </div>
-        </section>
-
-        <div class="section" style="text-align: center; border: none; padding-top: 40px;">
-            <h3>📞 Support & Documentation</h3>
-            <p>For additional support, visit the <a href="https://infineon.com" target="_blank">Infineon website</a> or contact technical support through official channels.</p>
-            <p><em>ModusToolbox Assistant User Guide - Version 1.0</em></p>
-        </div>
+  <div class="container">
+    <div class="header">
+      <h1>ModusToolbox Assistant – User Manual</h1>
+      <p>Everything you need to create, configure, and maintain ModusToolbox applications inside VS Code.</p>
     </div>
+
+    <div class="toc">
+      <h3>Table of Contents</h3>
+      <ul>
+        <li><a href="#intro">1. Overview & Requirements</a></li>
+        <li><a href="#install">2. Installation & First Run</a></li>
+        <li><a href="#ui">3. UI Tour & Navigation</a></li>
+        <li><a href="#projects">4. Create Project Wizard</a></li>
+        <li><a href="#status">5. Application Status & Actions</a></li>
+        <li><a href="#recents">6. Recently Opened</a></li>
+        <li><a href="#lcs">7. Local Content Storage (BSPs)</a></li>
+        <li><a href="#software">8. Software & Tool Installation</a></li>
+        <li><a href="#llvm">9. LLVM Installer</a></li>
+        <li><a href="#devkits">10. DevKit Management</a></li>
+        <li><a href="#settings">11. Settings & Preferences</a></li>
+        <li><a href="#docs">12. Documentation & Help</a></li>
+        <li><a href="#memory">13. Memory Usage View</a></li>
+        <li><a href="#commands">14. Commands, Menus & Shortcuts</a></li>
+        <li><a href="#troubleshooting">15. Troubleshooting</a></li>
+        <li><a href="#faq">16. FAQ</a></li>
+        <li><a href="#about">17. About</a></li>
+      </ul>
+    </div>
+
+    <section id="intro" class="section">
+      <h2>1. Overview & Requirements</h2>
+      <p>ModusToolbox Assistant integrates Infineon ModusToolbox workflows into VS Code. It provides project creation, BSP/content management, device kit awareness, tool installation, and deep IDE integration.</p>
+      <div class="grid">
+        <div class="card">
+          <h4>Main Capabilities</h4>
+          <ul>
+            <li>Create ModusToolbox applications from BSPs and code examples</li>
+            <li>Manage local BSP content for online/offline use</li>
+            <li>Inspect application status, fix tasks/settings, rebuild</li>
+            <li>Install ModusToolbox tools and the LLVM toolchain</li>
+            <li>Manage connected DevKits and update firmware</li>
+            <li>Browse documentation, examples, and community links</li>
+            <li>Configure extension and workspace settings</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Prerequisites</h4>
+          <ul>
+            <li>VS Code 1.71.0 or later</li>
+            <li>Recommended extensions: <span class="pill">clangd</span> <span class="pill">Cortex-Debug</span></li>
+            <li>ModusToolbox tools (managed via this extension)</li>
+            <li>Optional: Internet access to fetch manifests/BSPs</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="install" class="section">
+      <h2>2. Installation & First Run</h2>
+      <ol>
+        <li>Open the Extensions view (<span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">X</span>) and search for <strong>ModusToolbox Assistant</strong>.</li>
+        <li>Click <strong>Install</strong> and reload VS Code when prompted.</li>
+        <li>On first launch, the assistant initializes and may download manifest data.</li>
+      </ol>
+      <div class="note">If you’re behind a proxy/firewall, configure network access in VS Code or system settings before first use.</div>
+    </section>
+
+    <section id="ui" class="section">
+      <h2>3. UI Tour & Navigation</h2>
+      <p>Open the main page via the Command Palette or the status bar item. The UI is tabbed and responsive to VS Code dark/light themes.</p>
+      <div class="grid">
+        <div class="card">
+          <h4>Main Tabs</h4>
+          <ul>
+            <li>Getting Started – Orientation and quick links</li>
+            <li>Create Project – Wizard for new applications</li>
+            <li>Recently Opened – Jump back into recent apps</li>
+            <li>Application Status – Project health, actions, memory</li>
+            <li>DevKit List – Connected kits and BSP association</li>
+            <li>Local Content Storage – Manage BSP packages</li>
+            <li>Software Installer – Install/upgrade tools</li>
+            <li>Settings – Extension/workspace preferences</li>
+            <li>LLVM Installer – Install supported LLVM versions</li>
+            <li>User Guide – Built-in documentation</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Status Bar</h4>
+          <p>A status bar entry provides quick access to the main page and indicates when actions complete (e.g., build done).</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="projects" class="section">
+      <h2>4. Create Project Wizard</h2>
+      <p>Use the guided wizard to create a new ModusToolbox application based on a Board Support Package (BSP) and optional code examples.</p>
+      <h3>Steps</h3>
+      <ol>
+        <li><strong>Location</strong>: Choose the project directory; browse via the built‑in folder selector.</li>
+        <li><strong>BSP Selection</strong>: Pick a BSP from <em>Active BSPs</em> (or <em>All BSPs</em> if enabled by manifest).</li>
+        <li><strong>Examples</strong>: Filter and select code examples by category; the assistant fetches and displays available examples.</li>
+        <li><strong>Configuration</strong>: Choose build configuration (e.g., Debug/Release) and other options.</li>
+        <li><strong>Create</strong>: The backend performs project generation and reports progress; errors are surfaced immediately.</li>
+      </ol>
+      <div class="note">After creation, the workspace may auto‑open if a VS Code workspace file is generated by the template.</div>
+    </section>
+
+    <section id="status" class="section">
+      <h2>5. Application Status & Actions</h2>
+      <p>Aggregates project details, tools, middleware, documentation, and memory snapshots. Provides one‑click fixes when tasks/settings are missing or corrupt.</p>
+      <div class="grid">
+        <div class="card">
+          <h4>What You See</h4>
+          <ul>
+            <li>Project list with missing asset indicators and details</li>
+            <li>Tools and middleware detected for each project</li>
+            <li>Documentation links per project and globally</li>
+            <li>Current configuration and theme awareness</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>Actions</h4>
+          <ul>
+            <li>Fix VS Code tasks and settings</li>
+            <li>Open project folder or README</li>
+            <li>Run build actions exposed by the assistant</li>
+            <li>Refresh application and rescan environment</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">For memory analysis, see <a href="#memory">Memory Usage View</a>.</p>
+    </section>
+
+    <section id="recents" class="section">
+      <h2>6. Recently Opened</h2>
+      <p>Track and reopen recent applications with timestamps and BSP metadata. Use <em>Open</em> or <em>Open README</em> from the card actions.</p>
+    </section>
+
+    <section id="lcs" class="section">
+      <h2>7. Local Content Storage (BSPs)</h2>
+      <p>Manage locally stored BSPs for offline development.</p>
+      <ul>
+        <li>View BSPs present in local storage vs. not present</li>
+        <li>Add or remove BSPs from storage</li>
+        <li>Apply pending changes (bulk operations)</li>
+        <li>Sync with manifest and filter by category/device</li>
+      </ul>
+      <div class="note">The assistant computes <em>in</em>/<em>not in</em> lists against the active manifest and shows when updates are needed.</div>
+    </section>
+
+    <section id="software" class="section">
+      <h2>8. Software & Tool Installation</h2>
+      <p>Install or update ModusToolbox features, tools, and utilities. The assistant reports progress with feature IDs and percentages.</p>
+      <ul>
+        <li>Detects required vs. optional components</li>
+        <li>Installs to configured tools location</li>
+        <li>Supports running setup programs and restarts the extension if needed</li>
+        <li>Provides error messages and recovery guidance</li>
+      </ul>
+      <div class="warn">Ensure you have write permissions to the selected tools directory and adequate disk space.</div>
+    </section>
+
+    <section id="llvm" class="section">
+      <h2>9. LLVM Installer</h2>
+      <p>Install supported LLVM versions used by ModusToolbox build systems.</p>
+      <ul>
+        <li>Fetch and display available LLVM versions</li>
+        <li>Stream installation messages and errors in real‑time</li>
+        <li>Integrate installed LLVM with existing toolchains</li>
+      </ul>
+    </section>
+
+    <section id="devkits" class="section">
+      <h2>10. DevKit Management</h2>
+      <p>Enumerate connected Infineon development kits, show firmware versions, features, bridging types, and BSP association.</p>
+      <ul>
+        <li>Update kit firmware when out of date</li>
+        <li>Associate or change BSP for a connected kit</li>
+        <li>Monitor USB mode and KitProg type</li>
+      </ul>
+    </section>
+
+    <section id="settings" class="section">
+      <h2>11. Settings & Preferences</h2>
+      <p>Configure both assistant and workspace settings with validation and inline tips.</p>
+      <ul>
+        <li>Ownership: <span class="pill">Modus</span> <span class="pill">Extension</span> <span class="pill">Workspace</span></li>
+        <li>Types: string, number, boolean, choice, URI, directory path, file path, tools path</li>
+        <li>Automatic read/write to VS Code global/workspace state</li>
+        <li>Quick‑fixes for invalid paths and configuration mismatches</li>
+      </ul>
+      <h3>Auto‑display</h3>
+      <p>Setting: <code>mtbassist2.autodisplay</code> – choose when the main page appears automatically on startup.</p>
+    </section>
+
+    <section id="docs" class="section">
+      <h2>12. Documentation & Help</h2>
+      <ul>
+        <li>Open <em>Getting Started</em> and <em>Documentation</em> links in your external browser</li>
+        <li>Browse code examples on GitHub</li>
+        <li>Visit the ModusToolbox community forums</li>
+        <li>Built‑in User Guide (this page) with dark/light theme support</li>
+      </ul>
+    </section>
+
+    <section id="memory" class="section">
+      <h2>13. Memory Usage View</h2>
+      <p>Visualize memory regions and segments as reported by the backend. Inspect names, start addresses, sizes, and section stacks per segment.</p>
+    </section>
+
+    <section id="commands" class="section">
+      <h2>14. Commands, Menus & Shortcuts</h2>
+      <h3>Commands</h3>
+      <ul>
+        <li><code>ModusToolbox Assistant: Show Main Page</code> – open the assistant</li>
+        <li><code>ModusToolbox Assistant: Set Intellisense Project</code> – select the active project for IntelliSense</li>
+        <li><code>ModusToolbox Assistant: Display documentation for symbol</code> – context‑menu action in C files</li>
+      </ul>
+      <h3>Context Menu</h3>
+      <p>In C files, right‑click and choose <em>Display documentation for symbol</em> to open relevant docs.</p>
+      <h3>Terminal Profile</h3>
+      <p>Profile: <code>ModusToolbox Shell</code> – use for environment‑aware shell sessions.</p>
+      <h3>Keybindings</h3>
+      <ul>
+        <li><span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">F1</span> – Display documentation for symbol</li>
+      </ul>
+    </section>
+
+    <section id="troubleshooting" class="section">
+      <h2>15. Troubleshooting</h2>
+      <h3>Common Issues</h3>
+      <ul>
+        <li><strong>Tools location errors</strong>: Verify the tools path in Settings and permissions.</li>
+        <li><strong>Missing assets</strong>: Use the <em>Fix</em> actions in Application Status to restore tasks/settings.</li>
+        <li><strong>Manifest not available</strong>: Check network/proxy or use previously cached BSPs.</li>
+        <li><strong>Build issues</strong>: Review the Output panel, ensure compilers (LLVM) are installed.</li>
+      </ul>
+      <h3>Where to Look</h3>
+      <ul>
+        <li>VS Code Output: <em>ModusToolbox</em> channel</li>
+        <li>Developer Tools Console (Help → Toggle Developer Tools)</li>
+        <li>Extension logs and progress notifications in the UI</li>
+      </ul>
+    </section>
+
+    <section id="faq" class="section">
+      <h2>16. FAQ</h2>
+      <h4>Does the assistant work offline?</h4>
+      <p>Yes, when BSPs are available in Local Content Storage and cached manifests are present. Some features (example fetching) may require connectivity.</p>
+      <h4>Can I change the default tools install path?</h4>
+      <p>Yes, configure the tools path in Settings. The installer will honor this location.</p>
+      <h4>How do I switch the IntelliSense project?</h4>
+      <p>Use the command palette entry <em>Set Intellisense Project</em> or the control within Application Status if present.</p>
+    </section>
+
+    <section id="about" class="section">
+      <h2>17. About</h2>
+      <p><strong>Version:</strong> 2.x (see VS Code Extensions view for the exact version).</p>
+      <p>Copyright © C And T Software. Licensed under the Apache License 2.0.</p>
+    </section>
+  </div>
 </body>
 </html>

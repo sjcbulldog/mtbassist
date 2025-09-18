@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 -->
-<div class="users-guide-container">
+<div class="users-guide-container" [class.dark-theme]="themeType === 'dark'" [class.light-theme]="themeType === 'light'">
   <h2>User's Guide</h2>
   <div [innerHTML]="userGuideHtml"></div>
 </div>

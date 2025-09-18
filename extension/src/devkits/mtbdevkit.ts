@@ -14,7 +14,6 @@
 
 import { DevKitInfo } from "../comms";
 
-
 export class MTBDevKit {
     public readonly kptype: string ;
     public readonly serial : string ;

@@ -23,8 +23,10 @@ import { BackendService } from '../backend/backend-service';
 })
 export class UsersGuideComponent implements OnInit {
   userGuideHtml: SafeHtml = '';
+  themeType: 'dark' | 'light' = 'dark' ;
 
-  constructor(private backend: BackendService, private sanitizer: DomSanitizer) {}
+  constructor(private backend: BackendService, private sanitizer: DomSanitizer) {
+  }
 
   ngOnInit(): void {
     this.backend.userGuide.subscribe(html => {
@@ -38,6 +40,7 @@ export class UsersGuideComponent implements OnInit {
     });
 
     this.backend.theme.subscribe(theme => {
+        this.themeType = (theme === 'light') ? 'light' : 'dark' ;
         this.backend.sendRequestWithArgs('user-guide-data', theme);
     });
   }
