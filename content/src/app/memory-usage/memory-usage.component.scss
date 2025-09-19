@@ -133,6 +133,12 @@
               color: #2e7d32;
               border: 1px solid #c8e6c9;
             }
+
+            &.unused {
+              background-color: #fafafa;
+              color: #616161;
+              border: 1px solid #e0e0e0;
+            }
           }
 
           .sections-list {
@@ -184,6 +190,12 @@
         background-color: rgba(76, 175, 80, 0.2);
         color: #81c784;
         border: 1px solid rgba(76, 175, 80, 0.4);
+      }
+
+      &.unused {
+        background-color: rgba(158, 158, 158, 0.2);
+        color: #bdbdbd;
+        border: 1px solid rgba(158, 158, 158, 0.4);
       }
     }
   }

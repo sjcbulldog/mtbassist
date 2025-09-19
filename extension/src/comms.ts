@@ -349,7 +349,7 @@ export interface MemoryUsageSegment {
   start: number ;
   size: number ;
   sections: string[] ;
-  type: 'virtual' | 'physical' | 'virtual/physical' ;
+  type: 'virtual' | 'physical' | 'virtual/physical' | 'unused';
 }
 
 export interface MemoryUsageData {

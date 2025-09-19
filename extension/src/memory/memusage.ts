@@ -220,6 +220,59 @@ export class MemoryUsageMgr {
 
         this.normalizeUsageAddresses() ;
         this.computePercentages() ;
+        this.fillGapsInUsage() ;
+    }
+
+    private fillGapsInOneUsage(u: MemoryUsageData) {
+        if (u.segments.length === 0) {
+            u.segments.push( {
+                start: u.start,
+                size: u.size,
+                sections: [],
+                type: 'unused'
+            }) ;
+        }
+        else {
+            if (u.start < u.segments[0].start) {
+                u.segments.unshift( {
+                    start: u.start,
+                    size: u.segments[0].start - u.start,
+                    sections: [],
+                    type: 'unused'
+                }) ;
+            }
+
+            for(let i = 0; i < u.segments.length - 1; i++) {
+                let seg1 = u.segments[i] ;
+                let seg2 = u.segments[i + 1] ;
+                let end1 = seg1.start + seg1.size ;
+                if (end1 < seg2.start) {
+                    u.segments.splice(i + 1, 0, {
+                        start: end1,
+                        size: seg2.start - end1,
+                        sections: [],
+                        type: 'unused'
+                    }) ;
+                }
+            }
+
+            let lastseg = u.segments[u.segments.length - 1] ;
+            let endlast = lastseg.start + lastseg.size ;
+            if (endlast < u.start + u.size) {
+                u.segments.push( {
+                    start: endlast,
+                    size: (u.start + u.size) - endlast,
+                    sections: [],
+                    type: 'unused'
+                }) ;
+            }
+        }
+    }
+
+    private fillGapsInUsage() {
+        for(let u of this.usage_) {
+            this.fillGapsInOneUsage(u) ;
+        }
     }
 
     private computeOnePercentage(u: MemoryUsageData) {
@@ -241,6 +294,7 @@ export class MemoryUsageMgr {
 
     private computePercentages() {
         for(let u of this.usage_) {
+            u.segments.sort( (a, b) => a.start - b.start ) ;
             this.computeOnePercentage(u) ;
         }
     }
