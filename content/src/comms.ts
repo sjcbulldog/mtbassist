@@ -230,28 +230,6 @@ export interface ProjectInfo {
     tools: Tool[] ;
 }
 
-export interface ApplicationInfo {
-    documents: Document[] ;
-    projects: ProjectInfo[] ;
-    memoryUsage: MemoryUsage[] ;
-    tools: Tool[] ;
-}
-
-export interface MemoryUsage {
-  type: string;
-  used: number;
-  total: number;
-  percentage: number;
-  unit: string;
-}
-
-export interface MemoryInfo {
-  type: string;
-  used: number;
-  total: number;
-  percentage: number;
-}
-
 export interface Documentation {
   name: string;
   location: string ;
@@ -294,7 +272,6 @@ export interface ApplicationStatusData {
   vscodeTasksStatus: MTBVSCodeTaskStatus ;
   vscodeSettingsStatus: MTBVSCodeSettingsStatus ;
   needVSCode: boolean ;
-  memory: MemoryInfo[];
   documentation: Documentation[];
   middleware: Middleware[];
   projects: Project[];
@@ -372,6 +349,7 @@ export interface MemoryUsageSegment {
   start: number ;
   size: number ;
   sections: string[] ;
+  type: 'virtual' | 'physical' | 'virtual/physical' ;
 }
 
 export interface MemoryUsageData {

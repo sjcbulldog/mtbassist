@@ -136,6 +136,16 @@ export class MTBProjectInfo {
         return this.vars_.get(MTBNames.MTB_TOOLCHAIN)! ;
     }
 
+    public get coreType() : string {
+        return this.vars_.get(MTBNames.MTB_CORE_TYPE)! ;
+    }
+
+    public get coreName() : string {
+        return this.vars_.get(MTBNames.MTB_CORE_NAME)! ;
+    }
+
+    
+
     public get path() : string {
         return this.rootdir_ ;
     }

@@ -25,7 +25,7 @@ import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
-    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, ManifestStatusType, MemoryInfo, Middleware, MTBAssistantMode, 
+    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, ManifestStatusType, Middleware, MTBAssistantMode, 
     MTBLocationStatus, Project, SettingsError, ThemeType, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
@@ -76,7 +76,6 @@ export class MTBAssistObject {
     private memusage_ : MemoryUsageMgr ;
     private devicedb_ : DeviceDBManager | undefined = undefined ;
     private projectInfo_: Map<string, Project> = new Map();
-    private meminfo_: MemoryInfo[] = [];
     private tasks_: MTBTasks | undefined = undefined;
     private vscodeSettings_ : MTBVSCodeSettings | undefined = undefined;
     private recents_: RecentAppManager | undefined = undefined;
@@ -1981,7 +1980,6 @@ export class MTBAssistObject {
                 valid: true,
                 name: this.env_.appInfo?.appdir || '',
                 toolsdir: this.env_.toolsDir!,
-                memory: this.meminfo_,
                 documentation: pinfo?.documentation || [],
                 middleware: [],
                 projects: projects,
@@ -1999,7 +1997,6 @@ export class MTBAssistObject {
                 valid: false,
                 name: '',
                 toolsdir: this.settings_.toolsPath ? this.settings_.toolsPath : '',
-                memory: [],
                 documentation: [],
                 middleware: [],
                 projects: [],

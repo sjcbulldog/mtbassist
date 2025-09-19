@@ -38,6 +38,9 @@
                 <tr class="segment-row">
                   <td class="segment-name">
                     <span class="segment-indent">└─ </span>
+                    <span class="segment-type" [class.virtual]="segment.type === 'virtual'" [class.physical]="segment.type === 'physical'" [class.virtual-physical]="segment.type === 'virtual/physical'">
+                      {{ segment.type }}
+                    </span>
                   </td>
                   <td>{{ formatHex(segment.start) }}</td>
                   <td>{{ formatHex(segment.size) }}</td>

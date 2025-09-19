@@ -71,6 +71,10 @@ export class MTBAppInfo {
         return path.join(this.appdir_, MTBNames.BSPsDir) ;
     }
 
+    public get generatedSourceDir() : string {
+        return path.join(this.bspdir, this.projects_[0].bspName!, 'config', 'GeneratedSource') ;
+    }
+
     public addProject(proj: MTBProjectInfo) {
         this.projects_.push(proj) ;
     }
