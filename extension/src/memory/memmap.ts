@@ -52,10 +52,15 @@ export class MemoryMap {
     private externalMemories_: PhysicalMemory[] = [] ;
     private externalReservation_: ExternalReservation[] = [] ;
     private busMasters_: BusMaster[] = [] ;
+    private hasSupport_ : boolean = false ;
 
     public constructor(private devdb: DeviceDBManager, private env: ModusToolboxEnvironment) {
         this.devdb_ = devdb ;
         this.env_ = env ;
+    }
+
+    public get hasSupport() : boolean {
+        return this.hasSupport_ ;
     }
 
     public get isValid() : boolean {
@@ -82,9 +87,11 @@ export class MemoryMap {
 
     public getMemoryMap(): Promise<void> {
         let ret = new Promise<void>( (resolve, reject) => {
+            this.hasSupport_ = true ;
             let device = this.env_.appInfo!.projects[0].device ;
             let xmlstr = this.getMemoryMapFile(this.devdb_, device) ;
             if (xmlstr === null) {
+                this.hasSupport_ = false ;
                 resolve() ;
                 return ;
             }

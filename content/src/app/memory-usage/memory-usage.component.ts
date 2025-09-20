@@ -12,7 +12,7 @@ import { MemoryUsageData } from '../../comms';
   styleUrls: ['./memory-usage.component.scss']
 })
 export class MemoryUsage {
-  @Input() memoryUsageData: MemoryUsageData[] = [];
+  @Input() memoryUsageData: MemoryUsageData[] | null = null ;
   @Input() collapsedStates: Map<string, boolean> = new Map();
   
   isMainSectionCollapsed = false;

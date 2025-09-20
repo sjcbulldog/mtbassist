@@ -110,17 +110,9 @@ export class MTBManifestDB {
         for(let app of example.versions) {
             let reqs = [...example.requirements, ...app.requirements] ;
             let reqsv2 = [...example.requirementsv2, ...app.requirementsv2] ;
+            let match = true ;
 
-            let v1 = true ;
-            for(let req of reqs) {
-                if (!provides.includes(req)) {
-                    v1 = false;
-                    break;
-                }
-            }
-
-            let v2 = true ;
-            if (v1) {
+            if (reqsv2.length > 0) {
                 for(let req2 of reqsv2) {
                     if (req2.startsWith('[') && req2.endsWith(']')) {
                         let orgroup = req2.substring(1, req2.length - 1).split(',');
@@ -132,25 +124,32 @@ export class MTBManifestDB {
                             }
                         }
                         if (!found) {
-                            v2 = false;
+                            match = false;
                             break;
                         }
                     }
                     else {
                         // This is a non-versioned requirement, just check if the board provides it
                         if (!bsp.provides.includes(req2)) {
-                            v2 = false;
+                            match = false;
                             break;
                         }
                     }
                 }
             }
-
-            if (v1 && v2) {
-                return true ;
+            else {
+                for(let req of reqs) {
+                    if (!provides.includes(req)) {
+                        match = false;
+                        break;
+                    }
+                }
             }
+
+            return match ;
         }
-        return false;
+
+        return false ;
     }
 
     public getCodeExamplesForBSP(bspId: string): Promise<MTBApp[]> {

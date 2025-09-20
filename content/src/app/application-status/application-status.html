@@ -181,9 +181,9 @@
           </div>
 
           <!-- Memory Usage Section -->
-          @if (applicationStatus.valid && memoryUsageData.length > 0) {
+          @if (applicationStatus.valid && memoryUsageData && memoryUsageData.length > 0) {
             <app-memory-usage [memoryUsageData]="memoryUsageData" [collapsedStates]="memoryCollapsedStates"></app-memory-usage>
-          } @else if (applicationStatus.valid && memoryUsageData.length === 0) {
+          } @else if (applicationStatus.valid && memoryUsageData && memoryUsageData.length === 0) {
             <div class="memory-usage-section">
               <div class="memory-usage-card">
                 <div class="memory-header-container" style="display: flex; align-items: center;">

@@ -48,7 +48,7 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     intellisenseProject: string | null = null;
 
     applicationStatus: ApplicationStatusData | null = null;
-    memoryUsageData: MemoryUsageData[] = [];
+    memoryUsageData: MemoryUsageData[] | null = null ;
     isLoading = true;
     hasError = false;
     running = false ;
@@ -168,9 +168,12 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         // Subscribe to memory usage data
         this.subscriptions.push(this.be.memoryUsage.subscribe(data => {
             this.memoryUsageData = data;
-            // Set all memory sections to collapsed by default
-            for (const memory of data) {
-                this.memoryCollapsedStates.set(memory.name, true);
+
+            if (data) {
+                // Set all memory sections to collapsed by default
+                for (const memory of data) {
+                    this.memoryCollapsedStates.set(memory.name, true);
+                }
             }
             this.cdr.detectChanges();
         }));

@@ -58,6 +58,13 @@ export class MemoryUsageMgr {
         this.ext_ = mtbobj ;
     }
 
+    public hasSupport() : boolean {
+        if (!this.memoryMapObj_) {
+            return false ;
+        }
+        return this.memoryMapObj_.hasSupport ;
+    }
+
     public updateMemoryInfo() : Promise<boolean> {
         let ret = new Promise<boolean>(async (resolve, reject) => {
             if (!this.ext_.deviceDB) {
@@ -127,7 +134,10 @@ export class MemoryUsageMgr {
         this.segments_.clear() ;
     }
 
-    public get usage() : MemoryUsageData[] {
+    public get usage() : MemoryUsageData[] | null {
+        if (!this.hasSupport()) {
+            return null ;
+        }
         return this.usage_ ;
     }
 

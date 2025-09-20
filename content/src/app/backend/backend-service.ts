@@ -102,7 +102,7 @@ export class BackendService {
     aiApiKey : BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
 
     // Memory Usage related
-    memoryUsage: BehaviorSubject<MemoryUsageData[]> = new BehaviorSubject<MemoryUsageData[]>([]);
+    memoryUsage: BehaviorSubject<MemoryUsageData[] | null> = new BehaviorSubject<MemoryUsageData[] | null>([]);
 
     // Data members
     private allBSPExceptEAPData : BSPIdentifier[] = [] ;
@@ -263,7 +263,7 @@ export class BackendService {
         this.registerHandler('userguide', (cmd) => { this.userGuide.next(cmd.data || 'User Guide') });
         this.registerHandler('buildDone', (cmd) => { this.debug('Received Build Done') ;this.buildDone.next(cmd.data); } );
         this.registerHandler('getPassword', this.getPassword.bind(this));
-        this.registerHandler('memoryUsage', (cmd) => { this.memoryUsage.next(cmd.data || []) });
+        this.registerHandler('memoryUsage', (cmd) => { this.memoryUsage.next(cmd.data) });
         this.registerHandler('installLLVM', this.handleInstallLLVM.bind(this));
         this.registerHandler('installLLVMMessage', this.handleInstallLLVMMessage.bind(this));
     }
