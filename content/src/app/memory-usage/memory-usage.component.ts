@@ -16,6 +16,7 @@ export class MemoryUsage {
   @Input() collapsedStates: Map<string, boolean> = new Map();
   
   isMainSectionCollapsed = false;
+  sectionsCollapsedStates: Map<string, boolean> = new Map();
 
   formatHex(value: number): string {
     return '0x' + value.toString(16).toUpperCase().padStart(8, '0');
@@ -32,5 +33,24 @@ export class MemoryUsage {
 
   isMemorySectionCollapsed(memoryName: string): boolean {
     return this.collapsedStates.get(memoryName) || false;
+  }
+
+  getSegmentKey(memoryName: string, segmentStart: number): string {
+    return `${memoryName}-${segmentStart}`;
+  }
+
+  toggleSectionsCollapse(memoryName: string, segmentStart: number): void {
+    const key = this.getSegmentKey(memoryName, segmentStart);
+    const currentState = this.sectionsCollapsedStates.get(key) || false;
+    this.sectionsCollapsedStates.set(key, !currentState);
+  }
+
+  isSectionsCollapsed(memoryName: string, segmentStart: number): boolean {
+    const key = this.getSegmentKey(memoryName, segmentStart);
+    return this.sectionsCollapsedStates.get(key) || false;
+  }
+
+  shouldCollapseSections(sections: string[]): boolean {
+    return sections.length > 10;
   }
 }

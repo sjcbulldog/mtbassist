@@ -181,6 +181,11 @@ export class MemoryUsageMgr {
             for(let s of segs) {
                 let views = this.findViewEntriesForSeg(view, s) ;
 
+                this.ext_.logger.debug(`MemoryUsageMgr: For project ${projname} segment at 0x${s.virtaddr.toString(16)} (0x${s.physaddr.toString(16)}) found ${views.length} matching views`) ;
+                for(let v of views) { 
+                    this.ext_.logger.debug(`    view ${v.view.mapId} at 0x${v.address.toString(16)}, size ${v.view.size}, type ${v.type}`) ;
+                }
+
                 for(let v of views) {
                     if (!v.view.memory) {
                         this.ext_.logger.warn(`MemoryUsageMgr: No physical memory found for view ${v.view.memoryId} in project ${projname}`) ;
@@ -299,30 +304,6 @@ export class MemoryUsageMgr {
         }
     }
 
-    private findPrimaryView(views: View[]) : View | undefined {
-        let memname: string | undefined = undefined ;
-        let view: View | undefined = undefined ;
-
-        for(let v of views) {
-            let vname = v.mapId ;
-            if (v.suffix && v.suffix.length > 0 && vname.endsWith(v.suffix)) {
-                vname = vname.substring(0, vname.length - v.suffix.length) ;
-            }
-
-            if (memname === undefined) {
-                memname = vname ;
-            }
-            else if (memname !== vname) {
-                return undefined ;
-            }
-
-            if (!v.suffix || v.suffix.length === 0) {
-                view = v ;
-            }
-        }
-        return view ;
-    }
-
     private findViewFromUsageAndAddress(u: MemoryUsageData, addr: number) : View | undefined {
         let views = this.usageViewMap_.get(u) ;
         if (!views) {
@@ -354,7 +335,7 @@ export class MemoryUsageMgr {
 
     private normalizeUsageAddresses() {
         for(let u of this.usage_) {
-            let primary = this.findPrimaryView(this.usageViewMap_.get(u) || []) ;
+            let primary = this.memoryMapObj_?.getViewForName(u.name) ;
             if (!primary) {
                 this.ext_.logger.warn(`MemoryUsageMgr: Could not find primary view for memory ${u.name}, cannot normalize addresses`) ;
                 continue ;

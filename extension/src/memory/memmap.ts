@@ -70,6 +70,16 @@ export class MemoryMap {
         return this.memviews_.find( mv => mv.viewId === name ) ;
     }
 
+    public getViewForName(name: string) : View | undefined { 
+        for(let mv of this.memviews_) {
+            let v = mv.memviews.find( v => v.mapId === name ) ;
+            if (v) {
+                return v ;
+            }
+        }
+        return undefined ;
+    }
+
     public getMemoryMap(): Promise<void> {
         let ret = new Promise<void>( (resolve, reject) => {
             let device = this.env_.appInfo!.projects[0].device ;

@@ -173,8 +173,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: 4rem;
   text-align: center;
+  min-height: 300px;
 
   .spinner {
     width: 40px;
@@ -183,13 +184,47 @@
     border-top: 4px solid var(--primary-color, #007bff);
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
   }
 
   p {
     color: var(--text-secondary, #666);
     margin: 0;
     font-size: 1.1rem;
+  }
+
+  .loading-message {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color, #333);
+    margin: 0;
+    letter-spacing: 0.5px;
+  }
+}
+
+.no-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  text-align: center;
+  min-height: 300px;
+
+  mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    color: var(--primary-color, #007bff);
+    margin-bottom: 2rem;
+  }
+
+  p {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color, #333);
+    margin: 0;
+    letter-spacing: 0.5px;
   }
 }
 

@@ -38,18 +38,44 @@
                 <tr class="segment-row">
                   <td class="segment-name">
                     <span class="segment-indent">└─ </span>
-                    <span class="segment-type" [class.virtual]="segment.type === 'virtual'" [class.physical]="segment.type === 'physical'" [class.virtual-physical]="segment.type === 'virtual/physical'" [class.unused]="segment.type === 'unused'">
-                      {{ segment.type }}
-                    </span>
+                      @if(segment.type === 'virtual') {
+                        <span class="segment-type" [class.virtual]="true" matTooltip="This memory segment is virtual memory, generally in RAM an copied from a non-volatile memory at startup.">Virtual</span>
+                      } @else if(segment.type === 'physical') {
+                        <span class="segment-type" [class.physical]="true" matTooltip="This memory segment is physical memory, generally in non-volatile memory but to be copied into another memory.">Physical</span>
+                      } @else if(segment.type === 'virtual/physical') {
+                        <span class="segment-type" [class.virtual-physical]="true" matTooltip="This memory segment is both virtual and physical, generally in non-volatile memory and access directly from that memory.">Both</span>
+                      } @else if(segment.type === 'unused') {
+                        <span class="segment-type" [class.unused]="true" matTooltip="This memory segment is currently unused.">Unused</span>
+                      }
                   </td>
                   <td>{{ formatHex(segment.start) }}</td>
                   <td>{{ formatHex(segment.size) }}</td>
                   <td>
-                    <div class="sections-list">
-                      @for (section of segment.sections; track section) {
-                        <span class="section-tag">{{ section }}</span>
-                      }
-                    </div>
+                    @if (shouldCollapseSections(segment.sections)) {
+                      <div class="sections-container">
+                        <div class="sections-toggle" (click)="toggleSectionsCollapse(memory.name, segment.start)">
+                          <mat-icon class="expand-icon" [class.collapsed]="isSectionsCollapsed(memory.name, segment.start)">expand_more</mat-icon>
+                          @if (isSectionsCollapsed(memory.name, segment.start)) {
+                            <span class="sections-count">{{ segment.sections.length }} sections</span>
+                          } @else {
+                            <span class="sections-count">{{ segment.sections.length }} sections (expanded)</span>
+                          }
+                        </div>
+                        @if (!isSectionsCollapsed(memory.name, segment.start)) {
+                          <div class="sections-list expanded">
+                            @for (section of segment.sections; track section) {
+                              <span class="section-tag">{{ section }}</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <div class="sections-list">
+                        @for (section of segment.sections; track section) {
+                          <span class="section-tag">{{ section }}</span>
+                        }
+                      </div>
+                    }
                   </td>
                 </tr>
               }
