@@ -145,6 +145,7 @@ export class MTBSettings extends EventEmitter {
             owner: 'extension',
             type: 'choice',
             choices: ['default', 'china', 'custom'],
+            mapping: { 'default': 'Default', 'china': 'China', 'custom': 'Custom' },
             value: 'default',
             description: 'The mode for selecting the Manifest Database System URL. "default" uses the standard URL, "china" uses a URL optimized for users in China, and "custom" allows you to specify your own URL in the Manifest Database System URL setting.'
         },
@@ -182,6 +183,7 @@ export class MTBSettings extends EventEmitter {
             type: 'choice',
             value: 'none',
             choices: ['manual', 'direct'],
+            mapping: { 'manual': 'Manual Proxy', 'direct': 'No Proxy' },
             description: 'The proxy mode for network connections. (Global scope: applies globally)'
         },
         {
