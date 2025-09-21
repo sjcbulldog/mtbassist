@@ -213,7 +213,28 @@ export class SettingsEditor implements OnInit, OnDestroy {
   }
 
   isSettingDisabled(setting: MTBSetting): boolean {
-    return !!setting.disabledMessage;
+    // Check if setting has a disabled message
+    if (setting.disabledMessage) {
+      return true;
+    }
+    
+    // Special case: disable proxy_server when proxy_mode is 'direct'
+    if (setting.name === 'proxy_server') {
+      const proxyMode = this.settings.find(s => s.name === 'proxy_mode');
+      if (proxyMode && proxyMode.value === 'direct') {
+        return true;
+      }
+    }
+    
+    // Special case: disable manifestdb_system_url when manifestdb_url_mode is not 'custom'
+    if (setting.name === 'manifestdb_system_url') {
+      const urlMode = this.settings.find(s => s.name === 'manifestdb_url_mode');
+      if (urlMode && urlMode.value !== 'custom') {
+        return true;
+      }
+    }
+    
+    return false;
   }
 
   getChoiceTipPairs(setting: MTBSetting): { choice: string, tip: string }[] {

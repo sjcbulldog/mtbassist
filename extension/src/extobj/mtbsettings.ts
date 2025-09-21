@@ -25,6 +25,9 @@ import * as vscode from 'vscode';
 export class MTBSettings extends EventEmitter {
     public static operatingModeOnline = 'direct' ;
     public static operatingModeLocalContent = 'local' ;
+    private static defaultManifestURL = '' ;    
+    private static chinaManifestURL = 'https://mtbgit.infineon.cn/raw/Infineon/mtb-super-manifest/main/mtb-super-manifest-fv2-mirror.xml' ;
+    private static chinaGitInsteadof = 'https://mtbgit.infineon.cn/raw/Infineon/mtb-super-manifest/main/mtb-super-manifest-fv2-mirror.xml|https://github.com|https://mtbgit.infineon.cn' ;
 
     private static defaultSettings : MTBSetting[] = [
         {
@@ -93,7 +96,7 @@ export class MTBSettings extends EventEmitter {
             type: 'dirpath',
             value: '',
             description: `The location of the ARM Compiler installation. (Extension scope: applies globally)`
-        },                        
+        },
         {
             name: 'enabled_eap',
             displayName: 'Early Access Pack',
@@ -137,12 +140,30 @@ export class MTBSettings extends EventEmitter {
             description: 'The path to the local manifest file that can be used to add additional content into ModusToolbox. (Global scope: applies globally)'
         },
         {
+            name: 'manifestdb_url_mode',
+            displayName: 'Manifest Database URL Mode',
+            owner: 'extension',
+            type: 'choice',
+            choices: ['default', 'china', 'custom'],
+            value: 'default',
+            description: 'The mode for selecting the Manifest Database System URL. "default" uses the standard URL, "china" uses a URL optimized for users in China, and "custom" allows you to specify your own URL in the Manifest Database System URL setting.'
+        },
+        {
             name: 'manifestdb_system_url',
             displayName: 'Manifest Database System URL',
             owner: 'modus',
             type: 'uri',
             value: '',
             description: 'The URL for top level super manifest containing ModusToolbox content. This should generally left empty unless you are using an alternate set of manifest files due to internet restrictions. (Global scope: applies globally)'
+        },
+        {
+            name: 'git_insteadof',
+            displayName: 'Git Insteadof',
+            owner: 'modus',
+            type: 'string',
+            value: '',
+            description: 'This setting allows you to specify a git url substitution.  This is useful if you need to use a different protocol or server to access git repositories.',
+            hidden: true
         },
         {
             name: 'operating_mode',
@@ -154,6 +175,23 @@ export class MTBSettings extends EventEmitter {
             mapping: { 'direct': 'Online Mode', 'local': 'Local Content Mode' },
             description: 'The operating mode for ModusToolbox. This determines how the tool interacts with the file system and network resources. Online Mode dynamically retrieves content from the internet, while Local Content Mode uses only locally available content. (Global scope: applies globally)'
         },
+        {
+            name: 'proxy_mode', 
+            displayName: 'Proxy Mode',
+            owner: 'modus',
+            type: 'choice',
+            value: 'none',
+            choices: ['manual', 'direct'],
+            description: 'The proxy mode for network connections. (Global scope: applies globally)'
+        },
+        {
+            name: 'proxy_server',
+            displayName: 'Proxy Server',
+            owner: 'modus',
+            type: 'string',
+            value: '',
+            description: 'The proxy server to use for network connections. This should be in the format http://username:password@proxyserver:port if authentication is required, or http://proxyserver:port if no authentication is needed. Leave empty to not use a proxy server. (Global scope: applies globally)'
+        }
     ] ;
 
     private settings_: MTBSetting[];
@@ -226,6 +264,7 @@ export class MTBSettings extends EventEmitter {
         this.updateEAPChoices(settings) ;
         this.updateToolPathChoices(settings) ;
         this.checkLCSandEAP(settings) ;
+        this.checkManifestURLMode(settings) ;
         return settings ;
     }
 
@@ -322,6 +361,20 @@ export class MTBSettings extends EventEmitter {
                     this.writeExtensionSettings() ;
                 }
             }
+            if (setting.name === 'manifestdb_url_mode') {
+                if (setting.value === 'default') {
+                    this.switchToDefaultManifest() ;
+                }
+                else if (setting.value === 'china') {
+                    this.switchToChinaManifest() ;
+                }
+                else if (setting.value === 'custom') {
+                    this.switchToCustomManifest() ;
+                }
+                this.writeSettingsFile() ;
+                this.writeExtensionSettings() ;
+                this.emit('refresh') ;
+            }
             else {
                 this.writeSettingsFile() ;
                 if (setting.name === 'enabled_eap') {
@@ -329,6 +382,39 @@ export class MTBSettings extends EventEmitter {
                     this.emit('toolsPathChanged', this.computeToolsPath()) ;
                 }
             }
+        }
+    }
+
+    private switchToDefaultManifest() : void {
+        let msetting = this.settings_.find(s => s.name === 'manifestdb_system_url');
+        if (msetting) {
+            msetting.value = MTBSettings.defaultManifestURL ;
+        }
+
+        let gsetting = this.settings_.find(s => s.name === 'git_insteadof');
+        if (gsetting) {
+            gsetting.value = '' ;
+        }
+        this.emit('refresh') ;        
+    }
+
+    private switchToChinaManifest() : void {    
+        let msetting = this.settings_.find(s => s.name === 'manifestdb_system_url');
+        if (msetting) {
+            msetting.value = MTBSettings.chinaManifestURL ;
+        }
+
+        let gsetting = this.settings_.find(s => s.name === 'git_insteadof');
+        if (gsetting) {
+            gsetting.value = MTBSettings.chinaGitInsteadof ;
+        }
+        this.emit('refresh') ;
+    }
+
+    private switchToCustomManifest() : void {
+        let gsetting = this.settings_.find(s => s.name === 'git_insteadof');
+        if (gsetting) {
+            gsetting.value = '' ;
         }
     }
 
@@ -421,22 +507,6 @@ export class MTBSettings extends EventEmitter {
                 setting.value = this.resolvePath(setting.value as string);
             }
         }
-    }
-
-    private versionToToolsDir(ver: string) : string | undefined {
-        let ret = undefined ;
-
-        if (ver.startsWith('ModusToolbox ')) {
-            ver = ver.substring('ModusToolbox '.length);
-            let tools = ModusToolboxEnvironment.findToolsDirectories();
-            for(let stdplaces of tools) {
-                if (stdplaces.includes(ver)) {
-                    ret = stdplaces;
-                    break;
-                }
-            }
-        }
-        return ret ;
     }
 
     public checkToolsVersion() : boolean {
@@ -567,7 +637,6 @@ export class MTBSettings extends EventEmitter {
     private updateToolPathChoices(settings: MTBSetting[]) : void {
         let choices: string[] = [];
         let tips: string[] = [];
-        let index = 1 ;
 
         for (let tool of this.alltools_) {
             choices.push(this.toolDirToVersion(tool));
@@ -605,6 +674,19 @@ export class MTBSettings extends EventEmitter {
             else {
                 opmode.disabledMessage = undefined;
                 eap.disabledMessage = undefined;
+            }
+        }
+    }
+
+    private checkManifestURLMode(settings: MTBSetting[]) : void {
+        let urlMode = settings.find(s => s.name === 'manifestdb_url_mode');
+        let systemUrl = settings.find(s => s.name === 'manifestdb_system_url');
+
+        if (urlMode && systemUrl) {
+            if (urlMode.value === 'custom') {
+                systemUrl.disabledMessage = undefined;
+            } else {
+                systemUrl.disabledMessage = 'This setting is only available when Manifest Database URL Mode is set to "custom".';
             }
         }
     }

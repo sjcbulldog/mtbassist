@@ -314,6 +314,7 @@ export interface MTBSetting {
     mapping? : { [key: string]: string } ;
     description: string ;
     disabledMessage? : string ;
+    hidden?: boolean ;
 }
 
 export interface SetupProgram {
