@@ -46,6 +46,7 @@ import { DeviceDBManager } from '../devdb/devdbmgr';
 import { MTBVSCodeSettings } from './mtbvscodesettings';
 import { MTBVersion } from '../mtbenv/misc/mtbversion';
 import { LLVMInstaller } from './llvminstaller';
+import { AddBootloaderTask } from '../stasks/addbootloader';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -164,7 +165,7 @@ export class MTBAssistObject {
 
         this.computeTheme() ;
     }
-
+    
     public get toolsDir(): string | undefined {
         return this.toolspath_;
     }
@@ -176,6 +177,10 @@ export class MTBAssistObject {
     public get deviceDB(): DeviceDBManager | undefined {
         return this.devicedb_;
     }
+
+    public createProjectDirect(targetdir: string, appname: string, bspid: string, ceid: string, prepvscode: boolean = true): Promise<[number, string[]]> {
+        return this.worker_!.createProject(targetdir, appname, bspid, ceid, prepvscode) ;
+    } ;
 
     private showSettingsError(name: string, message: string) {
         let err: SettingsError = { setting: name, message: message };
@@ -1421,8 +1426,39 @@ export class MTBAssistObject {
                 });
             this.context.subscriptions.push(disposable);
 
+            disposable = vscode.commands.registerCommand('mtbassist2.addBootloader', this.addBootloader.bind(this));
+            this.context_.subscriptions.push(disposable);
+
             this.commandsInited_ = true;
         }
+    }
+
+    private addBootloader() {
+        if (!this.env) {
+            this.logger_.error('internal error: ModusToolbox environment is not initialized.');
+            return ;
+        }
+
+        if (!this.env.appInfo) {
+            vscode.window.showErrorMessage('No ModusToolbox application is loaded in the current workspace.  Cannot add bootloader.');
+            this.logger_.error('internal error: ModusToolbox application is not loaded.');
+            return ;
+        }
+
+        if (!this.isPSOCEdge()) {
+            vscode.window.showErrorMessage('the loaded application is not a PSOC Edge application. The bootloader can only be automatically added to PSOC Edge applications.');
+            this.logger_.error('internal error: ModusToolbox application is not loaded.');
+            return ;            
+        }
+
+        let task = new AddBootloaderTask(this) ;
+        task.run()
+        .then(() => {
+            vscode.window.showInformationMessage('Bootloader added successfully.');
+        })
+        .catch((error) => {
+            vscode.window.showErrorMessage('Failed to add bootloader: ' + error);
+        });
     }
 
     private displayAssetDocs(asset: MTBAssetRequest, symbol: String) {
@@ -2400,5 +2436,4 @@ export class MTBAssistObject {
 
         return this.env_.appInfo.projects[0].device.startsWith('PSE') ;
     }
-
 }

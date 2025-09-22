@@ -39,6 +39,10 @@
       {
         "command": "mtbassist2.mtbSymbolDoc",
         "title": "ModusToolbox Assistant: Display documentation for symbol"
+      },
+      {
+        "command" : "mtbassist2.addBootloader",
+        "title": "ModusToolbox Assistant: Add Bootloader To PSOC Edge Application"
       }
     ],
     "keybindings": [

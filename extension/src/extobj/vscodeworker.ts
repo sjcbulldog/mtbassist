@@ -186,7 +186,7 @@ export class VSCodeWorker extends EventEmitter  {
         return ret;
     }
 
-    public async createProject(projdir: string, appdir: string, bspid: string, ceid: string): Promise<[number, string[]]> {
+    public async createProject(targetdir: string, appname: string, bspid: string, ceid: string, prepvscode : boolean = true): Promise<[number, string[]]> {
         return new Promise<[number, string[]]>(async (resolve, reject) => {
             let cliPath = this.findProjectCreatorCLIPath();
             if (cliPath === undefined) {
@@ -201,12 +201,12 @@ export class VSCodeWorker extends EventEmitter  {
                 this.sendProgress(`Creating project '${bspid} - ${ceid}'`, 0);
                 this.createProjectIndex_ = 0 ;
                 this.createProjectPercent_ = 0 ;
-                let args: string[] = ['--use-modus-shell', '-b', bspid, '-a', ceid , '-d', projdir, '-n', appdir] ;
+                let args: string[] = ['--use-modus-shell', '-b', bspid, '-a', ceid , '-d', targetdir, '-n', appname] ;
                 let opts: MTBRunCommandOptions = {
                     toolspath: this.ext_.toolsDir,
                     id: 'createproject',
                     onOutput: this.createProjectCallback.bind(this),
-                    cwd: projdir
+                    cwd: targetdir
                 } ;
 
                 ModusToolboxEnvironment.runCmdCaptureOutput(cliPath, args, opts)
@@ -218,18 +218,25 @@ export class VSCodeWorker extends EventEmitter  {
                         resolve([-1, [`Failed to create project '${bspid} - ${ceid}'`]]);
                         return;
                     }
-                    this.sendProgress('Preparing VS Code workspace', 80);
-                    this.logger_.info('-----------------------------------------------') ;
-                    this.logger_.info('Preparing project for VSCode') ;
-                    this.logger_.info('-----------------------------------------------') ;                      
-                    this.runMakeVSCodeCommand(path.join(projdir, appdir))
-                    .then((makeResult) => {
-                        if (makeResult[0] !== 0) {
-                            resolve([-1, [`Failed to create project '${bspid} - ${ceid}': ${makeResult[1].join('\n')}`]]);
-                            return;
-                        }   
+
+                    if (!prepvscode) {
                         resolve([0, [`Application '${bspid} - ${ceid}' created successfully.`]]);
-                    }) ;
+                        return ;
+                    }
+                    else {
+                        this.sendProgress('Preparing VS Code workspace', 80);
+                        this.logger_.info('-----------------------------------------------') ;
+                        this.logger_.info('Preparing project for VSCode') ;
+                        this.logger_.info('-----------------------------------------------') ;                      
+                        this.runMakeVSCodeCommand(path.join(targetdir, appname))
+                        .then((makeResult) => {
+                            if (makeResult[0] !== 0) {
+                                resolve([-1, [`Failed to create project '${bspid} - ${ceid}': ${makeResult[1].join('\n')}`]]);
+                                return;
+                            }   
+                            resolve([0, [`Application '${bspid} - ${ceid}' created successfully.`]]);
+                        }) ;
+                    }
                 })
                 .catch((error) => {
                     resolve([-1, [`Failed to create project '${bspid} - ${ceid}': ${error.message}`]]);
