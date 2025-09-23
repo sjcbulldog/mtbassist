@@ -12,6 +12,15 @@
  * limitations under the License.
  */
 
+/*
+ * LCSManager - Local Content Storage Manager for ModusToolbox BSPs
+ *
+ * This class manages the local content storage (LCS) of Board Support Packages (BSPs)
+ * for ModusToolbox projects. It provides methods to check for updates, add/remove BSPs,
+ * apply changes, and synchronize the local BSP list with the manifest database. The manager
+ * interacts with the lcs-manager-cli tool and emits events for UI updates.
+ */
+
 import EventEmitter = require("events");
 import { ModusToolboxEnvironment } from "../mtbenv";
 import { MTBAssistObject } from "./mtbassistobj";
@@ -24,7 +33,9 @@ export interface CommandData {
 }
 
 export class LCSManager extends EventEmitter {
+    // UUID for the lcs-manager-cli tool in the ModusToolbox tools database
     static lcsCliUUID: string = '74a9688f-86e2-4ea0-8590-ca29a4b91ca4' ;
+    // Sentinel string used to detect empty watch lists in CLI output
     static sentinelString: string = 'No items in watch list' ;
     private ext_ : MTBAssistObject ;
     private needsUpdate_ : boolean = false ;
@@ -39,35 +50,60 @@ export class LCSManager extends EventEmitter {
         this.ext_ = ext ;
     }
 
+    /**
+     * Returns true if there are BSPs queued to be added or removed.
+     */
     public get needsApplyChanges() : boolean {
         return this.toadd_.length > 0 || this.todel_.length > 0 ;
     }
 
+    /**
+     * Returns true if the LCS is ready (has at least one BSP in local storage).
+     */
     public get isLCSReady() : boolean {
         return this.bsps_.length > 0 ;
     }
 
+    /**
+     * Returns true if an update is needed (as determined by lcs-manager-cli).
+     */
     public get needsUpdate() : boolean {
         return this.needsUpdate_ ;
     }
 
+    /**
+     * Returns the list of BSPs currently in local storage.
+     */
     public get bspsIn() : string[] {
         return this.bsps_ ;
     }
 
+    /**
+     * Returns the list of BSPs queued to be added to local storage.
+     */
     public get toAdd() : string[] {
         return this.toadd_ ;
     }
 
+    /**
+     * Returns the list of BSPs queued to be removed from local storage.
+     */
     public get toDelete() : string[] {
         return this.todel_ ;
     }
 
+    /**
+     * Returns the list of BSPs not currently in local storage.
+     */
     public get bspsOut() : string[] {
         let allBsps = this.ext_.env?.manifestDB.allBspNames.filter((bsp) => !this.bspsIn.includes(bsp)).sort() || [];
         return allBsps ;
     }
 
+    /**
+     * Checks for available updates to BSPs using lcs-manager-cli.
+     * @returns Promise that resolves to true if updates are available.
+     */
     public updateNeedsUpdate() : Promise<boolean> {
         let ret = new Promise<boolean>((resolve, reject) => {
             this.runLCSCmd(['--check-for-updates'])
@@ -86,6 +122,10 @@ export class LCSManager extends EventEmitter {
         return ret;
     }
 
+    /**
+     * Updates the list of BSPs in local storage by querying lcs-manager-cli.
+     * @returns Promise that resolves when the update is complete.
+     */
     public updateBSPS() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.runLCSCmd(['--list-bsps'])
@@ -106,6 +146,10 @@ export class LCSManager extends EventEmitter {
         return ret ;
     }
 
+    /**
+     * Handles UI commands for managing BSPs (add, remove, revert, etc).
+     * @param data - Command data object specifying the action to perform.
+     */
     public command(data: any) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             switch (data.cmd) {
@@ -186,6 +230,10 @@ export class LCSManager extends EventEmitter {
         });
     }
 
+    /**
+     * Applies all queued BSP add/remove changes to local storage.
+     * @returns Promise that resolves when changes are applied.
+     */
     private applyBSPChanges() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.emit('show') ;
@@ -223,6 +271,9 @@ export class LCSManager extends EventEmitter {
         return ret;
     }   
 
+    /**
+     * Adds all available BSPs to local storage.
+     */
     private addAllBSPSs() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.emit('show') ;
@@ -241,6 +292,9 @@ export class LCSManager extends EventEmitter {
         return ret;
     }
 
+    /**
+     * Removes all BSPs from local storage.
+     */
     private removeAllBSPSs() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.emit('show') ;
@@ -259,6 +313,9 @@ export class LCSManager extends EventEmitter {
         return ret;
     }
 
+    /**
+     * Applies BSP add/remove changes one by one.
+     */
     private oneByOne() : Promise<void> {
         let ret = new Promise<void>(async (resolve, reject) => {
             this.emit('show') ;
@@ -296,6 +353,9 @@ export class LCSManager extends EventEmitter {
         return ret;
     }
 
+    /**
+     * Updates existing BSP content in local storage.
+     */
     private updateExistingContent() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             let args : string[] = ['--update-existing'] ;
@@ -315,6 +375,12 @@ export class LCSManager extends EventEmitter {
         return ret;
     }
 
+    /**
+     * Runs the lcs-manager-cli tool with the specified arguments.
+     * @param args - Arguments to pass to the CLI tool.
+     * @param cb - Optional callback for output lines.
+     * @returns Promise resolving to [exitCode, outputLines].
+     */
     private runLCSCmd(args: string[], cb?: (lines: string[], id?: any) => void) : Promise<[number, string[]]> {
         let ret = new Promise<[number, string[]]>((resolve, reject) => {
             let cmd = this.findLcsCLI() ;
@@ -339,6 +405,10 @@ export class LCSManager extends EventEmitter {
         return ret;
     }
 
+    /**
+     * Toggles the presence of a BSP in local storage (queues for add/remove).
+     * @param bsp - BSP name to toggle.
+     */
     private toggleBSP(bsp: string) {
         if (this.bsps_.includes(bsp)) {
             // BSP is currently in local storage
@@ -368,6 +438,10 @@ export class LCSManager extends EventEmitter {
         }
     }    
 
+    /**
+     * Finds the path to the lcs-manager-cli tool in the ModusToolbox environment.
+     * @returns Path to the CLI tool, or undefined if not found.
+     */
     private findLcsCLI() : string | undefined {
         let ret : string | undefined ;
 
@@ -378,6 +452,10 @@ export class LCSManager extends EventEmitter {
         return ret ;
     }
 
+    /**
+     * Parses the output of lcs-manager-cli to determine if updates are needed.
+     * @param output - Output lines from the CLI tool.
+     */
     private parseNeedsUpdate(output: string[]) {
         if (output.length > 3 && output[1].indexOf('Updates available') !== -1) {
             this.needsUpdate_ = true;
@@ -394,6 +472,11 @@ export class LCSManager extends EventEmitter {
         }
     }
 
+    /**
+     * Parses the output of lcs-manager-cli to extract BSP names.
+     * @param output - Output lines from the CLI tool.
+     * @returns Array of BSP names.
+     */
     private parseOutput(output: string[]) {
         let ret: string[] = [] ;
         if (output[0].indexOf(LCSManager.sentinelString) === -1) {
