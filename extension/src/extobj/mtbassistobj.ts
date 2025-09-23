@@ -2434,6 +2434,7 @@ export class MTBAssistObject {
             return false ;
         }
 
+        // TODO: need a better way to do this
         return this.env_.appInfo.projects[0].device.startsWith('PSE') ;
     }
 }
