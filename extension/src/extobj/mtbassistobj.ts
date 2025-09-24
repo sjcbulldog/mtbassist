@@ -143,14 +143,15 @@ export class MTBAssistObject {
         this.memusage_ = new MemoryUsageMgr(this) ;
 
         vscode.tasks.onDidEndTask((e) => { 
+            this.sendMessageWithArgs('buildDone', true) ;            
             this.memusage_.updateMemoryInfo()
             .then((ret) => {
                 if (ret) {
                     this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;
-                    this.sendMessageWithArgs('buildDone', true) ;
                 }
             });
         }) ;
+
 
         this.toolspath_ = this.findToolsPath() ;
         this.bindCommandHandlers();
@@ -2393,10 +2394,10 @@ export class MTBAssistObject {
         return ret;
     }
 
-    private fixMissingAssets(request: FrontEndToBackEndRequest): Promise<void> {
+    public fixMissingAssetsForProject(projname: string) {
         let ret = new Promise<void>((resolve, reject) => {
             if (this.worker_) {
-                this.worker_.fixMissingAssets(request.data as string)
+                this.worker_.fixMissingAssets(projname)
                     .then(() => {
                         this.env_?.reloadAppInfo()
                             .then(() => {
@@ -2416,7 +2417,11 @@ export class MTBAssistObject {
                 reject(new Error('Platofrm API is not initialized.'));
             }
         });
-        return ret;
+        return ret;        
+    }
+
+    private fixMissingAssets(request: FrontEndToBackEndRequest): Promise<void> {
+        return this.fixMissingAssetsForProject(request.data as string) ;
     }
 
     private runAction(request: FrontEndToBackEndRequest): Promise<void> {

@@ -6,6 +6,12 @@ import * as path from 'path' ;
 import * as os from 'os' ;
 import * as vscode from 'vscode' ;
 
+//
+// TODO: run make vscode
+//       run getlibs in proj_bootloader
+//       refresh application
+//
+
 export class AddBootloaderTask implements STask {
     private static readonly bootloaderProjectName = 'proj_bootloader' ;
     private static readonly bootloaderCEID = 'mtb-example-edge-protect-bootloader' ;
@@ -17,33 +23,49 @@ export class AddBootloaderTask implements STask {
 
     public async run() : Promise<void> {
         let ret = new Promise<void>( async (resolve, reject) => {
-            // this.copyInBootloader()
-            //     .then(() => {
-            //         this.addBootloaderToAppConfig()
-            //         .then(() => {
-            //             resolve() ;
-            //         })
-            //         .catch( (error) => {
-            //             reject(error) ;
-            //         }) ;
-            //     }).catch((err) => {
-            //         reject(err) ;
-            //     }) ;
-            this.addBootloaderProjectToMakefile()
-            .then(() => {
-                this.fixupCombinerSigner()
+            this.copyInBootloader()
                 .then(() => {
-                    resolve() ;
-                })
-                .catch( (error) => {
-                    reject(error) ;
+                    this.addBootloaderProjectToMakefile()
+                    .then(() => {
+                        this.addToWorkspace()
+                        .then(() =>  {
+                            this.fixupCombinerSigner()
+                            .then(() => {
+                                this.ext_.fixMissingAssetsForProject(AddBootloaderTask.bootloaderProjectName)
+                                .then(() => {
+                                    resolve();
+                                })
+                                .catch((error) => {
+                                    reject(error);
+                                });
+                            })
+                            .catch( (error) => {
+                                reject(error) ;
+                            }) ;
+                        })
+                        .catch( (error) => {
+                            reject(error) ;
+                        }) ;
+                    })
+                    .catch( (error) => {
+                        reject(error) ;
+                    }) ;
+                }).catch((err) => {
+                    reject(err) ;
                 }) ;
-            })
-            .catch((error) => {
-                reject(error) ;
-            });
-
         }) ;                
+        return ret ;
+    }
+
+    private addToWorkspace() : Promise<void> {
+        let ret = new Promise<void>( async (resolve, reject) => {
+            // let projdir = path.join(this.ext_.env!.appInfo!.appdir, AddBootloaderTask.bootloaderProjectName) ;
+            // if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+            //     const newFolders = [ vscode.workspace.workspaceFolders![0], { uri: vscode.Uri.file(projdir) } , ...vscode.workspace.workspaceFolders.slice(1, vscode.workspace.workspaceFolders.length) ] ;
+            //     vscode.workspace.updateWorkspaceFolders(0, vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0, ...newFolders) ;
+            // }
+            resolve() ;
+        }) ;
         return ret ;
     }
 
@@ -120,6 +142,7 @@ export class AddBootloaderTask implements STask {
                     }
                     this.updateSignerCombiner(doc, editor)
                     .then(() => {
+                        setTimeout(() => { doc.save() ; }, 100) ;                        
                         resolve() ;
                     })
                     .catch((error) => {
@@ -135,7 +158,7 @@ export class AddBootloaderTask implements STask {
     }    
 
     private updateSignerCombiner(doc: vscode.TextDocument, editor: vscode.TextEditor) : Promise<void> { 
-        let regex = /^COMBINE_SIGN_JSON?=.*$/m;
+        let regex = /^COMBINE_SIGN_JSON.*$/m;
         let ret = new Promise<void>( async (resolve, reject) => {
             let match = regex.exec(doc.getText());
             if (!match) {
@@ -181,6 +204,7 @@ export class AddBootloaderTask implements STask {
                     }
                     this.addBootloaderProject(doc, editor)
                     .then(() => {
+                        setTimeout(() => { doc.save() ; }, 100) ;
                         resolve() ;
                     })
                     .catch((error) => {
@@ -212,10 +236,11 @@ export class AddBootloaderTask implements STask {
             }
 
             // Add bootloader project to the list
-            projects.push(AddBootloaderTask.bootloaderProjectName);
+            projects.unshift(AddBootloaderTask.bootloaderProjectName);
             let newText = doc.getText().replace(regex, `MTB_PROJECTS= ${projects.join(' ')}`);
             editor.edit((editBuilder) => {
                 editBuilder.replace(new vscode.Range(0, 0, doc.lineCount, 0), newText);
+                doc.save() ;
                 resolve() ;
             });
         });
@@ -234,56 +259,59 @@ export class AddBootloaderTask implements STask {
                 return ;
             }
 
-            let bloadpath = path.join(this.ext_.env.appInfo.appdir, AddBootloaderTask.bootloaderProjectName) ;
-            if (fs.existsSync(bloadpath)) {
-                // A project named proj_bootloader already exists in the application
-                // directory. We won't overwrite it.
-                this.ext_.logger.info('A project named proj_bootloader already exists in the application directory. Not overwriting it.') ;
-                resolve() ;
-                return ;
-            }
+            resolve() ;
+            return ;
 
-            let tmpdir : string ;
+            // let bloadpath = path.join(this.ext_.env.appInfo.appdir, AddBootloaderTask.bootloaderProjectName) ;
+            // if (fs.existsSync(bloadpath)) {
+            //     // A project named proj_bootloader already exists in the application
+            //     // directory. We won't overwrite it.
+            //     this.ext_.logger.info('A project named proj_bootloader already exists in the application directory. Not overwriting it.') ;
+            //     resolve() ;
+            //     return ;
+            // }
+
+            // let tmpdir : string ;
             
-            try {
-                tmpdir = await this.createUniqueTempDirectory() ;
-            } catch(err) {
-                reject('Could not create temporary directory: ' + err) ;
-                return ;
-            }
+            // try {
+            //     tmpdir = await this.createUniqueTempDirectory() ;
+            // } catch(err) {
+            //     reject('Could not create temporary directory: ' + err) ;
+            //     return ;
+            // }
 
-            let bspid = this.ext_.env.appInfo.projects[0].target ;
-            if (bspid.startsWith('APP_')) {
-                bspid = bspid.substring(4) ;
-            }
+            // let bspid = this.ext_.env.appInfo.projects[0].target ;
+            // if (bspid.startsWith('APP_')) {
+            //     bspid = bspid.substring(4) ;
+            // }
 
-            this.ext_.createProjectDirect(tmpdir, 'APPNAME', bspid, AddBootloaderTask.bootloaderCEID, false)
-            .then( (result: [number, string[]]) => {
-                if (result[0] !== 0) {
-                    reject('Could not create bootloader project: ' + result[1].join('\n')) ;
-                    return ;
-                }
+            // this.ext_.createProjectDirect(tmpdir, 'APPNAME', bspid, AddBootloaderTask.bootloaderCEID, false)
+            // .then( (result: [number, string[]]) => {
+            //     if (result[0] !== 0) {
+            //         reject('Could not create bootloader project: ' + result[1].join('\n')) ;
+            //         return ;
+            //     }
 
-                let srcdir = path.join(tmpdir, 'APPNAME', AddBootloaderTask.bootloaderProjectName) ;
-                if (!fs.existsSync(srcdir)) {
-                    reject('Could not find created bootloader project in temporary directory.') ;
-                    return ;
-                }
+            //     let srcdir = path.join(tmpdir, 'APPNAME', AddBootloaderTask.bootloaderProjectName) ;
+            //     if (!fs.existsSync(srcdir)) {
+            //         reject('Could not find created bootloader project in temporary directory.') ;
+            //         return ;
+            //     }
 
-                // Now copy the directory tree from srcdir to bloadpath
-                fs.cp(srcdir, bloadpath, { recursive: true }, (err) => {
-                    if (err) {
-                        fs.rmSync(srcdir, { recursive: true, force: true }) ;
-                        reject('Could not copy bootloader project to application directory: ' + err) ;
-                        return ;
-                    }
-                    fs.rmSync(srcdir, { recursive: true, force: true }) ;                    
-                    resolve() ;
-                }) ;
-            })
-            .catch( (error) => {
-                reject('Could not create project: ' + error) ;
-            });
+            //     // Now copy the directory tree from srcdir to bloadpath
+            //     fs.cp(srcdir, bloadpath, { recursive: true }, (err) => {
+            //         if (err) {
+            //             fs.rmSync(srcdir, { recursive: true, force: true }) ;
+            //             reject('Could not copy bootloader project to application directory: ' + err) ;
+            //             return ;
+            //         }
+            //         fs.rmSync(srcdir, { recursive: true, force: true }) ;                    
+            //         resolve() ;
+            //     }) ;
+            // })
+            // .catch( (error) => {
+            //     reject('Could not create project: ' + error) ;
+            // });
 
         }) ;
         return ret;

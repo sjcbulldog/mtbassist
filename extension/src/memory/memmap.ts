@@ -162,6 +162,9 @@ export class MemoryMap {
                     }
                 }) ;
             }
+            else {
+                resolve() ;
+            }
         }) ;
         return ret ;
     }

@@ -113,6 +113,7 @@ export class MemoryUsageMgr {
             .then((result) => {
                 if (result) {
                     this.computeMemoryUsage() ;
+                    resolve(true) ;
                 }
                 else {
                     this.clear() ;
@@ -218,6 +219,7 @@ export class MemoryUsageMgr {
                     let seg = {
                         start: v.address,
                         size: s.memsize,
+                        fsize: s.filesize,
                         type: v.type,
                         sections: s.sections.map( sec => sec + ` (${s.project})` )
                     } ;
@@ -228,7 +230,9 @@ export class MemoryUsageMgr {
                         this.usageViewMap_.set(usage, mapentry) ;
                     }
                     this.insertViewEntry(mapentry, v.view) ;
-                    usage.segments.push(seg) ;
+                    if (seg.type !== 'physical' || seg.fsize > 0) {
+                        usage.segments.push(seg) ;
+                    }
                 }
             }
         }
@@ -243,6 +247,7 @@ export class MemoryUsageMgr {
             u.segments.push( {
                 start: u.start,
                 size: u.size,
+                fsize: u.size,
                 sections: [],
                 type: 'unused'
             }) ;
@@ -252,6 +257,7 @@ export class MemoryUsageMgr {
                 u.segments.unshift( {
                     start: u.start,
                     size: u.segments[0].start - u.start,
+                    fsize: u.segments[0].start - u.start,
                     sections: [],
                     type: 'unused'
                 }) ;
@@ -265,6 +271,7 @@ export class MemoryUsageMgr {
                     u.segments.splice(i + 1, 0, {
                         start: end1,
                         size: seg2.start - end1,
+                        fsize: seg2.start - end1,
                         sections: [],
                         type: 'unused'
                     }) ;
@@ -277,6 +284,7 @@ export class MemoryUsageMgr {
                 u.segments.push( {
                     start: endlast,
                     size: (u.start + u.size) - endlast,
+                    fsize: (u.start + u.size) - endlast,
                     sections: [],
                     type: 'unused'
                 }) ;
@@ -293,7 +301,12 @@ export class MemoryUsageMgr {
     private computeOnePercentage(u: MemoryUsageData) {
         let geom = new GeomElement() ;
         for(let seg of u.segments) {
-            geom.addSegmentFromPointAndLength(seg.start, seg.size) ;
+            if (seg.type === 'physical') {
+                geom.addSegmentFromPointAndLength(seg.start, seg.fsize) ;
+            }
+            else {
+                geom.addSegmentFromPointAndLength(seg.start, seg.size) ;
+            }
         }
 
         // Now the geom object has all the segments, merge them to eliminate overlaps
@@ -304,7 +317,7 @@ export class MemoryUsageMgr {
             used += seg.length ;
         }
 
-        u.percent = Math.round((used / u.size) * 100) ;
+        u.percent = (used / u.size) * 100 ;
     }
 
     private computePercentages() {

@@ -349,6 +349,7 @@ export interface BrowseResult {
 export interface MemoryUsageSegment {
   start: number ;
   size: number ;
+  fsize: number ;
   sections: string[] ;
   type: 'virtual' | 'physical' | 'virtual/physical' | 'unused';
 }
