@@ -47,6 +47,7 @@ import { MTBVSCodeSettings } from './mtbvscodesettings';
 import { MTBVersion } from '../mtbenv/misc/mtbversion';
 import { LLVMInstaller } from './llvminstaller';
 import { AddBootloaderTask } from '../stasks/addbootloader';
+import { STask } from '../stasks/stask';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -97,6 +98,8 @@ export class MTBAssistObject {
     private intellisenseProject_ : string | undefined ;
     private manifestStatus_ : ManifestStatusType = 'loading';
     private pendingPasswordPromise: ((pass: string | undefined) => void) | undefined = undefined ;
+    private pendingStatusClosePromise: (() => void) | undefined = undefined ;
+    private activeTask_ : STask | undefined = undefined ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -177,6 +180,10 @@ export class MTBAssistObject {
 
     public get deviceDB(): DeviceDBManager | undefined {
         return this.devicedb_;
+    }
+
+    public extStorageDir(p: string) {
+        return path.join(this.context_.globalStorageUri.fsPath, p) ;
     }
 
     public createProjectDirect(targetdir: string, appname: string, bspid: string, ceid: string, prepvscode: boolean = true): Promise<[number, string[]]> {
@@ -451,6 +458,63 @@ export class MTBAssistObject {
         return tools[0] ;
     }
 
+    private findWorkspaceFile(dir: string) : string | undefined {
+        let files = fs.readdirSync(dir) ;
+        for(let f of files) {
+            if (f.endsWith('.code-workspace')) {
+                return path.join(dir, f) ;
+            }
+        }
+        return undefined ;
+    }
+
+    private runVSCodeAndReload() {
+        this.sendMessageWithArgs('startOperation', `Preparing Application For VSCode`) ;
+        this.sendMessageWithArgs('addStatusLine', `Running 'make vscode'...`) ;
+        this.runMakeVSCode()
+        .then(() => { 
+            let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
+            if (wkspc) {
+                vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(wkspc)) ;
+            }
+            else {
+                this.logger_.error(`Failed to find workspace file after running 'make vscode'`);
+                vscode.window.showErrorMessage(`Failed to find workspace file after running 'make vscode'`);
+                throw new Error(`Failed to find workspace file after running 'make vscode'`);
+            }                    
+        }) ;
+    }
+
+    private checkVSCodeStructure() : void {
+        if (vscode.workspace.workspaceFile) {
+            let vscodedir = path.join(this.env_!.appInfo!.appdir, '.vscode') ;  
+            if (!fs.existsSync(vscodedir)) {
+                this.runVSCodeAndReload() ;
+            }
+            else {
+                this.logger_.debug(`workspace file and .vscode directory exists, no need to run 'make vscode'`) ;
+            }
+        }
+        else {
+            //
+            // There is no workspace file loaded, check if one exists
+            //
+            let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
+            if (wkspc) {
+                //
+                // Load the workspace file, this should re-initialize the extension and not return in a meaningful way
+                //
+                vscode.commands.executeCommand('vscode.openWorkspace', vscode.Uri.file(wkspc)) ;
+            }
+            else {
+                //
+                // There is not workspace file, run make vscode
+                //
+                this.runVSCodeAndReload() ;
+            }
+        }
+    }
+
     private initWithTools(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
@@ -489,6 +553,7 @@ export class MTBAssistObject {
             this.readComponentDefinitions();
 
             this.loadMTBApplication().then(() => {
+                this.checkVSCodeStructure() ;
                 this.updateStatusBar();
                 this.createAppStructure();
 
@@ -811,6 +876,18 @@ export class MTBAssistObject {
         this.cmdhandler_.set('fix-settings', this.fixSettings.bind(this)) ;
         this.cmdhandler_.set('install-llvm', this.installLLVM.bind(this)) ;
         this.cmdhandler_.set('set-config', this.setConfig.bind(this)) ;
+        this.cmdhandler_.set('operation-status-closed', this.handleOperationStatusClosed.bind(this)) ;
+    }
+
+    private handleOperationStatusClosed() : Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.pendingStatusClosePromise) {
+                let p = this.pendingStatusClosePromise ;
+                this.pendingStatusClosePromise = undefined ;
+                p() ;
+            }
+            resolve() ;
+        }) ;
     }
 
     private setConfig(request: FrontEndToBackEndRequest): Promise<void> {
@@ -883,6 +960,27 @@ export class MTBAssistObject {
         });
     }
 
+    public runMakeVSCode() : Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.env_ && this.env_.appInfo) {
+                this.worker_?.runMakeVSCodeCommand(this.env_.appInfo.appdir)
+                .then((result) => {
+                    if (result[0] !== 0) {
+                        reject(new Error('Failed to run make vscode command')) ;
+                        return ;
+                    }
+                    this.tasks_?.addAll() ;
+                    this.tasks_?.writeTasks() ;
+                    this.vscodeSettings_?.fix() ;                      
+                    resolve() ;
+                })
+                .catch((err) => {
+                    reject(err) ;
+                }) ;
+            }
+        });
+    }
+
     private prepareVSCode(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (this.env_ && this.env_.appInfo) {
@@ -890,6 +988,7 @@ export class MTBAssistObject {
                 .then((result) => {
                     this.tasks_?.addAll() ;
                     this.tasks_?.writeTasks() ;
+                    this.vscodeSettings_?.fix() ;                    
                     this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;                    
                     resolve() ;
                 })
@@ -1434,6 +1533,14 @@ export class MTBAssistObject {
         }
     }
 
+    private async finishBootloader() {
+        if (this.activeTask_ && this.activeTask_.ok) {
+            let path = this.context_.asAbsolutePath('content/bootloader.md') ;
+            let uri = vscode.Uri.file(path) ;
+            await vscode.commands.executeCommand('markdown.showPreview', uri) ;
+        }
+    }
+
     private addBootloader() {
         if (!this.env) {
             this.logger_.error('internal error: ModusToolbox environment is not initialized.');
@@ -1452,10 +1559,25 @@ export class MTBAssistObject {
             return ;            
         }
 
-        let task = new AddBootloaderTask(this) ;
-        task.run()
+        this.pendingStatusClosePromise = this.finishBootloader.bind(this) ;
+
+        this.activeTask_ = new AddBootloaderTask(this) ;
+        this.activeTask_.on('startOperation', (msg: string) => {
+            this.sendMessageWithArgs('startOperation', msg) ;
+        }) ;
+        this.activeTask_.on('finishOperation', () => {
+            this.sendMessageWithArgs('finishOperation', '') ;
+        }) ;
+        this.activeTask_.on('addStatusLine', (line: string) => {
+            this.sendMessageWithArgs('addStatusLine', line) ;
+        }) ;
+        this.activeTask_.on('reveal', () => {
+            if (this.panel_) {
+                this.panel_.reveal() ;
+            }
+        }) ;
+        this.activeTask_.run()
         .then(() => {
-            vscode.window.showInformationMessage('Bootloader added successfully.');
         })
         .catch((error) => {
             vscode.window.showErrorMessage('Failed to add bootloader: ' + error);
@@ -2008,7 +2130,7 @@ export class MTBAssistObject {
                 //
                 // See if we need to install the LLVM compiler
                 //
-                msg = 'The LLVM compiler is recommended for PSOC Edge projects. Do you want to install it?' ;
+                msg = 'The LLVM compiler is useful for many PSOC Edge projects. Do you want to install it?' ;
                 msgButton = 'Install LLVM' ;
                 msgRequest = 'install-llvm' ;
             }
@@ -2058,6 +2180,7 @@ export class MTBAssistObject {
                 vscode.ViewColumn.One,
                 {
                     enableScripts: true,
+                    retainContextWhenHidden: true,
                 }
             );
 
@@ -2394,34 +2517,35 @@ export class MTBAssistObject {
         return ret;
     }
 
-    public fixMissingAssetsForProject(projname: string) {
-        let ret = new Promise<void>((resolve, reject) => {
-            if (this.worker_) {
-                this.worker_.fixMissingAssets(projname)
-                    .then(() => {
-                        this.env_?.reloadAppInfo()
-                            .then(() => {
-                                this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv());
-                                resolve();
-                            })
-                            .catch((error) => {
-                                this.logger_.error(`Error reloading app info after fixing assets: ${error.message}`);
-                                reject(error);
-                            });
-                    })
-                    .catch((error) => {
-                        this.logger_.error(`Error fixing missing assets: ${error.message}`);
-                        reject(error);
-                    });
-            } else {
-                reject(new Error('Platofrm API is not initialized.'));
-            }
-        });
-        return ret;        
+    public fixMissingAssetsForProject(projname: string) : Promise<void> {
+        return this.worker_!.fixMissingAssets(projname)
     }
 
     private fixMissingAssets(request: FrontEndToBackEndRequest): Promise<void> {
-        return this.fixMissingAssetsForProject(request.data as string) ;
+        let ret = new Promise<void>((resolve, reject) => {
+            if (!this.worker_) {
+                // Should never happen
+                reject(new Error('Extension is not initialized correctly'));
+                return;
+            }
+
+            this.fixMissingAssetsForProject(request.data as string)
+            .then(() => { 
+                this.env_?.reloadAppInfo()
+                    .then(() => {
+                        this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv());
+                        resolve();
+                    })
+                    .catch((error) => {
+                        this.logger_.error(`Error reloading app info after fixing assets: ${error.message}`);
+                        reject(error);
+                    });
+            })
+            .catch((err) => { 
+                reject(err) ;
+            }) ;
+        }) ;
+        return ret ;
     }
 
     private runAction(request: FrontEndToBackEndRequest): Promise<void> {

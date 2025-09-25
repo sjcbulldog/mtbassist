@@ -20,7 +20,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { ApplicationStatusData, Documentation, MemoryUsageData } from '../../comms';
+import { ApplicationStatusData, Documentation, MemoryUsageData, MTBAssistantTask } from '../../comms';
 import { MemoryUsage } from '../memory-usage/memory-usage.component';
 import { LlvmInstallerComponent } from '../llvm-installer/llvm-installer.component';
 import { BackendService } from '../backend/backend-service';
@@ -74,6 +74,9 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     selectedConfiguration: string = 'Debug';
     configurationOptions: string[] = ['Debug', 'Release'];
 
+    // Tasks
+    availableTasks: MTBAssistantTask[] = [];
+
     private subscriptions: Subscription[] = [] ;
 
     constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
@@ -81,6 +84,10 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     }
 
     ngOnInit() : void {
+        this.subscriptions.push(this.be.availableTasks.subscribe((tasks) => {
+            this.availableTasks = tasks;
+            this.cdr.detectChanges();
+        }));
 
         this.subscriptions.push(this.be.isLLVMInstalling.subscribe((installing) => {
             this.displayLLVMInstallControl = installing;
@@ -160,7 +167,6 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         }));
 
         this.subscriptions.push(this.be.buildDone.subscribe((done) => {
-            this.be.debug(`Component level build done status received: ${done}`);
             this.running = !done;
             this.cdr.detectChanges();
         }));

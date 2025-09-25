@@ -5,43 +5,55 @@ import * as fs from 'fs' ;
 import * as path from 'path' ;
 import * as os from 'os' ;
 import * as vscode from 'vscode' ;
+import * as crypto from 'crypto' ;
+import { resolveCliArgsFromVSCodeExecutablePath } from "@vscode/test-electron";
 
-//
-// TODO: run make vscode
-//       run getlibs in proj_bootloader
-//       refresh application
-//
-
-export class AddBootloaderTask implements STask {
+export class AddBootloaderTask extends STask {
     private static readonly bootloaderProjectName = 'proj_bootloader' ;
     private static readonly bootloaderCEID = 'mtb-example-edge-protect-bootloader' ;
     private ext_ : MTBAssistObject ;
 
     public constructor(private mtbObj: MTBAssistObject) {
+        super();
         this.ext_ = this.mtbObj ;
     }
 
     public async run() : Promise<void> {
         let ret = new Promise<void>( async (resolve, reject) => {
+            this.startOperation('Adding bootloader to project...') ;
             this.copyInBootloader()
                 .then(() => {
+                    this.addStatusLine('Updating the application Makefile ...') ;
                     this.addBootloaderProjectToMakefile()
                     .then(() => {
-                        this.addToWorkspace()
-                        .then(() =>  {
-                            this.fixupCombinerSigner()
+                        this.reveal() ;
+                        this.addStatusLine('Updating the signer/combiner settings in common.mk ...') ;
+                        this.fixupCombinerSigner()
+                        .then(() => {
+                            this.reveal() ;
+                            this.addStatusLine('Refreshing new bootloader project (make getlibs)...') ;
+                            this.ext_.fixMissingAssetsForProject(AddBootloaderTask.bootloaderProjectName)
                             .then(() => {
-                                this.ext_.fixMissingAssetsForProject(AddBootloaderTask.bootloaderProjectName)
+                                this.addStatusLine('Updating vscode project files (make vscode) ...') ;
+                                this.ext_.runMakeVSCode()
                                 .then(() => {
-                                    resolve();
+                                    this.addStatusLine('Adding bootloader project to workspace...') ;
+                                    this.addToWorkspace()
+                                    .then(() => {
+                                        this.finishOperation(true) ;
+                                        resolve();
+                                    })
+                                    .catch((err) => {
+                                        reject(err) ;
+                                    }) ;
                                 })
-                                .catch((error) => {
-                                    reject(error);
-                                });
+                                .catch((err) => {
+                                    reject(err) ;
+                                }) ;
                             })
-                            .catch( (error) => {
-                                reject(error) ;
-                            }) ;
+                            .catch((error) => {
+                                reject(error);
+                            });
                         })
                         .catch( (error) => {
                             reject(error) ;
@@ -51,6 +63,8 @@ export class AddBootloaderTask implements STask {
                         reject(error) ;
                     }) ;
                 }).catch((err) => {
+                    this.addStatusLine('Error: ' + err) ;
+                    this.finishOperation(false) ;
                     reject(err) ;
                 }) ;
         }) ;                
@@ -59,11 +73,11 @@ export class AddBootloaderTask implements STask {
 
     private addToWorkspace() : Promise<void> {
         let ret = new Promise<void>( async (resolve, reject) => {
-            // let projdir = path.join(this.ext_.env!.appInfo!.appdir, AddBootloaderTask.bootloaderProjectName) ;
-            // if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-            //     const newFolders = [ vscode.workspace.workspaceFolders![0], { uri: vscode.Uri.file(projdir) } , ...vscode.workspace.workspaceFolders.slice(1, vscode.workspace.workspaceFolders.length) ] ;
-            //     vscode.workspace.updateWorkspaceFolders(0, vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0, ...newFolders) ;
-            // }
+            let projdir = path.join(this.ext_.env!.appInfo!.appdir, AddBootloaderTask.bootloaderProjectName) ;
+            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+                const newFolders = [ vscode.workspace.workspaceFolders![0], { uri: vscode.Uri.file(projdir) } , ...vscode.workspace.workspaceFolders.slice(1, vscode.workspace.workspaceFolders.length) ] ;
+                vscode.workspace.updateWorkspaceFolders(0, vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.length : 0, ...newFolders) ;
+            }
             resolve() ;
         }) ;
         return ret ;
@@ -142,7 +156,7 @@ export class AddBootloaderTask implements STask {
                     }
                     this.updateSignerCombiner(doc, editor)
                     .then(() => {
-                        setTimeout(() => { doc.save() ; }, 100) ;                        
+                        setTimeout(() => { doc.save(); }, 100);
                         resolve() ;
                     })
                     .catch((error) => {
@@ -247,72 +261,207 @@ export class AddBootloaderTask implements STask {
         return ret ;
     }
 
+    private addDirToHash(dir: string, hash: crypto.Hash) : void {
+        const items = fs.readdirSync(dir);
+        for(let item of items) {
+            const fullPath = path.join(dir, item);
+            const stats = fs.statSync(fullPath);
+            if (stats.isFile()) {
+                const fileBuffer = fs.readFileSync(fullPath);
+                const u8buffer = new Uint8Array(fileBuffer) ;
+                hash.update(u8buffer) ;
+            } else if (stats.isDirectory()) {
+                this.addDirToHash(fullPath, hash);
+            }
+        }
+    }
+
+    private computeDirHash(dir: string) : string {
+        const hash = crypto.createHash('md5');
+        this.addDirToHash(dir, hash) ;
+        let ret = hash.digest('hex') ;
+        return ret ;
+    }
+
+    private verifyBootloaderProject(dir: string, sumfile: string) : Promise<boolean> {
+        let ret = new Promise<boolean>( (resolve, reject) => {
+            let hash = this.computeDirHash(dir) ;
+            fs.readFile(sumfile, 'utf-8', (err, data) => {
+                if (err) {
+                    reject(err) ;
+                    return ;
+                }
+                resolve(data.trim() === hash.trim()) ;
+            }) ;
+        }) ;
+        return ret ;
+    }
+
+    private computeChecksum(dir: string, sumfile: string) : Promise<void> {
+        let ret = new Promise<void>( (resolve, reject) => {
+            let h = this.computeDirHash(dir) ;
+            fs.writeFile(sumfile, h, (err) => {
+                if (err) {
+                    reject(err) ;
+                    return ;
+                }
+                resolve() ;
+            }) ;
+        }) ;
+        return ret ;
+    }
+
+    private getUniqueProjectName(dir: string) : string | undefined {
+        for(let i = 0 ; i < 100000 ; i++) {
+            let strnum = String(i).padStart(5, '0') ;
+            let projname = 'mtbassist_' + strnum ;
+            let projpath = path.join(dir, projname) ;
+            if (!fs.existsSync(projpath)) {
+                return projname ;
+            }
+        }
+
+        return undefined ;
+    }
+
+    private createBootloaderProject() : Promise<string> {
+        let ret = new Promise<string>( async (resolve, reject) => {
+            let tmpdir : string ;
+            
+            try {
+                // This is the directory that will hold the project
+                tmpdir = path.dirname(this.ext_.env!.appInfo!.appdir) ;
+            } catch(err) {
+                reject('Could not create temporary directory: ' + err) ;
+                return ;
+            }
+
+            let bspid = this.ext_.env!.appInfo!.projects[0].target ;
+            if (bspid.startsWith('APP_')) {
+                // TODO: how do we get the base target from the application
+                bspid = bspid.substring(4) ;
+            }
+
+            let projname : string | undefined = this.getUniqueProjectName(tmpdir) ;
+            if (!projname) {
+                reject(`Could not create temporary project name in directory ${tmpdir}`) ;
+                return ;
+            }
+
+            this.ext_.createProjectDirect(tmpdir, projname!, bspid, AddBootloaderTask.bootloaderCEID, false)
+            .then( (result: [number, string[]]) => {
+                if (result[0] !== 0) {
+                    fs.rmSync(path.join(tmpdir, projname!), { recursive: true, force: true }) ;
+                    reject('Could not create bootloader project: ' + result[1].join('\n')) ;
+                    return ;
+                }
+
+                let srcdir = path.join(tmpdir, projname!, AddBootloaderTask.bootloaderProjectName) ;
+                if (!fs.existsSync(srcdir)) {
+                    reject('Could not find created bootloader project in temporary directory.') ;
+                    return ;
+                }
+
+                resolve(path.join(tmpdir, projname!, AddBootloaderTask.bootloaderProjectName)) ;
+            })
+            .catch( (error) => {
+                reject('Could not create project: ' + error) ;
+            });            
+        }) ;
+        return ret ;
+    }
+
+    private putBootloaderInBootLoaderLib() : Promise<string> {
+        let ret = new Promise<string>( async (resolve, reject) => {
+            let ver = this.ext_!.env!.manifestDB.getCodeExampleLatestVersion(AddBootloaderTask.bootloaderCEID) ;
+            if (!ver) {
+                reject('Could not find bootloader code example in ModusToolbox manifest.') ;
+                return ;
+            }
+
+            let blpath = this.ext_.extStorageDir('bootloaders') ;
+            let bllibpath = path.join(blpath, ver) ;
+            let sumpath = path.join(blpath, ver + '.sum') ;
+
+            if (fs.existsSync(bllibpath) && fs.existsSync(sumpath)) {
+                this.addStatusLine('Verifying existing bootloader project...') ;
+                this.verifyBootloaderProject(bllibpath, sumpath)
+                .then((isValid) => {
+                    if (isValid) {
+                        resolve(bllibpath) ;
+                        return ;
+                    }
+                    else {
+                        this.addStatusLine('Existing bootloader project is invalid. Re-creating project...') ;
+                        fs.rmSync(bllibpath, { recursive: true, force: true }) ;
+                        fs.rmSync(sumpath, { force: true }) ;
+                    }
+                })
+                .catch((error) => {
+                    reject('Could not verify bootloader project: ' + error) ;
+                });
+            }
+            else if (fs.existsSync(bllibpath)) {
+                // The bootloader directory exists but not the .sum file.
+                // Remove the directory and re-download.
+                fs.rmSync(bllibpath, { recursive: true, force: true }) ;
+            }
+
+            this.addStatusLine('Retrieving bootloader project (this takes a while) ...') ;
+            this.createBootloaderProject() 
+            .then((projdir) => {         
+                // Now copy the directory tree from srcdir to bloadpath
+                this.addStatusLine('Copying bootloader project to bootloader library ...') ;
+                fs.cp(projdir, bllibpath, { recursive: true }, (err) => {
+                    if (err) {
+                        fs.rmSync(projdir, { recursive: true, force: true }) ;
+                        reject('Could not copy bootloader project to application directory: ' + err) ;
+                        return ;
+                    }
+                    fs.rmSync(path.dirname(projdir), { recursive: true, force: true }) ;                    
+                }) ;
+
+                this.computeChecksum(bllibpath, sumpath)
+                    .then(() => {
+                        resolve(bllibpath) ;
+                    })
+                    .catch((err) => {
+                        reject('Could not compute checksum for bootloader project: ' + err) ;
+                    }) ;
+            })
+            .catch( (error) => {
+                reject('Could not create bootloader project: ' + error) ;
+            });
+        }) ;
+
+        return ret ;
+    }
+
     private copyInBootloader() : Promise<void> {
         let ret = new Promise<void>( async (resolve, reject) => {
-            if (!this.ext_.env) { 
-                reject('internal error: ModusToolbox environment not set.') ;
+            let bloadpath = path.join(this.ext_.env!.appInfo!.appdir, AddBootloaderTask.bootloaderProjectName) ;
+            if (fs.existsSync(bloadpath)) {
+                // A project named proj_bootloader already exists in the application
+                // directory. We won't overwrite it.
+                this.ext_.logger.info('A project named proj_bootloader already exists in the application directory. Not overwriting it.') ;
+                resolve() ;
                 return ;
             }
 
-            if (!this.ext_.env.appInfo) {
-                reject('internal error: ModusToolbox application not loaded.') ;
-                return ;
-            }
-
-            resolve() ;
-            return ;
-
-            // let bloadpath = path.join(this.ext_.env.appInfo.appdir, AddBootloaderTask.bootloaderProjectName) ;
-            // if (fs.existsSync(bloadpath)) {
-            //     // A project named proj_bootloader already exists in the application
-            //     // directory. We won't overwrite it.
-            //     this.ext_.logger.info('A project named proj_bootloader already exists in the application directory. Not overwriting it.') ;
-            //     resolve() ;
-            //     return ;
-            // }
-
-            // let tmpdir : string ;
-            
-            // try {
-            //     tmpdir = await this.createUniqueTempDirectory() ;
-            // } catch(err) {
-            //     reject('Could not create temporary directory: ' + err) ;
-            //     return ;
-            // }
-
-            // let bspid = this.ext_.env.appInfo.projects[0].target ;
-            // if (bspid.startsWith('APP_')) {
-            //     bspid = bspid.substring(4) ;
-            // }
-
-            // this.ext_.createProjectDirect(tmpdir, 'APPNAME', bspid, AddBootloaderTask.bootloaderCEID, false)
-            // .then( (result: [number, string[]]) => {
-            //     if (result[0] !== 0) {
-            //         reject('Could not create bootloader project: ' + result[1].join('\n')) ;
-            //         return ;
-            //     }
-
-            //     let srcdir = path.join(tmpdir, 'APPNAME', AddBootloaderTask.bootloaderProjectName) ;
-            //     if (!fs.existsSync(srcdir)) {
-            //         reject('Could not find created bootloader project in temporary directory.') ;
-            //         return ;
-            //     }
-
-            //     // Now copy the directory tree from srcdir to bloadpath
-            //     fs.cp(srcdir, bloadpath, { recursive: true }, (err) => {
-            //         if (err) {
-            //             fs.rmSync(srcdir, { recursive: true, force: true }) ;
-            //             reject('Could not copy bootloader project to application directory: ' + err) ;
-            //             return ;
-            //         }
-            //         fs.rmSync(srcdir, { recursive: true, force: true }) ;                    
-            //         resolve() ;
-            //     }) ;
-            // })
-            // .catch( (error) => {
-            //     reject('Could not create project: ' + error) ;
-            // });
-
+            this.putBootloaderInBootLoaderLib()
+            .then((srcdir) => {
+                this.addStatusLine('Copying bootloader project to application ...') ;
+                fs.cp(srcdir, bloadpath, { recursive: true }, (err) => {    
+                    if (err) {
+                        reject('Could not copy bootloader project to application directory: ' + err) ;
+                        return ;
+                    }
+                    resolve() ;
+                }) ;
+            })
+            .catch((error) => {
+                reject(error) ;
+            }) ;
         }) ;
         return ret;
     }

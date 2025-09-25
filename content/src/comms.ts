@@ -66,7 +66,9 @@ export type FrontEndToBackEndType =
     'refreshApp' |
     'install-llvm' |
     'llvm-versions' |
-    'set-config'
+    'set-config' |
+    'operation-status-closed' |
+    'run-task'
     ;
 
 export type BackEndToFrontEndType =
@@ -114,7 +116,11 @@ export type BackEndToFrontEndType =
     'getPassword' |
     'memoryUsage' |
     'installLLVM' |
-    'installLLVMMessage' 
+    'installLLVMMessage' |
+    'startOperation' |
+    'finishOperation' |
+    'addStatusLine' |
+    'tasksAvailable'
     ;
 
 export type ThemeType =
@@ -360,4 +366,9 @@ export interface MemoryUsageData {
   size: number ;
   percent: number ;
   segments: MemoryUsageSegment[] ;
+}
+
+export interface MTBAssistantTask {
+  description: string ;
+  vscodecmd: string ;
 }

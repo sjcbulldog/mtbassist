@@ -152,6 +152,18 @@ export class MTBManifestDB {
         return false ;
     }
 
+    public getCodeExampleLatestVersion(ceid: string): string | undefined {
+        let ret : string | undefined = undefined ;
+        let ce = this.apps_.get(ceid);
+        if (ce) {
+            let ver = ce.getLatestVersion ;
+            if (ver) {
+                ret = ver.commit ;
+            }
+        }
+        return ret;        
+    }
+
     public getCodeExamplesForBSP(bspId: string): Promise<MTBApp[]> {
         let ret = new Promise<MTBApp[]>((resolve, reject) => {
             let [bsp, version] = this.getLatestBSPFromId(bspId) ;

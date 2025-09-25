@@ -13,12 +13,12 @@
  */
 
 import { Injectable} from '@angular/core';
-import { BehaviorSubject} from 'rxjs';
+import { BehaviorSubject, Subject} from 'rxjs';
 import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, MemoryUsageData, InstallLLVMProgressMsg } from '../../comms';
+import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, MemoryUsageData, InstallLLVMProgressMsg, MTBAssistantTask } from '../../comms';
 import { ProjectManager } from './projectmgr';
 
 declare var acquireVsCodeApi: any | undefined ;
@@ -76,6 +76,7 @@ export class BackendService {
     defaultProjectDir: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
     os: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
     isPasswordVisible: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false) ;
+    availableTasks: BehaviorSubject<MTBAssistantTask[]> = new BehaviorSubject<MTBAssistantTask[]> ([]);
 
     // LLVM installer related
     llvmVersions: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
@@ -103,6 +104,11 @@ export class BackendService {
 
     // Memory Usage related
     memoryUsage: BehaviorSubject<MemoryUsageData[] | null> = new BehaviorSubject<MemoryUsageData[] | null>([]);
+
+    // Status display related
+    startOperation: Subject<string> = new Subject<string>();
+    finishOperation: Subject<string> = new Subject<string>();
+    addStatusLine: Subject<string> = new Subject<string>();
 
     // Data members
     private allBSPExceptEAPData : BSPIdentifier[] = [] ;
@@ -266,6 +272,10 @@ export class BackendService {
         this.registerHandler('memoryUsage', (cmd) => { this.memoryUsage.next(cmd.data) });
         this.registerHandler('installLLVM', this.handleInstallLLVM.bind(this));
         this.registerHandler('installLLVMMessage', this.handleInstallLLVMMessage.bind(this));
+        this.registerHandler('startOperation', (cmd) => { this.startOperation.next(cmd.data) });
+        this.registerHandler('finishOperation', (cmd) => { this.finishOperation.next(cmd.data) });
+        this.registerHandler('addStatusLine', (cmd) => { this.addStatusLine.next(cmd.data) });
+        this.registerHandler('tasksAvailable', (cmd) => { this.availableTasks.next(cmd.data) });
     }
 
     private handleInstallLLVMMessage(cmd: BackEndToFrontEndResponse) {

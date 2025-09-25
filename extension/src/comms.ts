@@ -66,7 +66,8 @@ export type FrontEndToBackEndType =
     'refreshApp' |
     'install-llvm' |
     'llvm-versions' |
-    'set-config'
+    'set-config' |
+    'operation-status-closed' 
     ;
 
 export type BackEndToFrontEndType =
@@ -114,7 +115,10 @@ export type BackEndToFrontEndType =
     'getPassword' |
     'memoryUsage' |
     'installLLVM' |
-    'installLLVMMessage' 
+    'installLLVMMessage' |
+    'startOperation' |
+    'finishOperation' |
+    'addStatusLine'
     ;
 
 export type ThemeType =

@@ -85,7 +85,6 @@ export class SettingsEditor implements OnInit, OnDestroy {
 
     this.subscriptions.push(
       this.be.settingsErrors.subscribe(errors => {
-        this.be.debug(`SettingsEditor received ${JSON.stringify(errors) }`);
         for(let error of errors) {
           this.settingsErrors.set(error.setting, error.message);
         }

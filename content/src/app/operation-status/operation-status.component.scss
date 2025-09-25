@@ -1,0 +1,256 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.operation-status-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.operation-status-modal {
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  width: 90%;
+  max-width: 600px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+.operation-header {
+  padding: 24px 24px 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--header-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.operation-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.header-controls {
+  margin-left: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.activity-indicator {
+  display: flex;
+  align-items: center;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: var(--close-button-hover);
+    color: var(--text-primary);
+  }
+  
+  &:focus {
+    outline: 2px solid var(--focus-color);
+    outline-offset: 2px;
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--spinner-track);
+  border-top: 3px solid var(--spinner-active);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.activity-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+  max-height: 400px;
+}
+
+.activity-list {
+  flex: 1;
+  padding: 16px 24px 24px 24px;
+  overflow-y: auto;
+  background: var(--activity-bg);
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+    
+    &:hover {
+      background: var(--scrollbar-thumb-hover);
+    }
+  }
+}
+
+.status-line {
+  padding: 4px 0;
+  color: var(--text-secondary);
+  word-wrap: break-word;
+  animation: fadeInLine 0.3s ease-out;
+  
+  &.placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeInLine {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Dark theme variables */
+.operation-status-overlay[data-theme="dark"] {
+  --modal-bg: #2d2d2d;
+  --modal-border: #404040;
+  --header-bg: #1e1e1e;
+  --activity-bg: #252526;
+  --border-color: #404040;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #969696;
+  --spinner-track: #404040;
+  --spinner-active: #0078d4;
+  --scrollbar-track: #3e3e42;
+  --scrollbar-thumb: #646464;
+  --scrollbar-thumb-hover: #7e7e7e;
+  --close-button-hover: #404040;
+  --focus-color: #0078d4;
+}
+
+/* Light theme variables */
+.operation-status-overlay[data-theme="light"] {
+  --modal-bg: #ffffff;
+  --modal-border: #e1e1e1;
+  --header-bg: #f8f8f8;
+  --activity-bg: #fafafa;
+  --border-color: #e1e1e1;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --spinner-track: #e1e1e1;
+  --spinner-active: #0078d4;
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a1a1a1;
+  --close-button-hover: #e1e1e1;
+  --focus-color: #0078d4;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .operation-status-modal {
+    width: 95%;
+    max-height: 80vh;
+  }
+  
+  .operation-header {
+    padding: 20px 20px 12px 20px;
+  }
+  
+  .operation-title {
+    font-size: 1.1rem;
+  }
+  
+  .activity-list {
+    padding: 12px 20px 20px 20px;
+    font-size: 0.85rem;
+  }
+}

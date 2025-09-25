@@ -21,11 +21,12 @@ import { IdcLauncherRequiredComponent } from "./idc-launcher-required/idc-launch
 import { InitializingComponent } from "./initializing/initializing.component";
 import { ErrorComponent } from "./error/error.component";
 import { PasswordOverlayComponent } from './password-overlay/password-overlay.component';
+import { OperationStatusComponent } from './operation-status/operation-status.component';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent, InitializingComponent, ErrorComponent, PasswordOverlayComponent],
+  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent, InitializingComponent, ErrorComponent, PasswordOverlayComponent, OperationStatusComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
