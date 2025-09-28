@@ -2,7 +2,7 @@
   @if (isLoading) {
     <div class="loading-state">
       <div class="spinner"></div>
-      <p class="loading-message">Loading Application Configuration</p>
+      <p class="loading-message">Loading Application</p>
     </div>
   }
 
@@ -29,8 +29,8 @@
           <div class="overview-section">
             <div class="app-info">
               <div class="app-dir-row" style="display: flex; align-items: center; justify-content: space-between;">
-                <h3 style="margin: 0;">Application Directory: <span class="app-dir">{{ applicationStatus.name }}</span></h3>
-                <span class="toolsdir-display" style="margin-left: 24px; font-size: 1rem; color: #1976d2;">Tools Directory: <strong>{{ applicationStatus.toolsdir }}</strong></span>
+                <h3 style="margin: 0; color: white;">Application: <span class="app-dir" style="color: white;">{{ applicationStatus.name }}</span></h3>
+                <span class="toolsdir-display" style="margin-left: 24px; font-size: 1rem; color: white;">Tools: <strong style="color: white;">{{ applicationStatus.toolsdir }}</strong></span>
                 <mat-icon
                   matTooltip="This is a ModusToolboxc Application.  A ModusToolbox application consists of multiple projects, each of which builds to an indepenent ELF file.  These ELF files are then combined into a single HEX file to program into the device.  Each project is represented by a project view which can be selected via the navigation bar above."
                   class="application-help-icon"
@@ -176,6 +176,22 @@
                     </button>
                   </div>
                 </div>
+
+                <!-- Task Selection Row -->
+                @if (availableTasks && availableTasks.length > 0) {
+                  <div class="task-selection-row" style="display: flex; align-items: center; margin-top: 16px; gap: 12px; flex-wrap: wrap;">
+                    <span style="font-size: 20px;font-weight: 500; color: #1976d2;">I want to ...</span>
+                    @for (task of availableTasks; track task.description) {
+                      <button mat-raised-button 
+                              class="task-btn" 
+                              (click)="onTaskSelection(task.description)" 
+                              [disabled]="running"
+                              style="margin: 2px;">
+                        {{ task.description }}
+                      </button>
+                    }
+                  </div>
+                }
               }
             </div>
           </div>
@@ -184,26 +200,24 @@
           @if (applicationStatus.valid && memoryUsageData && memoryUsageData.length > 0) {
             <app-memory-usage [memoryUsageData]="memoryUsageData" [collapsedStates]="memoryCollapsedStates"></app-memory-usage>
           } @else if (applicationStatus.valid && memoryUsageData && memoryUsageData.length === 0) {
-            <div class="memory-usage-section">
-              <div class="memory-usage-card">
-                <div class="memory-header-container" style="display: flex; align-items: center;">
-                  <h3 class="collapsible-header" style="flex: 1; margin: 0; cursor: pointer;" (click)="noMemoryCollapsed = !noMemoryCollapsed">
-                    <mat-icon class="collapse-icon" [class.collapsed]="noMemoryCollapsed">expand_more</mat-icon>
-                    Memory Usage
-                  </h3>
-                  <mat-icon
-                    matTooltip="This shows the combined memory usage across all of the projects using the latest build. This means if a latest build was a DEBUG build that will be used. This is per project so there can be a mix of DEBUG and RELEASE builds depending on what was built last."
-                    class="memory-help-icon"
-                    style="cursor: pointer; margin-left: 8px;"
-                  >help_outline</mat-icon>
-                </div>
-                <div class="memory-usage-container" [class.collapsed]="noMemoryCollapsed">
-                  <ng-container *ngIf="!noMemoryCollapsed">
-                    <div class="no-memory-data">
-                      <p>A sucessful build is needed to display memory usage.</p>
-                    </div>
-                  </ng-container>
-                </div>
+            <div class="documentation-section">
+              <div class="memory-header-container" style="display: flex; align-items: center;">
+                <h3 class="collapsible-header" style="flex: 1; margin: 0; cursor: pointer;" (click)="noMemoryCollapsed = !noMemoryCollapsed">
+                  <mat-icon class="collapse-icon" [class.collapsed]="noMemoryCollapsed">expand_more</mat-icon>
+                  Memory
+                </h3>
+                <mat-icon
+                  matTooltip="This shows the combined memory usage across all of the projects using the latest build. This means if a latest build was a DEBUG build that will be used. This is per project so there can be a mix of DEBUG and RELEASE builds depending on what was built last."
+                  class="memory-help-icon"
+                  style="cursor: pointer; margin-left: 8px;"
+                >help_outline</mat-icon>
+              </div>
+              <div class="memory-usage-container" [class.collapsed]="noMemoryCollapsed">
+                <ng-container *ngIf="!noMemoryCollapsed">
+                  <div class="no-memory-data">
+                    <p>A sucessful build is needed to display memory usage.</p>
+                  </div>
+                </ng-container>
               </div>
             </div>
           }
@@ -215,7 +229,7 @@
                 <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed('application', 'documentation')">
                   expand_more
                 </mat-icon>
-                Application Documentation
+                Documents
               </h3>
               <div class="doc-grid" [class.collapsed]="isSectionCollapsed('application', 'documentation')">
                 @for (doc of applicationStatus.documentation; track doc.name) {
@@ -235,17 +249,17 @@
                 <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed('application', 'tools')">
                   expand_more
                 </mat-icon>
-                Application Tools
+                Tools
               </h3>
               <div class="tools-grid" [class.collapsed]="isSectionCollapsed('application', 'tools')">
                 @for (tool of applicationStatus.tools; track tool.name) {
                   <div class="tool-item"  (click)="onToolClick(null, tool)">
                     <div class="tool-header">
                       <div class="tool-info">
-                        <h4 style="color: black;">{{ tool.name }}</h4>
+                        <h4 style="color: white;">{{ tool.name }}</h4>
                         @if (tool.version) {
                           <div class="tool-meta">
-                            <span class="version">v{{ tool.version }}</span>
+                            <span class="version" style="color: white;">v{{ tool.version }}</span>
                           </div>
                         }
                       </div>
@@ -436,10 +450,10 @@
                   <div class="tool-header">
                     <div class="tool-info">
                       <div class="tool-name">
-                        <h4>{{ tool.name }}</h4>
+                        <h4 style="color: white;">{{ tool.name }}</h4>
                       </div>
                       <div class="tool-meta">
-                        <span class="version">v{{ tool.version }}</span>
+                        <span class="version" style="color: white;">v{{ tool.version }}</span>
                       </div>
                     </div>
                   </div>
@@ -456,7 +470,7 @@
   @else {
     <div class="no-status">
       <mat-icon>info</mat-icon>
-      <p>Loading Application Configuration</p>
+      <p>Loading Application</p>
     </div>
   }
 

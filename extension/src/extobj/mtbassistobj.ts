@@ -26,18 +26,18 @@ import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
     FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, ManifestStatusType, Middleware, MTBAssistantMode, 
-    MTBLocationStatus, Project, SettingsError, ThemeType, Tool
+    MTBAssistantTask, 
+    MTBLocationStatus, MTBVSCodeSettingsStatus, MTBVSCodeTaskStatus, Project, SettingsError, ThemeType, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
-import { MTBTasks } from './mtbtasks';
 import { browseropen } from '../browseropen';
 import * as exec from 'child_process';
 import { RecentAppManager } from './mtbrecent';
 import { IntelliSenseMgr } from './intellisense';
 import { SetupMgr } from '../setup/setupmgr';
 import { MTBApp } from '../mtbenv/manifest/mtbapp';
-import { VSCodeWorker } from './vscodeworker';
+import { TaskToRun, VSCodeWorker } from './vscodeworker';
 import { MtbFunIndex } from '../keywords/mtbfunindex';
 import { MTBSettings } from './mtbsettings';
 import { LCSManager } from './lcsmgr';
@@ -48,6 +48,9 @@ import { MTBVersion } from '../mtbenv/misc/mtbversion';
 import { LLVMInstaller } from './llvminstaller';
 import { AddBootloaderTask } from '../stasks/addbootloader';
 import { STask } from '../stasks/stask';
+import { VSCodeTasks } from '../vscodetasks/vscodetasks';
+import { VSCodeAppTaskGenerator } from '../vscodetasks/vscodeapptaskgen';
+import { VSCodeProjTaskGenerator } from '../vscodetasks/vscodeprojtaskgen';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -57,6 +60,8 @@ export class MTBAssistObject {
     private static readonly devcfgProgUUID: string = '45159e28-aab0-4fee-af1e-08dcb3a8c4fd';
     private static readonly modusShellUUID: string = '0afffb32-ea89-4f58-9ee8-6950d44cb004';
     private static readonly setupPgmUUID: string = '14ca45f3-863f-4a4c-8e55-9a14bd1e1ee5';
+    private static readonly projectCreatorUUID: string = '2b5ece6f-0a04-4a6f-a683-de5e3dc0a060';
+    private static readonly lastProjectPath: string = 'lastProjectPath' ;
 
     private static readonly gettingStartedTab = 0;
     private static readonly createProjectTab = 1;
@@ -78,7 +83,7 @@ export class MTBAssistObject {
     private memusage_ : MemoryUsageMgr ;
     private devicedb_ : DeviceDBManager | undefined = undefined ;
     private projectInfo_: Map<string, Project> = new Map();
-    private tasks_: MTBTasks | undefined = undefined;
+    private tasks_:Map<string, VSCodeTasks> = new Map();
     private vscodeSettings_ : MTBVSCodeSettings | undefined = undefined;
     private recents_: RecentAppManager | undefined = undefined;
     private intellisense_: IntelliSenseMgr | undefined = undefined;
@@ -141,18 +146,12 @@ export class MTBAssistObject {
         this.settings_.on('restartWorkspace', this.doRestartExtension.bind(this));
         this.settings_.on('showError', this.showSettingsError.bind(this));
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
-        this.settings_.on('updateTasks', () => { this.tasks_?.addAll() ; this.tasks_?.writeTasks() ; }) ;
+        this.settings_.on('updateTasks', () => { this.tasks_.forEach(task => task.addRequiredTasks()); }); ;
 
         this.memusage_ = new MemoryUsageMgr(this) ;
 
         vscode.tasks.onDidEndTask((e) => { 
-            this.sendMessageWithArgs('buildDone', true) ;            
-            this.memusage_.updateMemoryInfo()
-            .then((ret) => {
-                if (ret) {
-                    this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;
-                }
-            });
+            this.taskEnd(e) ;
         }) ;
 
 
@@ -168,6 +167,16 @@ export class MTBAssistObject {
         this.updateStatusBar();
 
         this.computeTheme() ;
+    }
+
+    private taskEnd(e: vscode.TaskEndEvent) {
+        this.sendMessageWithArgs('buildDone', true) ;            
+        this.memusage_.updateMemoryInfo()
+        .then((ret) => {
+            if (ret) {
+                this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;
+            }
+        }) ;
     }
     
     public get toolsDir(): string | undefined {
@@ -499,19 +508,53 @@ export class MTBAssistObject {
             //
             // There is no workspace file loaded, check if one exists
             //
-            let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
-            if (wkspc) {
-                //
-                // Load the workspace file, this should re-initialize the extension and not return in a meaningful way
-                //
-                vscode.commands.executeCommand('vscode.openWorkspace', vscode.Uri.file(wkspc)) ;
+            if (this.env_ && this.env_.appInfo && this.env_.appInfo.appdir) {
+                let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
+                if (wkspc) {
+                    //
+                    // Load the workspace file, this should re-initialize the extension and not return in a meaningful way
+                    //
+                    vscode.commands.executeCommand('vscode.openWorkspace', vscode.Uri.file(wkspc)) ;
+                }
+                else {
+                    //
+                    // There is not workspace file, run make vscode
+                    //
+                    this.runVSCodeAndReload() ;
+                }
             }
-            else {
-                //
-                // There is not workspace file, run make vscode
-                //
-                this.runVSCodeAndReload() ;
+        }
+    }
+
+    private sendTasks() : void {
+        let tasks : MTBAssistantTask[] = [] ;
+        if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
+            let proj = this.env_.appInfo.projects.find(p => p.name === 'proj_bootloader') ;
+            if (!proj) {
+                tasks.push(
+                    {
+                        description: 'Add Bootloader',
+                        vscodecmd: 'mtbassist2.addBootloader',
+                        args: []
+                    }) ;
             }
+        }
+        this.sendMessageWithArgs('tasksAvailable', tasks) ;
+    }
+
+    private createVSCodeTaskManager() : void {
+        if (!this.env_ || !this.env_.appInfo) {
+            throw new Error('No application loaded, cannot create VSCode task manager');
+        }
+
+        let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'tasks.json');
+        let gen = new VSCodeAppTaskGenerator(this.env_!, this.settings_) ;
+        this.tasks_.set('', new VSCodeTasks(this.logger_, p, gen)) ;
+
+        for(let proj of this.env_!.appInfo!.projects) {
+            p = path.join(this.env_!.appInfo!.appdir, proj.name, '.vscode', 'tasks.json');
+            let pgen = new VSCodeProjTaskGenerator(this.env_!, this.settings_, proj) ;
+            this.tasks_.set(proj.name, new VSCodeTasks(this.logger_, p, pgen)) ;
         }
     }
 
@@ -556,6 +599,7 @@ export class MTBAssistObject {
                 this.checkVSCodeStructure() ;
                 this.updateStatusBar();
                 this.createAppStructure();
+                this.sendTasks() ;
 
                 this.logger_.debug('All managers initialized successfully.');
 
@@ -566,6 +610,10 @@ export class MTBAssistObject {
 
                 if (this.env_ && this.env_.appInfo) {
                     this.sendMessageWithArgs('sendDefaultProjectDir', path.dirname(this.env_!.appInfo!.appdir));
+                }
+                else {
+                    let path = this.context_.globalState.get(MTBAssistObject.lastProjectPath, os.homedir()) ;
+                    this.sendMessageWithArgs('sendDefaultProjectDir', path);
                 }
 
                 this.mtbmode_ = 'mtb' ;
@@ -580,10 +628,9 @@ export class MTBAssistObject {
 
                         this.sendMessageWithArgs('selectTab', MTBAssistObject.applicationStatusTab) ;
 
-                        let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'tasks.json');
-                        this.tasks_ = new MTBTasks(this.env_!, this.settings_, this.logger_, p);
+                        this.createVSCodeTaskManager() ;
 
-                        p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'settings.json');
+                        let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'settings.json');
                         this.vscodeSettings_ = new MTBVSCodeSettings(this.env_!, this.logger_, p);
 
                         this.getLaunchData()
@@ -591,8 +638,7 @@ export class MTBAssistObject {
                                 this.setIntellisenseProject();
                                 this.initDeviceDB() 
                                 .then(() => {
-                                    this.memusage_.updateMemoryInfo() ;                                    
-                                    this.setupAuxiliaryStuff()
+                                    this.memusage_.updateMemoryInfo()
                                     .then(() => {
                                         this.logger_.debug('All managers post-initialization completed successfully.');
 
@@ -607,6 +653,8 @@ export class MTBAssistObject {
                                         this.sendMessageWithArgs('mtbMode', this.mtbmode_);
 
                                         this.updateStatusBar();
+                                        this.setupAuxiliaryStuff()
+                                        .then(() => {
                                         this.env?.load(MTBLoadFlags.manifestData)
                                             .then(() => {
                                                 this.sendManifestStatus() ;
@@ -617,6 +665,11 @@ export class MTBAssistObject {
                                                 this.updateStatusBar();
                                                 reject(err);
                                             });
+                                        })
+                                        .catch((error: Error) => {
+                                            this.logger_.error('Failed to load manifest files:', error.message);
+                                            resolve();
+                                        }) ;
                                     })
                                     .catch((error: Error) => {
                                         this.logger_.error('Failed to load manifest files:', error.message);
@@ -818,13 +871,56 @@ export class MTBAssistObject {
         return MTBAssistObject.theInstance_;
     }
 
-    private runTask(task: string) {
-        if (this.tasks_?.doesTaskExist(task)) {
-            vscode.commands.executeCommand('workbench.action.tasks.runTask', task);
+    private needMemoryExportFile(): boolean {
+        let ret = false ;
+
+        if (this.env_ && this.env_.appInfo && this.env_.bspName) {
+            let memfile = path.join(this.env_!.appInfo!.appdir, 'bsps', this.env_!.bspName!, 'config', 'GeneratedSource', 'design.cyqspi.memory-export') ;
+            if (!fs.existsSync(memfile)) {
+                ret = true ;
+            }
+        }
+
+        return ret;
+    }
+
+    private async runTask(data:TaskToRun) {
+        let taskSetName = data.project ? data.project : '' ;
+        let t = this.tasks_.get(taskSetName) ;
+
+        let taskname = data.task + (data.project ? ':' + data.project : '') ;
+        if (t && t.doesTaskExist(taskname)) {
+            // A hack for ModusToolbox.  If we are running a task and the memory export file
+            // does not exist, we delete the timestamp file so that the PSOC Creator
+            // code generation will run and create the memory export file.
+            if (this.isPSOCEdge() && this.needMemoryExportFile()) {
+                let tstfile = path.join(this.env_!.appInfo!.appdir, 'bsps', this.env_!.bspName!, 'config', 'GeneratedSource', 'cycfg.timestamp') ;
+                if (fs.existsSync(tstfile)) {
+                    fs.rmSync(tstfile, { force: true }) ;
+                }
+            }
+            vscode.tasks.fetchTasks().then((alltasks) => {
+                let t: vscode.Task | undefined = undefined ;
+                for(let task of alltasks) {
+                    if (task.name === taskname) {
+                        t = task ;
+                        break ;
+                    }
+                }
+
+                if (t) {
+                    vscode.tasks.executeTask(t)
+                    .then((e) => {
+                        // TODO: keep this for possible future use so we can add an 'End Build' button
+                        // e.terminate()
+                    }) ;
+                } ;
+            }) ;
         }
         else {
-            this.logger_.warn(`Task not found: ${task}`);
-            vscode.window.showWarningMessage(`The requested task '${task}' does not exist.`);
+            this.logger_.warn(`Task not found: task=${data.task} project=${data.project}`) ;
+            let projmsg = data.project ? ` for project '${data.project}'` : '' ;
+            vscode.window.showWarningMessage(`The requested task '${data.task}' does not exist ${projmsg}.`) ;
             this.sendMessageWithArgs('buildDone', true) ;
         }
     }
@@ -877,6 +973,19 @@ export class MTBAssistObject {
         this.cmdhandler_.set('install-llvm', this.installLLVM.bind(this)) ;
         this.cmdhandler_.set('set-config', this.setConfig.bind(this)) ;
         this.cmdhandler_.set('operation-status-closed', this.handleOperationStatusClosed.bind(this)) ;
+        this.cmdhandler_.set('run-task', this.runTaskFromGUI.bind(this)) ;
+    }
+
+    private runTaskFromGUI(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (request.data) {
+                let d: MTBAssistantTask = request.data ;
+                if (d.description && d.vscodecmd) {
+                    vscode.commands.executeCommand(d.vscodecmd, ...d.args) ;
+                }
+            }
+            resolve() ;
+        }) ;
     }
 
     private handleOperationStatusClosed() : Promise<void> {
@@ -894,8 +1003,7 @@ export class MTBAssistObject {
         return new Promise<void>((resolve, reject) => {
             if (request.data) {
                 this.settings_.configuration = request.data.configuration ;
-                this.tasks_?.addAll() ;
-                this.tasks_?.writeTasks() ;
+                this.tasks_.forEach((t) => { t.addRequiredTasks(); }) ;
             }
         });
     }
@@ -969,8 +1077,7 @@ export class MTBAssistObject {
                         reject(new Error('Failed to run make vscode command')) ;
                         return ;
                     }
-                    this.tasks_?.addAll() ;
-                    this.tasks_?.writeTasks() ;
+                    this.tasks_?.forEach((t) => { t.addRequiredTasks(); }) ;
                     this.vscodeSettings_?.fix() ;                      
                     resolve() ;
                 })
@@ -986,8 +1093,7 @@ export class MTBAssistObject {
             if (this.env_ && this.env_.appInfo) {
                 this.worker_?.runMakeVSCodeCommand(this.env_.appInfo.appdir)
                 .then((result) => {
-                    this.tasks_?.addAll() ;
-                    this.tasks_?.writeTasks() ;
+                    this.tasks_?.forEach((t) => { t.addRequiredTasks(); }) ;
                     this.vscodeSettings_?.fix() ;                    
                     this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;                    
                     resolve() ;
@@ -1011,8 +1117,7 @@ export class MTBAssistObject {
 
     private fixTasks(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            this.tasks_?.addAll() ;
-            this.tasks_?.writeTasks() ;
+            this.tasks_?.forEach((t) => { t.addRequiredTasks(); }) ;
             this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
             resolve();
         });
@@ -1460,6 +1565,9 @@ export class MTBAssistObject {
             let tool = this.getLaunchConfig('', MTBAssistObject.devcfgProgUUID);
             if (tool) {
                 this.launch(tool);
+            }
+            else {
+                vscode.window.showErrorMessage('Cannot find the device configurator tool.');
             }
             resolve();
         });
@@ -1945,8 +2053,7 @@ export class MTBAssistObject {
                     .then(() => {
                         progress.report({ message: "Updating all tasks" });
                         this.tasks_?.clear();
-                        this.tasks_?.addAll();
-                        this.tasks_?.writeTasks();
+                        this.tasks_?.forEach((t) => { t.addRequiredTasks(); });
                         this.vscodeSettings_?.fix() ;
                         this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv());
                         this.sendMessageWithArgs('settings', this.settings_.settings);
@@ -2119,7 +2226,10 @@ export class MTBAssistObject {
             this.logger_.debug(`Found ${projects.length} projects in the application.`);
             let tools: Tool[] = [];
             if (pinfo && pinfo.tools) {
-                tools = pinfo.tools.filter((tool) => (tool.id !== MTBAssistObject.libmgrProgUUID && tool.id !== MTBAssistObject.devcfgProgUUID));
+                tools = pinfo.tools.filter((tool) => (tool.id !== MTBAssistObject.libmgrProgUUID && 
+                                                      tool.id !== MTBAssistObject.devcfgProgUUID && 
+                                                      tool.id !== MTBAssistObject.projectCreatorUUID &&
+                                                      tool.id !== MTBAssistObject.setupPgmUUID));
             }
 
             let msg : string | undefined = undefined ;
@@ -2134,6 +2244,21 @@ export class MTBAssistObject {
                 msgButton = 'Install LLVM' ;
                 msgRequest = 'install-llvm' ;
             }
+
+            let vscTaskStatus : MTBVSCodeTaskStatus= 'good' ;
+            let vscSettingStatus : MTBVSCodeSettingsStatus = 'good' ;
+
+            if (!needVSCode) {
+                for(let tasks of this.tasks_.values()) {
+                    if (tasks.taskFileStatus !== 'good') {
+                        vscTaskStatus = tasks.taskFileStatus || 'missing' ;
+                        vscTaskStatus = 'needsTasks' ;
+                        break ;
+                    }
+                }
+
+                vscSettingStatus = this.vscodeSettings_?.status || 'missing' ;
+            }
         
             appst = {
                 valid: true,
@@ -2143,8 +2268,8 @@ export class MTBAssistObject {
                 middleware: [],
                 projects: projects,
                 tools: tools,
-                vscodeTasksStatus: needVSCode ? 'good' : (this.tasks_?.taskFileStatus || 'missing'),
-                vscodeSettingsStatus: needVSCode ? 'good' : (this.vscodeSettings_?.status || 'missing'),
+                vscodeTasksStatus: vscTaskStatus,
+                vscodeSettingsStatus: vscSettingStatus,
                 needVSCode: needVSCode,
                 generalMessage: msg,
                 generalMessageButtonText: msgButton,
@@ -2473,6 +2598,7 @@ export class MTBAssistObject {
             if (!fs.existsSync(fpath)) {
                 fs.mkdirSync(fpath, { recursive: true });
             }
+            this.context_.globalState.update(MTBAssistObject.lastProjectPath, request.data.location);
             this.worker_!.createProject(request.data.location, request.data.name, request.data.bsp.id, request.data.example.id)
                 .then(([status, messages]) => {
                     if (status === 0) {
@@ -2518,7 +2644,7 @@ export class MTBAssistObject {
     }
 
     public fixMissingAssetsForProject(projname: string) : Promise<void> {
-        return this.worker_!.fixMissingAssets(projname)
+        return this.worker_!.fixMissingAssets(projname) ;
     }
 
     private fixMissingAssets(request: FrontEndToBackEndRequest): Promise<void> {

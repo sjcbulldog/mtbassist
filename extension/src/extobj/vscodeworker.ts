@@ -25,6 +25,11 @@ import { MTBAssistObject } from "./mtbassistobj";
 import { MTBProjectInfo } from "../mtbenv/appdata/mtbprojinfo";
 import { ApplicationType } from "../mtbenv/appdata/mtbappinfo";
 
+export interface TaskToRun {
+    task: string ;
+    project: string | undefined ;
+}
+
 interface OutputPercentMap {
     match: RegExp ;
     message: string ;
@@ -252,32 +257,32 @@ export class VSCodeWorker extends EventEmitter  {
         });
     }
 
-    private mapActionToTask(action: string, project: string | undefined) : string {
-        let ret ;
+    private mapActionToTask(action: string, project: string | undefined) :TaskToRun {
+        let ret : TaskToRun = { task: '', project: undefined } ;
         switch(action) {
             case 'build':
-                ret = `Build`;
+                ret.task = `Build`;
                 break ;
             case 'rebuild':
-                ret = `Rebuild`;
+                ret.task = `Rebuild`;
                 break ;
             case 'clean':
-                ret = `Clean`;
+                ret.task = `Clean`;
                 break ;
             case 'program':
-                ret = `Build & Program`;
+                ret.task = `Build & Program`;
                 break ;
             case 'erase':
-                ret = `Erase`;
+                ret.task = `Erase All`;
                 break ;
             default:
-                ret  = '' ;
+                ret = { task: '', project: undefined } ;
                 break ;
         }
 
         if (this.ext_.env!.appInfo!.type() !== ApplicationType.combined) {
-            if (ret.length > 0 && project) {
-                ret += ` ${project}`;
+            if (ret.task.length > 0 && project) {
+                ret.project = project;
             }
         }
 

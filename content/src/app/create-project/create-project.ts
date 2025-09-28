@@ -341,10 +341,6 @@ export class CreateProject implements OnInit, OnDestroy {
             if (success) {
                 this.projectCreated = true;
                 this.projectPath = this.getProjectPath();
-                this.snackBar.open('Project created successfully!', 'Close', { 
-                    duration: 5000,
-                    panelClass: ['success-snackbar']
-                });
             } else {
                 throw new Error('Project creation failed');
             }

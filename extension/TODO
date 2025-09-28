@@ -1,16 +1,22 @@
 Open Issues
 ----------
-- What to do if a project requires an EAP but it is not selected - can we warn
+- What to do if a build fails do to veneers?
 
 Bugs
 ----------
-- The refresh application does not reload the application in the ModusToolboxEnvironment
-- The tools collaspable does not rotate the icon when collasped
+- Sensitivity lists in manifests for project creation
+- Fix the 'I want to ...' look for a better visual appearance
+
+Add Bootloader
+--------------
+- Add the markdown file for the 'Add bootloader task'
 
 Features
 -------------------------------------------------------------------------------------------
-- Install LLVM - make robust to errors, provide more status
 - Mimic memory information for P6
-- Support DEBUG vs RELEASE builds & TOOLCHAINS
+- Mimic memory information for PSOC Control
+- Add a system to process build output and look for specific failure conditions and offer advice / Cannot figure this out
+- Project creation, project some progress indication in the application/project part
 
 
+Check light theme

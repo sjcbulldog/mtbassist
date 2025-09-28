@@ -26,6 +26,7 @@ export type FrontEndToBackEndType =
     'updateSetting' |
     'fixMissingAssets' |
     'buildAction' |
+    'runTask' |
     'gettingStarted' |
     'documentation' | 
     'browseExamples' |
@@ -371,4 +372,5 @@ export interface MemoryUsageData {
 export interface MTBAssistantTask {
   description: string ;
   vscodecmd: string ;
+  args: string[] ;
 }

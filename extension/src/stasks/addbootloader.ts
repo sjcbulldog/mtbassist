@@ -8,6 +8,195 @@ import * as vscode from 'vscode' ;
 import * as crypto from 'crypto' ;
 import { resolveCliArgsFromVSCodeExecutablePath } from "@vscode/test-electron";
 
+let dummyBldrJsonFile = `{
+    "schema-version": 1.0,
+    "content":
+    [
+        {
+            "name": "sign_proj_bootloader",
+            "enabled" : true,
+            "commands" :
+            [
+                {
+                    "command" : "sign",
+                    "inputs" :
+                    [
+                        {
+                            "file" : "../../../../build/project_hex/proj_bootloader.hex",
+                            "header-size": "0x400",
+                            "fill-value" : "0x0",
+                            "slot-size" : "0x00028000",
+                            "min-erase-size": "0x10",
+                            "hex-address" : "0x32011000"
+                        }
+                    ],
+                    "outputs":
+                    [
+                        {
+                            "file" : "../../../../build/project_hex/proj_bootloader_signed.hex",
+                            "format": "ihex"
+                        }
+                    ],
+                    "extra_config" : [
+                        {
+                            "project" : "proj_bootloader",
+                            "debug_config_name" : "proj_bootloader",
+                            "default" : false,
+                            "build_dependency" : "project"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Image 0",
+            "enabled" : true,
+            "commands" :
+            [
+                {
+                    "command" : "sign",
+                    "inputs" :
+                    [
+                        {
+                            "file" : "../../../../build/project_hex/proj_cm33_s.hex",
+                            "header-size": "0x400",
+                            "fill-value" : "0xFF",
+                            "slot-size" : "0x00100000",
+                            "overwrite-only" : true,
+                            "hex-address" : "0x60000000"
+                        }
+                    ],
+                    "outputs":
+                    [
+                        {
+                            "file" : "../../../../build/project_hex/proj_cm33_s_signed.hex",
+                            "format": "ihex"
+                        }
+                    ]
+                    ,
+                    "extra_config" : [
+                        {
+                            "project" : "proj_cm33_s",
+                            "debug_config_name" : "proj_cm33_s",
+                            "default" : false,
+                            "build_dependency" : "project"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Image 1",
+            "enabled" : true,
+            "commands" :
+            [
+                {
+                    "command" : "sign",
+                    "inputs" :
+                    [
+                        {
+                            "file" : "../../../../build/project_hex/proj_cm33_ns.hex",
+                            "header-size": "0x400",
+                            "fill-value" : "0xFF",
+                            "slot-size" : "0x00100000",
+                            "overwrite-only" : true,
+                            "hex-address" : "0x60140000"
+                        }
+                    ],
+                    "outputs":
+                    [
+                        {
+                            "file" : "../../../../build/project_hex/proj_cm33_ns_signed.hex",
+                            "format": "ihex"
+                        }
+                    ]
+                    ,
+                    "extra_config" : [
+                        {
+                            "project" : "proj_cm33_ns",
+                            "debug_config_name" : "proj_cm33_ns",
+                            "default" : false,
+                            "build_dependency" : "project"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Image 2",
+            "enabled" : true,
+            "commands" :
+            [
+                {
+                    "command" : "sign",
+                    "inputs" :
+                    [
+                        {
+                            "file" : "../../../../build/project_hex/proj_cm55.hex",
+                            "header-size": "0x400",
+                            "fill-value" : "0xFF",
+                            "slot-size" : "0x00100000",
+                            "overwrite-only" : true,
+                            "hex-address" : "0x60280000"
+                        }
+                    ],
+                    "outputs":
+                    [
+                        {
+                            "file" : "../../../../build/project_hex/proj_cm55_signed.hex",
+                            "format": "ihex"
+                        }
+                    ]
+                    ,
+                    "extra_config" : [
+                        {
+                            "project" : "proj_cm55",
+                            "debug_config_name" : "proj_cm55",
+                            "default" : false,
+                            "build_dependency" : "project"
+                        }
+                    ]
+                }
+            ]
+        }
+,
+        {
+            "name": "merge",
+            "enabled": true,
+            "commands" :
+            [
+                {
+                    "command" : "merge",
+                    "inputs" :
+                    [
+                        {
+                            "file" : "../../../../build/project_hex/proj_bootloader_signed.hex"
+                        },
+                        {
+                            "file" : "../../../../build/project_hex/proj_cm33_s_signed.hex"
+                        },
+                        {
+                            "file" : "../../../../build/project_hex/proj_cm33_ns_signed.hex"
+                        },
+                        {
+                            "file" : "../../../../build/project_hex/proj_cm55_signed.hex"
+                        }
+                    ],
+                    "outputs" :
+                    [
+                        {
+                            "file" : "../../../../build/app_combined.hex",
+                            "format" : "ihex",
+                            "overlap" : "ignore"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+` ;
+
 export class AddBootloaderTask extends STask {
     private static readonly bootloaderProjectName = 'proj_bootloader' ;
     private static readonly bootloaderCEID = 'mtb-example-edge-protect-bootloader' ;
@@ -30,30 +219,37 @@ export class AddBootloaderTask extends STask {
                         this.addStatusLine('Updating the signer/combiner settings in common.mk ...') ;
                         this.fixupCombinerSigner()
                         .then(() => {
-                            this.reveal() ;
-                            this.addStatusLine('Refreshing new bootloader project (make getlibs)...') ;
-                            this.ext_.fixMissingAssetsForProject(AddBootloaderTask.bootloaderProjectName)
+                            this.addStatusLine('Creating temporary boot_with_bldr.json file ...') ;
+                            this.addBuildWithBldrJsonFile()
                             .then(() => {
-                                this.addStatusLine('Updating vscode project files (make vscode) ...') ;
-                                this.ext_.runMakeVSCode()
+                                this.reveal() ;
+                                this.addStatusLine('Refreshing new bootloader project (make getlibs)...') ;
+                                this.ext_.fixMissingAssetsForProject(AddBootloaderTask.bootloaderProjectName)
                                 .then(() => {
-                                    this.addStatusLine('Adding bootloader project to workspace...') ;
-                                    this.addToWorkspace()
+                                    this.addStatusLine('Updating vscode project files (make vscode) ...') ;
+                                    this.ext_.runMakeVSCode()
                                     .then(() => {
-                                        this.finishOperation(true) ;
-                                        resolve();
+                                        this.addStatusLine('Adding bootloader project to workspace...') ;
+                                        this.addToWorkspace()
+                                        .then(() => {
+                                            this.finishOperation(true) ;
+                                            resolve();
+                                        })
+                                        .catch((err) => {
+                                            reject(err) ;
+                                        }) ;
                                     })
                                     .catch((err) => {
                                         reject(err) ;
                                     }) ;
                                 })
-                                .catch((err) => {
-                                    reject(err) ;
-                                }) ;
+                                .catch((error) => {
+                                    reject(error);
+                                });
                             })
-                            .catch((error) => {
-                                reject(error);
-                            });
+                            .catch( (error) => {
+                                reject(error) ;
+                            }) ;
                         })
                         .catch( (error) => {
                             reject(error) ;
@@ -71,6 +267,19 @@ export class AddBootloaderTask extends STask {
         return ret ;
     }
 
+    private addBuildWithBldrJsonFile() : Promise<void> {
+        let ret = new Promise<void>( async (resolve, reject) => {
+            let bspname = this.ext_.env!.appInfo!.projects[0].target ;
+            let jsonfile = path.join(this.ext_.env!.appInfo!.appdir!,`bsps/TARGET_${bspname}/config/GeneratedSource/boot_with_bldr.json`) ;
+            if (!fs.existsSync(jsonfile)) {
+                fs.writeFileSync(jsonfile, dummyBldrJsonFile) ;
+            }
+
+            resolve() ;
+        }) ;
+        return ret ;
+    }
+
     private addToWorkspace() : Promise<void> {
         let ret = new Promise<void>( async (resolve, reject) => {
             let projdir = path.join(this.ext_.env!.appInfo!.appdir, AddBootloaderTask.bootloaderProjectName) ;
@@ -80,23 +289,6 @@ export class AddBootloaderTask extends STask {
             }
             resolve() ;
         }) ;
-        return ret ;
-    }
-
-    private createUniqueTempDirectory(): Promise<string> {
-        const systemTempDir = os.tmpdir();
-        const prefix = 'mtbassist-'; // Optional prefix for your directory
-        const tempDirPath = path.join(systemTempDir);
-
-        let ret = new Promise<string>( (resolve, reject) => {
-            try {
-                let ret = fs.mkdtempSync(path.join(tempDirPath, prefix), 'utf-8') ;
-                resolve(ret) ;
-            } catch (error) {
-                reject(error);
-            }
-        }) ;
-
         return ret ;
     }
 
@@ -385,21 +577,16 @@ export class AddBootloaderTask extends STask {
 
             if (fs.existsSync(bllibpath) && fs.existsSync(sumpath)) {
                 this.addStatusLine('Verifying existing bootloader project...') ;
-                this.verifyBootloaderProject(bllibpath, sumpath)
-                .then((isValid) => {
-                    if (isValid) {
-                        resolve(bllibpath) ;
-                        return ;
-                    }
-                    else {
-                        this.addStatusLine('Existing bootloader project is invalid. Re-creating project...') ;
-                        fs.rmSync(bllibpath, { recursive: true, force: true }) ;
-                        fs.rmSync(sumpath, { force: true }) ;
-                    }
-                })
-                .catch((error) => {
-                    reject('Could not verify bootloader project: ' + error) ;
-                });
+                let isValid = await this.verifyBootloaderProject(bllibpath, sumpath) ;
+                if (isValid) {
+                    resolve(bllibpath) ;
+                    return ;
+                }
+                else {
+                    this.addStatusLine('Existing bootloader project is invalid. Re-creating project...') ;
+                    fs.rmSync(bllibpath, { recursive: true, force: true }) ;
+                    fs.rmSync(sumpath, { force: true }) ;
+                }
             }
             else if (fs.existsSync(bllibpath)) {
                 // The bootloader directory exists but not the .sum file.
@@ -412,14 +599,13 @@ export class AddBootloaderTask extends STask {
             .then((projdir) => {         
                 // Now copy the directory tree from srcdir to bloadpath
                 this.addStatusLine('Copying bootloader project to bootloader library ...') ;
-                fs.cp(projdir, bllibpath, { recursive: true }, (err) => {
-                    if (err) {
-                        fs.rmSync(projdir, { recursive: true, force: true }) ;
-                        reject('Could not copy bootloader project to application directory: ' + err) ;
-                        return ;
-                    }
+                try {
+                    fs.cpSync(projdir, bllibpath, { recursive: true }) ;
                     fs.rmSync(path.dirname(projdir), { recursive: true, force: true }) ;                    
-                }) ;
+                } catch (err) {
+                    fs.rmSync(path.dirname(projdir), { recursive: true, force: true }) ;
+                    reject('Could not copy bootloader project to bootloader library: ' + err) ;
+                }
 
                 this.computeChecksum(bllibpath, sumpath)
                     .then(() => {

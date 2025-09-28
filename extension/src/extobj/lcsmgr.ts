@@ -96,7 +96,7 @@ export class LCSManager extends EventEmitter {
      * Returns the list of BSPs not currently in local storage.
      */
     public get bspsOut() : string[] {
-        let allBsps = this.ext_.env?.manifestDB.allBspNames.filter((bsp) => !this.bspsIn.includes(bsp)).sort() || [];
+        let allBsps = this.ext_.env?.manifestDB.allBspNames.filter((bsp: string) => !this.bspsIn.includes(bsp)).sort() || [];
         return allBsps ;
     }
 

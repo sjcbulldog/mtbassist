@@ -87,12 +87,16 @@ export class MTBAppInfo {
         return this.projects_.length ;
     }
 
+    public get projectNames() : string[] {
+        return this.projects_.map( (p) => p.name ) ;
+    }
+
     public get totalProjectCount() : number {
         if (!this.vars_) {
             throw new Error('MTBAppInfo.totalProjectCount called without setting the get_app_info vars') ;
         }
 
-        return this.vars_.get(MTBNames.MTB_PROJECTS)?.split(',').length || 0 ;
+        return this.projects_.length ;
     }
 
     public isValid() : Error | undefined {

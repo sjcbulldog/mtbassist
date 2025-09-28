@@ -52,7 +52,7 @@ export class MTBSettings extends EventEmitter {
             displayName: 'Configuration',
             owner: 'workspace',
             type: 'choice',
-            choices: [ 'Debug', 'Release', 'None'],
+            choices: [ 'Debug', 'Release', 'Per Project'],
             value: 'Debug',
             description: 'This is the configuration to use when building the application. (Workspace scope: applies only to this open workspace)'
         },           

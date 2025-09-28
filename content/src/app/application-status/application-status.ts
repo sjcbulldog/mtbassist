@@ -72,10 +72,11 @@ export class ApplicationStatus implements OnInit, OnDestroy {
 
     // Configuration selector
     selectedConfiguration: string = 'Debug';
-    configurationOptions: string[] = ['Debug', 'Release'];
+    configurationOptions: string[] = ['Debug', 'Release', 'Per Project'];
 
     // Tasks
     availableTasks: MTBAssistantTask[] = [];
+    selectedTask: string = 'Select Task';
 
     private subscriptions: Subscription[] = [] ;
 
@@ -514,6 +515,17 @@ export class ApplicationStatus implements OnInit, OnDestroy {
             this.applicationStatus.configuration = configuration;
         }
         this.be.sendRequestWithArgs('set-config', configuration);
+    }
+
+    onTaskSelection(taskDescription: string) {
+        if (taskDescription !== 'Select Task') {
+            const selectedTask = this.availableTasks.find(task => task.description === taskDescription);
+            if (selectedTask) {
+                this.be.sendRequestWithArgs('run-task', selectedTask);
+            }
+        }
+        // Reset the dropdown to default
+        this.selectedTask = 'Select Task';
     }
 }
 

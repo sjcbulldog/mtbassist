@@ -345,6 +345,13 @@ export class BackendService {
         }
     }
 
+    public runTask(taskname: string) : void {
+        this.sendPipeRequest({
+            request: 'runTask',
+            data: taskname
+        });
+    }
+
     public executeBuildAction(action: string, project?: string): void {
         this.sendPipeRequest({
             request: 'buildAction',

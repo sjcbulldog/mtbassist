@@ -26,6 +26,7 @@ export type FrontEndToBackEndType =
     'updateSetting' |
     'fixMissingAssets' |
     'buildAction' |
+    'runTask' |
     'gettingStarted' |
     'documentation' | 
     'browseExamples' |
@@ -67,7 +68,8 @@ export type FrontEndToBackEndType =
     'install-llvm' |
     'llvm-versions' |
     'set-config' |
-    'operation-status-closed' 
+    'operation-status-closed' |
+    'run-task'
     ;
 
 export type BackEndToFrontEndType =
@@ -118,7 +120,8 @@ export type BackEndToFrontEndType =
     'installLLVMMessage' |
     'startOperation' |
     'finishOperation' |
-    'addStatusLine'
+    'addStatusLine' |
+    'tasksAvailable'
     ;
 
 export type ThemeType =
@@ -364,4 +367,10 @@ export interface MemoryUsageData {
   size: number ;
   percent: number ;
   segments: MemoryUsageSegment[] ;
+}
+
+export interface MTBAssistantTask {
+  description: string ;
+  vscodecmd: string ;
+  args: string[] ;
 }

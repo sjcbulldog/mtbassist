@@ -172,8 +172,13 @@ export class MTBAppLoader {
                 let pall = [] ;
                 for(let proj of vars.get(MTBNames.MTB_PROJECTS)!.split(' ')) {
                     let projpath = path.join(this.app_.appdir, proj) ;
-                    let p = this.loadProject(projpath) ;
-                    pall.push(p) ;
+                    if (fs.existsSync(projpath)) {
+                        let p = this.loadProject(projpath) ;
+                        pall.push(p) ;                        
+                    }
+                    else {
+                        this.logger_.warn(`project directory ${projpath} does not exist - ignored`) ;
+                    }
                 }
 
                 Promise.all(pall)
