@@ -52,6 +52,7 @@ export interface DownloadInstallStatus {
 export class SetupMgr extends MtbManagerBase {
     private static readonly mtbFeatureId = 'com.ifx.tb.tool.modustoolbox';
     private static readonly mtbSetupId = 'com.ifx.tb.tool.modustoolboxsetup';
+    private static readonly mtbModusToolbox = 'com.ifx.tb.tool.modustoolbox' ;
     private static readonly downloadRatio = 0.8;
     private static readonly localIDCServiceRequestTimeout = 30000; // 30 seconds
 
@@ -347,7 +348,7 @@ export class SetupMgr extends MtbManagerBase {
     }
 
     private isModusToolbox(id: string) {
-        return id === 'com.ifx.tb.tool.modustoolbox' ;
+        return id === SetupMgr.mtbModusToolbox ;
     }
 
     private getName(id: string) : string {

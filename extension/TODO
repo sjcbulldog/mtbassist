@@ -9,14 +9,15 @@ Bugs
 
 Add Bootloader
 --------------
-- Add the markdown file for the 'Add bootloader task'
+- Update the markdown file for the 'Add bootloader task'
 
 Features
 -------------------------------------------------------------------------------------------
 - Mimic memory information for P6
 - Mimic memory information for PSOC Control
-- Add a system to process build output and look for specific failure conditions and offer advice / Cannot figure this out
+- Add a system to process build output and look for specific failure conditions and offer advice (cannot figure this out yet)
 - Project creation, project some progress indication in the application/project part
 
-
-Check light theme
+TODO
+----
+Check light theme for all tabs
