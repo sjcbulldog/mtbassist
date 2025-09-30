@@ -25,7 +25,7 @@ import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
-    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, ManifestStatusType, Middleware, MTBAssistantMode, 
+    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, LCSBSPKeywordAliases, ManifestStatusType, Middleware, MTBAssistantMode, 
     MTBAssistantTask, 
     MTBLocationStatus, MTBVSCodeSettingsStatus, MTBVSCodeTaskStatus, Project, SettingsError, ThemeType, Tool
 } from '../comms';
@@ -527,6 +527,16 @@ export class MTBAssistObject {
         }
     }
 
+    private sendLCSKeywordAliases() : void {
+        let aliases : LCSBSPKeywordAliases[] = [
+            {
+                keyword: 'edge',
+                bsps: this.env_?.manifestDB.allBspNames.filter(n => n.toLowerCase().includes('pse84')) || []
+            }
+        ] ;
+        this.sendMessageWithArgs('lcsKeywordAliases', aliases) ;
+    }
+
     private sendLCSGuide() : void {
         let lcspath = this.lcsMgr_?.findLcsCLIPath() || undefined ;
         if (lcspath) {
@@ -963,7 +973,7 @@ export class MTBAssistObject {
                 if (t) {
                     vscode.tasks.executeTask(t)
                     .then((e) => {
-                        // TODO: keep this for possible future use so we can add an 'End Build' button
+                        // TODO: keep this for possible future use so we can add a 'Stop' button
                         // e.terminate()
                     }) ;
                 } ;
@@ -972,7 +982,7 @@ export class MTBAssistObject {
         else {
             this.logger_.warn(`Task not found: task=${data.task} project=${data.project}`) ;
             let projmsg = data.project ? ` for project '${data.project}'` : '' ;
-            vscode.window.showWarningMessage(`The requested task '${data.task}' does not exist ${projmsg}.`) ;
+            vscode.window.showWarningMessage(`The requested task '${data.task}' does not exist ${projmsg}.  At the main application pages, use the 'Fix Tasks' button to create missing tasks.`) ;
             this.sendMessageWithArgs('buildDone', true) ;
         }
     }
@@ -1212,7 +1222,9 @@ export class MTBAssistObject {
             if (this.manifestStatus_ === 'loaded') {
                 this.sendLCSData() ;
                 this.sendLCSGuide() ;
+                this.sendLCSKeywordAliases() ;
             }
+            resolve() ;
         });
     }
 

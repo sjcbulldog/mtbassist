@@ -18,7 +18,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, MemoryUsageData, InstallLLVMProgressMsg, MTBAssistantTask } from '../../comms';
+import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, MemoryUsageData, InstallLLVMProgressMsg, MTBAssistantTask, LCSBSPKeywordAliases } from '../../comms';
 import { ProjectManager } from './projectmgr';
 
 declare var acquireVsCodeApi: any | undefined ;
@@ -99,6 +99,7 @@ export class BackendService {
     lcsNeedsApply: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     lcsBusy: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     lcsGuide: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
+    lcsKeywordAliases: BehaviorSubject<LCSBSPKeywordAliases[]> = new BehaviorSubject<LCSBSPKeywordAliases[]>([]) ;
 
     // AI related
     aiApiKey : BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
@@ -278,6 +279,7 @@ export class BackendService {
         this.registerHandler('addStatusLine', (cmd) => { this.addStatusLine.next(cmd.data) });
         this.registerHandler('tasksAvailable', (cmd) => { this.availableTasks.next(cmd.data) });
         this.registerHandler('lcsGuide', (cmd) => { this.lcsGuide.next(cmd.data || '') });
+        this.registerHandler('lcsKeywordAliases', (cmd) => { this.lcsKeywordAliases.next(cmd.data || []) });
     }
 
     private handleInstallLLVMMessage(cmd: BackEndToFrontEndResponse) {

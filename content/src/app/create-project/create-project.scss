@@ -30,6 +30,83 @@
   margin-top: 12px;
 }
 
+/* Project completion overlay styles */
+.project-complete-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.7);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-complete-content {
+  background: #2e7d32;
+  color: #fff;
+  padding: 40px 50px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  max-width: 500px;
+  
+  .success-icon {
+    mat-icon {
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      color: #fff;
+    }
+  }
+  
+  h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+  }
+  
+  .project-location {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.1);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: monospace;
+    word-break: break-all;
+    
+    mat-icon {
+      font-size: 1.2rem;
+      width: 1.2rem;
+      height: 1.2rem;
+    }
+  }
+  
+  .load-project-button {
+    margin-top: 8px;
+    background: #fff;
+    color: #2e7d32;
+    font-weight: 600;
+    
+    &:hover {
+      background: #f5f5f5;
+    }
+  }
+}
+
 /* Manifest error message styles */
 .manifest-error-message {
   display: flex;

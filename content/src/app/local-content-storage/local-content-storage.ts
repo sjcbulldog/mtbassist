@@ -27,6 +27,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { Subscription } from 'rxjs';
 import { BackendService } from '../backend/backend-service';
+import { LCSBSPKeywordAliases } from '../../comms';
 
 @Component({
   selector: 'app-local-content-storage',
@@ -60,12 +61,19 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
   showChanges: boolean = false;
   leftListFilterText: string = '';
   lcsGuide: string = '' ;
+  lcsAliases: LCSBSPKeywordAliases[] = [];
 
   private subscriptions: Subscription[] = [];
 
   constructor(private be: BackendService) {}
 
   ngOnInit(): void {
+    this.subscriptions.push(
+      this.be.lcsKeywordAliases.subscribe(aliases => {
+        this.lcsAliases = [...aliases];
+      })
+    );
+
     this.subscriptions.push(
       this.be.lcsGuide.subscribe(guide => {
         this.lcsGuide = guide;
