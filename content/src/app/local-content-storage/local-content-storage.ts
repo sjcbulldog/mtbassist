@@ -59,12 +59,19 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
   busy: boolean = false ;
   showChanges: boolean = false;
   leftListFilterText: string = '';
+  lcsGuide: string = '' ;
 
   private subscriptions: Subscription[] = [];
 
   constructor(private be: BackendService) {}
 
   ngOnInit(): void {
+    this.subscriptions.push(
+      this.be.lcsGuide.subscribe(guide => {
+        this.lcsGuide = guide;
+      })
+    );
+
     this.subscriptions.push(
       this.be.ready.subscribe(ready => {
         this.be.sendRequestWithArgs('lcs-data', null) ;
@@ -254,6 +261,17 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
     if (checked) {
       // Clear the filter text when show changes is enabled
       this.leftListFilterText = '';
+    }
+  }
+
+  openUserGuide(event: Event): void {
+    event.preventDefault();
+    if (this.lcsGuide && this.lcsGuide.length > 0) {
+      const documentation = {
+        name: 'User Guide',
+        location: this.lcsGuide
+      };
+      this.be.sendRequestWithArgs('open', documentation);
     }
   }
 }

@@ -23,10 +23,12 @@
 
 import * as vscode from 'vscode';
 import { MTBAssistObject } from './extobj/mtbassistobj';
+import { RunTimeTracker } from './runtime';
 
 let extobj: MTBAssistObject | undefined = undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
+	RunTimeTracker.initInstance() ;
 	MTBAssistObject.initInstance(context);
 }
 

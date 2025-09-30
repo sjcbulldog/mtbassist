@@ -14,6 +14,13 @@
 
   <div class="header">
     <h2>Local Content Storage Management</h2>
+    @if (lcsGuide && lcsGuide.length > 0) {
+      <div class="user-guide-link">
+        <a href="#" (click)="openUserGuide($event)" class="guide-link">
+          User Guide
+        </a>
+      </div>
+    }
   </div>
 
   <div class="lists-container">

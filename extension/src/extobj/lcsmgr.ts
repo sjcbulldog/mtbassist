@@ -438,6 +438,16 @@ export class LCSManager extends EventEmitter {
         }
     }    
 
+    public findLcsCLIPath() : string | undefined {
+        let ret : string | undefined ;
+        let tool = this.ext_.env?.toolsDB.findToolByGUID(LCSManager.lcsCliUUID);
+
+        if (tool) {
+            ret = tool.path ;
+        }
+        return ret ;
+    }
+
     /**
      * Finds the path to the lcs-manager-cli tool in the ModusToolbox environment.
      * @returns Path to the CLI tool, or undefined if not found.

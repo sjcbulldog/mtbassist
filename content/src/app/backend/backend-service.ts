@@ -98,6 +98,7 @@ export class BackendService {
     lcsNeedsUpdate: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     lcsNeedsApply: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
     lcsBusy: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+    lcsGuide: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
 
     // AI related
     aiApiKey : BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
@@ -276,6 +277,7 @@ export class BackendService {
         this.registerHandler('finishOperation', (cmd) => { this.finishOperation.next(cmd.data) });
         this.registerHandler('addStatusLine', (cmd) => { this.addStatusLine.next(cmd.data) });
         this.registerHandler('tasksAvailable', (cmd) => { this.availableTasks.next(cmd.data) });
+        this.registerHandler('lcsGuide', (cmd) => { this.lcsGuide.next(cmd.data || '') });
     }
 
     private handleInstallLLVMMessage(cmd: BackEndToFrontEndResponse) {

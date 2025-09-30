@@ -51,6 +51,7 @@ import { STask } from '../stasks/stask';
 import { VSCodeTasks } from '../vscodetasks/vscodetasks';
 import { VSCodeAppTaskGenerator } from '../vscodetasks/vscodeapptaskgen';
 import { VSCodeProjTaskGenerator } from '../vscodetasks/vscodeprojtaskgen';
+import { RunTimeTracker } from '../runtime';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -526,6 +527,22 @@ export class MTBAssistObject {
         }
     }
 
+    private sendLCSGuide() : void {
+        let lcspath = this.lcsMgr_?.findLcsCLIPath() || undefined ;
+        if (lcspath) {
+            let lcsGuide : string | undefined ;
+            let pinfo = this.projectInfo_.get('');
+            for(let doc of pinfo?.documentation || []) {
+                let p = path.normalize(doc.location) ;
+                if (p.startsWith(lcspath)) {
+                    lcsGuide = doc.location ;
+                    break ;                    
+                }
+            }
+            this.sendMessageWithArgs('lcsGuide', lcsGuide) ;
+        }
+    }
+
     private sendTasks() : void {
         let tasks : MTBAssistantTask[] = [] ;
         if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
@@ -559,12 +576,18 @@ export class MTBAssistObject {
     }
 
     private initWithTools(): Promise<void> {
+        let runtime = RunTimeTracker.getInstance() ;
+        runtime.mark('initWithTools');
+
         let ret = new Promise<void>((resolve, reject) => {
             this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
             if (!this.env_) {
                 this.logger_.error('Failed to initialize ModusToolbox environment.');
                 return;
             }
+
+            runtime.mark('ModusToolboxEnvironment.getInstance')  ;
+
 
             this.toolspath_ = this.settings_.toolsPath;
             if (!this.toolspath_ || this.toolspath_.length === 0 || !fs.existsSync(this.toolspath_)) {
@@ -587,19 +610,26 @@ export class MTBAssistObject {
                 this.sendMessageWithArgs('settings', this.settings_.settings);
                 this.logger_.debug(`lcs-manager: LCS operation completed`);
             });
+            runtime.mark('LCSManager init') ;
 
             this.worker_ = new VSCodeWorker(this.logger_, this);
             this.worker_.on('progress', this.sendMessageWithArgs.bind(this, 'createProjectProgress'));
             this.worker_.on('runtask', this.runTask.bind(this));
             this.worker_.on('loadedAsset', this.sendMessageWithArgs.bind(this, 'loadedAsset'));
+            runtime.mark('VSCodeWorker init') ;
 
             this.readComponentDefinitions();
 
             this.loadMTBApplication().then(() => {
+                runtime.mark('loadMTBApplication') ;
                 this.checkVSCodeStructure() ;
+                runtime.mark('checkVSCodeStructure') ;
                 this.updateStatusBar();
+                runtime.mark('updateStatusBar') ;
                 this.createAppStructure();
+                runtime.mark('createAppStructure') ;
                 this.sendTasks() ;
+                runtime.mark('sendTasks') ;
 
                 this.logger_.debug('All managers initialized successfully.');
 
@@ -621,6 +651,7 @@ export class MTBAssistObject {
 
                 this.postInitializeManagers()
                 .then(() => {
+                    runtime.mark('postInitializeManagers') ;
                     if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
                         // We do this again in case the setting is to show the mtb assistant only if an application is loaded
                         this.optionallyShowPage();
@@ -635,11 +666,14 @@ export class MTBAssistObject {
 
                         this.getLaunchData()
                             .then(() => {
+                                runtime.mark('getLaunchData') ;
                                 this.setIntellisenseProject();
                                 this.initDeviceDB() 
                                 .then(() => {
+                                    runtime.mark('initDeviceDB') ;
                                     this.memusage_.updateMemoryInfo()
                                     .then(() => {
+                                        runtime.mark('updateMemoryInfo') ;
                                         this.logger_.debug('All managers post-initialization completed successfully.');
 
                                         //
@@ -651,14 +685,20 @@ export class MTBAssistObject {
                                         this.sendMessageWithArgs('ready', this.theme_) ;
                                         this.mtbmode_ = 'mtb' ;
                                         this.sendMessageWithArgs('mtbMode', this.mtbmode_);
+                                        runtime.mark('Show Application') ;
 
                                         this.updateStatusBar();
                                         this.setupAuxiliaryStuff()
                                         .then(() => {
-                                        this.env?.load(MTBLoadFlags.manifestData)
+                                            runtime.mark('setupAuxiliaryStuff') ;
+                                            this.env?.load(MTBLoadFlags.manifestData)
                                             .then(() => {
+                                                runtime.mark('loadManifestData') ;
                                                 this.sendManifestStatus() ;
                                                 this.updateStatusBar();
+                                                runtime.mark('application load done') ;
+                                                runtime.printAll(this.logger_) ;
+                                                resolve() ;
                                             })
                                             .catch((err) => {
                                                 this.sendManifestStatus();
@@ -683,22 +723,28 @@ export class MTBAssistObject {
                             })
                             .catch((error: Error) => {
                                 this.logger_.error('Error during post-initialization of managers:', error.message);
+                                resolve() ;
                             });
                     }
                     else {
                         this.updateStatusBar();
+                        runtime.mark('update status bar') ;
                         this.ready_ = true ;
                         this.sendMessageWithArgs('ready', this.theme_) ;
                         this.sendTheme() ;
                         this.mtbmode_ = 'mtb' ;
                         this.sendMessageWithArgs('mtbMode', this.mtbmode_);
+                        runtime.mark('Show Application') ;
                         this.setupAuxiliaryStuff()
                         .then(() => {
+                            runtime.mark('setupAuxiliaryStuff') ;
                             this.env?.load(MTBLoadFlags.manifestData)
                             .then(() => {
+                                runtime.mark('loadManifestData') ;
                                 this.sendManifestStatus() ;
                                 this.updateStatusBar();
                                 this.logger_.debug('ModusToolbox manifests loaded successfully.');
+                                runtime.printAll(this.logger_) ;
                                 resolve();
                             })
                             .catch((error: Error) => {
@@ -793,12 +839,18 @@ export class MTBAssistObject {
     }
 
     public async initialize(): Promise<void> {
+        let runtime = RunTimeTracker.getInstance() ;
+
+        runtime.mark('startInitialize');
         this.initializeCommands() ;
+        runtime.mark('initializeCommands');
         this.optionallyShowPage() ;                     // Shows initialization page
-        
+        runtime.mark('optionallyShowPage');
+
         let ret = new Promise<void>((resolve, reject) => {
             this.setupMgr_?.initializeLocal()
                 .then(() => {
+                    runtime.mark('setupMgrInitializeLocal');
                     if (this.setupMgr_!.doWeNeedTools()) {
                         this.initNoTools()
                             .then(() => {
@@ -1159,6 +1211,7 @@ export class MTBAssistObject {
         return new Promise<void>((resolve, reject) => {
             if (this.manifestStatus_ === 'loaded') {
                 this.sendLCSData() ;
+                this.sendLCSGuide() ;
             }
         });
     }
@@ -1789,7 +1842,7 @@ export class MTBAssistObject {
                 let appDir = this.mtbApplicationDirectory();
                 if (!appDir) {
                     this.logger_.error('Could not determine ModusToolbox application directory.');
-                    reject(new Error('ModusToolbox application directory not found.'));
+                    resolve() ;
                     return;
                 }
 
@@ -1804,8 +1857,14 @@ export class MTBAssistObject {
                     this.logger_.info('ModusToolbox application loaded successfully.');
                     resolve();
                 }).catch((error: Error) => {
-                    this.logger_.error('Failed to load ModusToolbox application:', error.message);
-                    reject(error);
+                    flags = MTBLoadFlags.packs | MTBLoadFlags.tools;
+                    ModusToolboxEnvironment.destroy() ;
+                    this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_) ;
+                    this.env_!.load(flags, undefined, this.toolspath_).then(() => {
+                        this.envLoaded_ = true;
+                        this.logger_.info('ModusToolbox environment loaded with application successfully.');
+                        resolve();                        
+                    }) ;
                 });
             }
         });

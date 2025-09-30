@@ -121,7 +121,8 @@ export type BackEndToFrontEndType =
     'startOperation' |
     'finishOperation' |
     'addStatusLine' |
-    'tasksAvailable'
+    'tasksAvailable' |
+    'lcsGuide'
     ;
 
 export type ThemeType =
