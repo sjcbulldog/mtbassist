@@ -2353,6 +2353,14 @@ export class MTBAssistObject {
         return appst;
     }
 
+    private showRedisplayHint() {
+        let config = vscode.workspace.getConfiguration();
+        let autodisp = config.get('mtbassist2.displayHint') as boolean ;
+        if (autodisp) {
+            vscode.window.showInformationMessage(`Click the 'MTB' in the bottom right status bar to display the ModusToolbox Assistant`);
+        }
+    }
+
     private showLocalContent(filename: string) {
         let p: string = path.join(this.context_.extensionUri.fsPath, 'content', filename);
         let fullpath: vscode.Uri = vscode.Uri.file(p);
@@ -2372,6 +2380,7 @@ export class MTBAssistObject {
             this.panel_.webview.html = data;
 
             this.panel_.onDidDispose(() => {
+                this.showRedisplayHint() ;
                 this.panel_ = undefined;
             }, null, this.context_.subscriptions);
 

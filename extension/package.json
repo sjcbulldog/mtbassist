@@ -76,6 +76,11 @@
           ],
           "default": "Always",
           "description": "Automatically display the ModusToolbox Assistant when VSCode is opened."
+        },
+        "mtbassist2.displayHint" : {
+          "type" : "boolean",
+          "default" : true,
+          "description" : "Display the hint on how to re-display the ModusToolbox Assistant when it is closed."
         }
       }
     }
