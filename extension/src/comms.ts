@@ -122,7 +122,8 @@ export type BackEndToFrontEndType =
     'finishOperation' |
     'addStatusLine' |
     'tasksAvailable' |
-    'lcsGuide'
+    'lcsGuide' |
+    'lcsKeywordAliases'
     ;
 
 export type ThemeType =
@@ -374,4 +375,9 @@ export interface MTBAssistantTask {
   description: string ;
   vscodecmd: string ;
   args: string[] ;
+}
+
+export interface LCSBSPKeywordAliases {
+  keyword: string ;
+  bsps: string[] ;
 }

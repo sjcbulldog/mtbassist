@@ -10,6 +10,30 @@
     </div>
     </div>
   }
+  <!-- Project Creation Complete Overlay -->
+  @if (projectCreated) {
+    <div class="project-complete-overlay">
+      <div class="project-complete-content">
+        <div class="success-icon">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <h2>Project Creation Complete!</h2>
+        <p>Your ModusToolbox project has been successfully created.</p>
+        <div class="project-location">
+          <mat-icon>folder</mat-icon>
+          <span>{{ projectPath }}</span>
+        </div>
+        <button mat-raised-button 
+                color="primary" 
+                (click)="loadProject()"
+                class="load-project-button">
+          <mat-icon>folder_open</mat-icon>
+          Load Project
+        </button>
+      </div>
+    </div>
+  }
+
   <!-- Header -->
   <div class="header">
     <h1>
@@ -430,7 +454,7 @@
                 <strong>Project Name:</strong> {{ projectInfoForm.value.projectName }}
               </div>
               <div class="review-item">
-                <strong>Location:</strong> {{ projectInfoForm.value.projectLocation }}
+                <strong>Location:</strong> {{ getLocation() }}
               </div>
               <div class="review-item">
                 <strong>Full Path:</strong> {{ getProjectPath() }}
@@ -469,27 +493,6 @@
           </mat-card>
         </div>
         
-        <!-- Success Card -->
-        @if (projectCreated) {
-          <div class="success-section">
-            <mat-card class="success-card">
-              <mat-card-header>
-                <div mat-card-avatar class="success-avatar">
-                  <mat-icon>check_circle</mat-icon>
-                </div>
-                <mat-card-title>Project Created Successfully!</mat-card-title>
-                <mat-card-subtitle>Your ModusToolbox project is ready</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <div class="success-item">
-                  <mat-icon>folder</mat-icon>
-                  <span>Project location: <strong>{{ projectPath }}</strong></span>
-                </div>
-              </mat-card-content>
-            </mat-card>
-          </div>
-        }
-        
         <!-- Progress Section -->
         @if (isLoading) {
           <div class="progress-section" #progressSection>
@@ -518,28 +521,19 @@
         }
         
         <div class="step-actions">
-          <button mat-button matStepperPrevious [disabled]="isLoading">
+          <button mat-button matStepperPrevious [disabled]="isLoading || projectCreated">
             <mat-icon>arrow_back</mat-icon>
             Back
           </button>
-          @if (projectCreated) {
-            <button mat-raised-button 
-                    color="accent" 
-                    (click)="loadProject()">
-              <mat-icon>folder_open</mat-icon>
-              Load Project
-            </button>
-          } @else {
-            <button mat-raised-button 
-                    color="primary" 
-                    (click)="createProject()"
-                    [disabled]="isLoading">
-              @if (!isLoading) {
-                <mat-icon>rocket_launch</mat-icon>
-              }
-              {{ isLoading ? 'Creating Project...' : 'Create Project' }}
-            </button>
-          }
+          <button mat-raised-button 
+                  color="primary" 
+                  (click)="createProject()"
+                  [disabled]="isLoading || projectCreated">
+            @if (!isLoading) {
+              <mat-icon>rocket_launch</mat-icon>
+            }
+            {{ isLoading ? 'Creating Project...' : 'Create Project' }}
+          </button>
         </div>
       </div>
     </mat-step>

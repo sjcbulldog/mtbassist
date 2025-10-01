@@ -27,6 +27,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { Subscription } from 'rxjs';
 import { BackendService } from '../backend/backend-service';
+import { LCSBSPKeywordAliases } from '../../comms';
 
 @Component({
   selector: 'app-local-content-storage',
@@ -60,12 +61,19 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
   showChanges: boolean = false;
   leftListFilterText: string = '';
   lcsGuide: string = '' ;
+  lcsAliases: LCSBSPKeywordAliases[] = [];
 
   private subscriptions: Subscription[] = [];
 
   constructor(private be: BackendService) {}
 
   ngOnInit(): void {
+    this.subscriptions.push(
+      this.be.lcsKeywordAliases.subscribe(aliases => {
+        this.lcsAliases = [...aliases];
+      })
+    );
+
     this.subscriptions.push(
       this.be.lcsGuide.subscribe(guide => {
         this.lcsGuide = guide;
@@ -242,7 +250,28 @@ export class LocalContentStorageComponent implements OnInit, OnDestroy {
     // Apply text filter
     if (this.leftListFilterText && this.leftListFilterText.trim()) {
       const filterText = this.leftListFilterText.toLowerCase().trim();
-      filteredList = filteredList.filter(bsp => bsp.toLowerCase().includes(filterText));
+      
+      // First try normal BSP name filtering
+      const normalFilteredList = filteredList.filter(bsp => bsp.toLowerCase().includes(filterText));
+      
+      // If no BSPs match the filter text, check if it matches exactly one alias
+      if (normalFilteredList.length === 0 && this.lcsAliases && this.lcsAliases.length > 0) {
+        const matchingAliases = this.lcsAliases.filter(alias => 
+          alias.keyword.toLowerCase().includes(filterText)
+        );
+        
+        // If exactly one alias matches, show its BSPs (filtered by current list)
+        if (matchingAliases.length === 1) {
+          const aliasBsps = matchingAliases[0].bsps;
+          filteredList = filteredList.filter(bsp => aliasBsps.includes(bsp));
+        } else {
+          // No matches found, return empty list
+          filteredList = [];
+        }
+      } else {
+        // Use normal filtered results
+        filteredList = normalFilteredList;
+      }
     }
     
     return filteredList;
