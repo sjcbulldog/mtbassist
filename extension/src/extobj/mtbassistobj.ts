@@ -528,13 +528,23 @@ export class MTBAssistObject {
     }
 
     private sendLCSKeywordAliases() : void {
-        let aliases : LCSBSPKeywordAliases[] = [
-            {
-                keyword: 'edge',
-                bsps: this.env_?.manifestDB.allBspNames.filter(n => n.toLowerCase().includes('pse84')) || []
+        let aliases : LCSBSPKeywordAliases[] = [] ;
+        let categories = new Set(this.env_!.manifestDB.allBsps.map(b => b.category)) ;
+        for(let cat of categories) {
+            let catmod = '' ;
+            for(let c of cat) {
+                if (c.charCodeAt(0) < 256) {
+                    catmod += c.toLowerCase() ;
+                }
             }
-        ] ;
-        this.sendMessageWithArgs('lcsKeywordAliases', aliases) ;
+            let bsps = this.env_!.manifestDB.allBsps.filter(b => b.category === cat).map(b => b.name) ;
+            let entry : LCSBSPKeywordAliases = {
+                keyword: catmod.toLowerCase(),
+                bsps: bsps
+            };
+            aliases.push(entry);
+        }
+        this.sendMessageWithArgs('lcsKeywordAliases', aliases);
     }
 
     private sendLCSGuide() : void {

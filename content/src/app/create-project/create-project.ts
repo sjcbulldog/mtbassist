@@ -407,13 +407,21 @@ export class CreateProject implements OnInit, OnDestroy {
         this.examples = [];
     }
 
+    getLocation(): string { 
+        let ret = this.projectInfoForm.value.projectLocation || '' ;
+        ret = ret.replace(/\\/g, '/');
+        return ret ;
+    }
+
     getProjectPath(): string {
+        let ret = '' ;
         const location = this.projectInfoForm.value.projectLocation;
         const name = this.projectInfoForm.value.projectName;
         if (location && name) {
-            return `${location}/${name}`;
+            ret = `${location}/${name}`;
+            ret = ret.replace(/\\/g, '/');
         }
-        return '';
+        return ret ;
     }
 
     getBSPCategories() : string[] {
