@@ -12,9 +12,7 @@ typeing 'edge' in the BSP filter should filter to the edge BSPs.
 
 Normalized the direction of the slashes in the project creator.
 
-
-
-
-
+### 2.0.3
+Updated how external documents are opened to use the vscode capabilites.
 
 
