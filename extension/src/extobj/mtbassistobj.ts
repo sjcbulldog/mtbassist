@@ -31,7 +31,6 @@ import {
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
-import { browseropen } from '../browseropen';
 import * as exec from 'child_process';
 import { RecentAppManager } from './mtbrecent';
 import { IntelliSenseMgr } from './intellisense';
@@ -52,6 +51,7 @@ import { VSCodeTasks } from '../vscodetasks/vscodetasks';
 import { VSCodeAppTaskGenerator } from '../vscodetasks/vscodeapptaskgen';
 import { VSCodeProjTaskGenerator } from '../vscodetasks/vscodeprojtaskgen';
 import { RunTimeTracker } from '../runtime';
+import fetch from 'node-fetch';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -76,7 +76,8 @@ export class MTBAssistObject {
     private commandsInited_: boolean = false;
     private env_: ModusToolboxEnvironment | null = null;
     private panel_: vscode.WebviewPanel | undefined = undefined;
-    // private content_: vscode.WebviewPanel | undefined = undefined;
+    private content_: vscode.WebviewPanel | undefined = undefined;
+    private showContentExternal_: boolean = true ;
     private postInitDone_: boolean = false;
     private envLoaded_: boolean = false;
     private cmdhandler_: Map<FrontEndToBackEndType, (data: any) => Promise<void>> = new Map();
@@ -1665,7 +1666,8 @@ export class MTBAssistObject {
 
     private open(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            browseropen(request.data.location);
+            let uri = vscode.Uri.file(request.data.location);
+            this.showWebContent(uri) ;
             resolve();
         });
         return ret;
@@ -1794,7 +1796,8 @@ export class MTBAssistObject {
             if (this.keywords_.contains(symbol)) {
                 let url: string | undefined = this.keywords_.getUrl(symbol);
                 if (url) {
-                    browseropen(decodeURIComponent(url));
+                    let uri = vscode.Uri.parse(url) ;
+                    this.showWebContent(uri) ;
                 }
             }
             else {
@@ -1897,46 +1900,79 @@ export class MTBAssistObject {
         this.showLocalContent('single-dist/index.html');
     }
 
+    private getDocHTML(uri: vscode.Uri): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            let html: string = '' ;
+
+            if (uri.scheme === 'file') {
+                let fname = uri.fsPath ;
+                try {
+                    html = fs.readFileSync(fname, 'utf8') ;
+                    resolve(html) ;
+                }
+                catch(err) {
+                    reject(err) ;
+                }
+            }
+            else {
+                fetch(uri.toString()).then(response => {
+                    if (response.ok) {
+                        let html = response.text();
+                        resolve(html) ;
+                    }
+                    else {
+                        reject(new Error(`HTTP error ${response.status}: ${response.statusText}`)) ;
+                    }
+                });
+            }
+        }) ;
+    }
+
     //
     // Save: maybe use this later.  This shows web content in a vscode webview panel
     //       There are display issues that need to be figure out before it is usable.
     //
-    // private showWebContentEmbedded(uri: vscode.Uri) {
-    //     if (!this.content_) {
-    //         this.content_ = vscode.window.createWebviewPanel(
-    //             'mtbassist.content',
-    //             'ModusToolbox Assistant',
-    //             vscode.ViewColumn.One,
-    //             {
-    //                 enableScripts: true,
-    //             }
-    //         );
-    //     }
-
-    //     let str = `<!DOCTYPE html>
-    //                 <html lang='en'>
-    //                     <head>
-    //                         <meta charset='UTF-8'>
-    //                         <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    //                         <meta http-equiv="Content-Security-Policy" content="default-src 'none';">                            
-    //                         <title>ModusToolbox Content</title>
-    //                     </head>
-    //                     <body>
-    //                         <iframe src='${uri.toString()}' style='width: 100%; height: 100vh; border: none;'></iframe>
-    //                     </body>
-    //                 </html>`;
-    //     this.content_.webview.html = str;
-    //     this.content_.onDidDispose(() => {
-    //         this.content_ = undefined;
-    //     }, null, this.context_.subscriptions);
-    // }
+    private showWebContentEmbedded(uri: vscode.Uri) {
+        this.getDocHTML(uri)
+        .then((html) => {
+            if (!this.content_) {
+                this.content_ = vscode.window.createWebviewPanel(
+                    'mtbassist.content',
+                    'ModusToolbox Documentation',
+                    vscode.ViewColumn.One,
+                    {
+                        enableScripts: true,
+                    }
+                );
+            }            
+            this.content_.webview.html = html ;
+            this.content_.onDidDispose(() => {
+                this.content_ = undefined;
+            }, null, this.context_.subscriptions);
+        })
+        .catch((err) => {
+            this.logger_.error(`Failed to load documentation: ${err.message}`);
+            vscode.window.showErrorMessage(`Failed to load documentation: ${err.message}`) ;
+        });
+    }
 
     private showWebContentExternal(uri: vscode.Uri) {
         vscode.env.openExternal(uri);
     }
 
     private showWebContent(uri: vscode.Uri) {
-        this.showWebContentExternal(uri);
+        let ext = this.showContentExternal_ ;
+
+        if (uri.path.endsWith('.pdf')) {
+            ext = true ;
+        }
+
+        if (ext) {
+            this.showWebContentExternal(uri);
+        }
+        else {
+            this.showWebContentEmbedded(uri) ;
+        }
     }
 
 
