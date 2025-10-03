@@ -2376,6 +2376,11 @@ export class MTBAssistObject {
 
                 vscSettingStatus = this.vscodeSettings_?.status || 'missing' ;
             }
+
+            let readme: string = path.join(this.env_!.appInfo!.appdir, 'README.md') ;
+            if (!fs.existsSync(readme)) {
+                readme = '' ;
+            }
         
             appst = {
                 valid: true,
@@ -2391,7 +2396,8 @@ export class MTBAssistObject {
                 generalMessage: msg,
                 generalMessageButtonText: msgButton,
                 generalMessageRequest: msgRequest,
-                configuration: this.settings_.configuration
+                configuration: this.settings_.configuration,
+                readme: readme
             };
         } else {
             appst = {
@@ -2405,7 +2411,8 @@ export class MTBAssistObject {
                 vscodeTasksStatus: 'good',
                 vscodeSettingsStatus: 'good',
                 needVSCode: false,
-                configuration: 'Debug'
+                configuration: 'Debug',
+                readme: ''
             };
         }
         return appst;

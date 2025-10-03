@@ -20,6 +20,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatMenuModule } from '@angular/material/menu';
 import { ApplicationStatusData, Documentation, MemoryUsageData, MTBAssistantTask } from '../../comms';
 import { MemoryUsage } from '../memory-usage/memory-usage.component';
 import { LlvmInstallerComponent } from '../llvm-installer/llvm-installer.component';
@@ -37,6 +38,7 @@ import { Subscription } from 'rxjs';
         MatButtonModule,
         MatSelectModule,
         MatFormFieldModule,
+        MatMenuModule,
         MemoryUsage,
         LlvmInstallerComponent
     ],
@@ -46,6 +48,8 @@ import { Subscription } from 'rxjs';
 })
 export class ApplicationStatus implements OnInit, OnDestroy {
     intellisenseProject: string | null = null;
+    isQuickProgram: boolean = false;
+    isEraseAll: boolean = false;
 
     applicationStatus: ApplicationStatusData | null = null;
     memoryUsageData: MemoryUsageData[] | null = null ;
@@ -417,14 +421,63 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         this.be.executeBuildAction('clean');
     }
 
-    eraseApplication(): void {
+    eraseApplication(all: boolean): void {
         this.running = true;
-        this.be.executeBuildAction('erase');
+        if (all) {
+            // If erasing all, set a flag or send an argument to the backend
+            this.be.executeBuildAction('erase-all');
+        }
+        else {
+            this.be.executeBuildAction('erase');
+        }
     }
 
-    programApplication(): void {
+    programApplication(quick: boolean): void {
         this.running = true;
-        this.be.executeBuildAction('program');
+        if (quick) {
+            this.be.executeBuildAction('quick-program');
+        }
+        else {
+            this.be.executeBuildAction('program');
+        }
+    }
+
+    toggleProgramMode(quick: boolean): void {
+        this.isQuickProgram = quick;
+    }
+
+    toggleEraseMode(all: boolean): void {
+        this.isEraseAll = all;
+    }
+
+    onEraseClick(event: MouseEvent): void {
+        // Prevent menu from opening on left-click
+        event.stopPropagation();
+        this.eraseApplication(this.isEraseAll);
+    }
+
+    onProgramClick(event: MouseEvent): void {
+        // Prevent menu from opening on left-click
+        event.stopPropagation();
+        this.programApplication(this.isQuickProgram);
+    }
+
+    openEraseMenu(event: MouseEvent): void {
+        event.preventDefault();
+        // Get reference to the hidden trigger button and open the menu
+        const triggerElement = document.querySelector('#hiddenEraseTrigger') as HTMLElement;
+        if (triggerElement) {
+            triggerElement.click();
+        }
+    }
+
+    openProgramMenu(event: MouseEvent): void {
+        event.preventDefault();
+        // Get reference to the hidden trigger button and open the menu  
+        const triggerElement = document.querySelector('#hiddenProgramTrigger') as HTMLElement;
+        if (triggerElement) {
+            triggerElement.click();
+        }
     }
 
     // Project-specific Build Actions

@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -77,10 +77,10 @@
           "default": "Always",
           "description": "Automatically display the ModusToolbox Assistant when VSCode is opened."
         },
-        "mtbassist2.displayHint" : {
-          "type" : "boolean",
-          "default" : true,
-          "description" : "Display the hint on how to re-display the ModusToolbox Assistant when it is closed."
+        "mtbassist2.displayHint": {
+          "type": "boolean",
+          "default": true,
+          "description": "Display the hint on how to re-display the ModusToolbox Assistant when it is closed."
         }
       }
     }
@@ -112,6 +112,8 @@
     "@types/mocha": "^9.1.1",
     "@types/node": "16.x",
     "@types/node-fetch": "^2.6.2",
+    "@types/tmp": "^0.2.6",
+    "@types/turndown": "^5.0.5",
     "@types/vscode": "^1.71.0",
     "@typescript-eslint/eslint-plugin": "^5.31.0",
     "@typescript-eslint/parser": "^5.31.0",
@@ -134,7 +136,7 @@
     "openurl": "^1.1.1",
     "os": "^0.1.2",
     "request": "^2.88.2",
-    "tmp": "^0.2.1",
+    "tmp": "^0.2.5",
     "vscode-uri": "^3.1.0",
     "winston": "^3.17.0",
     "xml2js": "^0.6.2"

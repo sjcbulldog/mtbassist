@@ -16,184 +16,234 @@
           Application
         </ng-template>
 
-        <!-- Application Tab Title Row with Right-Aligned Help Icon -->
-        <div class="application-title-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-          <span class="application-title" style="font-size: 1.5em; font-weight: bold;">Application Status</span>
-          <button mat-icon-button (click)="refreshApplicationData()" [disabled]="isLoading" matTooltip="Refresh application data">
-            <mat-icon>refresh</mat-icon>
-          </button>
-        </div>
-
         <div class="tab-content">
-          <!-- Application Overview -->
+          <!-- Application Overview Card -->
           <div class="overview-section">
-            <div class="app-info">
-              <div class="app-dir-row" style="display: flex; align-items: center; justify-content: space-between;">
-                <h3 style="margin: 0; color: white;">Application: <span class="app-dir" style="color: white;">{{ applicationStatus.name }}</span></h3>
-                <span class="toolsdir-display" style="margin-left: 24px; font-size: 1rem; color: white;">Tools: <strong style="color: white;">{{ applicationStatus.toolsdir }}</strong></span>
-                <mat-icon
-                  matTooltip="This is a ModusToolboxc Application.  A ModusToolbox application consists of multiple projects, each of which builds to an indepenent ELF file.  These ELF files are then combined into a single HEX file to program into the device.  Each project is represented by a project view which can be selected via the navigation bar above."
-                  class="application-help-icon"
-                  style="vertical-align: middle; cursor: pointer; margin-left: 8px;"
-                >help_outline</mat-icon>
-              </div>
-              <div class="app-status-row" style="display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 16px;">
-                <span class="status-label">Status:</span>
-                <span class="status-badge" [ngClass]="applicationStatus.valid ? 'status-valid' : 'status-invalid'">
-                  <mat-icon class="status-icon" [ngClass]="applicationStatus.valid ? 'icon-valid' : 'icon-invalid'">
-                    {{ applicationStatus.valid ? 'check_circle' : 'error' }}
-                  </mat-icon>
-                  <span class="status-text">{{ applicationStatus.valid ? 'ModusToolbox Project Loaded' : 'No ModusToolbox Project Loaded' }}</span>
-                </span>
-                <span class="status-date">Checked: {{ currentDate | date:'medium' }}</span>
-                
-                <!-- Configuration Selector aligned to the right -->
-                <div class="config-selector" style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
-                  <mat-form-field appearance="outline" style="width: 120px; font-size: 0.875rem;">
-                    <mat-label>Config</mat-label>
-                    <mat-select [value]="applicationStatus.configuration" (selectionChange)="onConfigurationChange($event.value)">
-                      @for (config of configurationOptions; track config) {
-                        <mat-option [value]="config">{{ config }}</mat-option>
+            <div class="app-info-card">
+              <!-- Header Section -->
+              <div class="app-header">
+                <div class="app-identity">
+                  <button mat-icon-button (click)="refreshApplicationData()" [disabled]="isLoading" matTooltip="Refresh application data" class="refresh-btn">
+                    <mat-icon>refresh</mat-icon>
+                  </button>
+                  <div class="app-details">
+                    <div class="app-name-section">
+                      <h2 class="app-name">{{ applicationStatus.name }}</h2>
+                      @if (applicationStatus.readme && applicationStatus.readme.length > 0) {
+                        <button mat-icon-button (click)="viewReadme()" [disabled]="running" matTooltip="View README.md" class="readme-btn">
+                          <mat-icon>description</mat-icon>
+                        </button>
                       }
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-icon
-                    matTooltip="Selecting a configuration causes the complete application to be built with that configuration. The configuration can either be Debug or Release. Selecting None causes no configuration to be specified. Therefore, the default from the make files will be used. Select none, and then edit the CONFIG value in each make file to get a mix of Debug and Release builds."
-                    class="config-help-icon"
-                    style="cursor: pointer; margin-left: 4px;"
-                  >help_outline</mat-icon>
+                    </div>
+                    <div class="app-paths">
+                      <div class="path-item">
+                        <mat-icon>folder</mat-icon>
+                        <span class="path-label">Application</span>
+                        <span class="path-value">{{ applicationStatus.name }}</span>
+                      </div>
+                      <div class="path-item">
+                        <mat-icon>build</mat-icon>
+                        <span class="path-label">Tools</span>
+                        <span class="path-value">{{ applicationStatus.toolsdir }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="app-controls">
+                  <div class="config-controls">
+                    <mat-form-field appearance="outline" class="config-field">
+                      <mat-label>Configuration</mat-label>
+                      <mat-select [value]="applicationStatus.configuration" (selectionChange)="onConfigurationChange($event.value)">
+                        @for (config of configurationOptions; track config) {
+                          <mat-option [value]="config">{{ config }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-icon
+                      matTooltip="Selecting a configuration causes the complete application to be built with that configuration. The configuration can either be Debug or Release."
+                      class="config-help-icon">
+                      help_outline
+                    </mat-icon>
+                  </div>
                 </div>
               </div>
-              
+            </div>
+            
+            <!-- Warning Messages -->
+            <div class="warning-messages">
               @if (applicationStatus.generalMessage && typeof applicationStatus.generalMessage === 'string') {
-                <div class="tasks-warning" style="margin-top: 1em; margin-bottom: 1em; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 12px; display: flex; align-items: center;">
-                  <mat-icon color="warn" style="margin-right: 8px;">warning</mat-icon>
-                  <span style="flex: 1; font-weight: 500; color: #856404;">{{ applicationStatus.generalMessage }}</span>
-                  <mat-icon
-                    matTooltip="This is an important message related to your application."
-                    class="tasks-help-icon"
-                    style="cursor: pointer; margin-right: 8px; color: #856404;"
-                  >help_outline</mat-icon>
-                  <button mat-raised-button color="primary" (click)="handleGeneralMessageButton()" [disabled]="running">
-                    {{ applicationStatus.generalMessageButtonText || 'Take Action' }}
-                  </button>
+                <div class="warning-card general-warning">
+                  <div class="warning-content">
+                    <mat-icon class="warning-icon">warning</mat-icon>
+                    <div class="warning-text">
+                      <span class="warning-message">{{ applicationStatus.generalMessage }}</span>
+                    </div>
+                    <button mat-raised-button color="primary" (click)="handleGeneralMessageButton()" [disabled]="running" class="warning-action">
+                      {{ applicationStatus.generalMessageButtonText || 'Take Action' }}
+                    </button>
+                  </div>
                 </div>
               }
               
               @if (applicationStatus.needVSCode) {
-                <div class="tasks-warning" style="margin-top: 1em; margin-bottom: 1em; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 12px; display: flex; align-items: center;">
-                  <mat-icon color="warn" style="margin-right: 8px;">warning</mat-icon>
-                  <span style="flex: 1; font-weight: 500; color: #856404;">This application has not been setup to run in VS Code. Press the Prepare For VSCode button to prepare this application.</span>
-                  <mat-icon
-                    matTooltip="The ModusToolbox Assistant needs to prepare this application for VS Code before tasks and other features are available."
-                    class="tasks-help-icon"
-                    style="cursor: pointer; margin-right: 8px; color: #856404;"
-                  >help_outline</mat-icon>
-                  <button mat-raised-button color="primary" (click)="prepareVSCode()" [disabled]="running">Prepare For VSCode</button>
+                <div class="warning-card vscode-warning">
+                  <div class="warning-content">
+                    <mat-icon class="warning-icon">warning</mat-icon>
+                    <div class="warning-text">
+                      <span class="warning-message">This application has not been setup to run in VS Code. Prepare this application to enable VS Code features.</span>
+                    </div>
+                    <button mat-raised-button color="primary" (click)="prepareVSCode()" [disabled]="running" class="warning-action">
+                      Prepare For VSCode
+                    </button>
+                  </div>
                 </div>
               } @else if (applicationStatus.vscodeTasksStatus !== 'good') {
-                <div class="tasks-warning" style="margin-top: 1em; margin-bottom: 1em; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 12px; display: flex; align-items: center;">
-                  <mat-icon color="warn" style="margin-right: 8px;">warning</mat-icon>
-                  <span style="flex: 1; font-weight: 500; color: #856404;">
-                    @if (applicationStatus.vscodeTasksStatus === 'missing') {
-                      The VS Code tasks.json file is missing.  Press 'Fix Tasks' to create a new tasks file with the required tasks.
-                    } @else if (applicationStatus.vscodeTasksStatus === 'corrupt') {
-                      The .vscode file is corrupt and cannot be read.  Press 'Fix Tasks' to create a new tasks file.
-                    } @else {
-                      Some required VS Code tasks are missing or incorrect.  Press the 'Fix Tasks' button to add and/or update these tasks.
-                    }
-                  </span>
-                  <mat-icon
-                    matTooltip="The ModusToolbox Assistant relies on specific tasks to be available in the VS Code tasks.json file.  Press the 'Fix Tasks' button to generate any of these that are missing."
-                    class="tasks-help-icon"
-                    style="cursor: pointer; margin-right: 8px; color: #856404;"
-                  >help_outline</mat-icon>
-                  <button mat-raised-button color="primary" (click)="fixTasks()" [disabled]="running">Fix Tasks</button>
+                <div class="warning-card tasks-warning">
+                  <div class="warning-content">
+                    <mat-icon class="warning-icon">warning</mat-icon>
+                    <div class="warning-text">
+                      <span class="warning-message">
+                        @if (applicationStatus.vscodeTasksStatus === 'missing') {
+                          VS Code tasks.json file is missing. Create required tasks file.
+                        } @else if (applicationStatus.vscodeTasksStatus === 'corrupt') {
+                          VS Code tasks file is corrupt. Create a new tasks file.
+                        } @else {
+                          Some VS Code tasks are missing or incorrect. Update tasks configuration.
+                        }
+                      </span>
+                    </div>
+                    <button mat-raised-button color="primary" (click)="fixTasks()" [disabled]="running" class="warning-action">
+                      Fix Tasks
+                    </button>
+                  </div>
                 </div>
               }
               
               @if (applicationStatus.vscodeSettingsStatus !== 'good') {
-                <div class="settings-warning" style="margin-top: 1em; margin-bottom: 1em; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 12px; display: flex; align-items: center;">
-                  <mat-icon color="warn" style="margin-right: 8px;">warning</mat-icon>
-                  <span style="flex: 1; font-weight: 500; color: #856404;">
-                    @if (applicationStatus.vscodeSettingsStatus === 'missing') {
-                      The VS Code settings.json file is missing.  Press 'Fix Settings' to create a new settings file with the required settings.
-                    } @else if (applicationStatus.vscodeSettingsStatus === 'corrupt') {
-                      The .vscode settings file is corrupt and cannot be read.  Press 'Fix Settings' to create a new settings file.
-                    } @else {
-                      Some required VS Code settings are missing or incorrect.  Press the 'Fix Settings' button to add and/or update these settings.
-                    }
-                  </span>
-                  <mat-icon
-                    matTooltip="The ModusToolbox Assistant relies on specific settings to be available in the VS Code settings.json file.  Press the 'Fix Settings' button to generate any of these that are missing."
-                    class="settings-help-icon"
-                    style="cursor: pointer; margin-right: 8px; color: #856404;"
-                  >help_outline</mat-icon>
-                  <button mat-raised-button color="primary" (click)="fixSettings()" [disabled]="running">Fix Settings</button>
-                </div>
-              }
-              
-              <!-- Application Build & Tool Actions -->
-              @if (applicationStatus.valid) {
-                <div class="app-build-actions app-build-actions-flex">
-                  <div class="app-build-actions-left">
-                    <button mat-raised-button class="app-build-btn build-btn" (click)="buildApplication()" [disabled]="running">
-                      <mat-icon>build</mat-icon>
-                      Build
-                    </button>
-                    <button mat-raised-button class="app-build-btn rebuild-btn" (click)="rebuildApplication()" [disabled]="running">
-                      <mat-icon>refresh</mat-icon>
-                      Rebuild
-                    </button>
-                    <button mat-raised-button class="app-build-btn clean-btn" (click)="cleanApplication()" [disabled]="running">
-                      <mat-icon>cleaning_services</mat-icon>
-                      Clean
-                    </button>
-                    <button mat-raised-button class="app-build-btn erase-btn" (click)="eraseApplication()" [disabled]="running">
-                      <mat-icon>delete</mat-icon>
-                      Erase
-                    </button>
-                    <button mat-raised-button class="app-build-btn program-btn" 
-                            (click)="programApplication()" 
-                            [disabled]="running">
-                      <mat-icon>download</mat-icon>
-                      Program
-                    </button>
-                    <button mat-raised-button class="app-build-btn readme-btn" (click)="viewReadme()" [disabled]="running">
-                      <mat-icon>description</mat-icon>
-                      README.md
+                <div class="warning-card settings-warning">
+                  <div class="warning-content">
+                    <mat-icon class="warning-icon">warning</mat-icon>
+                    <div class="warning-text">
+                      <span class="warning-message">
+                        @if (applicationStatus.vscodeSettingsStatus === 'missing') {
+                          VS Code settings.json file is missing. Create required settings file.
+                        } @else if (applicationStatus.vscodeSettingsStatus === 'corrupt') {
+                          VS Code settings file is corrupt. Create a new settings file.
+                        } @else {
+                          Some VS Code settings are missing or incorrect. Update settings configuration.
+                        }
+                      </span>
+                    </div>
+                    <button mat-raised-button color="primary" (click)="fixSettings()" [disabled]="running" class="warning-action">
+                      Fix Settings
                     </button>
                   </div>
-                  <span class="app-build-actions-spacer"></span>
-                  <div class="app-build-actions-right">
-                    <button mat-raised-button class="app-build-btn device-configurator-btn" (click)="openDeviceConfigurator()" [disabled]="running">
-                      <mat-icon>settings_input_component</mat-icon>
-                      Device Configurator
-                    </button>
-                    <button mat-raised-button class="app-build-btn library-manager-btn" (click)="openLibraryManager()" [disabled]="running">
-                      <mat-icon>library_books</mat-icon>
-                      Library Manager
-                    </button>
+                </div>
+              }
+            </div>
+
+            <!-- Actions Section -->
+            @if (applicationStatus.valid) {
+              <div class="actions-section">
+                <!-- Build Actions -->
+                <div class="action-group">
+                  <div class="action-buttons-container">
+                    <div class="action-buttons">
+                      <button mat-raised-button class="action-btn primary-action" (click)="buildApplication()" [disabled]="running">
+                        <mat-icon>build</mat-icon>
+                        Build
+                      </button>
+                      <button mat-raised-button class="action-btn" (click)="rebuildApplication()" [disabled]="running">
+                        <mat-icon>refresh</mat-icon>
+                        Rebuild
+                      </button>
+                      <button mat-raised-button class="action-btn" (click)="cleanApplication()" [disabled]="running">
+                        <mat-icon>cleaning_services</mat-icon>
+                        Clean
+                      </button>
+                      <button mat-raised-button 
+                              class="action-btn" 
+                              (click)="eraseApplication(isEraseAll)" 
+                              (contextmenu)="openEraseMenu($event)" 
+                              [disabled]="running"
+                              matTooltip="Erase the device. Right-click to choose between Erase (internal memory only) and Erase All (internal and external memory).">
+                        <mat-icon>delete</mat-icon>
+                        {{ isEraseAll ? 'Erase All' : 'Erase' }}
+                      </button>
+                      <div style="position: relative; display: inline-block;">
+                        <button id="hiddenEraseTrigger" [style.visibility]="'hidden'" [style.position]="'absolute'" 
+                                [matMenuTriggerFor]="eraseMenu" 
+                                #eraseMenuTrigger="matMenuTrigger"></button>
+                        <mat-menu #eraseMenu="matMenu" [hasBackdrop]="true">
+                          <button mat-menu-item (click)="toggleEraseMode(false)">
+                            <mat-icon>{{ !isEraseAll ? 'check' : '' }}</mat-icon>
+                            <span>Erase</span>
+                          </button>
+                          <button mat-menu-item (click)="toggleEraseMode(true)">
+                            <mat-icon>{{ isEraseAll ? 'check' : '' }}</mat-icon>
+                            <span>Erase All</span>
+                          </button>
+                        </mat-menu>
+                      </div>
+                      <button mat-raised-button 
+                              class="action-btn program-action" 
+                              (click)="programApplication(isQuickProgram)" 
+                              (contextmenu)="openProgramMenu($event)" 
+                              [disabled]="running"
+                              matTooltip="Program the device. Right-click to choose between Program and Quick Program modes.">
+                        <mat-icon>download</mat-icon>
+                        {{ isQuickProgram ? 'Quick Program' : 'Program' }}
+                      </button>
+                      <div style="position: relative; display: inline-block;">
+                        <button id="hiddenProgramTrigger" [style.visibility]="'hidden'" [style.position]="'absolute'" 
+                                [matMenuTriggerFor]="programMenu" 
+                                #programMenuTrigger="matMenuTrigger"></button>
+                        <mat-menu #programMenu="matMenu" [hasBackdrop]="true">
+                          <button mat-menu-item (click)="toggleProgramMode(false)">
+                            <mat-icon>{{ !isQuickProgram ? 'check' : '' }}</mat-icon>
+                            <span>Program</span>
+                          </button>
+                          <button mat-menu-item (click)="toggleProgramMode(true)">
+                            <mat-icon>{{ isQuickProgram ? 'check' : '' }}</mat-icon>
+                            <span>Quick Program</span>
+                          </button>
+                        </mat-menu>
+                      </div>
+                    <div class="config-buttons">
+                      <button mat-raised-button class="action-btn" (click)="openDeviceConfigurator()" [disabled]="running">
+                        <mat-icon>settings_input_component</mat-icon>
+                        Configure Device
+                      </button>
+                      <button mat-raised-button class="action-btn" (click)="openLibraryManager()" [disabled]="running">
+                        <mat-icon>library_books</mat-icon>
+                        Configure Middleware
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Task Selection Row -->
+                <!-- Quick Tasks -->
                 @if (availableTasks && availableTasks.length > 0) {
-                  <div class="task-selection-row" style="display: flex; align-items: center; margin-top: 16px; gap: 12px; flex-wrap: wrap;">
-                    <span style="font-size: 20px;font-weight: 500; color: #1976d2;">I want to ...</span>
-                    @for (task of availableTasks; track task.description) {
-                      <button mat-raised-button 
-                              class="task-btn" 
-                              (click)="onTaskSelection(task.description)" 
-                              [disabled]="running"
-                              style="margin: 2px;">
-                        {{ task.description }}
-                      </button>
-                    }
+                  <div class="action-group">
+                    <h3 class="action-group-title">
+                      <mat-icon>flash_on</mat-icon>
+                      Quick Tasks
+                    </h3>
+                    <div class="task-buttons">
+                      @for (task of availableTasks; track task.description) {
+                        <button mat-raised-button 
+                                class="task-btn" 
+                                (click)="onTaskSelection(task.description)" 
+                                [disabled]="running">
+                          {{ task.description }}
+                        </button>
+                      }
+                    </div>
                   </div>
                 }
-              }
-            </div>
+                </div>
+              </div>
+            }
           </div>
 
           <!-- Memory Usage Section -->

@@ -15,4 +15,7 @@ Normalized the direction of the slashes in the project creator.
 ### 2.0.3
 Updated how external documents are opened to use the vscode capabilites.
 
-
+### 2.0.4
+Cleaned up the application view to reduce the amount of space used.
+Updated the Erase action button to have a context menu so you can select between Erase and Erase All tasks.
+Updated the Program action button to have a context menu so you can select between Program and Quick Program tasks.

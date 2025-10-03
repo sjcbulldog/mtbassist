@@ -272,8 +272,14 @@ export class VSCodeWorker extends EventEmitter  {
             case 'program':
                 ret.task = `Build & Program`;
                 break ;
-            case 'erase':
+            case 'quick-program':
+                ret.task = `Quick Program`;
+                break ;
+            case 'erase-all':
                 ret.task = `Erase All`;
+                break ;
+            case 'erase':
+                ret.task = `Erase Device`;
                 break ;
             default:
                 ret = { task: '', project: undefined } ;

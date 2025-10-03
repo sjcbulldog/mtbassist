@@ -277,6 +277,7 @@ export interface Project {
 export interface ApplicationStatusData {
   valid: boolean ;
   name: string;
+  readme: string ;
   toolsdir: string;
   vscodeTasksStatus: MTBVSCodeTaskStatus ;
   vscodeSettingsStatus: MTBVSCodeSettingsStatus ;
