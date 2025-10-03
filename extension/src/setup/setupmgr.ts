@@ -697,9 +697,30 @@ export class SetupMgr extends MtbManagerBase {
 
     private installFeatureLinux(id: string, version: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            setTimeout(() => { resolve(); }, 2000) ;
-        });
-        return ret;
+            let props = this.toollist_.getToolByFeature(id) ;
+            if (!props) {
+                this.logger.error(`No tool found for feature ${id}`);
+                resolve() ;
+                return ;
+            }
+
+            let attrs = this.findAttributes(props, version) ;
+
+            let cmdstr = 'installOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
+            let addargs : string[] = [] ;
+            this.launcher_.run(['-idc.service', cmdstr, ...addargs], this.downloadCallback.bind(this), id)
+            .then((result) => {
+                if (!result) {
+                    reject(new Error(`Failed to install feature ${id} - ${version}`));
+                    return;
+                }
+                resolve();
+            })
+            .catch((err) => {
+                reject(err);
+            });  
+        }) ;
+        return ret;      
     }
 
     private installFeatureWin32(id: string, version: string) : Promise<void> {

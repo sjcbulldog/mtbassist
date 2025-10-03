@@ -1666,7 +1666,14 @@ export class MTBAssistObject {
 
     private open(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            let uri = vscode.Uri.file(request.data.location);
+            let uri : vscode.Uri ;
+
+            if (request.data.location.startsWith('http') || request.data.location.startsWith('https:')) {
+                uri = vscode.Uri.parse(request.data.location) ;
+            }
+            else {
+                uri = vscode.Uri.file(request.data.location);
+            }
             this.showWebContent(uri) ;
             resolve();
         });
