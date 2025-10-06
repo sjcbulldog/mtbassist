@@ -102,7 +102,7 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "copydist": "copyfiles ../content/single-dist/index.html content",
-    "copyshared": "cp ../content/src/comms.ts src",
+    "copyshared": "shx cp ../content/src/comms.ts src",
     "copy": "npm run copydist && npm run copyshared",
     "content": "cd ../content && npm run build",
     "build": "npm run content && npm run copy && npm run compile"
@@ -121,6 +121,7 @@
     "copyfiles": "^2.4.1",
     "eslint": "^8.20.0",
     "mocha": "^10.0.0",
+    "shx": "^0.4.0",
     "ts-loader": "^9.3.1",
     "typescript": "^4.7.4",
     "webpack": "^5.74.0",
