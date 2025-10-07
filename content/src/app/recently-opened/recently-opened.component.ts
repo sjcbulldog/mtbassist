@@ -89,6 +89,16 @@ export class RecentlyOpenedComponent implements OnInit, OnDestroy {
 			if (!groups[label]) groups[label] = [];
 			groups[label].push(entry);
 		}
+		
+		// Sort entries within each group from most recent to least recent
+		for (const label in groups) {
+			groups[label].sort((a, b) => {
+				const dateA = new Date(a.lastopened).getTime();
+				const dateB = new Date(b.lastopened).getTime();
+				return dateB - dateA; // Most recent first (descending order)
+			});
+		}
+		
 		// Sort groups: Last Day, Last Week, then months descending
 		const result: GroupedRecents[] = [];
 		if (groups['Last Day']) result.push({ label: 'Last Day', entries: groups['Last Day'], collapsed: false });
