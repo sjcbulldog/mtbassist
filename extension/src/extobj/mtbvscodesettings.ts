@@ -2,106 +2,124 @@ import { ModusToolboxEnvironment } from "../mtbenv";
 import * as fs from 'fs' ;
 import * as winston from 'winston';
 import { MTBVSCodeSettingsStatus } from "../comms";
+import { MTBAssistObject } from "./mtbassistobj";
 
 export class MTBVSCodeSettings {
 
     private static readonly openocdGUID = 'c0688bed-ec45-4dab-9521-10f5283a6ead' ;
     private static readonly gccGUID = '8472a194-a4ec-4c1b-bfda-b6fca90b3f0d' ;
 
-    private env_: ModusToolboxEnvironment ;
-    private filename_ : string ;
-    private logger_ : winston.Logger ;
+    private ext_: MTBAssistObject ;
     private status_ : MTBVSCodeSettingsStatus = 'missing' ;
     private settings_ : any = {} ;
 
-    constructor(env: ModusToolboxEnvironment, logger: winston.Logger, filename: string) {
-        this.env_ = env ;
-        this.logger_ = logger ;
-        this.filename_ = filename ;
-        this.processSettingsFile() ;
+    constructor(ext: MTBAssistObject,) {
+        this.ext_ = ext ;
     }
 
     public get status() : MTBVSCodeSettingsStatus {
-        this.processSettingsFile() ;
+        this.processAllSettingsFile() ;
         return this.status_ ;
     }
 
     public fix() : void {
-        let dir = this.env_.toolsDir ;
+        for(let file of this.getAllSettingsFiles()) {
+            this.fixSettingsFile(file) ;
+        }
+    }
+
+    private getAllSettingsFiles() : string[] {
+        let ret : string[] = [] ;
+        if (this.ext_.env!.appInfo) {
+            let setfile = `${this.ext_.env!.appInfo.appdir}/.vscode/settings.json` ;
+            ret.push(setfile) ;
+
+            for(let proj of this.ext_.env!.appInfo.projects) {
+                let setfile = `${proj.path}/.vscode/settings.json` ;
+                ret.push(setfile) ;
+            }
+        }
+        return ret ;
+    }
+
+    private fixSettingsFile(filename: string) {
+        let dir = this.ext_.toolsDir ;
         this.settings_['modustoolbox.toolsPath'] = dir ;
 
-        let tool = this.env_.toolsDB.findToolByGUID(MTBVSCodeSettings.openocdGUID) ;
+        let tool = this.ext_.env!.toolsDB.findToolByGUID(MTBVSCodeSettings.openocdGUID) ;
         if (tool) {
             dir = tool.path ;
             this.settings_['cortex-debug.openocdPath'] = dir ;
         }
 
-        tool = this.env_.toolsDB.findToolByGUID(MTBVSCodeSettings.gccGUID) ;
+        tool = this.ext_.env!.toolsDB.findToolByGUID(MTBVSCodeSettings.gccGUID) ;
         if (tool) {
             dir = tool.path ;
             this.settings_['cortex-debug.gccPath'] = dir ;
         }
 
-        fs.writeFileSync(this.filename_, JSON.stringify(this.settings_, null, 4), 'utf8') ;
-        this.logger_.info(`VS Code settings updated in ${this.filename_}`) ;
-        this.processSettingsFile() ;
+        fs.writeFileSync(filename, JSON.stringify(this.settings_, null, 4), 'utf8') ;
+        this.ext_.logger.info(`VS Code settings updated in ${filename}`) ;
+        this.processAllSettingsFile() ;
     }
 
-    private processSettingsFile() : void {
-        if (fs.existsSync(this.filename_)) {
-            let data = fs.readFileSync(this.filename_, 'utf8') ;
+    private processAllSettingsFile() {
+        this.status_ = 'good' ;
+        for(let file of this.getAllSettingsFiles()) {
+            let stat = this.processSettingsFile(file) ;
+            if (stat !== 'good') {
+                this.status_ = stat ;
+                return ;
+            }
+        }
+    }
+
+    private processSettingsFile(filename: string) : MTBVSCodeSettingsStatus {
+        let ret = 'missing' as MTBVSCodeSettingsStatus ;
+        if (fs.existsSync(filename)) {
+            let data = fs.readFileSync(filename, 'utf8') ;
             try {
                 data = data.replace(/\\"|"(?:\\"|[^"])*"|(\/\/.*|\/\*[\s\S]*?\*\/)/g, (m, g) => g ? "" : m);
                 this.settings_ = JSON.parse(data) ;
-                let dir = this.env_.toolsDir ;
+                let dir = this.ext_.env!.toolsDir ;
                 if (!dir) {
-                    this.status_ = 'missing' ;
-                    return ;
+                    return 'missing' ;
                 }
 
                 if (!this.checkSetting('modustoolbox.toolsPath', dir)) {
-                    this.status_ = 'needsSettings' ;
-                    return ;
+                    return 'needsSettings' ;
                 }
 
-                let tool = this.env_.toolsDB.findToolByGUID(MTBVSCodeSettings.openocdGUID) ;
+                let tool = this.ext_.env!.toolsDB.findToolByGUID(MTBVSCodeSettings.openocdGUID) ;
                 if (!tool) {
                     // Should not happen
-                    this.status_ = 'missing' ;
-                    return ;
+                    return 'missing' ;
                 }
 
                 dir = tool.path ;
                 if (!this.checkSetting('cortex-debug.openocdPath', dir)) {
-                    this.status_ = 'needsSettings' ;
-                    return ;
+                    return 'needsSettings' ;
                 }
 
-                tool = this.env_.toolsDB.findToolByGUID(MTBVSCodeSettings.gccGUID) ;
+                tool = this.ext_.env!.toolsDB.findToolByGUID(MTBVSCodeSettings.gccGUID) ;
                 if (!tool) {
                     // Should not happen
-                    this.status_ = 'missing' ;
-                    return ;
+                    return 'missing' ;
                 }
                 dir = tool.path ;
                 if (!this.checkSetting('cortex-debug.gccPath', dir)) {
-                    this.status_ = 'needsSettings' ;
-                    return ;
+                    return 'needsSettings' ;
                 }
 
-                this.status_ = 'good' ;
+                ret = 'good' ;
 
             }
             catch (e) {
-                this.status_ = 'missing' ;
-                this.logger_.error(e) ;
-                this.status_ = 'corrupt' ;
+                this.ext_.logger.error(e) ;
+                ret = 'corrupt' ;
             }
         }
-        else {
-            this.status_ = 'missing' ;
-            return ;
-        }
+        return ret ;
     }
 
     private checkSetting(name: string, value: string) : boolean {

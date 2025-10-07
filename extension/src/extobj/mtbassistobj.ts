@@ -362,7 +362,7 @@ export class MTBAssistObject {
         this.sendMessageWithArgs('sendAllBSPsExceptEAP', this.getAllBspExceptEAPInfo());
     }
 
-    private setupAuxiliaryStuff() : Promise<void> {
+    private setupAuxiliaryStuffAlt() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             let parray: any[] = [];
             let p: Promise<void>;
@@ -393,6 +393,19 @@ export class MTBAssistObject {
 
         });
         return ret;
+    }
+
+    private setupAuxiliaryStuff() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            //
+            // This is a bit of a hack, but we need to give VSCode a bit of time to settle down after telling the webview
+            // to show the MTB view.  Showing the MTB view will cause the UI to ask for data.  We want those requests to
+            // be services before this function runs.
+            //
+            setTimeout(() => {
+                this.setupAuxiliaryStuffAlt().then(() => { resolve() ; }).catch((error: Error) => { reject(error) ; }); }, 250) ;
+        }) ;
+        return ret ;
     }
 
     private initDeviceDB() : Promise<void> {
@@ -683,8 +696,7 @@ export class MTBAssistObject {
 
                         this.createVSCodeTaskManager() ;
 
-                        let p = path.join(this.env_!.appInfo!.appdir, '.vscode', 'settings.json');
-                        this.vscodeSettings_ = new MTBVSCodeSettings(this.env_!, this.logger_, p);
+                        this.vscodeSettings_ = new MTBVSCodeSettings(this);
 
                         this.getLaunchData()
                             .then(() => {

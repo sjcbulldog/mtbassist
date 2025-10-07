@@ -172,8 +172,7 @@ export abstract class VSCodeTaskGenerator {
         if (matcher) {
             if (project) {
                 let matchobj = {
-                    "base" : "$gcc",
-                    "fileLocation" : ["relative", "${workspaceRoot}/" + project]
+                    "base" : "$gcc"
                 } ;
                 task.problemMatcher = matchobj ;                
             }
