@@ -25,6 +25,7 @@ import * as vscode from 'vscode';
 export class MTBSettings extends EventEmitter {
     public static operatingModeOnline = 'direct' ;
     public static operatingModeLocalContent = 'local' ;
+    public static perProject = 'Per Project' ;
     private static defaultManifestURL = '' ;    
     private static chinaManifestURL = 'https://mtbgit.infineon.cn/raw/Infineon/mtb-super-manifest/main/mtb-super-manifest-fv2-mirror.xml' ;
     private static chinaGitInsteadof = 'https://mtbgit.infineon.cn/raw/Infineon/mtb-super-manifest/main/mtb-super-manifest-fv2-mirror.xml|https://github.com|https://mtbgit.infineon.cn' ;
@@ -52,7 +53,7 @@ export class MTBSettings extends EventEmitter {
             displayName: 'Configuration',
             owner: 'workspace',
             type: 'choice',
-            choices: [ 'Debug', 'Release', 'Per Project'],
+            choices: [ 'Debug', 'Release', MTBSettings.perProject],
             value: 'Debug',
             description: 'This is the configuration to use when building the application. (Workspace scope: applies only to this open workspace)'
         },           
@@ -61,7 +62,8 @@ export class MTBSettings extends EventEmitter {
             displayName: 'Toolchain',
             owner: 'workspace',
             type: 'choice',
-            choices: [ 'GCC_ARM', 'ARM', 'IAR', 'LLVM_ARM'],
+            choices: [ 'GCC_ARM', 'ARM', 'IAR', 'LLVM_ARM', MTBSettings.perProject
+            ],
             value: 'GCC_ARM',
             description: 'This is the toolchain to use when building the application. (Workspace scope: applies only to this open workspace)'
         },   
@@ -318,6 +320,7 @@ export class MTBSettings extends EventEmitter {
                         this.emit('showError', setting.name, 'The LLVM toolchain was selected but the LLVM path is not set correctly.  Please update the LLVM path setting or the build will not be successful.') ;
                     }
                     else {
+                        this.emit('updateTasks') ;
                         this.emit('showError', 'llvmpath', undefined) ;
                     }
                 }
@@ -327,10 +330,12 @@ export class MTBSettings extends EventEmitter {
                         this.emit('showError', setting.name, 'The ARM toolchain was selected but the ARM path is not set correctly.  Please update the ARM path setting before selecting the ARM toolchain.') ;
                     }
                     else {
+                        this.emit('updateTasks') ;                        
                         this.emit('showError', 'armccpath', undefined) ;
                     }
                 }
                 else {
+                    this.emit('updateTasks') ;                    
                     this.emit('showError', 'toolchain', undefined) ;
                 }
                 this.emit('updateTasks', null) ;

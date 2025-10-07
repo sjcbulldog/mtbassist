@@ -14,10 +14,8 @@
 
 import * as fs from 'fs' ;
 import * as path from 'path' ;
-import { ModusToolboxEnvironment } from '../mtbenv';
 import * as winston from 'winston';
 import { MTBVSCodeTaskStatus } from '../comms';
-import { MTBSettings } from '../extobj/mtbsettings';
 import { VSCodeTaskGenerator } from './vscodetaskgen';
 
 export class VSCodeTasks

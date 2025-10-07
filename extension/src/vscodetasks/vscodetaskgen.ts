@@ -42,42 +42,71 @@ export abstract class VSCodeTaskGenerator {
 
         let setting = this.settings_.settingByName('toolchain') ;
         if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0) {
-            args = 'TOOLCHAIN=' + setting.value ;
+            let settings: MTBSetting | undefined ;
+
+            if (setting && setting.value && typeof setting.value === 'string' && setting.value !== MTBSettings.perProject) {
+                args = 'TOOLCHAIN=' + setting.value ;
+            }
 
             switch(setting.value) {
             case 'GCC_ARM':
-                let gccsetting: MTBSetting | undefined = this.settings_.settingByName('gccpath') ;
-                p = (gccsetting!.value as string).replace(/\\/g, '/') ;                  
-                if (gccsetting && gccsetting.value && typeof gccsetting.value === 'string' && gccsetting.value.length > 0) {
+                setting = this.settings_.settingByName('gccpath') ;
+                p = (setting!.value as string).replace(/\\/g, '/') ;                  
+                if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0) {
                     args += ` CY_COMPILER_GCC_ARM_DIR=${p}` ;
                 }
                 break ;
+
             case 'IAR':
-                let iarsetting: MTBSetting | undefined = this.settings_.settingByName('iarpath') ;
-                p = (iarsetting!.value as string).replace(/\\/g, '/') ;
-                if (iarsetting && iarsetting.value && typeof iarsetting.value === 'string' && iarsetting.value.length > 0) {
+                setting = this.settings_.settingByName('iarpath') ;
+                p = (setting!.value as string).replace(/\\/g, '/') ;
+                if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0) {
                     args += ` CY_COMPILER_IAR_DIR=${p}` ;
                 }
                 break ;
+
             case 'ARM':
-                let armccsetting: MTBSetting | undefined = this.settings_.settingByName('armccpath') ;
-                p = (armccsetting!.value as string).replace(/\\/g, '/') ;
-                if (armccsetting && armccsetting.value && typeof armccsetting.value === 'string' && armccsetting.value.length > 0) {
+                setting = this.settings_.settingByName('armccpath') ;
+                p = (setting!.value as string).replace(/\\/g, '/') ;
+                if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0) {
                     args += ` CY_COMPILER_ARM_DIR=${p}` ;
                 }
                 break ;
+
             case 'LLVM_ARM':
-                let llvmsetting: MTBSetting | undefined = this.settings_.settingByName('llvmpath') ;
-                p = (llvmsetting!.value as string).replace(/\\/g, '/') ;
-                if (llvmsetting && llvmsetting.value && typeof llvmsetting.value === 'string' && llvmsetting.value.length > 0) {
+                setting = this.settings_.settingByName('llvmpath') ;
+                p = (setting!.value as string).replace(/\\/g, '/') ;
+                if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0) {
                     args += ` CY_COMPILER_LLVM_ARM_DIR=${p}` ;
                 }
+                break ;
+            case 'PER PROJECT':
+                setting = this.settings_.settingByName('gccpath') ;
+                p = (setting!.value as string).replace(/\\/g, '/') ;    
+                if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0) {
+                    args += ` CY_COMPILER_GCC_ARM_DIR=${p}` ;
+                }
+                setting = this.settings_.settingByName('iarpath') ;
+                p = (setting!.value as string).replace(/\\/g, '/') ;
+                if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0) {
+                    args += ` CY_COMPILER_IAR_DIR=${p}` ;
+                }
+                setting = this.settings_.settingByName('armccpath') ;
+                p = (setting!.value as string).replace(/\\/g, '/') ;
+                if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0) {
+                    args += ` CY_COMPILER_ARM_DIR=${p}` ;
+                }
+                setting = this.settings_.settingByName('llvmpath') ;
+                p = (setting!.value as string).replace(/\\/g, '/') ;
+                if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0) {
+                    args += ` CY_COMPILER_LLVM_ARM_DIR=${p}` ;
+                }            
                 break ;
             }
         }
 
         setting = this.settings_.settingByName('configuration') ;
-        if (setting && setting.value && typeof setting.value === 'string' && setting.value.length > 0 && (setting.value === 'Debug' || setting.value === 'Release')) {
+        if (setting && setting.value && typeof setting.value === 'string' && setting.value !== MTBSettings.perProject) {
             args += ` CONFIG=${setting.value}` ;
         }
         return args ;
