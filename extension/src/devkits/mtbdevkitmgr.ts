@@ -275,7 +275,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                     let opt : MTBRunCommandOptions = {
                         toolspath: this.ext.toolsDir,
                     } ;
-                    ModusToolboxEnvironment.runCmdCaptureOutput(fwload, args, opt)
+                    ModusToolboxEnvironment.runCmdCaptureOutput(this.ext.logger, fwload, args, opt)
                         .then((result) => {
                             this.scanForDevKits()
                             .then((st: boolean) => {
@@ -332,7 +332,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                 let runopts: MTBRunCommandOptions = {
                     toolspath: this.ext.toolsDir,
                 } ;
-                ModusToolboxEnvironment.runCmdCaptureOutput(fwload, args, runopts)
+                ModusToolboxEnvironment.runCmdCaptureOutput(this.ext.logger, fwload, args, runopts)
                 .then((result) => {
                     this.scanForDevKits()
                     .then((st: boolean) => {
@@ -405,7 +405,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                 let opts : MTBRunCommandOptions = {
                     toolspath: this.ext.toolsDir,
                 };
-                ModusToolboxEnvironment.runCmdCaptureOutput(fwload, args, opts)
+                ModusToolboxEnvironment.runCmdCaptureOutput(this.ext.logger, fwload, args, opts)
                     .then((result) => { (async() => {
                             let res: [number, string[]] = result as [number, string[]] ;
                             if (res[0] !== 0 && !this.isNotConnected(res)) {
@@ -628,7 +628,7 @@ export class MTBDevKitMgr extends MtbManagerBase {
                 toolspath: this.ext.toolsDir,
             } ;
             //
-            ModusToolboxEnvironment.runCmdCaptureOutput(fwload, args, opts)
+            ModusToolboxEnvironment.runCmdCaptureOutput(this.ext.logger, fwload, args, opts)
             .then((result) => {
                 let res: [number, string[]] = result as [number, string[]] ;
                 if (res[0] !== 0) {

@@ -44,9 +44,10 @@ export interface AccessTokenResponse {
     response: string;
 }
 
-export interface DownloadInstallStatus {
-    success: boolean;
-    error: string | undefined;
+interface InstallRequest {
+    featureId: string;  
+    version: string;
+    password?: string;
 }
 
 export class SetupMgr extends MtbManagerBase {
@@ -76,6 +77,10 @@ export class SetupMgr extends MtbManagerBase {
     private mtbLocation_ : string | undefined = undefined ;
     private mtbTools_ : string | undefined = undefined ;
     private installed_ : Map<string, InstalledFeature[]> = new Map<string, InstalledFeature[]>() ;
+    private installQueue_ : InstallRequest[] = [] ;
+    private downloadErrors_ : boolean = false ;
+    private installErrors_ : boolean = false ;
+    private downloadCount_ : number = 0 ;
 
     constructor(ext: MTBAssistObject) {
         super(ext);
@@ -252,7 +257,7 @@ export class SetupMgr extends MtbManagerBase {
     public doWeNeedTools() : boolean {
         for(let f of SetupMgr.requiredFeatures) {
             if (!this.installed_.has(f)) {
-                this.logger.warn(`Missing required feature: ${f}`);
+                this.logger.info(`Missing required feature: ${f}`);
                 return true;
             }
         }
@@ -264,15 +269,10 @@ export class SetupMgr extends MtbManagerBase {
             this.logger.debug('Initializing Setup Manager...');
             this.startIDCService()
             .then((result) => {
-                if (!result) {
-                    resolve(false) ;
-                    return ;
-                }
-
                 this.logger.debug('Getting service port...');
-                this.getServicePort()
+                this.launcher_.getServicePort()
                 .then((port) => {
-                    if (!port) {
+                    if (port === -1) {
                         this.emit('setupError', 'Could not launch IDC service');
                         resolve(false);
                         return;
@@ -308,6 +308,10 @@ export class SetupMgr extends MtbManagerBase {
                 .catch((err) => {
                     reject(err) ;
                 }) ;
+            })
+            .catch((err) => {
+                // TODO: display error about starting service
+                reject(err) ;
             });
         });
 
@@ -424,21 +428,11 @@ export class SetupMgr extends MtbManagerBase {
         return ret ;
     }
 
-    private startIDCService() : Promise<boolean> {
-        let ret = new Promise<boolean>((resolve, reject) => {
-            this.isServiceRunning()
-            .then((isRunning) => {
-                if (isRunning) {
-                    resolve(true);
-                } else {
-                    this.launcher_.start()
-                    .then(() => {
-                        resolve(true);
-                    })
-                    .catch((err) => {
-                        reject(err);
-                    });
-                }
+    private startIDCService() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            this.launcher_.start()
+            .then(() => {
+                resolve();
             })
             .catch((err) => {
                 reject(err);
@@ -464,26 +458,24 @@ export class SetupMgr extends MtbManagerBase {
 
             let promises = [];
             for(let f of tools.map(t => t.featureId)) {
-                let p = this.downloadAndInstallFeature(f, passwd);
+                let p = this.downloadAndQueueInstallFeature(f, passwd);
                 promises.push(p);
             }
+            this.downloadCount_ = promises.length ;
 
             Promise.all(promises)
-            .then((status: DownloadInstallStatus[]) => {
-                let msg = '' ;
-                for(let s of status) {
-                    if (!s.success) {
-                        if (msg.length > 0) {
-                            msg += '<br><br>' ;
-                        }
-                        msg += s.error ;
+            .then(() => {
+                this.installAllQueuedPackages()
+                .then(() => {
+                    if (this.downloadErrors_ || this.installErrors_) {
+                        reject(new Error('One or more errors occurred during download or installation'));
+                    } else {
+                        resolve();
                     }
-                }
-                if (msg.length > 0) {
-                    reject(new Error('Some required tools did not install correctly<br><br>' + msg)) ;
-                    return ;
-                }
-                resolve();
+                })
+                .catch((err) => {
+                    reject(err);
+                });
             })
             .catch((err) => {
                 reject(err);
@@ -656,7 +648,7 @@ export class SetupMgr extends MtbManagerBase {
             let opts: MTBRunCommandOptions = {
                 stdout: sudopwd,
             };
-            ModusToolboxEnvironment.runCmdCaptureOutput(cmd, args, opts)
+            ModusToolboxEnvironment.runCmdCaptureOutput(this.logger, cmd, args, opts)
             .then((result) => {
                 if (!result || this.wasSucessful(result[1]) === false) {
                     if (result && this.isPasswordError(result[1])) {
@@ -768,21 +760,21 @@ export class SetupMgr extends MtbManagerBase {
         return ret;      
     }
 
-    private downloadAndInstallFeature(id: string, password: string | undefined)  : Promise<DownloadInstallStatus> {
-        let ret = new Promise<DownloadInstallStatus>((resolve, reject) => {
+    private downloadAndQueueInstallFeature(id: string, password: string | undefined)  : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
             this.emit('downloadProgress', id, 'Preparing...', 0);   
             let tool = this.toollist_.getToolByFeature(id);
             let version = this.findLatestVersion(tool) ;
             if (!version) {
                 let msg = `For feature ${id} no versions were detected` ;
                 this.logger.error(msg);
-                resolve({ success: false, error: msg }) ;
+                resolve() ;
             }
             else {
                 if (!this.accessToken_) {
                     let msg = 'No access token available for downloading feature' ;
                     this.logger.error(msg);
-                    resolve({ success: false, error: msg }) ;
+                    resolve() ;
                 }
                 else {
                     let cmdstr = 'downloadOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
@@ -795,30 +787,22 @@ export class SetupMgr extends MtbManagerBase {
                             let msg = `Failed to download feature ${id} - ${version}` ;
                             this.logger.error(msg);
                             this.emit('downloadProgress', id, 'Download Error', 100);   
-                            resolve({ success: false, error: msg }) ;
+                            this.downloadErrors_ = true ;
                         }
                         else {
                             this.logger.debug(`Feature ${id} version ${version} downloaded successfully.`);
                             this.logger.debug(`Installing feature ${id} version ${version}...`);
-                            this.emit('downloadProgress', id, 'Installing...', SetupMgr.downloadRatio * 100 );
-                            this.installFeature(id, version!.toString(), password)
-                            .then(() => {
-                                this.emit('downloadProgress', id, 'Complete', 100) ;
-                                let msg = `Feature ${id} version ${version} installed successfully.` ;
-                                this.logger.debug(msg);
-                                resolve({ success: true, error: msg });
-                            })
-                            .catch((err) => {
-                                let msg = `Error installing feature ${id} version ${version} - ${err.message}` ;
-                                this.logger.error(msg, err);
-                                resolve({ success: false, error: msg });
-                            });
+                            this.emit('downloadProgress', id, 'Waiting...', SetupMgr.downloadRatio * 100 );
+                            this.installQueue_.push({ featureId: id, version: version!.toString(), password: password }) ;
                         }
+
+                        this.downloadCount_-- ;
+                        resolve() ;
                     })
                     .catch((err) => {
                         let msg = `Error downloading feature ${id} - ${version}` ;
                         this.logger.error(msg, err);
-                        resolve({ success: false, error: msg });
+                        resolve();
                     });
                 }
             }
@@ -826,43 +810,40 @@ export class SetupMgr extends MtbManagerBase {
         return ret;
     }
 
-    private isServiceRunning() : Promise<boolean> {
-        let ret = new Promise<boolean>((resolve, reject) => {
-            this.getServicePort()
-            .then((result) => { 
-                if (!result || result === -1) {
-                    resolve(false) ;
-                }
-                resolve(true) ;
-            })
-            .catch((err) => { 
-                reject(err) ;
-            }) ;
+    private installAllQueuedPackages() : Promise<void> {
+        let ret = new Promise<void>(async (resolve, reject) => {
+            while (this.installQueue_.length > 0) {
+                await this.installNextPackage() ;
+            }
+            resolve() ;
         });
 
-        return ret;
+        return ret ;
     }
 
-    private getServicePort() : Promise<number | undefined> {
-        let ret = new Promise<number | undefined>((resolve, reject) => {
-            this.launcher_.run(['--port'])
-            .then((result) => {
-                if (!result) {
-                    resolve(undefined);
-                    return;
-                }
-
-                const port = parseInt(result.trim(), 10);
-                if (isNaN(port)) {
-                    resolve(undefined);
-                    return;
-                }
-
-                resolve(port);
-            });
-        });
-
-        return ret;
+    private async installNextPackage() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            if (this.installQueue_.length === 0) {
+                resolve() ;
+                return ;
+            }
+            let req = this.installQueue_.shift()! ;
+            this.emit('downloadProgress', req.featureId, 'Installing', 80) ;
+            this.installFeature(req.featureId, req.version, req.password)
+            .then(() => {
+                this.emit('downloadProgress', req.featureId, 'Complete', 100) ;
+                let msg = `Feature ${req.featureId} version ${req.version} installed successfully.` ;
+                this.logger.debug(msg);
+                resolve() ;
+            })
+            .catch((err) => {
+                let msg = `Error installing feature ${req.featureId} version ${req.version} - ${err.message}` ;
+                this.logger.error(msg, err);
+                this.installErrors_ = true ;
+                resolve() ;
+            });            
+        }) ;
+        return ret ;
     }
 
     private getAccessToken() : Promise<AccessTokenResponse | undefined> {

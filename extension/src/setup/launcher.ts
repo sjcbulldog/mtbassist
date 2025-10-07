@@ -39,10 +39,15 @@ export class IDCLauncher extends EventEmitter{
 
     private logger_ : winston.Logger ;
     private path_? : string ;
+    private servicePort_ : number = -1 ;
 
     constructor(logger: winston.Logger) {
         super() ;
         this.logger_ = logger;
+    }
+
+    public get servicePort() : number {
+        return this.servicePort_ ;
     }
 
     public get found(): boolean {
@@ -71,10 +76,6 @@ export class IDCLauncher extends EventEmitter{
         return ret ;
     }
 
-    public get isIDCServiceRunning(): boolean {
-        return false ;
-    }
-
     public run(args: string[], cb? : (lines: string[]) => void, id?: any) : Promise<string | undefined> {
         let ret = new Promise<string | undefined>((resolve, reject) => {
             if (!this.path_) {
@@ -87,7 +88,7 @@ export class IDCLauncher extends EventEmitter{
                 onOutput: cb,
                 id: id
             } ;
-            ModusToolboxEnvironment.runCmdCaptureOutput(this.path_!, args, opts)
+            ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, this.path_!, args, opts)
             .then((result) => {
                 if (result[0] !== 0) {
                     this.logger_.error(`IDC Launcher failed with exit code ${result[0]}`);
@@ -107,6 +108,33 @@ export class IDCLauncher extends EventEmitter{
         }) ;
         return ret ;
     }
+
+    public getServicePort() : Promise<number> {
+        let ret = new Promise<number>((resolve, reject) => {
+            if (this.servicePort_ !== -1) {
+                resolve(this.servicePort_) ;
+                return ;
+            }
+            this.run(['--port'])
+            .then((result) => {
+                if (!result) {
+                    resolve(-1);
+                    return;
+                }
+
+                const port = parseInt(result.trim(), 10);
+                if (isNaN(port)) {
+                    resolve(-1);
+                    return;
+                }
+
+                this.servicePort_ = port;
+                resolve(port);
+            });
+        });
+
+        return ret;
+    }    
 
     private getSystemDriveWindow() {
         return "C:\\" ;

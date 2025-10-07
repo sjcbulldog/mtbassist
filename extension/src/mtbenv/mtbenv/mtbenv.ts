@@ -73,7 +73,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
 
     private logger_ : winston.Logger ;  
 
-    public static getInstance(logger: winston.Logger, settings: MTBSettings, exedir?: string) : ModusToolboxEnvironment | null {
+    public static initInstance(logger: winston.Logger, settings: MTBSettings, exedir?: string) : ModusToolboxEnvironment | null {
         if (!ModusToolboxEnvironment.env_) {
             ModusToolboxEnvironment.env_ = new ModusToolboxEnvironment(logger, settings, exedir) ;
         }
@@ -89,6 +89,13 @@ export class ModusToolboxEnvironment extends EventEmitter {
             }
         }
 
+        return ModusToolboxEnvironment.env_ ;
+    }
+
+    public static getInstance() : ModusToolboxEnvironment {
+        if (!ModusToolboxEnvironment.env_) {
+            throw new Error('ModusToolboxEnvironment has not been initialized') ;
+        }
         return ModusToolboxEnvironment.env_ ;
     }
 
@@ -312,7 +319,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
         return ret;
     }
 
-    public static async runCmdCaptureOutput(cmd: string, args: string[], options: MTBRunCommandOptions) : Promise<[number, string[]]> {
+    public static async runCmdCaptureOutput(logger: winston.Logger, cmd: string, args: string[], options: MTBRunCommandOptions) : Promise<[number, string[]]> {
         let ret: Promise<[number, string[]]> = new Promise<[number, string[]]>((resolve, reject) => {
             let sofar = 0 ;
             let text: string = "" ;
@@ -333,7 +340,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 }
             }
 
-            if (!cyfound) {
+            if (!cyfound && options.toolspath) {
                 penv['CY_TOOLS_PATHS'] = options.toolspath ;
             }
 
@@ -355,14 +362,10 @@ export class ModusToolboxEnvironment extends EventEmitter {
                     windowsHide: true,
                 }) ;
 
-            if (options.stdout) {
-                if (cp.stdin) {
-                    for(let line of options.stdout) {
-                        cp.stdin.write(line + '\n') ;
-                    }
-                    cp.stdin.end() ;
-                }
-            }
+            cp.on('spawn', () => {
+                // Process has started
+                logger.debug(`Process started: ${cmd} ${args.join(' ')} - pid: ${cp.pid}`) ;
+            }) ;
 
             cp.stdout?.on('data', (data) => {
                 text += (data as Buffer).toString() ;
@@ -379,7 +382,9 @@ export class ModusToolboxEnvironment extends EventEmitter {
             cp.on('error', (err) => {
                 reject(err);
             }) ;
-            cp.on('close', (code) => {
+            cp.on('close', (code, signal) => {
+                logger.debug(`Process closed: ${cmd} ${args.join(' ')} - code: ${code}, signal: ${signal}`) ; 
+
                 if (!code) {
                     code = 0 ;
                 }
@@ -387,6 +392,22 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 let ret: string[] = text.split('\n') ;
                 resolve([code, ret]);
             });
+            cp.on('exit', (code, signal) => { 
+                logger.debug(`Process exited: ${cmd} ${args.join(' ')} - code: ${code}, signal: ${signal}`) ;                
+            });
+            cp.on('disconnect', () => {
+                // Handle disconnect if necessary
+                logger.debug(`Process disconnected: ${cmd} ${args.join(' ')}`) ;
+            }) ;
+
+            if (options.stdout) {
+                if (cp.stdin) {
+                    for(let line of options.stdout) {
+                        cp.stdin.write(line + '\n') ;
+                    }
+                    cp.stdin.end() ;
+                }
+            }            
         }) ;
 
         return ret;

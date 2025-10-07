@@ -394,7 +394,7 @@ export class LCSManager extends EventEmitter {
                 id: 'lcsmanager',
                 onOutput: cb,
             } ;
-            ModusToolboxEnvironment.runCmdCaptureOutput(cmd, args, opts)
+            ModusToolboxEnvironment.runCmdCaptureOutput(this.ext_.logger, cmd, args, opts)
                 .then((output) => {
                     resolve(output) ;
                 })

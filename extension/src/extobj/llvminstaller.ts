@@ -320,7 +320,7 @@ export class LLVMInstaller extends EventEmitter {
         return new Promise<void>((resolve, reject) => {
             msg = { error: false, messages: ['Installing LLVM compiler ...'] } ;
             this.emit('progress', msg) ;
-            ModusToolboxEnvironment.runCmdCaptureOutput('hdiutil', ['attach', '-nobrowse', '-readonly', files[0]], {})
+            ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, 'hdiutil', ['attach', '-nobrowse', '-readonly', files[0]], {})
             .then(result => {
                 if (result[0] !== 0) {
                     let msg = result[1].join('\n') ;
@@ -348,7 +348,7 @@ export class LLVMInstaller extends EventEmitter {
                 let dirname = path.basename(mountPoint) ;
                 let tpath = path.join(ppath, dirname) ;
                 let srcdir = path.join(mountPoint, dirname) ;
-                ModusToolboxEnvironment.runCmdCaptureOutput('cp', ['-R', srcdir, ppath], {})
+                ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, 'cp', ['-R', srcdir, ppath], {})
                 .then(result => {
                     if (result[0] !== 0) {
                         let msg = result[1].join('\n') ;
@@ -357,7 +357,7 @@ export class LLVMInstaller extends EventEmitter {
                     }
                     this.installPath_ = tpath ;
                     this.logger_.debug(`LLVM compiler installation on MacOS completed to ${this.installPath_}`);
-                    ModusToolboxEnvironment.runCmdCaptureOutput('hdiutil', ['detach', mountPoint], {})
+                    ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, 'hdiutil', ['detach', mountPoint], {})
                     .then(result => {
                         if (result[0] !== 0) {
                             let msg = result[1].join('\n') ;

@@ -419,7 +419,7 @@ export class MemoryUsageMgr {
 
             let args = [ '-l', elffile ] ;
             let options = { id: 'mtbassist.memoryusage' } ;
-            ModusToolboxEnvironment.runCmdCaptureOutput(this.gccReadElfTool_!, args, options)
+            ModusToolboxEnvironment.runCmdCaptureOutput(this.ext_.logger, this.gccReadElfTool_!, args, options)
             .then((result) => { 
                 if (result[0] !== 0) {
                     this.ext_.logger.error(`MemoryUsageMgr: ${this.gccReadElfTool_} exited with code ${result[0]}`) ;

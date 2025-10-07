@@ -214,7 +214,7 @@ export class VSCodeWorker extends EventEmitter  {
                     cwd: targetdir
                 } ;
 
-                ModusToolboxEnvironment.runCmdCaptureOutput(cliPath, args, opts)
+                ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, cliPath, args, opts)
                 .then(async (result) => {
                     if (gitAutoRepoDetect) {
                         await this.setAutoRepoDetect(true) ;
@@ -322,7 +322,7 @@ export class VSCodeWorker extends EventEmitter  {
                     onOutput: this.makeVSCodeCallback.bind(this),
                     cwd: p
                 };
-                ModusToolboxEnvironment.runCmdCaptureOutput(cliPath, args, opts)
+                ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, cliPath, args, opts)
                 .then((result) => {
                     resolve([0, [``]]);
                 })
@@ -390,7 +390,7 @@ export class VSCodeWorker extends EventEmitter  {
                     onOutput: this.dumpMakeOutput.bind(this),
                     cwd: p
                 };
-                ModusToolboxEnvironment.runCmdCaptureOutput(cliPath, args, opts)
+                ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, cliPath, args, opts)
                 .then((result) => {
                     resolve([0, [``]]);
                 })

@@ -601,7 +601,7 @@ export class MTBAssistObject {
         runtime.mark('initWithTools');
 
         let ret = new Promise<void>((resolve, reject) => {
-            this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_);
+            this.env_ = ModusToolboxEnvironment.initInstance(this.logger_, this.settings_);
             if (!this.env_) {
                 this.logger_.error('Failed to initialize ModusToolbox environment.');
                 return;
@@ -1891,7 +1891,7 @@ export class MTBAssistObject {
                 }).catch((error: Error) => {
                     flags = MTBLoadFlags.packs | MTBLoadFlags.tools;
                     ModusToolboxEnvironment.destroy() ;
-                    this.env_ = ModusToolboxEnvironment.getInstance(this.logger_, this.settings_) ;
+                    this.env_ = ModusToolboxEnvironment.initInstance(this.logger_, this.settings_) ;
                     this.env_!.load(flags, undefined, this.toolspath_).then(() => {
                         this.envLoaded_ = true;
                         this.logger_.info('ModusToolbox environment loaded with application successfully.');
@@ -2062,7 +2062,7 @@ export class MTBAssistObject {
             let opts: MTBRunCommandOptions = {
                 toolspath: this.toolspath_,
             } ;
-            ModusToolboxEnvironment.runCmdCaptureOutput(cmd, args, opts)
+            ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, cmd, args, opts)
                 .then((result) => {
                     if (result[0] !== 0) {
                         this.logger_.debug(`mtblaunch output: ${result[1].join('\n')}`);
