@@ -498,7 +498,7 @@ export class MTBAssistObject {
     }
 
     private checkVSCodeStructure() : void {
-        if (vscode.workspace.workspaceFile) {
+        if (vscode.workspace.workspaceFile && this.env_!.appInfo) {
             let vscodedir = path.join(this.env_!.appInfo!.appdir, '.vscode') ;  
             if (!fs.existsSync(vscodedir)) {
                 this.runVSCodeAndReload() ;
