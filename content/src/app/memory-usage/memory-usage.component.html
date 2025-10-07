@@ -31,7 +31,7 @@
               </td>
               <td>{{ formatHex(memory.start) }}</td>
               <td>{{ formatHex(memory.size) }}</td>
-              <td>{{ memory.percent.toFixed(1) }}%</td>
+              <td>{{ memory.percent.toFixed(2) }}%</td>
             </tr>
             @if (!isMemorySectionCollapsed(memory.name)) {
               @for (segment of memory.segments; track segment.start) {

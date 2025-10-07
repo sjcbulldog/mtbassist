@@ -149,6 +149,7 @@ export class MTBAssistObject {
         this.settings_.on('showError', this.showSettingsError.bind(this));
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
         this.settings_.on('updateTasks', () => { this.tasks_.forEach(task => task.addRequiredTasks()); }); ;
+        this.settings_.on('updateAppStatus', () => { this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()); }); ;
 
         this.memusage_ = new MemoryUsageMgr(this) ;
 
@@ -1058,7 +1059,7 @@ export class MTBAssistObject {
                 }
             }
             resolve() ;
-        }) ;
+        }) ;            this.sendMessageWithArgs('settings', this.settings_.settings);
     }
 
     private handleOperationStatusClosed() : Promise<void> {
@@ -1075,9 +1076,9 @@ export class MTBAssistObject {
     private setConfig(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (request.data) {
-                this.settings_.configuration = request.data.configuration ;
-                this.tasks_.forEach((t) => { t.addRequiredTasks(); }) ;
+                this.settings_.configuration = request.data ;
             }
+            resolve() ;
         });
     }
 
@@ -1101,6 +1102,7 @@ export class MTBAssistObject {
                         versions: []
                     }) ;
                     this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
+                    this.sendMessageWithArgs('settings', this.settings_.settings);
                     vscode.window.showInformationMessage(`LLVM ${request.data.version} installed successfully.`);
                     resolve() ;
                 }) ;

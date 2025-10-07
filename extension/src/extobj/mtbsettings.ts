@@ -258,6 +258,9 @@ export class MTBSettings extends EventEmitter {
         if (setting) {
             setting.value = c;
             this.writeWorkspaceSettings();
+            this.emit('updateTasks') ;
+            this.emit('updateAppStatus', null) ;
+            this.emit('refresh') ;               
         }
     }
 
@@ -377,8 +380,15 @@ export class MTBSettings extends EventEmitter {
                 this.writeExtensionSettings() ;
                 this.emit('refresh') ;
             }
+            else if (setting.name === 'configuration') {
+                this.writeWorkspaceSettings() ;
+                this.emit('updateTasks') ;
+                this.emit('updateAppStatus') ;
+            }
             else {
                 this.writeSettingsFile() ;
+                this.writeExtensionSettings() ;
+                this.writeWorkspaceSettings() ;
                 if (setting.name === 'enabled_eap') {
                     this.emit('refresh') ;                    
                     this.emit('toolsPathChanged', this.computeToolsPath()) ;
