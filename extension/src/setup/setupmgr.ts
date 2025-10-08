@@ -441,17 +441,31 @@ export class SetupMgr extends MtbManagerBase {
         return ret;
     }
 
+    private needPassword() : boolean {
+        let ret = false ;
+        let os = process.platform ;
+
+        if (os === 'darwin' && this.mtbLocation_?.startsWith('/Applications')) {
+            ret = true ;
+        }
+        else if (os === 'linux') {
+            ret = true ;
+        }
+
+        return ret;
+    }
+
     private downloadAndInstallAllTools(tools: SetupProgram[]) : Promise<void> {
         let ret = new Promise<void>(async (resolve, reject) => {
             let passwd : string | undefined = undefined ;
-            if (this.mtbLocation_?.startsWith('/Applications')) {
+            if (this.needPassword()) {
                 passwd = await this.ext.getPasswordFromUser() ;
                 if (passwd === undefined) {
                     reject(new Error('Password is required for installation to /Applications'));
                 }
             }
 
-            if (!passwd && this.mtbLocation_?.startsWith('/Applications')) {
+            if (!passwd && this.needPassword()) {
                 reject(new Error('Password is required for installation to /Applications'));
                 return ;
             }
@@ -553,7 +567,7 @@ export class SetupMgr extends MtbManagerBase {
             p = this.installFeatureWin32(id, version) ;
         }
         else if (process.platform === 'linux') {
-            p = this.installFeatureLinux(id, version) ;
+            p = this.installFeatureLinux(id, version, password || '') ;
         }
         else {
             throw Error('Unsupported platform');
@@ -646,7 +660,7 @@ export class SetupMgr extends MtbManagerBase {
             }
 
             let opts: MTBRunCommandOptions = {
-                stdout: sudopwd,
+                stdin: sudopwd,
             };
             ModusToolboxEnvironment.runCmdCaptureOutput(this.logger, cmd, args, opts)
             .then((result) => {
@@ -687,7 +701,7 @@ export class SetupMgr extends MtbManagerBase {
         return false ;
     }
 
-    private installFeatureLinux(id: string, version: string) : Promise<void> {
+    private installFeatureLinux(id: string, version: string, password: string) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             let props = this.toollist_.getToolByFeature(id) ;
             if (!props) {
@@ -700,7 +714,7 @@ export class SetupMgr extends MtbManagerBase {
 
             let cmdstr = 'installOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
             let addargs : string[] = [] ;
-            this.launcher_.run(['-idc.service', cmdstr, ...addargs], this.downloadCallback.bind(this), id)
+            this.launcher_.run(['-idc.service', cmdstr, ...addargs], this.downloadCallback.bind(this), id, password)
             .then((result) => {
                 if (!result) {
                     reject(new Error(`Failed to install feature ${id} - ${version}`));

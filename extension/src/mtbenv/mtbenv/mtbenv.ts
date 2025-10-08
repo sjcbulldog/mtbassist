@@ -45,8 +45,8 @@ export interface MTBRunCommandOptions {
     // The caller assigned ID for the command, returned in the onOutput callback
     id?: string ;
 
-    // Lines of output to send to the running process
-    stdout? : string[] ;
+    // Lines of text to send to the running process
+    stdin? : string[] ;
 }
 
 export class ModusToolboxEnvironment extends EventEmitter {
@@ -401,9 +401,9 @@ export class ModusToolboxEnvironment extends EventEmitter {
                 logger.debug(`Process disconnected: ${cmd} ${args.join(' ')}`) ;
             }) ;
 
-            if (options.stdout) {
+            if (options.stdin) {
                 if (cp.stdin) {
-                    for(let line of options.stdout) {
+                    for(let line of options.stdin) {
                         cp.stdin.write(line + '\n') ;
                     }
                     cp.stdin.end() ;
