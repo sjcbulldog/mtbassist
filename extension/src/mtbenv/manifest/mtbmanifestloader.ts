@@ -35,7 +35,6 @@ enum ManifestFileType {
 
 export class MtbManifestLoader {
     private logger_ : winston.Logger ;
-    private isLoading: boolean;
 
     private superManifestList: PackManifest[];
     private superManifestData: Map<URI, string>;
@@ -51,7 +50,6 @@ export class MtbManifestLoader {
     constructor(logger: winston.Logger, db: MTBManifestDB) {
         this.logger_ = logger;
         this.db = db;
-        this.isLoading = false;
 
         this.superManifestList = [];
         this.superManifestData = new Map<URI, string>();
@@ -120,7 +118,6 @@ export class MtbManifestLoader {
     private loadAllContentManifests(): Promise<void[]> {
         let manifestPromiseArray: Promise<void>[] = [];
         for (let loc of this.manifestContentList) {
-            console.log('Loading content manifest from: ' + loc.uripath);
             let pro = this.loadManifestFile(loc, ManifestFileType.contentManifest);
             manifestPromiseArray.push(pro);
         }
@@ -177,6 +174,7 @@ export class MtbManifestLoader {
     private getManifestData(uri: URI) : Promise<string> {
         let ret = new Promise<string>((resolve, reject) => {
             if (uri.scheme === 'file') {
+                let fspath = uri.fsPath ;
                 let text = fs.readFileSync(uri.fsPath, 'utf8') ;
                 resolve(text);
             }
@@ -231,11 +229,20 @@ export class MtbManifestLoader {
     private fixManifestList(src: URI, uriobj: any) : any[] {
         let ret : any[] = [] ;
         if (uriobj.uri) {
-            let basename = path.dirname(src.fsPath) ;
-            let fpath = path.join(basename, uriobj.uri) ;
-            let urires = {
-                uri: URI.file(fpath).toString(),
-            } ;
+            let urires: any ;
+
+            if (path.isAbsolute(src.fsPath)) {
+                urires = { 
+                    uri: src 
+                } ;
+            }
+            else {            
+                let basename = path.dirname(src.fsPath) ;
+                let fpath = path.join(basename, uriobj.uri) ;
+                urires = {
+                    uri: URI.file(fpath).toString(),
+                } ;
+            }
             ret.push(urires) ;
         }
         return ret ;
@@ -553,13 +560,19 @@ export class MtbManifestLoader {
         }
 
         let manlist = toplevel[MTBManifestNames.appManifestList];
-        this.processAppManifestList(pmf, manlist);
+        if (manlist) {
+            this.processAppManifestList(pmf, manlist);
+        }
 
         manlist = toplevel[MTBManifestNames.boardManifestList];
-        this.processBoardManifestList(pmf, manlist);
+        if (manlist) {
+            this.processBoardManifestList(pmf, manlist);
+        }
 
         manlist = toplevel[MTBManifestNames.middlewareManifesetList];
-        this.processMiddlewareManifestList(pmf, manlist);
+        if (manlist) {
+            this.processMiddlewareManifestList(pmf, manlist);
+        }
     }
 
     private parseContentManifest(pfm: PackManifest, data: string): Promise<void> {

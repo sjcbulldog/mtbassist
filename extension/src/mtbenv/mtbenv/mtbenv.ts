@@ -30,6 +30,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import { URI } from 'vscode-uri';
 import { MTBSettings } from '../../extobj/mtbsettings';
+import { Uri } from 'vscode';
 
 export interface MTBRunCommandOptions {
     /// The directory to run the command in
@@ -737,6 +738,8 @@ export class ModusToolboxEnvironment extends EventEmitter {
     }
 
     private getDefaultManifest() : URI {
+        let manifestUrl: string | undefined ;
+
         //
         // First priority is the LCS manifest if it should be enabled.
         //
@@ -754,18 +757,61 @@ export class ModusToolboxEnvironment extends EventEmitter {
         }
 
         //
-        // Second priority is the alternate manifest location if it has been set
+        // Second priority is the CyRemoteManifestOverride environment variable
         //
-        let manifestUrl = this.settings_.settingByName('manifestdb_system_url')?.value;
-        if (manifestUrl && typeof manifestUrl === 'string' && (manifestUrl as string).length > 0) {
-            let manuri = URI.parse(manifestUrl as string);
-            return manuri;
+        manifestUrl = process.env['CyRemoteManifestOverride'] ;
+        if (manifestUrl) {
+            let uri = URI.parse(manifestUrl) ;
+            return uri ;
+        }
+
+
+        //
+        // Third priority is the alternate manifest location if it has been set
+        //
+        let setting = this.settings_.settingByName('manifestdb_system_url');
+        if (setting && setting.value && typeof setting.value === 'string') {
+            manifestUrl = setting.value as string ;
+            if (manifestUrl.length > 0) {
+                let manuri = URI.parse(manifestUrl as string);
+                return manuri;
+            }
         }
 
         //  
         // Finally, the last priority is the default
         //
         return URI.parse(ModusToolboxEnvironment.mtbDefaultManifest);
+    }
+
+    private getManifestLoc() : PackManifest[] | undefined {
+        let ret : PackManifest[] | undefined ;
+        let locname = 'manifest_loc_path' ;
+        let setting = this.settings_.settingByName(locname) ;
+        let locdir ;
+        if (setting) {
+            locdir = setting.value as string ;
+        }
+        else {
+            locdir = path.join(os.homedir(), '.modustoolbox', 'manifest.loc') ;
+        }
+
+        if (fs.existsSync(locdir)) {
+            let text = fs.readFileSync(locdir, 'utf-8') ;
+            let lines = text.split('\n') ;
+            ret = [] ;
+
+            for(let line of lines) {
+                line = line.trim() ;
+                if (line.length > 0) {
+                    ret.push({
+                        uripath: Uri.parse(line),
+                        iseap: false
+                    }) ;
+                }
+            }
+        }
+        return ret ;
     }
 
     private loadManifest() : Promise<void> {
@@ -775,11 +821,18 @@ export class ModusToolboxEnvironment extends EventEmitter {
 
             this.logger_.info(`Using Super Manifest URI: ${uri.toString()}`);
 
-            let defman : PackManifest = { 
+            let man : PackManifest[] = [] ;
+            man.push( {
                 uripath: uri,
                 iseap: false 
-            } ;
-            this.manifestDb_.loadManifestData(this.logger_, [defman, ...this.packDb_.getManifestFiles()])
+            }) ;
+
+            let loc = this.getManifestLoc() ;
+            if (loc) {
+                man.push(...loc) ;
+            }
+
+            this.manifestDb_.loadManifestData(this.logger_, [...man, ...this.packDb_.getManifestFiles()])
                 .then(() => {
                     this.loading_ &= ~MTBLoadFlags.manifestData ;
                     this.has_ |= MTBLoadFlags.manifestData ;
