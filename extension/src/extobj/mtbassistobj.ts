@@ -61,6 +61,7 @@ export class MTBAssistObject {
     private static readonly devcfgProgUUID: string = '45159e28-aab0-4fee-af1e-08dcb3a8c4fd';
     private static readonly modusShellUUID: string = '0afffb32-ea89-4f58-9ee8-6950d44cb004';
     private static readonly setupPgmUUID: string = '14ca45f3-863f-4a4c-8e55-9a14bd1e1ee5';
+    private static readonly setupPgmToolName: string = 'com.ifx.tb.tool.modustoolboxsetup';
     private static readonly projectCreatorUUID: string = '2b5ece6f-0a04-4a6f-a683-de5e3dc0a060';
     private static readonly lastProjectPath: string = 'lastProjectPath' ;
 
@@ -98,7 +99,6 @@ export class MTBAssistObject {
     private keywords_: MtbFunIndex;
     private toolspath_: string | undefined;
     private settings_: MTBSettings;
-    private statusBarItem_: vscode.StatusBarItem;
     private termRegistered_: boolean = false;
     private ready_ : boolean = false ;
     private theme_ : ThemeType = 'light';
@@ -165,10 +165,6 @@ export class MTBAssistObject {
             this.sendTheme();
         });
 
-        this.statusBarItem_ = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        this.statusBarItem_.command = 'mtbassist2.mtbMainPage';
-        this.updateStatusBar();
-
         this.computeTheme() ;
     }
 
@@ -206,34 +202,6 @@ export class MTBAssistObject {
         let err: SettingsError = { setting: name, message: message };
         this.sendMessageWithArgs('showSettingsError', [err]);
         this.sendMessageWithArgs('settings', this.settings_.settings);
-    }
-
-    private updateStatusBar(): void {
-        let st: string = 'Init';
-        let tip: string = 'Initializing';
-        if (!this.setupMgr_ || this.setupMgr_.doWeNeedTools()) {
-            st = 'No Tools';
-        }
-        else if (this.env_) {
-            if (this.env_.isLoading === false && !this.env_.has(MTBLoadFlags.appInfo)) {
-                st = 'No App';
-            }
-            else if (this.env_.has(MTBLoadFlags.manifestData)) {
-                st = 'Ready';
-                tip = 'Ready';
-            }
-            else if (this.env_.isLoading === false) {
-                st = 'Ready (M)';
-                tip = 'Ready but no manifest data could be loaded';
-            }
-            else {
-                st = 'Loading...';
-                tip = 'Loading manifest data';
-            }
-        }
-        this.statusBarItem_.text = 'MTB: ' + st;
-        this.statusBarItem_.tooltip = tip;
-        this.statusBarItem_.show();
     }
 
     /**
@@ -659,7 +627,6 @@ export class MTBAssistObject {
                 runtime.mark('loadMTBApplication') ;
                 this.checkVSCodeStructure() ;
                 runtime.mark('checkVSCodeStructure') ;
-                this.updateStatusBar();
                 runtime.mark('updateStatusBar') ;
                 this.createAppStructure();
                 runtime.mark('createAppStructure') ;
@@ -721,7 +688,6 @@ export class MTBAssistObject {
                                         this.sendMessageWithArgs('mtbMode', this.mtbmode_);
                                         runtime.mark('Show Application') ;
 
-                                        this.updateStatusBar();
                                         this.setupAuxiliaryStuff()
                                         .then(() => {
                                             runtime.mark('setupAuxiliaryStuff') ;
@@ -729,14 +695,12 @@ export class MTBAssistObject {
                                             .then(() => {
                                                 runtime.mark('loadManifestData') ;
                                                 this.sendManifestStatus() ;
-                                                this.updateStatusBar();
                                                 runtime.mark('application load done') ;
                                                 runtime.printAll(this.logger_) ;
                                                 resolve() ;
                                             })
                                             .catch((err) => {
                                                 this.sendManifestStatus();
-                                                this.updateStatusBar();
                                                 reject(err);
                                             });
                                         })
@@ -761,7 +725,6 @@ export class MTBAssistObject {
                             });
                     }
                     else {
-                        this.updateStatusBar();
                         runtime.mark('update status bar') ;
                         this.ready_ = true ;
                         this.sendMessageWithArgs('ready', this.theme_) ;
@@ -776,14 +739,12 @@ export class MTBAssistObject {
                             .then(() => {
                                 runtime.mark('loadManifestData') ;
                                 this.sendManifestStatus() ;
-                                this.updateStatusBar();
                                 this.logger_.debug('ModusToolbox manifests loaded successfully.');
                                 runtime.printAll(this.logger_) ;
                                 resolve();
                             })
                             .catch((error: Error) => {
                                 this.sendManifestStatus() ;                                
-                                this.updateStatusBar();
                                 this.logger_.error('Failed to load ModusToolbox manifests:', error.message);
                                 reject(error) ;
                             });
@@ -1588,25 +1549,36 @@ export class MTBAssistObject {
         return ret;
     }
 
-    private launch(tool: Tool, reloadApp: boolean = false) {
-        let cfg = tool.launchData;
+    private launch(tool: Tool, reloadApp: boolean = false) : void {
+        if (tool.launchData) {
+            this.launchWithLaunchData(tool.launchData.cmdline, reloadApp);
+        }
+    }
 
+    private launchWithLaunchData(cmdargs: string[], reloadApp: boolean = false) {
         let args: string[] = [];
-        for (let i = 0; i < cfg.cmdline.length; i++) {
+        for (let i = 0; i < cmdargs.length; i++) {
             if (i !== 0) {
-                args.push(cfg.cmdline[i]);
+                args.push(cmdargs[i]);
             }
         }
 
         let envobj: any = {};
         let found = false;
         for (let key of Object.keys(process.env)) {
-            if (key.indexOf("ELECTRON") === -1) {
-                envobj[key] = process.env[key];
-            }
-            else if (key === 'CY_TOOLS_PATHS' && this.toolspath_) {
+            if (key === 'CY_TOOLS_PATHS' && this.toolspath_) {//
+                // Inject the tools path to be what we want, overriding the existing value
+                // in the environment.
+                //
                 envobj[key] = this.toolspath_;
                 found = true;
+            }
+            else if (key.indexOf("ELECTRON") === -1) {
+                //
+                // There are some environment variables that Electron sets that
+                // can confuse launched tools, if they are electron-based.  So we do not pass those to the launched tool.
+                //
+                envobj[key] = process.env[key];
             }
         }
 
@@ -1614,7 +1586,7 @@ export class MTBAssistObject {
             envobj['CY_TOOLS_PATHS'] = this.toolspath_;
         }
 
-        exec.execFile(cfg.cmdline[0],
+        exec.execFile(cmdargs[0],
             args,
             {
                 cwd: this.env_?.appInfo?.appdir,
@@ -1666,9 +1638,9 @@ export class MTBAssistObject {
 
     private runSetupProgram(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            let tool = this.getLaunchConfig('', MTBAssistObject.setupPgmUUID);
+            let tool = this.setupMgr_.findToolById(MTBAssistObject.setupPgmToolName);
             if (tool) {
-                this.launch(tool);
+                this.launchWithLaunchData([tool], false) ;
             }
             else {
                 vscode.window.showErrorMessage('Setup program has not been installed.');
@@ -1725,6 +1697,9 @@ export class MTBAssistObject {
         if (!this.commandsInited_) {
             disposable = vscode.commands.registerCommand('mtbassist2.mtbMainPage', this.mtbMainPage.bind(this));
             this.context_.subscriptions.push(disposable);
+
+            disposable = vscode.commands.registerCommand('mtbassist2.mtbMainPageNoTitle', this.mtbMainPage.bind(this));
+            this.context_.subscriptions.push(disposable);            
 
             disposable = vscode.commands.registerTextEditorCommand('mtbassist2.mtbSymbolDoc',
                 (editor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {

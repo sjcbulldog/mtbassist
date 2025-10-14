@@ -2,11 +2,11 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "2.0.6",
+  "version": "2.3.0",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
-  "preview": false,
+  "preview": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/sjcbulldog/mtbassist.git"
@@ -27,10 +27,26 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "menus" : {
+      "editor/title" : [
+        {
+          "command" : "mtbassist2.mtbMainPage",
+          "group" : "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "resourceLangId == c",
+          "command": "mtbassist2.mtbSymbolDoc",
+          "group": "navigation"
+        }
+      ]      
+    },
     "commands": [
       {
         "command": "mtbassist2.mtbMainPage",
-        "title": "ModusToolbox Assistant: Show Main Page"
+        "title": "ModusToolbox Assistant: Show Main Page",
+        "icon" : "media/exticon.png"
       },
       {
         "command": "mtbassist2.mtbSymbolDoc",
@@ -47,15 +63,6 @@
         "key": "ctrl+shift+f1"
       }
     ],
-    "menus": {
-      "editor/context": [
-        {
-          "when": "resourceLangId == c",
-          "command": "mtbassist2.mtbSymbolDoc",
-          "group": "navigation"
-        }
-      ]
-    },
     "terminal": {
       "profiles": [
         {

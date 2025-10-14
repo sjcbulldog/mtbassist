@@ -223,22 +223,6 @@ export class SetupMgr extends MtbManagerBase {
         return basea.localeCompare(baseb);
     }
 
-    private findToolsDirFromPath(p: string) : string | undefined {
-        while (true) {
-            let bname = path.basename(p) ;
-            if (/^tools_[0-9]+.[0-9]+$/.test(bname)) {
-                return p ;
-            }
-            let parent = path.dirname(p) ;
-            if (parent === p) {
-                break ;
-            }
-            p = parent ;
-        }
-
-        return undefined ;
-    }
-
     public async initializeLocal() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.registry_.initialize()
@@ -315,6 +299,19 @@ export class SetupMgr extends MtbManagerBase {
             });
         });
 
+        return ret ;
+    }
+
+    public findToolById(id: string) : string | undefined {
+        let ret : string | undefined ;
+        if (this.installed_.has(id)) {
+            let arr = this.installed_.get(id) ;
+            if (arr && arr.length > 0) {
+                let myarray = [...arr] ;
+                myarray.sort((a, b) => MTBVersion.compare(b.version, a.version)) ;
+                return myarray[0].installPath ;
+            }
+        }
         return ret ;
     }
 
