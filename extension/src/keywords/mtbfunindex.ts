@@ -110,20 +110,27 @@ export class MtbFunIndex
 
             this.logger_.debug("Looking in project '" + proj.name + "' for symbols") ;
 
+            let p : Promise<number>[] = [] ;
             for(let asset of proj.assetsRequests) {
                 let loc = asset.fullPath(proj.dirList) ;
                 if (loc && this.processed.indexOf(loc) === -1) {
-                    try {
-                        count += await this.initAsset(proj, asset) ;
-                        this.processed.push(loc) ;
-                    }
-                    catch(err) {
-                        reject(err) ;
-                    }
+                    p.push(this.initAsset(proj, asset)) ;
                 }
             }
 
-            resolve(count) ;
+            this.logger_.debug("    processing " + p.length + " assets in project '" + proj.name + "' for symbols") ;
+            Promise.all(p)
+            .then((values) => {
+                for(let v of values) {
+                    count += v ;
+                }
+                this.logger_.debug("    found " + count + " symbols in project '" + proj.name + "'") ;
+                resolve(count) ;
+            })
+            .catch((err) => {
+                this.logger_.error("Error processing project '" + proj.name + "' for symbols : " + err) ;
+                reject(err) ;
+            });
         }) ;
         return ret ;
     }
