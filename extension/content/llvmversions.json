@@ -1,0 +1,16 @@
+{
+    "19.1.5" : {
+        "win32" : [
+            "https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.5/LLVM-ET-Arm-19.1.5-Windows-x86_64.zip"
+        ],
+        "darwin" : [
+            "https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.5/LLVM-ET-Arm-19.1.5-Darwin-universal.dmg"
+        ],
+        "linux" : [
+            "https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.5/LLVM-ET-Arm-19.1.5-Linux-AArch64.tar.xz"
+        ],
+        "all" : [
+            "https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.5/LLVM-ET-Arm-newlib-overlay-19.1.5.zip"
+        ]
+    }
+}

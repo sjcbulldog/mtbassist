@@ -1059,11 +1059,14 @@ export class MTBAssistObject {
         return new Promise<void>((resolve, reject) => {
             if (!request.data) {
                 // Just bring up the install page
-                this.sendMessageWithArgs('installLLVM', {
-                    enabled: true,
-                    versions: LLVMInstaller.getAvailableVersions()
+                LLVMInstaller.getAvailableVersions(this.logger_)
+                .then((versions) => {
+                    this.sendMessageWithArgs('installLLVM', {
+                        enabled: true,
+                        versions: versions
+                    }) ;
+                    resolve() ;
                 }) ;
-                resolve() ;
             }
             else {
                 // Actually do the install
@@ -1586,7 +1589,7 @@ export class MTBAssistObject {
             envobj['CY_TOOLS_PATHS'] = this.toolspath_;
         }
 
-        exec.execFile(cmdargs[0],
+        let cp = exec.execFile(cmdargs[0],
             args,
             {
                 cwd: this.env_?.appInfo?.appdir,
