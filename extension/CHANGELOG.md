@@ -42,3 +42,4 @@ Remove the status bar item and added an icon on the editor/title menu to bring u
 Fixed bug with filter of environment when launching external programs
 Fixed bug with installing new software when no project is loaded
 Parallelized the search for keywords in asset documentation to make the extension more responsive
+Moved LLVM versions available to JSON file on server that can be fetched, added fallback verions of LLVM in case server not reachable
