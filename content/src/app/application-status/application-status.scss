@@ -68,6 +68,41 @@
 .tools-grid.collapsed {
   display: none !important;
 }
+
+// No application message styling
+.no-application-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  min-height: 400px;
+  
+  .info-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: var(--primary-color, #007bff);
+    margin-bottom: 1.5rem;
+  }
+  
+  h2 {
+    color: var(--text-color, #212529);
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+  }
+  
+  p {
+    color: var(--text-secondary, #6c757d);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0.5rem 0;
+    max-width: 500px;
+  }
+}
+
 :host {
   display: block;
   padding: 1rem;

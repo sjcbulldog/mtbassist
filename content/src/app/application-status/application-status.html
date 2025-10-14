@@ -17,6 +17,15 @@
         </ng-template>
 
         <div class="tab-content">
+          @if (!applicationStatus.valid) {
+            <!-- No Valid Application Message -->
+            <div class="no-application-message">
+              <mat-icon class="info-icon">info</mat-icon>
+              <h2>No Valid ModusToolbox Application</h2>
+              <p>A valid ModusToolbox application is not currently loaded.</p>
+              <p>Please open a ModusToolbox application to view its status and perform actions.</p>
+            </div>
+          } @else {
           <!-- Application Overview Card -->
           <div class="overview-section">
             <div class="app-info-card">
@@ -318,6 +327,7 @@
                 }
               </div>
             </div>
+          }
           }
         </div>
       </mat-tab>
