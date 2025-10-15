@@ -52,6 +52,7 @@ import { VSCodeAppTaskGenerator } from '../vscodetasks/vscodeapptaskgen';
 import { VSCodeProjTaskGenerator } from '../vscodetasks/vscodeprojtaskgen';
 import { RunTimeTracker } from '../runtime';
 import fetch from 'node-fetch';
+import { ApplicationType } from '../mtbenv/appdata/mtbappinfo';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -571,10 +572,13 @@ export class MTBAssistObject {
         let gen = new VSCodeAppTaskGenerator(this.env_!, this.settings_) ;
         this.tasks_.set('', new VSCodeTasks(this.logger_, p, gen)) ;
 
-        for(let proj of this.env_!.appInfo!.projects) {
-            p = path.join(this.env_!.appInfo!.appdir, proj.name, '.vscode', 'tasks.json');
-            let pgen = new VSCodeProjTaskGenerator(this.env_!, this.settings_, proj) ;
-            this.tasks_.set(proj.name, new VSCodeTasks(this.logger_, p, pgen)) ;
+        if (this.env_!.appInfo!.type() !== ApplicationType.combined)
+        {
+            for(let proj of this.env_!.appInfo!.projects) {
+                p = path.join(this.env_!.appInfo!.appdir, proj.name, '.vscode', 'tasks.json');
+                let pgen = new VSCodeProjTaskGenerator(this.env_!, this.settings_, proj) ;
+                this.tasks_.set(proj.name, new VSCodeTasks(this.logger_, p, pgen)) ;
+            }
         }
     }
 
