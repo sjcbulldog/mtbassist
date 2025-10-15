@@ -69,7 +69,8 @@ export type FrontEndToBackEndType =
     'llvm-versions' |
     'set-config' |
     'operation-status-closed' |
-    'run-task'
+    'run-task' |
+    'install-idc-service'
     ;
 
 export type BackEndToFrontEndType =

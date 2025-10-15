@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -27,11 +27,11 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "menus" : {
-      "editor/title" : [
+    "menus": {
+      "editor/title": [
         {
-          "command" : "mtbassist2.mtbMainPage",
-          "group" : "navigation@1"
+          "command": "mtbassist2.mtbMainPage",
+          "group": "navigation@1"
         }
       ],
       "editor/context": [
@@ -40,13 +40,13 @@
           "command": "mtbassist2.mtbSymbolDoc",
           "group": "navigation"
         }
-      ]      
+      ]
     },
     "commands": [
       {
         "command": "mtbassist2.mtbMainPage",
         "title": "ModusToolbox Assistant: Show Main Page",
-        "icon" : "media/exticon.png"
+        "icon": "media/exticon.png"
       },
       {
         "command": "mtbassist2.mtbSymbolDoc",
@@ -55,6 +55,10 @@
       {
         "command": "mtbassist2.addBootloader",
         "title": "ModusToolbox Assistant: Add Bootloader To PSOC Edge Application"
+      },
+      {
+        "command": "mtbassist2.testCommand",
+        "title": "ModusToolbox Assistant: Test Command"
       }
     ],
     "keybindings": [
@@ -116,6 +120,7 @@
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
+    "@types/markdown-it": "^14.1.2",
     "@types/mocha": "^9.1.1",
     "@types/node": "16.x",
     "@types/node-fetch": "^2.6.2",
@@ -139,6 +144,7 @@
     "adm-zip": "^0.5.16",
     "copyfile": "^0.1.2",
     "is-wsl": "^2.2.0",
+    "markdown-it": "^14.1.0",
     "node-fetch": "^3.3.2",
     "open": "^9.1.0",
     "openurl": "^1.1.1",

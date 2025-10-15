@@ -18,6 +18,7 @@ import * as winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import * as mdit from 'markdown-it';
 import { VSCodeTransport } from './vscodetransport';
 import { ConsoleTransport } from './consoletransport';
 import { ModusToolboxEnvironment, MTBRunCommandOptions } from '../mtbenv/mtbenv/mtbenv';
@@ -64,6 +65,7 @@ export class MTBAssistObject {
     private static readonly setupPgmToolName: string = 'com.ifx.tb.tool.modustoolboxsetup';
     private static readonly projectCreatorUUID: string = '2b5ece6f-0a04-4a6f-a683-de5e3dc0a060';
     private static readonly lastProjectPath: string = 'lastProjectPath' ;
+    private static readonly bootloaderDocUrl: string = 'https://www.mewserver.org/vscode/bootloader.md' ;
 
     private static readonly gettingStartedTab = 0;
     private static readonly createProjectTab = 1;
@@ -140,7 +142,9 @@ export class MTBAssistObject {
 
         this.setupMgr_ = new SetupMgr(this);
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
-
+        this.setupMgr_.on('addStatusLine', (line: string) => {
+            this.sendMessageWithArgs('addStatusLine', line);
+        });
         this.keywords_ = new MtbFunIndex(this.logger_);
 
         this.settings_ = new MTBSettings(this);
@@ -152,7 +156,6 @@ export class MTBAssistObject {
         this.settings_.on('updateAppStatus', () => { this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()); }); ;
 
         this.memusage_ = new MemoryUsageMgr(this) ;
-
         vscode.tasks.onDidEndTask((e) => { 
             this.taskEnd(e) ;
         }) ;
@@ -461,21 +464,79 @@ export class MTBAssistObject {
         return undefined ;
     }
 
-    private runVSCodeAndReload() {
-        this.sendMessageWithArgs('startOperation', `Preparing Application For VSCode`) ;
-        this.sendMessageWithArgs('addStatusLine', `Running 'make vscode'...`) ;
-        this.runMakeVSCode()
-        .then(() => { 
+    private needsGetLibs() : boolean {
+        let getlibs = false ;
+        for(let proj of this.env_!.appInfo!.projects) {
+            let appmk = path.join(proj.path, 'libs', 'app.mk')  ;
+            if (!fs.existsSync(appmk)) {
+                getlibs = true ;
+                break ;
+            }
+        }
+        return getlibs ;
+    }
+
+    private seeIfGetLibsNeeded() : Promise<void> {
+        let ret = new Promise<void>(async (resolve, reject) => {
+            if (this.needsGetLibs()) {
+                for(let proj of this.env_!.appInfo!.projects) {
+                    try {
+                        this.sendMessageWithArgs('addStatusLine', `Running 'make getlibs' for project ${proj.name}...`) ;
+                        await this.worker_?.runMakeGetLibs(proj) ;
+                    }
+                    catch(error: any) {
+                        this.logger_.error(`Failed to run 'make getlibs' for project ${proj.name}: ${error.message}`);
+                        this.sendMessageWithArgs('addStatusLine', `Failed to run 'make getlibs' for project ${proj.name}: ${error.message}`) ;
+                        reject(error) ;
+                        return ;
+                    }
+                }
+                resolve() ;
+            }
+            else {
+                resolve() ;
+            }
+        }) ;
+        return ret ;
+    } ;
+
+    private reOpenWorkspace() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
             let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
             if (wkspc) {
                 vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(wkspc)) ;
-            }
-            else {
-                this.logger_.error(`Failed to find workspace file after running 'make vscode'`);
-                vscode.window.showErrorMessage(`Failed to find workspace file after running 'make vscode'`);
-                throw new Error(`Failed to find workspace file after running 'make vscode'`);
-            }                    
-        }) ;
+            }            
+            resolve() ;
+        });
+        return ret;
+    }
+
+    private runVSCodeAndReload() {
+        this.sendMessageWithArgs('startOperation', `Preparing Application For VSCode`) ;        
+
+        this.seeIfGetLibsNeeded()
+        .then(() => {
+            this.sendMessageWithArgs('addStatusLine', `Running 'make vscode'...`) ;
+            this.runMakeVSCode()
+            .then(() => {
+                let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
+                if (wkspc) {
+                    this.pendingStatusClosePromise = this.reOpenWorkspace.bind(this) ;                    
+                    this.sendMessageWithArgs('finishOperation', '') ;                    
+                }
+                else {
+                    this.logger_.error(`Failed to find workspace file after running 'make vscode'`);
+                    vscode.window.showErrorMessage(`Failed to find workspace file after running 'make vscode'`);
+                    this.sendMessageWithArgs('addStatusLine', `Failed to find workspace file after running 'make vscode'`) ;
+                    this.sendMessageWithArgs('finishOperation', '') ;
+                    throw new Error(`Failed to find workspace file after running 'make vscode'`);
+                }                    
+            }) ;
+        })
+        .catch((error: Error) => {
+            this.logger_.error(`Failed to run 'make getlibs': ${error.message}`);
+            this.sendMessageWithArgs('finishOperation', '') ;
+        });
     }
 
     private checkVSCodeStructure() : void {
@@ -1021,6 +1082,25 @@ export class MTBAssistObject {
         this.cmdhandler_.set('set-config', this.setConfig.bind(this)) ;
         this.cmdhandler_.set('operation-status-closed', this.handleOperationStatusClosed.bind(this)) ;
         this.cmdhandler_.set('run-task', this.runTaskFromGUI.bind(this)) ;
+        this.cmdhandler_.set('install-idc-service', this.installIDCService.bind(this)) ;    
+    }
+
+    private installIDCService() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            this.sendMessageWithArgs('startOperation', 'Installing IDC Service') ;
+            this.setupMgr_.installIDCService()
+            .then(() => {
+                this.sendMessageWithArgs('addStatusLine', 'IDC Service installed successfully') ;
+                this.sendMessageWithArgs('finishOperation', '') ;
+                resolve() ;
+            })
+            .catch((err) => {
+                this.sendMessageWithArgs('addStatusLine', `Failed to install IDC Service: ${err.message}`) ;
+                this.sendMessageWithArgs('finishOperation', '') ;
+                reject(err) ;
+            }) ;
+        }) ;
+        return ret ;
     }
 
     private runTaskFromGUI(request: FrontEndToBackEndRequest): Promise<void> {
@@ -1460,6 +1540,9 @@ export class MTBAssistObject {
             this.sendMessageWithArgs('mtbMode', 'initializing') ;
             this.setupMgr_ = new SetupMgr(this);
             this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
+            this.setupMgr_.on('addStatusLine', (line: string) => {
+                this.sendMessageWithArgs('addStatusLine', line);
+            });
             this.initialize()
                 .then(() => {
                     this.sendMessageWithArgs('settings', this.settings_.settings);
@@ -1713,15 +1796,59 @@ export class MTBAssistObject {
             disposable = vscode.commands.registerCommand('mtbassist2.addBootloader', this.addBootloader.bind(this));
             this.context_.subscriptions.push(disposable);
 
+            disposable = vscode.commands.registerCommand('mtbassist2.testCommand', this.testCommand.bind(this));
+            this.context_.subscriptions.push(disposable);            
+
             this.commandsInited_ = true;
         }
     }
 
+    private testCommand() {
+        fetch(MTBAssistObject.bootloaderDocUrl)
+        .then(response => {
+            if (!response.ok) {
+                vscode.window.showErrorMessage(`Failed to fetch bootloader documentation: ${response.statusText}`);
+                return ;
+            }
+
+            response.text().then(doc => {
+                const panel = vscode.window.createWebviewPanel(
+                    'bootloaderDoc',
+                    'Bootloader Documentation',
+                    vscode.ViewColumn.One,
+                    {}
+                );
+                const md = new mdit() ;
+                panel.webview.html = md.render(doc);
+            });
+        })
+        .catch(err => {
+            vscode.window.showErrorMessage(`Failed to fetch bootloader documentation: ${err}`);
+        }) ;        
+    }
+
     private async finishBootloader() {
         if (this.activeTask_ && this.activeTask_.ok) {
-            let path = this.context_.asAbsolutePath('content/bootloader.md') ;
-            let uri = vscode.Uri.file(path) ;
-            await vscode.commands.executeCommand('markdown.showPreview', uri) ;
+            fetch(MTBAssistObject.bootloaderDocUrl)
+            .then(response => {
+                if (!response.ok) {
+                    vscode.window.showErrorMessage(`Failed to fetch bootloader documentation: ${response.statusText}`);
+                    return ;
+                }
+
+                response.text().then(doc => {
+                    const panel = vscode.window.createWebviewPanel(
+                        'bootloaderDoc',
+                        'Bootloader Documentation',
+                        vscode.ViewColumn.One,
+                        {}
+                    );
+                    panel.webview.html = doc;
+                });
+            })
+            .catch(err => {
+                vscode.window.showErrorMessage(`Failed to fetch bootloader documentation: ${err}`);
+            }) ;
         }
     }
 
@@ -2421,7 +2548,7 @@ export class MTBAssistObject {
         let config = vscode.workspace.getConfiguration();
         let autodisp = config.get('mtbassist2.displayHint') as boolean ;
         if (autodisp) {
-            vscode.window.showInformationMessage(`Click the 'MTB' in the bottom right status bar to display the ModusToolbox Assistant`);
+            vscode.window.showInformationMessage(`Click the ModusToolbox Assistant icon in the Activity Bar to redisplay the assistant.`) ;
         }
     }
 

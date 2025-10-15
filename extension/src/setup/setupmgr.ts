@@ -12,6 +12,10 @@
  * limitations under the License.
  */
 
+import * as path from 'path' ;
+import * as fs from 'fs' ;
+import * as os from 'os' ;
+
 import { MTBAssistObject } from "../extobj/mtbassistobj";
 import { MtbManagerBase } from "../mgrbase/mgrbase";
 import { IDCLauncher } from "./launcher";
@@ -23,9 +27,7 @@ import { SetupProgram } from "../comms";
 import { ModusToolboxEnvironment } from "../mtbenv";
 import { MTBRunCommandOptions } from "../mtbenv/mtbenv/mtbenv";
 import { InstalledFeature } from "./installedfeature";
-import * as path from 'path' ;
-import * as fs from 'fs' ;
-import * as os from 'os' ;
+
 
 //
 // AppData/Local/Infineon_Technologies_AG/Infineon-Toolbox/Tools/ ...
@@ -56,6 +58,10 @@ export class SetupMgr extends MtbManagerBase {
     private static readonly mtbModusToolbox = 'com.ifx.tb.tool.modustoolbox' ;
     private static readonly downloadRatio = 0.8;
     private static readonly localIDCServiceRequestTimeout = 30000; // 30 seconds
+
+    private static readonly win32IDCDownloadURL = 'https://itools.infineon.com/itblauncher/service/itb-launcher-service-setup.exe' ;
+    private static readonly darwinIDCDownloadURL = 'https://itools.infineon.com/itblauncher/service/itb-launcher-service-setup.pkg' ;
+    private static readonly linuxIDCDownloadURL = 'https://itools.infineon.com/itblauncher/service/itb-launcher-service-setup.deb' ;
 
     private static readonly requiredFeatures : string[] = [
         'com.ifx.tb.tool.modustoolboxedgeprotectsecuritysuite',
@@ -345,6 +351,106 @@ export class SetupMgr extends MtbManagerBase {
             });
         });
 
+        return ret ;
+    }
+
+    public installIDCService() : Promise<void> {
+        if (process.platform === 'win32') {
+            return this.installIDCServiceWin32();
+        } else if (process.platform === 'darwin') {
+            return this.installIDCServiceDarwin();
+        } else if (process.platform === 'linux') {
+            return this.installIDCServiceLinux();
+        } else {
+            return Promise.reject(new Error(`Unsupported platform: ${process.platform}`));
+        }
+    }
+
+    private downloadFile(url: string, dest: string) : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            const file = fs.createWriteStream(dest);    
+            fetch(url)
+            .then((res: Response) => {
+                if (!res.ok) {
+                    reject(new Error(`Failed to download file: ${res.status} ${res.statusText}`));
+                    return;
+                }
+                res.body!.pipe(file);
+                res.body!.on('error', (err) => {
+                    reject(err);
+                });
+                file.on('finish', () => {
+                    file.close();
+                    resolve();
+                });
+                file.on('error', (err) => {
+                    fs.unlink(dest, () =>
+                        reject(err)
+                    );
+                });
+            })
+            .catch((err) => {
+                reject(err);
+            });
+        });
+        return ret ;
+    }
+
+    private installIDCServiceWin32() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let dest = path.join(os.tmpdir(), 'itb-launcher-service.exe') ;
+            this.emit('addStatusLine', 'Downloading IDC service...') ;
+            this.downloadFile(SetupMgr.win32IDCDownloadURL, dest)
+            .then(() => {
+                // Now install the service
+                let args: string[] = [] ;
+                args.push('/SP-') ;
+                args.push('/VERYSILENT') ;
+                args.push('/SUPPRESSMSGBOXES') ;
+                args.push('/CURRENTUSER') ;
+                this.emit('addStatusLine', 'Installing IDC service...') ;
+                ModusToolboxEnvironment.runCmdCaptureOutput(this.logger, dest, args, {})
+                .then((result) => { 
+                    if (result && result[0] === 0) {
+                        resolve() ;
+                    } else {
+                        reject(new Error('Failed to install IDC service')) ;
+                    }
+                })
+                .catch((err) => { 
+                    this.emit('addStatusLine', 'Error installing IDC service') ;
+                    reject(err) ;
+                }) ;
+            })
+            .catch((err) => { 
+                this.emit('addStatusLine', 'Error downloading IDC service') ;
+                reject(err) ;
+            }) ;
+        }) ;
+        return ret ;
+    }
+
+    private installIDCServiceDarwin() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            this.downloadFile(SetupMgr.darwinIDCDownloadURL, path.join(os.tmpdir(), 'itb-launcher-service.exe'))
+            .then(() => {
+            })
+            .catch((err) => { 
+                reject(err) ;
+            }) ;            
+        }) ;
+        return ret ;
+    }
+
+    private installIDCServiceLinux() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            this.downloadFile(SetupMgr.linuxIDCDownloadURL, path.join(os.tmpdir(), 'itb-launcher-service.exe'))
+            .then(() => {
+            })
+            .catch((err) => { 
+                reject(err) ;
+            }) ;              
+        }) ;
         return ret ;
     }
 

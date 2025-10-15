@@ -370,7 +370,7 @@ export class VSCodeWorker extends EventEmitter  {
         }
     }
 
-    private runMakeGetLibs(proj: MTBProjectInfo): Promise<[number, string[]]> {
+    public runMakeGetLibs(proj: MTBProjectInfo): Promise<[number, string[]]> {
         return new Promise<[number, string[]]>((resolve, reject) => {
             let p = proj.path ;
             let cliPath = this.findMakePath();
