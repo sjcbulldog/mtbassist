@@ -24,6 +24,7 @@ import { MTBLoadFlags } from "../mtbenv/mtbenv/loadflags";
 import { MTBAssistObject } from "./mtbassistobj";
 import { MTBProjectInfo } from "../mtbenv/appdata/mtbprojinfo";
 import { ApplicationType } from "../mtbenv/appdata/mtbappinfo";
+import { ProjectGitStateTracker } from "./projectGitStateTracker";
 
 export interface TaskToRun {
     task: string ;
@@ -72,6 +73,7 @@ export class VSCodeWorker extends EventEmitter  {
     private logger_: winston.Logger;
     private createProjectIndex_ : number = 0 ;
     private createProjectPercent_ : number = 0 ;
+    private gitState_ : ProjectGitStateTracker | undefined = undefined ;
     private makeLines_ : number = 0 ;
     private ext_ : MTBAssistObject;
 
@@ -110,6 +112,7 @@ export class VSCodeWorker extends EventEmitter  {
     }
 
     private createProjectCallback(lines: string[]) {
+        let sendState = false ;
         for(let line of lines) {
             this.logger_.info(line) ;
             let m = VSCodeWorker.createProjectMessages[this.createProjectIndex_].match.exec(line);
@@ -140,6 +143,14 @@ export class VSCodeWorker extends EventEmitter  {
                     this.sendProgress(str, this.createProjectPercent_);
                 }
             }
+
+            if (this.gitState_!.processLine(line)) {
+                sendState = true ;
+            }
+        }
+
+        if (sendState) {
+            this.emit('gitState', this.gitState_!.data) ;
         }
     }
 
@@ -193,6 +204,7 @@ export class VSCodeWorker extends EventEmitter  {
 
     public async createProject(targetdir: string, appname: string, bspid: string, ceid: string, prepvscode : boolean = true): Promise<[number, string[]]> {
         return new Promise<[number, string[]]>(async (resolve, reject) => {
+            this.gitState_ = new ProjectGitStateTracker() ;
             let cliPath = this.findProjectCreatorCLIPath();
             if (cliPath === undefined) {
                 resolve([-1, ["project creator CLI not found."]]) ;

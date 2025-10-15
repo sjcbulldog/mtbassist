@@ -28,7 +28,7 @@ import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
     FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, LCSBSPKeywordAliases, ManifestStatusType, Middleware, MTBAssistantMode, 
     MTBAssistantTask, 
-    MTBLocationStatus, MTBVSCodeSettingsStatus, MTBVSCodeTaskStatus, Project, SettingsError, ThemeType, Tool
+    MTBLocationStatus, MTBVSCodeSettingsStatus, MTBVSCodeTaskStatus, Project, ProjectGitStateTrackerData, SettingsError, ThemeType, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
@@ -684,6 +684,7 @@ export class MTBAssistObject {
             this.worker_.on('progress', this.sendMessageWithArgs.bind(this, 'createProjectProgress'));
             this.worker_.on('runtask', this.runTask.bind(this));
             this.worker_.on('loadedAsset', this.sendMessageWithArgs.bind(this, 'loadedAsset'));
+            this.worker_.on('gitState', this.gitStateTrampoline.bind(this)) ;
             runtime.mark('VSCodeWorker init') ;
 
             this.readComponentDefinitions();
@@ -835,6 +836,9 @@ export class MTBAssistObject {
         return ret;
     }
 
+    private gitStateTrampoline(state: ProjectGitStateTrackerData) {
+        this.sendMessageWithArgs('gitState', state);
+    }
 
     private readComponentDefinitions(): void {
         let p = path.join(__dirname, '..', 'content', 'components.json');

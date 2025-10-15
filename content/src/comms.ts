@@ -124,7 +124,8 @@ export type BackEndToFrontEndType =
     'addStatusLine' |
     'tasksAvailable' |
     'lcsGuide' |
-    'lcsKeywordAliases'
+    'lcsKeywordAliases' |
+    'gitState'
     ;
 
 export type ThemeType =
@@ -383,3 +384,13 @@ export interface LCSBSPKeywordAliases {
   keyword: string ;
   bsps: string[] ;
 }
+
+export interface CreateProjectGitState {
+  id: number ;
+  target: string ;
+  operation?: string ;
+  percent: number ;
+  done: boolean ;
+}
+
+export type ProjectGitStateTrackerData = Array<CreateProjectGitState> ;

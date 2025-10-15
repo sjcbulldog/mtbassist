@@ -206,6 +206,22 @@
 
     button {
       min-width: 120px;
+      
+      // Override Material button internal structure
+      ::ng-deep {
+        .mat-button-wrapper,
+        .mdc-button__label {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          gap: 0.5rem !important;
+          
+          mat-icon {
+            margin: 0 !important;
+            line-height: 1 !important;
+          }
+        }
+      }
     }
   }
 

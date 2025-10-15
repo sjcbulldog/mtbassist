@@ -27,7 +27,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BackendService } from '../backend/backend-service';
-import { BSPIdentifier, CodeExampleIdentifier, DevKitInfo, ThemeType } from '../../comms';
+import { BSPIdentifier, CodeExampleIdentifier, DevKitInfo, ProjectGitStateTrackerData, ThemeType } from '../../comms';
 import { MatDivider } from "@angular/material/divider";
 import { Subscription } from 'rxjs';
 
@@ -84,6 +84,8 @@ export class CreateProject implements OnInit, OnDestroy {
     devKits: DevKitInfo[] = [];
     selectedDevKit: DevKitInfo | null = null;
     manifestStatus: 'loading' | 'loaded' | 'not-available' = 'loading';
+
+    gitState: ProjectGitStateTrackerData = [] ;
 
     private subscriptions: Subscription[] = [];
 
@@ -155,6 +157,10 @@ export class CreateProject implements OnInit, OnDestroy {
 
         this.subscriptions.push(this.be.progressPercent.subscribe(percent => {
             this.progressValue = percent || 0 ;
+        }));
+
+        this.subscriptions.push(this.be.gitState.subscribe(state => {
+            this.gitState = state || [] ;
         }));
     }
 
