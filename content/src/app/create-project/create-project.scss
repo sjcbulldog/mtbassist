@@ -723,6 +723,12 @@
   .step-description {
     margin-bottom: 24px;
     font-size: 1rem;
+
+    &.warning-message {
+      color: #fbc02d;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
   }
 }
 
@@ -734,6 +740,10 @@
   
   .step-description {
     color: var(--dark-text-secondary);
+
+    &.warning-message {
+      color: #fdd835;
+    }
   }
 }
 
@@ -745,6 +755,10 @@
   
   .step-description {
     color: var(--light-text-secondary);
+
+    &.warning-message {
+      color: #f9a825;
+    }
   }
 }
 
@@ -1599,13 +1613,16 @@ body.dark-theme,
 
 /* Progress Section */
 .progress-section {
-  max-width: 600px;
   margin-bottom: 32px;
 }
 
 .progress-card {
   border-radius: 12px;
   border: 2px solid #2196f3;
+  
+  mat-card-header {
+    align-items: center;
+  }
   
   .progress-avatar {
     background-color: #2196f3;
@@ -1680,6 +1697,11 @@ body.dark-theme,
           font-size: 0.8rem;
           color: rgba(0, 0, 0, 0.6);
           font-style: italic;
+
+          &.error {
+            color: #d32f2f;
+            font-weight: 500;
+          }
         }
       }
 
@@ -1824,6 +1846,11 @@ body.dark-theme,
 
           .asset-operation {
             color: var(--dark-text-secondary);
+
+            &.error {
+              color: #ef5350;
+              font-weight: 500;
+            }
           }
         }
 
@@ -1882,6 +1909,11 @@ body.dark-theme,
 
           .asset-operation {
             color: var(--light-text-secondary);
+
+            &.error {
+              color: #d32f2f;
+              font-weight: 500;
+            }
           }
         }
 

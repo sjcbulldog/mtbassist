@@ -7,6 +7,8 @@ export class ProjectGitStateTracker {
     private static readonly progressRemoteGitRegex = /Git#([0-9]+)>remote: (.*): *([0-9]+)% *\(([0-9]+)\/([0-9]+)\)(.*)/ ;
     private static readonly progressLocalGitRegex = /Git#([0-9]+)>(.*): *([0-9]+)% *\(([0-9]+)\/([0-9]+)\)(.*)/ ;
     private static readonly endGitRegex =  /Git#([0-9]+)>Success: git -C ([^ ]+)(.*)/ ;
+    private static readonly errorGitRegex = /Git#([0-9]+)>fatal: (.*)/ ;
+
     private static readonly releaseRegex = /^release-v[0-9]+\.[0-9]+\.[0-9]+/ ;
 
     private states_: Map<string, CreateProjectGitState> = new Map() ;
@@ -52,6 +54,18 @@ export class ProjectGitStateTracker {
                 sendState = true ;
             }
         }
+
+        m = ProjectGitStateTracker.errorGitRegex.exec(line) ;
+        if (m && m.length > 1) {
+            let entry = this.findEntryById(+m[1]) ;
+            if (entry) {
+                entry.operation = 'Error: ' + m[2] ;
+                entry.percent = 100 ;
+                entry.done = true ;
+                entry.error = true ;
+                sendState = true ;
+            }
+        }
      
         return sendState ;
     }
@@ -69,7 +83,7 @@ export class ProjectGitStateTracker {
 
     private start(id: number, target: string) {
         if (!this.states_.has(target)) {
-            this.states_.set(target, { id: id, target: target, percent: 0, done: false, operation: 'Starting' }) ;
+            this.states_.set(target, { id: id, target: target, percent: 0, done: false, operation: 'Starting', error: false }) ;
         }
         else {
             let entry = this.states_.get(target) ;

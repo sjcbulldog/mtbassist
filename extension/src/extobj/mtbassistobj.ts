@@ -610,7 +610,7 @@ export class MTBAssistObject {
 
     private sendTasks() : void {
         let tasks : MTBAssistantTask[] = [] ;
-        if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
+        if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo && this.isPSOCEdge()) {
             let proj = this.env_.appInfo.projects.find(p => p.name === 'proj_bootloader') ;
             if (!proj) {
                 tasks.push(
@@ -2874,6 +2874,7 @@ export class MTBAssistObject {
                                 success: true
                             });
                     } else {
+                        this.bringChannelToFront() ;
                         this.sendMessageWithArgs('createProjectResult',
                             {
                                 uuid: request.data.uuid,

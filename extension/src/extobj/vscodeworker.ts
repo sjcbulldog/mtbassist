@@ -251,6 +251,7 @@ export class VSCodeWorker extends EventEmitter  {
                         return ;
                     }
                     else {
+                        this.emit('gitState', []) ;
                         this.sendProgress('Preparing VS Code workspace', 80);
                         this.logger_.info('-----------------------------------------------') ;
                         this.logger_.info('Preparing project for VSCode') ;

@@ -441,57 +441,64 @@
       </ng-template>
       
       <div class="step-content">
-        <h2>Review Your Project</h2>
-        <p class="step-description">Confirm your selections and create the project</p>
+        @if (!isLoading) {
+          <h2>Review Your Project</h2>
+          <p class="step-description">Confirm your selections and create the project</p>
+        } @else {
+          <h2>Creating Your Project</h2>
+          <p class="step-description warning-message">Please do not close Visual Studio Code until complete</p>
+        }
         
-        <div class="review-section">
-          <mat-card class="review-card">
-            <mat-card-header>
-              <mat-card-title>Project Summary</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="review-item">
-                <strong>Project Name:</strong> {{ projectInfoForm.value.projectName }}
-              </div>
-              <div class="review-item">
-                <strong>Location:</strong> {{ getLocation() }}
-              </div>
-              <div class="review-item">
-                <strong>Full Path:</strong> {{ getProjectPath() }}
-              </div>
-              
-              <mat-divider></mat-divider>
-              
-              <div class="review-item bsp-category-item">
-                <strong>BSP Category:</strong> {{ selectedCategory }}
-              </div>
-              <div class="review-item bsp-board-item">
-                <strong>Board:</strong> {{ selectedBSP?.name }}
-              </div>
-              <div class="review-item bsp-device-item">
-                <strong>Device:</strong> {{ selectedBSP?.device }}
-              </div>
-              <div class="review-item bsp-connectivity-item">
-                <strong>Connectivity:</strong> {{ selectedBSP?.connectivity }}
-              </div>
-              
-              <mat-divider></mat-divider>
-              
-              <div class="review-item">
-                <strong>Example Category:</strong> {{ selectedExampleCategory }}
-              </div>
-              <div class="review-item">
-                <strong>Code Example:</strong> {{ selectedExample?.name }}
-              </div>
-              @if (selectedExample?.description) {
+        @if (!isLoading) {
+          <div class="review-section">
+            <mat-card class="review-card">
+              <mat-card-header>
+                <mat-card-title>Project Summary</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
                 <div class="review-item">
-                  <strong>Description:</strong> 
-                  <span [innerHTML]="selectedExample?.description"></span>
+                  <strong>Project Name:</strong> {{ projectInfoForm.value.projectName }}
                 </div>
-              }
-            </mat-card-content>
-          </mat-card>
-        </div>
+                <div class="review-item">
+                  <strong>Location:</strong> {{ getLocation() }}
+                </div>
+                <div class="review-item">
+                  <strong>Full Path:</strong> {{ getProjectPath() }}
+                </div>
+                
+                <mat-divider></mat-divider>
+                
+                <div class="review-item bsp-category-item">
+                  <strong>BSP Category:</strong> {{ selectedCategory }}
+                </div>
+                <div class="review-item bsp-board-item">
+                  <strong>Board:</strong> {{ selectedBSP?.name }}
+                </div>
+                <div class="review-item bsp-device-item">
+                  <strong>Device:</strong> {{ selectedBSP?.device }}
+                </div>
+                <div class="review-item bsp-connectivity-item">
+                  <strong>Connectivity:</strong> {{ selectedBSP?.connectivity }}
+                </div>
+                
+                <mat-divider></mat-divider>
+                
+                <div class="review-item">
+                  <strong>Example Category:</strong> {{ selectedExampleCategory }}
+                </div>
+                <div class="review-item">
+                  <strong>Code Example:</strong> {{ selectedExample?.name }}
+                </div>
+                @if (selectedExample?.description) {
+                  <div class="review-item">
+                    <strong>Description:</strong> 
+                    <span [innerHTML]="selectedExample?.description"></span>
+                  </div>
+                }
+              </mat-card-content>
+            </mat-card>
+          </div>
+        }
         
         <!-- Progress Section -->
         @if (isLoading) {
@@ -501,8 +508,7 @@
                 <div mat-card-avatar class="progress-avatar">
                   <mat-icon>construction</mat-icon>
                 </div>
-                <mat-card-title>Creating Your Project</mat-card-title>
-                <mat-card-subtitle>{{ progressMessage }}</mat-card-subtitle>
+                <mat-card-title>{{ progressMessage }}</mat-card-title>
               </mat-card-header>
               <mat-card-content>
                 <div class="progress-container">
@@ -528,7 +534,7 @@
                         <div class="asset-info">
                           <span class="asset-name">{{ asset.target }}</span>
                           @if (asset.operation) {
-                            <span class="asset-operation">{{ asset.operation }}</span>
+                            <span class="asset-operation" [class.error]="asset.error">{{ asset.operation }}</span>
                           }
                         </div>
                         <div class="asset-progress">
@@ -548,21 +554,23 @@
           </div>
         }
         
-        <div class="step-actions">
-          <button mat-button matStepperPrevious [disabled]="isLoading || projectCreated">
-            <mat-icon>arrow_back</mat-icon>
-            Back
-          </button>
-          <button mat-raised-button 
-                  color="primary" 
-                  (click)="createProject()"
-                  [disabled]="isLoading || projectCreated">
-            @if (!isLoading) {
-              <mat-icon>rocket_launch</mat-icon>
-            }
-            {{ isLoading ? 'Creating Project...' : 'Create Project' }}
-          </button>
-        </div>
+        @if (!isLoading) {
+          <div class="step-actions">
+            <button mat-button matStepperPrevious [disabled]="isLoading || projectCreated">
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-raised-button 
+                    color="primary" 
+                    (click)="createProject()"
+                    [disabled]="isLoading || projectCreated">
+              @if (!isLoading) {
+                <mat-icon>rocket_launch</mat-icon>
+              }
+              {{ isLoading ? 'Creating Project...' : 'Create Project' }}
+            </button>
+          </div>
+        }
       </div>
     </mat-step>
   </mat-stepper>

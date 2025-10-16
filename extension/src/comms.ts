@@ -391,6 +391,7 @@ export interface CreateProjectGitState {
   operation?: string ;
   percent: number ;
   done: boolean ;
+  error: boolean ;
 }
 
 export type ProjectGitStateTrackerData = Array<CreateProjectGitState> ;
