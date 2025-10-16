@@ -515,6 +515,34 @@
                     {{ progressValue.toFixed(0) }}% Complete
                   </div>
                 </div>
+
+                <!-- Git Clone Progress -->
+                @if (gitState && gitState.length > 0) {
+                  <div class="git-state-container">
+                    <div class="git-state-header">
+                      <mat-icon>cloud_download</mat-icon>
+                      <span>Cloning Assets</span>
+                    </div>
+                    @for (asset of gitState; track asset.id) {
+                      <div class="git-asset-item">
+                        <div class="asset-info">
+                          <span class="asset-name">{{ asset.target }}</span>
+                          @if (asset.operation) {
+                            <span class="asset-operation">{{ asset.operation }}</span>
+                          }
+                        </div>
+                        <div class="asset-progress">
+                          <mat-progress-bar 
+                            mode="determinate" 
+                            [value]="asset.percent"
+                            color="accent">
+                          </mat-progress-bar>
+                          <span class="asset-percent">{{ asset.percent.toFixed(0) }}%</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
               </mat-card-content>
             </mat-card>
           </div>

@@ -2860,7 +2860,6 @@ export class MTBAssistObject {
 
     private createProject(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            this.bringChannelToFront();
             let fpath = path.join(request.data.location, request.data.name);
             if (!fs.existsSync(fpath)) {
                 fs.mkdirSync(fpath, { recursive: true });

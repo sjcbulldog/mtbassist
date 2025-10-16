@@ -24,7 +24,7 @@ import { MTBLoadFlags } from "../mtbenv/mtbenv/loadflags";
 import { MTBAssistObject } from "./mtbassistobj";
 import { MTBProjectInfo } from "../mtbenv/appdata/mtbprojinfo";
 import { ApplicationType } from "../mtbenv/appdata/mtbappinfo";
-import { ProjectGitStateTracker } from "./projectGitStateTracker";
+import { ProjectGitStateTracker } from "./gitstatetracker";
 
 export interface TaskToRun {
     task: string ;
@@ -129,6 +129,11 @@ export class VSCodeWorker extends EventEmitter  {
                     this.createProjectPercent_ = VSCodeWorker.createProjectMessages[this.createProjectIndex_].maximum;
                 }
                 this.sendProgress(str, this.createProjectPercent_);
+
+                if (this.createProjectIndex_ === 2) {
+                    this.gitState_ = new ProjectGitStateTracker() ;
+                    sendState = true ;
+                }
             }
 
             if (this.createProjectIndex_ < VSCodeWorker.createProjectMessages.length - 1) {
@@ -141,6 +146,11 @@ export class VSCodeWorker extends EventEmitter  {
                     }
                     this.createProjectPercent_ = VSCodeWorker.createProjectMessages[this.createProjectIndex_].start ;
                     this.sendProgress(str, this.createProjectPercent_);
+
+                    if (this.createProjectIndex_ === 2) {
+                        this.gitState_ = new ProjectGitStateTracker() ;
+                        sendState = true ;
+                    }                    
                 }
             }
 

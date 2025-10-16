@@ -1636,6 +1636,73 @@ body.dark-theme,
       font-size: 0.9rem;
     }
   }
+
+  .git-state-container {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+
+    .git-state-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      color: #2196f3;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .git-asset-item {
+      margin-bottom: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background-color: rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+
+      .asset-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 8px;
+
+        .asset-name {
+          font-weight: 500;
+          font-size: 0.9rem;
+        }
+
+        .asset-operation {
+          font-size: 0.8rem;
+          color: rgba(0, 0, 0, 0.6);
+          font-style: italic;
+        }
+      }
+
+      .asset-progress {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        mat-progress-bar {
+          flex: 1;
+          height: 6px;
+          border-radius: 3px;
+        }
+
+        .asset-percent {
+          font-size: 0.85rem;
+          font-weight: 500;
+          min-width: 40px;
+          text-align: right;
+        }
+      }
+    }
+  }
 }
 
 // Dark theme review section
@@ -1738,6 +1805,35 @@ body.dark-theme,
     .mat-mdc-card-subtitle {
       color: var(--dark-text-secondary);
     }
+
+    .git-state-container {
+      border-top-color: rgba(255, 255, 255, 0.12);
+
+      .git-state-header {
+        color: #64b5f6;
+      }
+
+      .git-asset-item {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.12);
+
+        .asset-info {
+          .asset-name {
+            color: var(--dark-text-primary);
+          }
+
+          .asset-operation {
+            color: var(--dark-text-secondary);
+          }
+        }
+
+        .asset-progress {
+          .asset-percent {
+            color: var(--dark-text-primary);
+          }
+        }
+      }
+    }
   }
 }
 
@@ -1766,6 +1862,35 @@ body.dark-theme,
     
     .mat-mdc-card-subtitle {
       color: var(--light-text-secondary);
+    }
+
+    .git-state-container {
+      border-top-color: rgba(0, 0, 0, 0.12);
+
+      .git-state-header {
+        color: #2196f3;
+      }
+
+      .git-asset-item {
+        background-color: rgba(0, 0, 0, 0.02);
+        border-color: rgba(0, 0, 0, 0.08);
+
+        .asset-info {
+          .asset-name {
+            color: var(--light-text-primary);
+          }
+
+          .asset-operation {
+            color: var(--light-text-secondary);
+          }
+        }
+
+        .asset-progress {
+          .asset-percent {
+            color: var(--light-text-primary);
+          }
+        }
+      }
     }
   }
 }
