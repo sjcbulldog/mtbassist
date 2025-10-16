@@ -43,3 +43,8 @@ Fixed bug with filter of environment when launching external programs
 Fixed bug with installing new software when no project is loaded
 Parallelized the search for keywords in asset documentation to make the extension more responsive
 Moved LLVM versions available to JSON file on server that can be fetched, added fallback verions of LLVM in case server not reachable
+
+### 2.4.0
+Changed the IDC Launcher support to directly download and install the launcher service
+Updated the project creation display to show more details about what is happening
+

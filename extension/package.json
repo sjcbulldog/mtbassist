@@ -116,7 +116,8 @@
     "copyshared": "shx cp ../content/src/comms.ts src",
     "copy": "npm run copydist && npm run copyshared",
     "content": "cd ../content && npm run build",
-    "build": "npm run content && npm run copy && npm run compile"
+    "build": "npm run content && npm run copy && npm run compile",
+    "prerelease" : "vsce publish --pre-release"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
@@ -136,6 +137,7 @@
     "shx": "^0.4.0",
     "ts-loader": "^9.3.1",
     "typescript": "^4.7.4",
+    "vsce": "^2.15.0",
     "webpack": "^5.74.0",
     "webpack-cli": "^4.10.0"
   },
