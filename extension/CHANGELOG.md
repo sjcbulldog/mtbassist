@@ -48,3 +48,6 @@ Moved LLVM versions available to JSON file on server that can be fetched, added 
 Changed the IDC Launcher support to directly download and install the launcher service
 Updated the project creation display to show more details about what is happening
 
+### 2.5.0
+Added copyright information when installing the LLVM compiler.
+

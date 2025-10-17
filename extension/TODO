@@ -6,11 +6,12 @@ Bugs
 ----------
 - Sensitivity lists in manifests for project creation
 
-Features
--------------------------------------------------------------------------------------------
-- Add a system to process build output and look for specific failure conditions and offer advice (cannot figure this out yet)
-- Project creation, project some progress indication in the application/project part
+Finish
+----------
+- Linux directly download and install IDC service
+- MacOS directly download and install IDC service
 
-TODO
-----
-Check light theme for all tabs
+Test
+----------
+- Linux end to end flow, downloading, installing tools, installing LLVM
+- Light theme in all GUI windows

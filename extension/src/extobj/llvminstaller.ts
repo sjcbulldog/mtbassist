@@ -46,7 +46,7 @@ export class LLVMInstaller extends EventEmitter {
      * Static mapping of LLVM versions to their download URLs for different platforms
      * Each version contains platform-specific URLs (win32, darwin, linux) and 'all' for cross-platform files
      */
-    private static llvmURLs : LLVMUrls[] = [] ;
+    private static llvmURLs : any ;
 
     /** Logger instance for recording installation progress and errors */
     private logger_: winston.Logger ;    
@@ -62,6 +62,10 @@ export class LLVMInstaller extends EventEmitter {
     constructor(logger: winston.Logger) {
         super() ;
         this.logger_ = logger;
+    }
+
+    public get copyright() : string {
+        return LLVMInstaller.llvmURLs['copyright'] || 'https://github.com/arm/arm-toolchain?tab=License-1-ov-file' ;
     }
 
     private static readFallbackList(logger: winston.Logger) : Promise<void> {
@@ -138,6 +142,9 @@ export class LLVMInstaller extends EventEmitter {
             .then(() => {
                 let versions : string[] = [] ;
                 for(let ver of Object.keys(LLVMInstaller.llvmURLs)) {
+                    if (ver === 'copyright') {
+                        continue ;
+                    }
                     let obj = LLVMInstaller.llvmURLs[ver as keyof typeof LLVMInstaller.llvmURLs] as LLVMUrls ;
                     let url = obj[process.platform as keyof typeof obj] ;
                     if (url && url.length > 0 && obj.all && obj.all.length > 0) {

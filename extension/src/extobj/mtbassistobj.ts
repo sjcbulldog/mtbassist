@@ -1151,7 +1151,8 @@ export class MTBAssistObject {
                 .then((versions) => {
                     this.sendMessageWithArgs('installLLVM', {
                         enabled: true,
-                        versions: versions
+                        versions: versions,
+                        copyright: this.llvminstaller_.copyright,
                     }) ;
                     resolve() ;
                 }) ;

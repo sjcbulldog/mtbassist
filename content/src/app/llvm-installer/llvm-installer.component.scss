@@ -87,6 +87,42 @@
     }
   }
 
+  .license-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: var(--info-background, #e3f2fd);
+    border: 1px solid var(--info-border, #90caf9);
+    color: var(--info-text, #0d47a1);
+    font-size: 0.9rem;
+    line-height: 1.5;
+
+    mat-icon {
+      color: var(--info-icon, #1976d2);
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      margin-top: 0.1rem;
+      flex-shrink: 0;
+    }
+
+    p {
+      margin: 0;
+      flex: 1;
+
+      a {
+        color: var(--info-link, #1565c0);
+        text-decoration: none;
+        font-weight: 500;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
   .installer-content {
     padding: 1.5rem;
 
@@ -297,6 +333,24 @@
       }
     }
 
+    .license-notice {
+      background: var(--dark-info-background, #1a237e);
+      border-color: var(--dark-info-border, #3f51b5);
+      color: var(--dark-info-text, #e8eaf6);
+
+      mat-icon {
+        color: var(--dark-info-icon, #5c6bc0);
+      }
+
+      p a {
+        color: var(--dark-info-link, #90caf9);
+
+        &:hover {
+          color: var(--dark-info-link-hover, #bbdefb);
+        }
+      }
+    }
+
     .installer-content {
       .form-section h3 {
         color: var(--dark-text-primary, #ffffff);
@@ -431,6 +485,24 @@
 
         &:hover {
           color: #333333;
+        }
+      }
+    }
+
+    .license-notice {
+      background: #e3f2fd;
+      border-color: #90caf9;
+      color: #0d47a1;
+
+      mat-icon {
+        color: #1976d2;
+      }
+
+      p a {
+        color: #1565c0;
+
+        &:hover {
+          color: #0d47a1;
         }
       }
     }
