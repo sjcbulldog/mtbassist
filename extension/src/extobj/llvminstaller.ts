@@ -426,14 +426,14 @@ export class LLVMInstaller extends EventEmitter {
                         return ;
                     }
                     this.installPath_ = tpath ;
-                    ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, 'hdiutil', ['detach', mountPoint], {})
+                     ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, 'hdiutil', ['detach', mountPoint], {})
                     .then(result => {
                         if (result[0] !== 0) {
                             let msg = result[1].join('\n') ;
                             reject(new Error(`Failed to unmount DMG: ${msg}`)) ;
                             return ;
                         }
-                        let ret : string | undefined = probePath ? tpath : undefined ; 
+                        let ret : string | undefined = probePath ? path.basename(tpath) : undefined ; 
                         resolve(ret) ;
                     })
                     .catch(err => {
