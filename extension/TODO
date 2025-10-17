@@ -8,10 +8,7 @@ Bugs
 
 Finish
 ----------
-- Add a vscode setting to disable LLVM nag
-- Add a command to install LLVM
 
 Test
 ----------
-- Linux end to end flow, downloading, installing tools, installing LLVM
 - Light theme in all GUI windows
