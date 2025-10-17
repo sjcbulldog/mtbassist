@@ -1692,29 +1692,32 @@ export class MTBAssistObject {
             envobj['CY_TOOLS_PATHS'] = this.toolspath_;
         }
 
-        let cp = exec.execFile(cmdargs[0],
-            args,
-            {
-                cwd: this.env_?.appInfo?.appdir,
-                env: envobj
-            }, (error, stdout, stderr) => {
-                if (error) {
-                    vscode.window.showErrorMessage(error.message);
-                }
-                if (reloadApp) {
-                    this.env_?.reloadAppInfo()
-                        .then(() => {
-                            this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv());
-                        })
-                        .catch((err) => {
-                            this.logger_.error('Error reloading app info:', err);
-                        });
-                }
-                else {
-                    this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv());
-                }
+        let opt: exec.SpawnOptionsWithoutStdio = {
+            cwd: this.env_?.appInfo?.appdir,
+            env: envobj,
+            detached: true
+        } ;
+        let cp = exec.spawn(cmdargs[0], args, opt) ;
+        cp.on('error', (err) => {
+            this.logger_.error(`Failed to launch tool: ${err.message}`) ;
+        }) ;
+
+        cp.on('exit', (code, signal) => {
+            if (reloadApp && this.env_ && this.env_.appInfo) {
+                this.doRestartExtension()
+                .catch((err) => {
+                    this.logger_.error(`Failed to restart extension after tool exit: ${err.message}`) ;
+                }) ;
             }
-        );
+        });
+
+        cp.stderr.on('data', (data) => {
+            this.logger_.error(`Tool error output: ${data}`) ;
+        });
+
+        cp.stdout.on('data', (data) => {
+            this.logger_.debug(`Tool output: ${data}`) ;
+        }) ;
     }
 
     private launchLibraryManager(request: FrontEndToBackEndRequest): Promise<void> {
