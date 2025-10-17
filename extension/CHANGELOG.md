@@ -55,5 +55,9 @@ Changed the IDC Launcher support to directly download and install the launcher s
 ### 2.6.0
 Refactored the LLVM installer to be more rebust against future changes in the release formats
 Added an extension setting 'mtbassist2.disablellvmnag' that can be set to display the LLVM nag
-Create a vscode command to start the LLVM installation process.
+Create a vscode command to start the LLVM installation process
 Fix small bugs with the ModusToolbox tools installer for Linux
+
+### 2.7.0
+If configurators are launched and still open when VSCode exits, leave these configurators open
+
