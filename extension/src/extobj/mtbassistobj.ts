@@ -1816,35 +1816,15 @@ export class MTBAssistObject {
             disposable = vscode.commands.registerCommand('mtbassist2.addBootloader', this.addBootloader.bind(this));
             this.context_.subscriptions.push(disposable);
 
-            disposable = vscode.commands.registerCommand('mtbassist2.testCommand', this.testCommand.bind(this));
+            disposable = vscode.commands.registerCommand('mtbassist2.installLLVM', this.installLLVMCommand.bind(this));
             this.context_.subscriptions.push(disposable);            
 
             this.commandsInited_ = true;
         }
     }
 
-    private testCommand() {
-        fetch(MTBAssistObject.bootloaderDocUrl)
-        .then(response => {
-            if (!response.ok) {
-                vscode.window.showErrorMessage(`Failed to fetch bootloader documentation: ${response.statusText}`);
-                return ;
-            }
-
-            response.text().then(doc => {
-                const panel = vscode.window.createWebviewPanel(
-                    'bootloaderDoc',
-                    'Bootloader Documentation',
-                    vscode.ViewColumn.One,
-                    {}
-                );
-                const md = new mdit() ;
-                panel.webview.html = md.render(doc);
-            });
-        })
-        .catch(err => {
-            vscode.window.showErrorMessage(`Failed to fetch bootloader documentation: ${err}`);
-        }) ;        
+    private installLLVMCommand() {
+        this.installLLVM({ request: 'install-llvm', data: undefined }) ;
     }
 
     private async finishBootloader() {
@@ -2498,14 +2478,18 @@ export class MTBAssistObject {
             let msg : string | undefined = undefined ;
             let msgButton : string | undefined = undefined ;
             let msgRequest : FrontEndToBackEndType | undefined = undefined ;
+            let msgHelp: string | undefined = undefined ;
+            let config = vscode.workspace.getConfiguration();            
+            let autodisp = config.get('mtbassist2.disableLLVMNag') as boolean ;
 
-            if (this.isPSOCEdge() && !this.settings_.hasLLVM) {
+            if (this.isPSOCEdge() && !this.settings_.hasLLVM && !autodisp) {
                 //
                 // See if we need to install the LLVM compiler
                 //
                 msg = 'The LLVM compiler is useful for many PSOC Edge projects. Do you want to install it?' ;
                 msgButton = 'Install LLVM' ;
                 msgRequest = 'install-llvm' ;
+                msgHelp = 'There is a VSCode extension setting that disables this prompt.  See File/Preferences/Settings and search for "mtbassist2".' ;
             }
 
             let vscTaskStatus : MTBVSCodeTaskStatus= 'good' ;
@@ -2542,6 +2526,7 @@ export class MTBAssistObject {
                 generalMessage: msg,
                 generalMessageButtonText: msgButton,
                 generalMessageRequest: msgRequest,
+                generalMessageHelp: msgHelp,
                 configuration: this.settings_.configuration,
                 readme: readme
             };

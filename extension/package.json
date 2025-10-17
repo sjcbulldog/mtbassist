@@ -57,8 +57,8 @@
         "title": "ModusToolbox Assistant: Add Bootloader To PSOC Edge Application"
       },
       {
-        "command": "mtbassist2.testCommand",
-        "title": "ModusToolbox Assistant: Test Command"
+        "command": "mtbassist2.installLLVM",
+        "title": "ModusToolbox Assistant: Install the LLVM Compiler"
       }
     ],
     "keybindings": [
@@ -87,6 +87,11 @@
           ],
           "default": "Always",
           "description": "Automatically display the ModusToolbox Assistant when VSCode is opened."
+        },
+        "mtbassist2.disableLLVMNag": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, do not show the hint to install LLVM when opening a ModusToolbox PSoC Edge project without LLVM installed."
         },
         "mtbassist2.displayHint": {
           "type": "boolean",

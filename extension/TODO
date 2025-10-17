@@ -8,7 +8,8 @@ Bugs
 
 Finish
 ----------
-- Linux directly download and install IDC service
+- Add a vscode setting to disable LLVM nag
+- Add a command to install LLVM
 
 Test
 ----------

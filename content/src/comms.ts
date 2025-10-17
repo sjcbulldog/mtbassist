@@ -292,6 +292,7 @@ export interface ApplicationStatusData {
   generalMessage? : string ;
   generalMessageButtonText? : string ;
   generalMessageRequest? : FrontEndToBackEndType ;
+  generalMessageHelp? : string ;
 }
 
 export interface DevKitInfo {
