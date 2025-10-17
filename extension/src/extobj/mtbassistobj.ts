@@ -110,6 +110,7 @@ export class MTBAssistObject {
     private pendingPasswordPromise: ((pass: string | undefined) => void) | undefined = undefined ;
     private pendingStatusClosePromise: (() => void) | undefined = undefined ;
     private activeTask_ : STask | undefined = undefined ;
+    private password? : string ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -246,8 +247,13 @@ export class MTBAssistObject {
         }
 
         let ret = new Promise<string | undefined >((resolve, reject) => {
-            this.pendingPasswordPromise = resolve ;
-            this.sendMessageWithArgs('getPassword', true);
+            if (this.password !== undefined) {
+                resolve(this.password) ;
+            }
+            else {
+                this.pendingPasswordPromise = resolve ;
+                this.sendMessageWithArgs('getPassword', true);
+            }
         });
     
         return ret ;
@@ -1200,6 +1206,7 @@ export class MTBAssistObject {
     private processPasswordResponse(data: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (this.pendingPasswordPromise) {
+                this.password = data.data ;
                 let p = this.pendingPasswordPromise ;
                 this.pendingPasswordPromise = undefined ;
                 this.sendMessageWithArgs('getPassword', false);

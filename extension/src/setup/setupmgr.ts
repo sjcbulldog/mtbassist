@@ -432,24 +432,52 @@ export class SetupMgr extends MtbManagerBase {
 
     private installIDCServiceDarwin() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            this.downloadFile(SetupMgr.darwinIDCDownloadURL, path.join(os.tmpdir(), 'itb-launcher-service.exe'))
-            .then(() => {
+            this.emit('addStatusLine', 'Downloading IDC service...') ;
+            let target = path.join(os.tmpdir(), 'itb-launcher-service.pkg') ;            
+            this.downloadFile(SetupMgr.darwinIDCDownloadURL, target)
+            .then(async () => {
+                let passwd = await this.ext.getPasswordFromUser() ;
+                if (passwd === undefined) {
+                    reject(new Error('Password is install IDC service.'));
+                }
+
+                this.emit('addStatusLine', 'Installing IDC service...') ;
+                this.runInstallerDarwin(target, 'itb-launcher-service', '1.0', passwd)
+                .then(() => {
+                    resolve();
+                })
+                .catch((err) => {
+                    reject(err);
+                });
             })
-            .catch((err) => { 
-                reject(err) ;
-            }) ;            
-        }) ;
-        return ret ;
+            .catch((err) => {
+                reject(err);
+            });
+        });
+        return ret;
     }
 
     private installIDCServiceLinux() : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            this.downloadFile(SetupMgr.linuxIDCDownloadURL, path.join(os.tmpdir(), 'itb-launcher-service.exe'))
-            .then(() => {
+            this.emit('addStatusLine', 'Downloading IDC service...') ;
+            let target = path.join(os.tmpdir(), 'itb-launcher-service.deb') ;
+            this.downloadFile(SetupMgr.linuxIDCDownloadURL, target)
+            .then(async () => {
+                let password = await this.ext.getPasswordFromUser() ;
+                if (password === undefined) {
+                    reject(new Error('Password is install IDC service.'));
+                }
+                let args = ['dpkg', '-i', target] ;
+                let sudopwd = [ password! ] ;
+                let cmd = '/usr/bin/sudo' ;          
+                let opts: MTBRunCommandOptions = {
+                    stdin: sudopwd,
+                };                                      
+                ModusToolboxEnvironment.runCmdCaptureOutput(this.logger, cmd, args , opts);
             })
-            .catch((err) => { 
-                reject(err) ;
-            }) ;              
+            .catch((err) => {
+                reject(err);
+            });
         }) ;
         return ret ;
     }
@@ -747,11 +775,25 @@ export class SetupMgr extends MtbManagerBase {
                 return ;
             }
 
+            this.runInstallerDarwin(p, id, version, password)
+            .then(() => {
+                resolve();
+            })
+            .catch((err) => {
+                reject(err);
+            });
+
+        });
+        return ret;
+    }
+
+    private runInstallerDarwin(p: string, id: string, version: string, password?: string) : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
             let cmd ;
             let sudopwd: string[] | undefined ;
             let args: string[] ;
 
-            if (this.mtbLocation_?.startsWith('/Applications')) {
+            if (password) {
                 args = ['-S', '/usr/sbin/installer', '-target', '/Applications', '-pkg', p] ;                
                 sudopwd = [ password! ] ;
                 cmd = '/usr/bin/sudo' ;
@@ -781,9 +823,9 @@ export class SetupMgr extends MtbManagerBase {
             })
             .catch((err) => {
                 reject(new Error(`Failed to install feature ${id} - ${version} - ${err.message}`));
-            });
-        });
-        return ret;
+            });            
+        }) ;
+        return ret ;
     }
 
     private isPasswordError(text: string[]) : boolean { 
