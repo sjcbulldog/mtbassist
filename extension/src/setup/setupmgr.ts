@@ -714,7 +714,7 @@ export class SetupMgr extends MtbManagerBase {
 
             let cmdstr = 'installOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
             let addargs : string[] = [] ;
-            this.launcher_.run(['-idc.service', cmdstr, ...addargs], this.downloadCallback.bind(this), id, password)
+            this.launcher_.run(['-idc.service', cmdstr, ...addargs], this.downloadCallback.bind(this), id, [password])
             .then((result) => {
                 if (!result) {
                     reject(new Error(`Failed to install feature ${id} - ${version}`));
