@@ -86,6 +86,13 @@
                     <mat-icon class="warning-icon">warning</mat-icon>
                     <div class="warning-text">
                       <span class="warning-message">{{ applicationStatus.generalMessage }}</span>
+                      @if (applicationStatus.generalMessageHelp) {
+                        <mat-icon class="help-icon" 
+                                  [matTooltip]="applicationStatus.generalMessageHelp"
+                                  matTooltipPosition="above">
+                          help
+                        </mat-icon>
+                      }
                     </div>
                     <button mat-raised-button color="primary" (click)="handleGeneralMessageButton()" [disabled]="running" class="warning-action">
                       {{ applicationStatus.generalMessageButtonText || 'Take Action' }}

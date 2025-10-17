@@ -51,3 +51,9 @@ Updated the project creation display to show more details about what is happenin
 ### 2.5.0
 Added copyright information when installing the LLVM compiler.
 Changed the IDC Launcher support to directly download and install the launcher service (macos)
+
+### 2.6.0
+Refactored the LLVM installer to be more rebust against future changes in the release formats
+Added an extension setting 'mtbassist2.disablellvmnag' that can be set to display the LLVM nag
+Create a vscode command to start the LLVM installation process.
+Fix small bugs with the ModusToolbox tools installer for Linux

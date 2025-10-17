@@ -755,12 +755,28 @@
         
         .warning-text {
           flex: 1;
+          display: flex;
+          align-items: center;
+          gap: 8px;
           
           .warning-message {
             color: #856404;
             font-weight: 500;
             font-size: 14px;
             line-height: 1.4;
+          }
+
+          .help-icon {
+            color: #856404;
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            cursor: help;
+            opacity: 0.8;
+
+            &:hover {
+              opacity: 1;
+            }
           }
         }
         
@@ -1996,6 +2012,11 @@
   mat-icon {
     color: #ffffff;
   }
+}
+
+// Dark theme help icon styling
+.application-status.dark-theme .warning-text .help-icon {
+  color: var(--warning-color);
 }
 
 // Memory Usage Section Styles

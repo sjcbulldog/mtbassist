@@ -2489,7 +2489,7 @@ export class MTBAssistObject {
                 msg = 'The LLVM compiler is useful for many PSOC Edge projects. Do you want to install it?' ;
                 msgButton = 'Install LLVM' ;
                 msgRequest = 'install-llvm' ;
-                msgHelp = 'There is a VSCode extension setting that disables this prompt.  See File/Preferences/Settings and search for "mtbassist2".' ;
+                msgHelp = 'There is a VSCode extension setting that disables this prompt.  See File/Preferences/Settings and search for "mtbassist2.disablellvmnag".' ;
             }
 
             let vscTaskStatus : MTBVSCodeTaskStatus= 'good' ;
