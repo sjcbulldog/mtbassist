@@ -508,7 +508,7 @@ export class LLVMInstaller extends EventEmitter {
                 // Extract the main LLVM compiler package
 
                 if (probePath) {
-                    let targetDir = await this.getTargetDirFromTar(tarfile) ;
+                    targetDir = await this.getTargetDirFromTar(tarfile) ;
                     if (!targetDir) {
                         reject(new Error('Could not determine target directory from tar file')) ;
                         return ;
