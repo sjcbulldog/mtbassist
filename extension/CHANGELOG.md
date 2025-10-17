@@ -45,9 +45,9 @@ Parallelized the search for keywords in asset documentation to make the extensio
 Moved LLVM versions available to JSON file on server that can be fetched, added fallback verions of LLVM in case server not reachable
 
 ### 2.4.0
-Changed the IDC Launcher support to directly download and install the launcher service
+Changed the IDC Launcher support to directly download and install the launcher service (window)
 Updated the project creation display to show more details about what is happening
 
 ### 2.5.0
 Added copyright information when installing the LLVM compiler.
-
+Changed the IDC Launcher support to directly download and install the launcher service (macos)
