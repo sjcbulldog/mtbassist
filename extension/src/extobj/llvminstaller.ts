@@ -22,6 +22,12 @@ import { ModusToolboxEnvironment } from '../mtbenv';
 import { InstallLLVMProgressMsg } from '../comms';
 
 // TODO: read a JSON file from mewserver.org to add possible new versions and URLs.
+interface LLVMUrls {
+    win32? : string[] ;
+    darwin? : string[] ;
+    linux? : string[] ;
+    all? : string[] ;
+}
 
 /**
  * LLVMInstaller - Downloads and installs LLVM embedded toolchain for ARM development
@@ -33,42 +39,14 @@ import { InstallLLVMProgressMsg } from '../comms';
  * library overlay, extracting them to the specified installation directory.
  */
 export class LLVMInstaller extends EventEmitter {
+
+    private static readonly llvmVersionsUrl = 'https://www.mewserver.org/vscode/llvmversions.json' ;
+
     /** 
      * Static mapping of LLVM versions to their download URLs for different platforms
      * Each version contains platform-specific URLs (win32, darwin, linux) and 'all' for cross-platform files
      */
-    private static llvmURLs = {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        '19.1.5' : {
-            'win32' : [
-                'https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.5/LLVM-ET-Arm-19.1.5-Windows-x86_64.zip'
-            ],
-            'darwin' : [
-                'https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.5/LLVM-ET-Arm-19.1.5-Darwin-universal.dmg'
-            ],
-            'linux' : [
-                'https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.5/LLVM-ET-Arm-19.1.5-Linux-AArch64.tar.xz'
-            ],
-            'all' : [
-                'https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.5/LLVM-ET-Arm-newlib-overlay-19.1.5.zip'
-            ]
-        },
-        // eslint-disable-next-line @typescript-eslint/naming-convention        
-        '19.1.1' : {
-            'win32' : [
-                'https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.1/LLVM-ET-Arm-19.1.1-Windows-x86_64.zip'
-            ],
-            'darwin' : [
-                'https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.1/LLVM-ET-Arm-19.1.1-Darwin-universal.dmg'  
-            ],
-            'linux' : [
-                'https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.1/LLVM-ET-Arm-19.1.1-Linux-AArch64.tar.xz'
-            ],
-            'all' : [
-                'https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-19.1.1/LLVM-ET-Arm-newlib-overlay-19.1.1.zip'
-            ]
-        }
-    } ;
+    private static llvmURLs : any ;
 
     /** Logger instance for recording installation progress and errors */
     private logger_: winston.Logger ;    
@@ -86,6 +64,64 @@ export class LLVMInstaller extends EventEmitter {
         this.logger_ = logger;
     }
 
+    public get copyright() : string {
+        return LLVMInstaller.llvmURLs['copyright'] || 'https://github.com/arm/arm-toolchain?tab=License-1-ov-file' ;
+    }
+
+    private static readFallbackList(logger: winston.Logger) : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let p = path.join(__dirname, '..', 'content', 'llvmversions.json') ;    
+            fs.readFile(p, 'utf8', (err, data) => {
+                if (err) {
+                    logger.error(`Failed to read fallback llvmversions.json: ${err}`) ;
+                    reject(err) ;
+                    return ;
+                }
+                try {
+                    LLVMInstaller.llvmURLs = JSON.parse(data) ;
+                    logger.debug(`Using fallback llvmversions.json with ${Object.keys(LLVMInstaller.llvmURLs).length} versions`);
+                    resolve() ;
+                }
+                catch(err) {
+                    logger.error(`Failed to parse fallback llvmversions.json: ${err}`) ;
+                    reject(err) ;
+                }
+            }) ;
+        }) ;
+        return ret ;
+    }
+
+    private static fetchLlvmURLs(logger: winston.Logger) : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            logger.debug(`Starting download from ${LLVMInstaller.llvmVersionsUrl}`);
+            fetch(LLVMInstaller.llvmVersionsUrl)
+            .then(response => {
+                if (!response.ok) {
+                    logger.error(`Failed to download ${LLVMInstaller.llvmVersionsUrl}: ${response.statusText} - using fallback llvm list`);  
+                    this.readFallbackList(logger)
+                    .then(() => resolve())
+                    .catch(err => reject(err)) ;
+                    return ;
+                }
+                else {
+                    response.json()
+                    .then(data => {
+                        LLVMInstaller.llvmURLs = data as any ;
+                        logger.debug(`Downloaded llvmversions.json with ${Object.keys(LLVMInstaller.llvmURLs).length} versions`);
+                        resolve() ;
+                    })
+                    .catch(err => {
+                        logger.error(`Failed to parse JSON from ${LLVMInstaller.llvmVersionsUrl}: ${err} - using fallback llvm list`);  
+                        this.readFallbackList(logger)
+                        .then(() => resolve())
+                        .catch(err => reject(err)) ;
+                    }) ;
+                }
+            }) ;
+        }) ;
+        return ret ;
+    }
+
     /**
      * Get the path where LLVM was installed
      * 
@@ -100,8 +136,25 @@ export class LLVMInstaller extends EventEmitter {
      * 
      * @returns Array of version strings available for installation
      */
-    public static getAvailableVersions() : string[] {
-        return Object.keys(LLVMInstaller.llvmURLs) ;
+    public static getAvailableVersions(logger: winston.Logger) : Promise<string[]> {
+        let ret = new Promise<string[]>((resolve, reject) => {
+            this.fetchLlvmURLs(logger)
+            .then(() => {
+                let versions : string[] = [] ;
+                for(let ver of Object.keys(LLVMInstaller.llvmURLs)) {
+                    if (ver === 'copyright') {
+                        continue ;
+                    }
+                    let obj = LLVMInstaller.llvmURLs[ver as keyof typeof LLVMInstaller.llvmURLs] as LLVMUrls ;
+                    let url = obj[process.platform as keyof typeof obj] ;
+                    if (url && url.length > 0 && obj.all && obj.all.length > 0) {
+                        versions.push(ver) ;
+                    }
+                }
+                resolve(versions) ;
+            });
+        });
+        return ret ;
     }
 
     /**
@@ -163,12 +216,12 @@ export class LLVMInstaller extends EventEmitter {
     private getURLsForVersion(version: string) : string[] {
         let ret: string[] = [] ;
         if (version in LLVMInstaller.llvmURLs) {
-            let obj =  LLVMInstaller.llvmURLs[version as keyof typeof LLVMInstaller.llvmURLs] ;
+            let obj =  LLVMInstaller.llvmURLs[version as keyof typeof LLVMInstaller.llvmURLs] as LLVMUrls | undefined ;
             if (obj) {
                 // Add platform-specific URLs (win32, darwin, linux)
                 ret = ret.concat(obj[process.platform as keyof typeof obj] || []) ;
                 // Add universal files that work on all platforms
-                ret = ret.concat(obj['all'] || []) ;
+                ret = ret.concat(obj.all|| []) ;
             }
         }
 

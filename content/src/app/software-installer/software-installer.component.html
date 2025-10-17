@@ -25,9 +25,6 @@
           <div class="spinner"></div>
         </div>
       }
-      <div class="idc-launcher-note">
-        <p style="font-size: 2.5rem; font-weight: 700; text-align: center; margin: 2rem 0;"><strong>Note:</strong> If the IDC Launcher Service is still installing, please wait until it is done.</p>
-      </div>
     }
     @else {
       <div class="step-indicator">Step {{ step + 2 }} of 4</div>
@@ -236,7 +233,7 @@
             }
           </div>
           
-          <button class="reinit-btn" (click)="onReinit()">Reinitialize Extension</button>
+          <button class="reinit-btn" (click)="onReinit()">Restart Extension</button>
         </div>
       }
       @case (3) {
@@ -270,7 +267,7 @@
             }
           </div>
           
-          <button class="reinit-btn" (click)="onReinit()">Reinitialize Extension</button>
+          <button class="reinit-btn" (click)="onReinit()">Restart Extension</button>
         </div>
       }
     }

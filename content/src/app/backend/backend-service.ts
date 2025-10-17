@@ -18,7 +18,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, MemoryUsageData, InstallLLVMProgressMsg, MTBAssistantTask, LCSBSPKeywordAliases } from '../../comms';
+import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, MemoryUsageData, InstallLLVMProgressMsg, MTBAssistantTask, LCSBSPKeywordAliases, ProjectGitStateTrackerData } from '../../comms';
 import { ProjectManager } from './projectmgr';
 
 declare var acquireVsCodeApi: any | undefined ;
@@ -77,6 +77,7 @@ export class BackendService {
     os: BehaviorSubject<string> = new BehaviorSubject<string>('') ;
     isPasswordVisible: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false) ;
     availableTasks: BehaviorSubject<MTBAssistantTask[]> = new BehaviorSubject<MTBAssistantTask[]> ([]);
+    gitState: BehaviorSubject<ProjectGitStateTrackerData> = new BehaviorSubject<ProjectGitStateTrackerData>([]) ;
 
     // LLVM installer related
     llvmVersions: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
@@ -280,6 +281,14 @@ export class BackendService {
         this.registerHandler('tasksAvailable', (cmd) => { this.availableTasks.next(cmd.data) });
         this.registerHandler('lcsGuide', (cmd) => { this.lcsGuide.next(cmd.data || '') });
         this.registerHandler('lcsKeywordAliases', (cmd) => { this.lcsKeywordAliases.next(cmd.data || []) });
+        this.registerHandler('gitState', (cmd) => { this.receivedGitState(cmd) }) ;
+    }
+
+    private receivedGitState(cmd: BackEndToFrontEndResponse) {
+        if (cmd.data) {
+            this.debug(`Received git state: ${JSON.stringify(cmd.data)}`) ;
+            this.gitState.next(cmd.data as ProjectGitStateTrackerData) ;
+        }
     }
 
     private handleInstallLLVMMessage(cmd: BackEndToFrontEndResponse) {

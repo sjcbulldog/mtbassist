@@ -18,6 +18,7 @@ import * as winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import * as mdit from 'markdown-it';
 import { VSCodeTransport } from './vscodetransport';
 import { ConsoleTransport } from './consoletransport';
 import { ModusToolboxEnvironment, MTBRunCommandOptions } from '../mtbenv/mtbenv/mtbenv';
@@ -27,7 +28,7 @@ import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
     FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, LCSBSPKeywordAliases, ManifestStatusType, Middleware, MTBAssistantMode, 
     MTBAssistantTask, 
-    MTBLocationStatus, MTBVSCodeSettingsStatus, MTBVSCodeTaskStatus, Project, SettingsError, ThemeType, Tool
+    MTBLocationStatus, MTBVSCodeSettingsStatus, MTBVSCodeTaskStatus, Project, ProjectGitStateTrackerData, SettingsError, ThemeType, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
@@ -52,6 +53,7 @@ import { VSCodeAppTaskGenerator } from '../vscodetasks/vscodeapptaskgen';
 import { VSCodeProjTaskGenerator } from '../vscodetasks/vscodeprojtaskgen';
 import { RunTimeTracker } from '../runtime';
 import fetch from 'node-fetch';
+import { ApplicationType } from '../mtbenv/appdata/mtbappinfo';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -61,8 +63,10 @@ export class MTBAssistObject {
     private static readonly devcfgProgUUID: string = '45159e28-aab0-4fee-af1e-08dcb3a8c4fd';
     private static readonly modusShellUUID: string = '0afffb32-ea89-4f58-9ee8-6950d44cb004';
     private static readonly setupPgmUUID: string = '14ca45f3-863f-4a4c-8e55-9a14bd1e1ee5';
+    private static readonly setupPgmToolName: string = 'com.ifx.tb.tool.modustoolboxsetup';
     private static readonly projectCreatorUUID: string = '2b5ece6f-0a04-4a6f-a683-de5e3dc0a060';
     private static readonly lastProjectPath: string = 'lastProjectPath' ;
+    private static readonly bootloaderDocUrl: string = 'https://www.mewserver.org/vscode/bootloader.md' ;
 
     private static readonly gettingStartedTab = 0;
     private static readonly createProjectTab = 1;
@@ -98,7 +102,6 @@ export class MTBAssistObject {
     private keywords_: MtbFunIndex;
     private toolspath_: string | undefined;
     private settings_: MTBSettings;
-    private statusBarItem_: vscode.StatusBarItem;
     private termRegistered_: boolean = false;
     private ready_ : boolean = false ;
     private theme_ : ThemeType = 'light';
@@ -107,6 +110,7 @@ export class MTBAssistObject {
     private pendingPasswordPromise: ((pass: string | undefined) => void) | undefined = undefined ;
     private pendingStatusClosePromise: (() => void) | undefined = undefined ;
     private activeTask_ : STask | undefined = undefined ;
+    private password? : string ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -140,7 +144,9 @@ export class MTBAssistObject {
 
         this.setupMgr_ = new SetupMgr(this);
         this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
-
+        this.setupMgr_.on('addStatusLine', (line: string) => {
+            this.sendMessageWithArgs('addStatusLine', line);
+        });
         this.keywords_ = new MtbFunIndex(this.logger_);
 
         this.settings_ = new MTBSettings(this);
@@ -152,7 +158,6 @@ export class MTBAssistObject {
         this.settings_.on('updateAppStatus', () => { this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()); }); ;
 
         this.memusage_ = new MemoryUsageMgr(this) ;
-
         vscode.tasks.onDidEndTask((e) => { 
             this.taskEnd(e) ;
         }) ;
@@ -164,10 +169,6 @@ export class MTBAssistObject {
         vscode.window.onDidChangeActiveColorTheme(e => {
             this.sendTheme();
         });
-
-        this.statusBarItem_ = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        this.statusBarItem_.command = 'mtbassist2.mtbMainPage';
-        this.updateStatusBar();
 
         this.computeTheme() ;
     }
@@ -208,34 +209,6 @@ export class MTBAssistObject {
         this.sendMessageWithArgs('settings', this.settings_.settings);
     }
 
-    private updateStatusBar(): void {
-        let st: string = 'Init';
-        let tip: string = 'Initializing';
-        if (!this.setupMgr_ || this.setupMgr_.doWeNeedTools()) {
-            st = 'No Tools';
-        }
-        else if (this.env_) {
-            if (this.env_.isLoading === false && !this.env_.has(MTBLoadFlags.appInfo)) {
-                st = 'No App';
-            }
-            else if (this.env_.has(MTBLoadFlags.manifestData)) {
-                st = 'Ready';
-                tip = 'Ready';
-            }
-            else if (this.env_.isLoading === false) {
-                st = 'Ready (M)';
-                tip = 'Ready but no manifest data could be loaded';
-            }
-            else {
-                st = 'Loading...';
-                tip = 'Loading manifest data';
-            }
-        }
-        this.statusBarItem_.text = 'MTB: ' + st;
-        this.statusBarItem_.tooltip = tip;
-        this.statusBarItem_.show();
-    }
-
     /**
      * Sets the current intellisense project by sending an 'oob' request.
      * @param projectName The name of the project to set as the intellisense project.
@@ -274,8 +247,13 @@ export class MTBAssistObject {
         }
 
         let ret = new Promise<string | undefined >((resolve, reject) => {
-            this.pendingPasswordPromise = resolve ;
-            this.sendMessageWithArgs('getPassword', true);
+            if (this.password !== undefined) {
+                resolve(this.password) ;
+            }
+            else {
+                this.pendingPasswordPromise = resolve ;
+                this.sendMessageWithArgs('getPassword', true);
+            }
         });
     
         return ret ;
@@ -493,21 +471,79 @@ export class MTBAssistObject {
         return undefined ;
     }
 
-    private runVSCodeAndReload() {
-        this.sendMessageWithArgs('startOperation', `Preparing Application For VSCode`) ;
-        this.sendMessageWithArgs('addStatusLine', `Running 'make vscode'...`) ;
-        this.runMakeVSCode()
-        .then(() => { 
+    private needsGetLibs() : boolean {
+        let getlibs = false ;
+        for(let proj of this.env_!.appInfo!.projects) {
+            let appmk = path.join(proj.path, 'libs', 'app.mk')  ;
+            if (!fs.existsSync(appmk)) {
+                getlibs = true ;
+                break ;
+            }
+        }
+        return getlibs ;
+    }
+
+    private seeIfGetLibsNeeded() : Promise<void> {
+        let ret = new Promise<void>(async (resolve, reject) => {
+            if (this.needsGetLibs()) {
+                for(let proj of this.env_!.appInfo!.projects) {
+                    try {
+                        this.sendMessageWithArgs('addStatusLine', `Running 'make getlibs' for project ${proj.name}...`) ;
+                        await this.worker_?.runMakeGetLibs(proj) ;
+                    }
+                    catch(error: any) {
+                        this.logger_.error(`Failed to run 'make getlibs' for project ${proj.name}: ${error.message}`);
+                        this.sendMessageWithArgs('addStatusLine', `Failed to run 'make getlibs' for project ${proj.name}: ${error.message}`) ;
+                        reject(error) ;
+                        return ;
+                    }
+                }
+                resolve() ;
+            }
+            else {
+                resolve() ;
+            }
+        }) ;
+        return ret ;
+    } ;
+
+    private reOpenWorkspace() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
             let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
             if (wkspc) {
                 vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(wkspc)) ;
-            }
-            else {
-                this.logger_.error(`Failed to find workspace file after running 'make vscode'`);
-                vscode.window.showErrorMessage(`Failed to find workspace file after running 'make vscode'`);
-                throw new Error(`Failed to find workspace file after running 'make vscode'`);
-            }                    
-        }) ;
+            }            
+            resolve() ;
+        });
+        return ret;
+    }
+
+    private runVSCodeAndReload() {
+        this.sendMessageWithArgs('startOperation', `Preparing Application For VSCode`) ;        
+
+        this.seeIfGetLibsNeeded()
+        .then(() => {
+            this.sendMessageWithArgs('addStatusLine', `Running 'make vscode'...`) ;
+            this.runMakeVSCode()
+            .then(() => {
+                let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
+                if (wkspc) {
+                    this.pendingStatusClosePromise = this.reOpenWorkspace.bind(this) ;                    
+                    this.sendMessageWithArgs('finishOperation', '') ;                    
+                }
+                else {
+                    this.logger_.error(`Failed to find workspace file after running 'make vscode'`);
+                    vscode.window.showErrorMessage(`Failed to find workspace file after running 'make vscode'`);
+                    this.sendMessageWithArgs('addStatusLine', `Failed to find workspace file after running 'make vscode'`) ;
+                    this.sendMessageWithArgs('finishOperation', '') ;
+                    throw new Error(`Failed to find workspace file after running 'make vscode'`);
+                }                    
+            }) ;
+        })
+        .catch((error: Error) => {
+            this.logger_.error(`Failed to run 'make getlibs': ${error.message}`);
+            this.sendMessageWithArgs('finishOperation', '') ;
+        });
     }
 
     private checkVSCodeStructure() : void {
@@ -580,7 +616,7 @@ export class MTBAssistObject {
 
     private sendTasks() : void {
         let tasks : MTBAssistantTask[] = [] ;
-        if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
+        if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo && this.isPSOCEdge()) {
             let proj = this.env_.appInfo.projects.find(p => p.name === 'proj_bootloader') ;
             if (!proj) {
                 tasks.push(
@@ -603,10 +639,13 @@ export class MTBAssistObject {
         let gen = new VSCodeAppTaskGenerator(this.env_!, this.settings_) ;
         this.tasks_.set('', new VSCodeTasks(this.logger_, p, gen)) ;
 
-        for(let proj of this.env_!.appInfo!.projects) {
-            p = path.join(this.env_!.appInfo!.appdir, proj.name, '.vscode', 'tasks.json');
-            let pgen = new VSCodeProjTaskGenerator(this.env_!, this.settings_, proj) ;
-            this.tasks_.set(proj.name, new VSCodeTasks(this.logger_, p, pgen)) ;
+        if (this.env_!.appInfo!.type() !== ApplicationType.combined)
+        {
+            for(let proj of this.env_!.appInfo!.projects) {
+                p = path.join(this.env_!.appInfo!.appdir, proj.name, '.vscode', 'tasks.json');
+                let pgen = new VSCodeProjTaskGenerator(this.env_!, this.settings_, proj) ;
+                this.tasks_.set(proj.name, new VSCodeTasks(this.logger_, p, pgen)) ;
+            }
         }
     }
 
@@ -651,6 +690,7 @@ export class MTBAssistObject {
             this.worker_.on('progress', this.sendMessageWithArgs.bind(this, 'createProjectProgress'));
             this.worker_.on('runtask', this.runTask.bind(this));
             this.worker_.on('loadedAsset', this.sendMessageWithArgs.bind(this, 'loadedAsset'));
+            this.worker_.on('gitState', this.gitStateTrampoline.bind(this)) ;
             runtime.mark('VSCodeWorker init') ;
 
             this.readComponentDefinitions();
@@ -659,7 +699,6 @@ export class MTBAssistObject {
                 runtime.mark('loadMTBApplication') ;
                 this.checkVSCodeStructure() ;
                 runtime.mark('checkVSCodeStructure') ;
-                this.updateStatusBar();
                 runtime.mark('updateStatusBar') ;
                 this.createAppStructure();
                 runtime.mark('createAppStructure') ;
@@ -721,7 +760,6 @@ export class MTBAssistObject {
                                         this.sendMessageWithArgs('mtbMode', this.mtbmode_);
                                         runtime.mark('Show Application') ;
 
-                                        this.updateStatusBar();
                                         this.setupAuxiliaryStuff()
                                         .then(() => {
                                             runtime.mark('setupAuxiliaryStuff') ;
@@ -729,14 +767,12 @@ export class MTBAssistObject {
                                             .then(() => {
                                                 runtime.mark('loadManifestData') ;
                                                 this.sendManifestStatus() ;
-                                                this.updateStatusBar();
                                                 runtime.mark('application load done') ;
                                                 runtime.printAll(this.logger_) ;
                                                 resolve() ;
                                             })
                                             .catch((err) => {
                                                 this.sendManifestStatus();
-                                                this.updateStatusBar();
                                                 reject(err);
                                             });
                                         })
@@ -761,7 +797,6 @@ export class MTBAssistObject {
                             });
                     }
                     else {
-                        this.updateStatusBar();
                         runtime.mark('update status bar') ;
                         this.ready_ = true ;
                         this.sendMessageWithArgs('ready', this.theme_) ;
@@ -776,14 +811,12 @@ export class MTBAssistObject {
                             .then(() => {
                                 runtime.mark('loadManifestData') ;
                                 this.sendManifestStatus() ;
-                                this.updateStatusBar();
                                 this.logger_.debug('ModusToolbox manifests loaded successfully.');
                                 runtime.printAll(this.logger_) ;
                                 resolve();
                             })
                             .catch((error: Error) => {
                                 this.sendManifestStatus() ;                                
-                                this.updateStatusBar();
                                 this.logger_.error('Failed to load ModusToolbox manifests:', error.message);
                                 reject(error) ;
                             });
@@ -809,6 +842,9 @@ export class MTBAssistObject {
         return ret;
     }
 
+    private gitStateTrampoline(state: ProjectGitStateTrackerData) {
+        this.sendMessageWithArgs('gitState', state);
+    }
 
     private readComponentDefinitions(): void {
         let p = path.join(__dirname, '..', 'content', 'components.json');
@@ -1060,6 +1096,25 @@ export class MTBAssistObject {
         this.cmdhandler_.set('set-config', this.setConfig.bind(this)) ;
         this.cmdhandler_.set('operation-status-closed', this.handleOperationStatusClosed.bind(this)) ;
         this.cmdhandler_.set('run-task', this.runTaskFromGUI.bind(this)) ;
+        this.cmdhandler_.set('install-idc-service', this.installIDCService.bind(this)) ;    
+    }
+
+    private installIDCService() : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            this.sendMessageWithArgs('startOperation', 'Installing IDC Service') ;
+            this.setupMgr_.installIDCService()
+            .then(() => {
+                this.sendMessageWithArgs('addStatusLine', 'IDC Service installed successfully') ;
+                this.sendMessageWithArgs('finishOperation', '') ;
+                resolve() ;
+            })
+            .catch((err) => {
+                this.sendMessageWithArgs('addStatusLine', `Failed to install IDC Service: ${err.message}`) ;
+                this.sendMessageWithArgs('finishOperation', '') ;
+                reject(err) ;
+            }) ;
+        }) ;
+        return ret ;
     }
 
     private runTaskFromGUI(request: FrontEndToBackEndRequest): Promise<void> {
@@ -1098,11 +1153,15 @@ export class MTBAssistObject {
         return new Promise<void>((resolve, reject) => {
             if (!request.data) {
                 // Just bring up the install page
-                this.sendMessageWithArgs('installLLVM', {
-                    enabled: true,
-                    versions: LLVMInstaller.getAvailableVersions()
+                LLVMInstaller.getAvailableVersions(this.logger_)
+                .then((versions) => {
+                    this.sendMessageWithArgs('installLLVM', {
+                        enabled: true,
+                        versions: versions,
+                        copyright: this.llvminstaller_.copyright,
+                    }) ;
+                    resolve() ;
                 }) ;
-                resolve() ;
             }
             else {
                 // Actually do the install
@@ -1147,6 +1206,7 @@ export class MTBAssistObject {
     private processPasswordResponse(data: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (this.pendingPasswordPromise) {
+                this.password = data.data ;
                 let p = this.pendingPasswordPromise ;
                 this.pendingPasswordPromise = undefined ;
                 this.sendMessageWithArgs('getPassword', false);
@@ -1496,6 +1556,9 @@ export class MTBAssistObject {
             this.sendMessageWithArgs('mtbMode', 'initializing') ;
             this.setupMgr_ = new SetupMgr(this);
             this.setupMgr_.on('downloadProgress', this.reportInstallProgress.bind(this));
+            this.setupMgr_.on('addStatusLine', (line: string) => {
+                this.sendMessageWithArgs('addStatusLine', line);
+            });
             this.initialize()
                 .then(() => {
                     this.sendMessageWithArgs('settings', this.settings_.settings);
@@ -1588,25 +1651,36 @@ export class MTBAssistObject {
         return ret;
     }
 
-    private launch(tool: Tool, reloadApp: boolean = false) {
-        let cfg = tool.launchData;
+    private launch(tool: Tool, reloadApp: boolean = false) : void {
+        if (tool.launchData) {
+            this.launchWithLaunchData(tool.launchData.cmdline, reloadApp);
+        }
+    }
 
+    private launchWithLaunchData(cmdargs: string[], reloadApp: boolean = false) {
         let args: string[] = [];
-        for (let i = 0; i < cfg.cmdline.length; i++) {
+        for (let i = 0; i < cmdargs.length; i++) {
             if (i !== 0) {
-                args.push(cfg.cmdline[i]);
+                args.push(cmdargs[i]);
             }
         }
 
         let envobj: any = {};
         let found = false;
         for (let key of Object.keys(process.env)) {
-            if (key.indexOf("ELECTRON") === -1) {
-                envobj[key] = process.env[key];
-            }
-            else if (key === 'CY_TOOLS_PATHS' && this.toolspath_) {
+            if (key === 'CY_TOOLS_PATHS' && this.toolspath_) {//
+                // Inject the tools path to be what we want, overriding the existing value
+                // in the environment.
+                //
                 envobj[key] = this.toolspath_;
                 found = true;
+            }
+            else if (key.indexOf("ELECTRON") === -1) {
+                //
+                // There are some environment variables that Electron sets that
+                // can confuse launched tools, if they are electron-based.  So we do not pass those to the launched tool.
+                //
+                envobj[key] = process.env[key];
             }
         }
 
@@ -1614,7 +1688,7 @@ export class MTBAssistObject {
             envobj['CY_TOOLS_PATHS'] = this.toolspath_;
         }
 
-        exec.execFile(cfg.cmdline[0],
+        let cp = exec.execFile(cmdargs[0],
             args,
             {
                 cwd: this.env_?.appInfo?.appdir,
@@ -1666,9 +1740,9 @@ export class MTBAssistObject {
 
     private runSetupProgram(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            let tool = this.getLaunchConfig('', MTBAssistObject.setupPgmUUID);
+            let tool = this.setupMgr_.findToolById(MTBAssistObject.setupPgmToolName);
             if (tool) {
-                this.launch(tool);
+                this.launchWithLaunchData([tool], false) ;
             }
             else {
                 vscode.window.showErrorMessage('Setup program has not been installed.');
@@ -1726,6 +1800,9 @@ export class MTBAssistObject {
             disposable = vscode.commands.registerCommand('mtbassist2.mtbMainPage', this.mtbMainPage.bind(this));
             this.context_.subscriptions.push(disposable);
 
+            disposable = vscode.commands.registerCommand('mtbassist2.mtbMainPageNoTitle', this.mtbMainPage.bind(this));
+            this.context_.subscriptions.push(disposable);            
+
             disposable = vscode.commands.registerTextEditorCommand('mtbassist2.mtbSymbolDoc',
                 (editor: vscode.TextEditor, edit: vscode.TextEditorEdit, args: any[]) => {
                     this.mtbSymbolDoc(editor, edit, this.context_);
@@ -1735,15 +1812,59 @@ export class MTBAssistObject {
             disposable = vscode.commands.registerCommand('mtbassist2.addBootloader', this.addBootloader.bind(this));
             this.context_.subscriptions.push(disposable);
 
+            disposable = vscode.commands.registerCommand('mtbassist2.testCommand', this.testCommand.bind(this));
+            this.context_.subscriptions.push(disposable);            
+
             this.commandsInited_ = true;
         }
     }
 
+    private testCommand() {
+        fetch(MTBAssistObject.bootloaderDocUrl)
+        .then(response => {
+            if (!response.ok) {
+                vscode.window.showErrorMessage(`Failed to fetch bootloader documentation: ${response.statusText}`);
+                return ;
+            }
+
+            response.text().then(doc => {
+                const panel = vscode.window.createWebviewPanel(
+                    'bootloaderDoc',
+                    'Bootloader Documentation',
+                    vscode.ViewColumn.One,
+                    {}
+                );
+                const md = new mdit() ;
+                panel.webview.html = md.render(doc);
+            });
+        })
+        .catch(err => {
+            vscode.window.showErrorMessage(`Failed to fetch bootloader documentation: ${err}`);
+        }) ;        
+    }
+
     private async finishBootloader() {
         if (this.activeTask_ && this.activeTask_.ok) {
-            let path = this.context_.asAbsolutePath('content/bootloader.md') ;
-            let uri = vscode.Uri.file(path) ;
-            await vscode.commands.executeCommand('markdown.showPreview', uri) ;
+            fetch(MTBAssistObject.bootloaderDocUrl)
+            .then(response => {
+                if (!response.ok) {
+                    vscode.window.showErrorMessage(`Failed to fetch bootloader documentation: ${response.statusText}`);
+                    return ;
+                }
+
+                response.text().then(doc => {
+                    const panel = vscode.window.createWebviewPanel(
+                        'bootloaderDoc',
+                        'Bootloader Documentation',
+                        vscode.ViewColumn.One,
+                        {}
+                    );
+                    panel.webview.html = doc;
+                });
+            })
+            .catch(err => {
+                vscode.window.showErrorMessage(`Failed to fetch bootloader documentation: ${err}`);
+            }) ;
         }
     }
 
@@ -2443,7 +2564,7 @@ export class MTBAssistObject {
         let config = vscode.workspace.getConfiguration();
         let autodisp = config.get('mtbassist2.displayHint') as boolean ;
         if (autodisp) {
-            vscode.window.showInformationMessage(`Click the 'MTB' in the bottom right status bar to display the ModusToolbox Assistant`);
+            vscode.window.showInformationMessage(`Click the ModusToolbox Assistant icon in the Activity Bar to redisplay the assistant.`) ;
         }
     }
 
@@ -2747,7 +2868,6 @@ export class MTBAssistObject {
 
     private createProject(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            this.bringChannelToFront();
             let fpath = path.join(request.data.location, request.data.name);
             if (!fs.existsSync(fpath)) {
                 fs.mkdirSync(fpath, { recursive: true });
@@ -2762,6 +2882,7 @@ export class MTBAssistObject {
                                 success: true
                             });
                     } else {
+                        this.bringChannelToFront() ;
                         this.sendMessageWithArgs('createProjectResult',
                             {
                                 uuid: request.data.uuid,

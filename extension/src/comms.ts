@@ -69,7 +69,8 @@ export type FrontEndToBackEndType =
     'llvm-versions' |
     'set-config' |
     'operation-status-closed' |
-    'run-task'
+    'run-task' |
+    'install-idc-service'
     ;
 
 export type BackEndToFrontEndType =
@@ -123,7 +124,8 @@ export type BackEndToFrontEndType =
     'addStatusLine' |
     'tasksAvailable' |
     'lcsGuide' |
-    'lcsKeywordAliases'
+    'lcsKeywordAliases' |
+    'gitState'
     ;
 
 export type ThemeType =
@@ -382,3 +384,14 @@ export interface LCSBSPKeywordAliases {
   keyword: string ;
   bsps: string[] ;
 }
+
+export interface CreateProjectGitState {
+  id: number ;
+  target: string ;
+  operation?: string ;
+  percent: number ;
+  done: boolean ;
+  error: boolean ;
+}
+
+export type ProjectGitStateTrackerData = Array<CreateProjectGitState> ;

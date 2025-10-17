@@ -1,22 +1,16 @@
 Open Issues
 ----------
-- What to do if a build fails do to veneers?
+- What to do if a build fails due to veneers?
 
 Bugs
 ----------
 - Sensitivity lists in manifests for project creation
 
-Add Bootloader
---------------
-- Update the markdown file for the 'Add bootloader task'
+Finish
+----------
+- Linux directly download and install IDC service
 
-Features
--------------------------------------------------------------------------------------------
-- Mimic memory information for P6
-- Mimic memory information for PSOC Control
-- Add a system to process build output and look for specific failure conditions and offer advice (cannot figure this out yet)
-- Project creation, project some progress indication in the application/project part
-
-TODO
-----
-Check light theme for all tabs
+Test
+----------
+- Linux end to end flow, downloading, installing tools, installing LLVM
+- Light theme in all GUI windows

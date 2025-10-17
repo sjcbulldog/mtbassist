@@ -28,7 +28,7 @@ export class IdcLauncherRequiredComponent {
   }
   
   onDownload() {
-    this.be.sendRequestWithArgs('open', { location: 'https://softwaretools.infineon.com/assets/com.ifx.tb.launcher2' });
+    this.be.sendRequestWithArgs('install-idc-service' , null);
   }
   
   onRetry() {

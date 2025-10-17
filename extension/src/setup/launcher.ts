@@ -76,7 +76,7 @@ export class IDCLauncher extends EventEmitter{
         return ret ;
     }
 
-    public run(args: string[], cb? : (lines: string[]) => void, id?: any, password?: string[]) : Promise<string | undefined> {
+    public run(args: string[], cb? : (lines: string[]) => void, id?: any, password?: string) : Promise<string | undefined> {
         let ret = new Promise<string | undefined>((resolve, reject) => {
             if (!this.path_) {
                 this.logger_.error('Cannot run IDC Launcher - launcher executable not found.');
@@ -88,8 +88,9 @@ export class IDCLauncher extends EventEmitter{
                 onOutput: cb,
                 id: id
             } ;
+
             if (password) {
-                opts.stdin = password ;
+                opts.stdin = [password] ;
             }
             ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, this.path_!, args, opts)
             .then((result) => {
