@@ -93,6 +93,8 @@ export class SoftwareInstallerComponent implements OnInit, OnDestroy {
         this.customPath = 'C:\\ModusToolbox' ;
       } else {
         this.customPath = '/opt' ;
+        // Auto-select home installation for Linux
+        this.installChoice = 'home' ;
       }
     }));
 

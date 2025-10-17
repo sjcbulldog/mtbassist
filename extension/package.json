@@ -117,7 +117,7 @@
     "copy": "npm run copydist && npm run copyshared",
     "content": "cd ../content && npm run build",
     "build": "npm run content && npm run copy && npm run compile",
-    "prerelease" : "vsce publish --pre-release"
+    "prerelease": "vsce publish --pre-release"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
@@ -152,6 +152,7 @@
     "openurl": "^1.1.1",
     "os": "^0.1.2",
     "request": "^2.88.2",
+    "tar": "^7.5.1",
     "tmp": "^0.2.5",
     "vscode-uri": "^3.1.0",
     "winston": "^3.17.0",

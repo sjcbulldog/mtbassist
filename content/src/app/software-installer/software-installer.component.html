@@ -31,7 +31,11 @@
       @switch (step) {
       @case (0) {
         <div class="install-choice-container">
-          <p class="intro-text">Pick a method for installing ModusToolbox and related tools</p>
+          @if (os === 'linux') {
+            <p class="intro-text">ModusToolbox and related tools will be installed in the default location</p>
+          } @else {
+            <p class="intro-text">Pick a method for installing ModusToolbox and related tools</p>
+          }
           <div class="cards-wrapper">
             <div class="choice-card" [class.selected]="installChoice==='home'" [class.disabled]="homeError" (click)="selectInstallChoice('home')">
               <div class="card-content">
@@ -42,7 +46,7 @@
                   } @else if (os === 'darwin') {
                     <h3>Install In User's Application Directory</h3>
                   } @else {
-                  <h3>Install In Home Directory</h3>
+                  <h3>Install In Default Location</h3>
                   }
                 </div>
                 @if (os === 'darwin') {
@@ -56,6 +60,7 @@
               @if (homeWarning && !homeError) { <div class="warning-text">{{ homeWarning }}</div> }
               @if (homeError) { <div class="error-text">{{ homeError }}</div> }
             </div>
+              @if (os !== 'linux') {
               <div class="choice-card" [class.selected]="installChoice==='custom'" [class.disabled]="customError" (click)="selectInstallChoice('custom')">
                 <div class="card-content">
                   <div class="card-header">
@@ -89,6 +94,7 @@
                 @if (customWarning && !customError) { <div class="warning-text">{{ customWarning }}</div> }
                 @if (customError) { <div class="error-text">{{ customError }}</div> }
               </div>
+              }
           </div>
           <div class="actions-row">
             <button mat-raised-button color="primary" (click)="locationNext()" [disabled]="disableNext || !installChoice || (installChoice==='custom' && isCustomInstallAvailable() && !customPath)">Next</button>
@@ -150,7 +156,7 @@
                         <span class="tool-status will-install">Install v{{ tool.version }}</span>
                       }
                     </div>
-                    @if (tool.featureId === 'com.ifx.tb.tool.modustoolboxprogtools' && !tool.installed && os !== 'darwin') {
+                    @if (tool.featureId === 'com.ifx.tb.tool.modustoolboxprogtools' && !tool.installed && os !== 'darwin' && os !== 'linux') {
                       <div class="admin-required-message">
                         <mat-icon style="color: #f44336; vertical-align: middle;">security</mat-icon>
                         <span style="color: #f44336; font-weight: 600; margin-left: 0.5em;">Administrative privileges will be required to install this tool.</span>

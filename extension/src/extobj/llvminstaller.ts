@@ -17,6 +17,7 @@ import * as winston from 'winston';
 import * as fs from 'fs' ;
 import * as os from 'os' ;
 import * as path from 'path' ;
+import * as tar from 'tar' ;
 import { EventEmitter } from 'stream';
 import { ModusToolboxEnvironment } from '../mtbenv';
 import { InstallLLVMProgressMsg } from '../comms';
@@ -299,7 +300,7 @@ export class LLVMInstaller extends EventEmitter {
      * @param zip - AdmZip object representing the downloaded ZIP file
      * @returns Root directory name from the ZIP structure, or undefined if no entries
      */
-    private getTargetDir(zip: any) : string | undefined {
+    private getTargetDirFromZip(zip: any) : string | undefined {
         let ret : string | undefined = undefined ;
 
         // Get all entries from the ZIP archive
@@ -312,6 +313,25 @@ export class LLVMInstaller extends EventEmitter {
         return ret ;
     }
 
+    private async getTargetDirFromTar(tarballFilename: string) : Promise<string | undefined> {
+        let ret = new Promise<string | undefined>(async (resolve, reject) => {
+            let answer: string | undefined = undefined ;
+            const filenames: string [] = [] ;
+            await tar.t({
+                file: tarballFilename,
+                onReadEntry: entry => filenames.push(entry.path)
+            }) ;
+            if (filenames.length > 0) {
+                answer = filenames[0] ;
+                while (path.dirname(answer) !== '.' ) {
+                    answer = path.dirname(answer) ;
+                }
+            }
+            resolve(answer) ;
+        }) ;
+        return ret;
+    }
+
     /**
      * Install LLVM on Windows platform by extracting ZIP files
      * 
@@ -322,7 +342,7 @@ export class LLVMInstaller extends EventEmitter {
      * @param files - Array of downloaded ZIP files to extract
      * @returns Promise that resolves when installation is complete
      */
-    private installLLVMWindows(tpath: string, files: string[]) : Promise<void> {
+    private installLLVMWin32(tpath: string, files: string[]) : Promise<void> {
         return new Promise<void>((resolve, reject) => {
             // Extract the LLVM compiler ZIP file
             this.logger_.debug(`Installing LLVM on Windows to ${tpath}`);
@@ -334,7 +354,7 @@ export class LLVMInstaller extends EventEmitter {
             
             // Extract the main LLVM compiler package
             let zip = new admZip(files[0]) ;
-            let targetDir = this.getTargetDir(zip) ;
+            let targetDir = this.getTargetDirFromZip(zip) ;
             if (!targetDir) {
                 reject(new Error('Could not determine target directory from zip file')) ;
                 return ;
@@ -444,6 +464,34 @@ export class LLVMInstaller extends EventEmitter {
         }) ;
     }
 
+    private decompressTarBall(tarballFilename: string) : Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            let parsed = path.parse(tarballFilename) ;
+            let newfilename = path.join(path.dirname(tarballFilename), parsed.name) ;
+
+            if (fs.existsSync(newfilename)) {
+                fs.unlinkSync(newfilename) ;
+            }
+
+            ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, '/usr/bin/xz', ['--decompress', tarballFilename], {})
+            .then(result => {
+                if (result[0] !== 0) {
+                    let msg = result[1].join('\n') ;
+                    reject(new Error(`Failed to decompress tarball: ${msg}`)) ;
+                    return ;
+                }
+                if (!fs.existsSync(newfilename)) {
+                    reject(new Error(`Decompressed file not found: ${newfilename}`)) ;
+                    return ;
+                }
+                resolve(newfilename) ;
+            })
+            .catch(err => {
+                reject(err) ;
+            }) ;    
+        }) ;
+    }
+
     /**
      * Install LLVM on Linux platform
      * 
@@ -454,10 +502,53 @@ export class LLVMInstaller extends EventEmitter {
      * @param files - Array of downloaded files for Linux
      * @returns Promise that resolves immediately (placeholder)
      */
-    private installLLVMLinux(path: string, files: string[]) : Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            // TODO: Implement Linux-specific LLVM installation logic
-            resolve() ;
+    private installLLVMLinux(tpath: string, files: string[]) : Promise<void> {
+        let msg : InstallLLVMProgressMsg ;        
+        return new Promise<void>(async (resolve, reject) => {
+            msg = { error: false, messages: ['Decompressing LLVM compiler tarball ...'] } ;
+            this.emit('progress', msg) ;
+
+            // Extract the LLVM compiler ZIP file
+            this.logger_.debug(`Installing LLVM on Linux to ${tpath}`);
+            for(let file of files) {
+                this.logger_.debug(`    File: ${file}`);
+            }
+
+            this.decompressTarBall(files[0])
+            .then(async (tarfile) => {
+                
+                // Extract the main LLVM compiler package
+
+                let targetDir = await this.getTargetDirFromTar(tarfile) ;
+                if (!targetDir) {
+                    reject(new Error('Could not determine target directory from tar file')) ;
+                    return ;
+                }
+
+                // Notify progress and extract compiler
+                msg = { error: false, messages: ['Installing LLVM compiler tarball ...'] } ;
+                this.emit('progress', msg) ;            
+                tar.x({
+                    file: tarfile,
+                    C: tpath,
+                    sync: true
+                }) ;
+                this.logger_.debug(`LLVM compiler installation on Linux completed to ${tpath}`);
+
+                // Extract the newlib library overlay
+                let admZip = require('adm-zip') ;            
+                msg  = { error: false, messages: ['Installing LLVM newlib library ...'] } ;
+                this.emit('progress', msg) ;             
+                let zip = new admZip(files[1]) ;
+                this.installPath_ = path.join(tpath, targetDir) ;
+                zip.extractAllTo(this.installPath_, true) ;
+                this.logger_.debug(`LLVM newlib overlay installation on Linux completed to ${this.installPath_}`);
+
+                resolve() ;
+            })
+            .catch(err => {
+                reject(err) ;
+            }) ;
         }) ;
     }
 
@@ -478,7 +569,7 @@ export class LLVMInstaller extends EventEmitter {
         // Route to platform-specific installation method
         switch(process.platform) {
             case 'win32':
-                return this.installLLVMWindows(path, files) ;
+                return this.installLLVMWin32(path, files) ;
             case 'darwin':
                 return this.installLLVMMacOs(path, files) ;
             case 'linux':

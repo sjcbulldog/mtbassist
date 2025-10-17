@@ -57,7 +57,7 @@ export class SetupMgr extends MtbManagerBase {
     private static readonly mtbSetupId = 'com.ifx.tb.tool.modustoolboxsetup';
     private static readonly mtbModusToolbox = 'com.ifx.tb.tool.modustoolbox' ;
     private static readonly downloadRatio = 0.8;
-    private static readonly localIDCServiceRequestTimeout = 30000; // 30 seconds
+    private static readonly localIDCServiceRequestTimeout = 5 * 60000; // 30 seconds
 
     private static readonly win32IDCDownloadURL = 'https://itools.infineon.com/itblauncher/service/itb-launcher-service-setup.exe' ;
     private static readonly darwinIDCDownloadURL = 'https://itools.infineon.com/itblauncher/service/itb-launcher-service-setup.pkg' ;
@@ -463,17 +463,33 @@ export class SetupMgr extends MtbManagerBase {
             let target = path.join(os.tmpdir(), 'itb-launcher-service.deb') ;
             this.downloadFile(SetupMgr.linuxIDCDownloadURL, target)
             .then(async () => {
+                this.emit('addStatusLine', 'Installing IDC Service ...') ;
                 let password = await this.ext.getPasswordFromUser() ;
                 if (password === undefined) {
                     reject(new Error('Password is install IDC service.'));
                 }
-                let args = ['dpkg', '-i', target] ;
+                let args = ['-S', 'dpkg', '-i', target] ;
                 let sudopwd = [ password! ] ;
                 let cmd = '/usr/bin/sudo' ;          
                 let opts: MTBRunCommandOptions = {
                     stdin: sudopwd,
-                };                                      
-                ModusToolboxEnvironment.runCmdCaptureOutput(this.logger, cmd, args , opts);
+                };               
+                ModusToolboxEnvironment.runCmdCaptureOutput(this.logger, cmd, args, opts)
+                .then((result) => { 
+                    if (result[0] !== 0) {
+                        this.ext.clearPassword() ;
+                        for(let line of result[1]) {
+                            this.logger.error(line) ;
+                        }
+                        reject(new Error('error installing launcher service - see output window for details')) ;
+                    }
+                    else {
+                        resolve() ;
+                    }
+                })
+                .catch((err) => { 
+                    reject(err) ;
+                }) ;
             })
             .catch((err) => {
                 reject(err);
@@ -859,7 +875,7 @@ export class SetupMgr extends MtbManagerBase {
 
             let cmdstr = 'installOnly ' + id + ':' + version.toString() + ' https://softwaretools.infineon.com/api/v1/tools/';
             let addargs : string[] = [] ;
-            this.launcher_.run(['-idc.service', cmdstr, ...addargs], this.downloadCallback.bind(this), id, [password])
+            this.launcher_.run(['-idc.service', cmdstr, ...addargs], this.downloadCallback.bind(this), id, password)
             .then((result) => {
                 if (!result) {
                     reject(new Error(`Failed to install feature ${id} - ${version}`));

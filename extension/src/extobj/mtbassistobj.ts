@@ -241,6 +241,10 @@ export class MTBAssistObject {
         return this.envLoaded_;
     }
 
+    public clearPassword() { 
+        this.password = undefined ;
+    }
+
     public getPasswordFromUser(): Promise<string | undefined > {
         if (this.pendingPasswordPromise) {
             throw new Error('new password request while another is pending');
