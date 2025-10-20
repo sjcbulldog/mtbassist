@@ -1,15 +1,19 @@
 import { MTBAssistObject } from "../extobj/mtbassistobj";
 import { MTBProjectInfo } from "../mtbenv/appdata/mtbprojinfo";
 import { ModusToolboxEnvironment } from "../mtbenv";
-import { MemoryUsageData, MemoryUsageSegment } from "../comms";
+import { MemoryRegion, MemoryUsageSegment, PhysicalMemoryUsageData } from "../comms";
 import * as path from 'path' ;
 import * as fs from 'fs' ;
-import { MemoryMap, MemoryView, View } from "./memmap";
+import { MemoryMap, DeviceMemoryView, View, PhysicalMemory } from "./memmap";
 import { GeomElement } from "../geom/geom";
+import { assert } from "console";
+import { DesignModus } from "./dmodus";
 
 class MemorySegment {
     private sections_ : string[] = [] ;
-    private view_ : View[] = [] ;
+    private view_ : ViewMatch[] = [] ;
+    private physoffset: number = 0 ;
+    private virtoffset: number = 0 ;
 
     constructor(
         public project: string,
@@ -29,19 +33,36 @@ class MemorySegment {
         this.sections_.push(sec) ;
     }
 
-    public get views() : View[] {
+    public get views() : ViewMatch[] {
         return this.view_ ;
     }
 
-    public set views(v: View[]) {
+    public set views(v: ViewMatch[]) {
         this.view_ = v ;
+    }
+
+    public get physOffset() : number {
+        return this.physoffset ;
+    }
+
+    public set physOffset(o: number) {
+        this.physoffset = o ;
+    }
+
+    public get virtOffset() : number {
+        return this.virtoffset ;
+    }
+
+    public set virtOffset(o: number) {
+        this.virtoffset = o ;
     }
 }
 
+type ViewMatchType = 'virtual' | 'physical' | 'virtual/physical' ;
+
 interface ViewMatch {
     view: View ;
-    address: number ;
-    type: 'virtual' | 'physical' | 'virtual/physical' ;
+    type: ViewMatchType ;
 }
 
 export class MemoryUsageMgr {
@@ -50,9 +71,9 @@ export class MemoryUsageMgr {
     private ext_ : MTBAssistObject ;
     private segments_ : Map<string, MemorySegment[]> = new Map() ;
     private gccReadElfTool_ : string | undefined = undefined ;
-    private usage_ : MemoryUsageData[] = [] ;
+    private usage_ : PhysicalMemoryUsageData[] = [] ;
     private memoryMapObj_? : MemoryMap ;
-    private usageViewMap_: Map<MemoryUsageData, View[]> = new Map() ;
+    private dmodus_ : DesignModus | undefined = undefined ;
     
     constructor(mtbobj: MTBAssistObject) {
         this.ext_ = mtbobj ;
@@ -67,38 +88,28 @@ export class MemoryUsageMgr {
 
     public updateMemoryInfo() : Promise<boolean> {
         let ret = new Promise<boolean>(async (resolve, reject) => {
-            if (!this.ext_.deviceDB) {
+            if (!this.ext_.deviceDB || !this.ext_.env) {
                 this.clear() ;
                 resolve(false) ;
                 return ;
             }
 
-            let app = this.ext_.env?.appInfo ;
+            let app = this.ext_.env.appInfo ;
             if (!app) {
                 this.clear() ;
                 resolve(false) ;
                 return ;
             }
 
-            let tool = this.ext_!.env?.toolsDB.findToolByGUID(MemoryUsageMgr.gccFeatureId) ;
-            if (!tool) {
+            this.gccReadElfTool_ = this.ext_!.env?.toolsDB.findToolProgramPath(MemoryUsageMgr.gccFeatureId, 'bin', 'arm-none-eabi-readelf') ;
+            if (!this.gccReadElfTool_) {
                 this.clear() ;
                 resolve(false) ;
                 return ;
             }
 
-            this.gccReadElfTool_ = path.join(tool.path, 'bin', 'arm-none-eabi-readelf') ;
-            if (process.platform === 'win32') {
-                this.gccReadElfTool_ += '.exe' ;
-            }
-            if (!fs.existsSync(this.gccReadElfTool_)) {
-                this.clear() ;
-                resolve(false) ;    
-                return ;
-            }
-
             try {
-                this.memoryMapObj_ = new MemoryMap(this.ext_.deviceDB!, this.ext_.env!) ;
+                this.memoryMapObj_ = new MemoryMap(this.ext_.deviceDB, this.ext_.env) ;
                 await this.memoryMapObj_.getMemoryMap() ;
             }
             catch (err) {
@@ -112,8 +123,16 @@ export class MemoryUsageMgr {
             this.getSegmentsFromProjects()
             .then((result) => {
                 if (result) {
-                    this.computeMemoryUsage() ;
-                    resolve(true) ;
+                    this.loadDeignModusFile()
+                    .then( () => {
+                        this.computeMemoryUsage() ;
+                        resolve(true) ;
+                    })
+                    .catch( (err) => {
+                        this.ext_.logger.error(`MemoryUsageMgr: Error loading design.modus file: ${err}`) ;
+                        this.clear() ;
+                        resolve(false) ;
+                    }) ;
                 }
                 else {
                     this.clear() ;
@@ -135,30 +154,94 @@ export class MemoryUsageMgr {
         this.segments_.clear() ;
     }
 
-    public get usage() : MemoryUsageData[] | null {
+    public get usage() : PhysicalMemoryUsageData[] | null {
         if (!this.hasSupport()) {
             return null ;
         }
         return this.usage_ ;
     }
 
-    private findViewEntriesForSeg(view: MemoryView, s: MemorySegment)  : ViewMatch[] {
+    private loadDeignModusFile() : Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            let filename = path.join(this.ext_.env!.appInfo!.bspdir, 'TARGET_' + this.ext_.env!.appInfo!.projects[0].target, 'config', 'design.modus') ;
+            this.dmodus_ = new DesignModus(filename) ;
+            this.dmodus_.init()
+            .then( () => {
+                resolve() ;
+            })
+            .catch( (err) => {
+                this.ext_.logger.error(`MemoryUsageMgr: Error loading design.modus file: ${err}`) ;
+                resolve() ;
+            }) ;
+        }) ;
+    }
+
+    private findViewEntriesForSeg(view: DeviceMemoryView, s: MemorySegment)  : ViewMatch[] {
         let ret: ViewMatch[] = [] ;
         for(let v of view.memviews) {
             if (s.virtaddr >= v.address && s.virtaddr + s.memsize <= v.address + v.size) {
                 if (s.physaddr === s.virtaddr) {
-                    ret.push({ view: v, address: s.virtaddr, type: 'virtual/physical' }) ;
+                    ret.push({ view: v, type: 'virtual/physical' }) ;
+                    s.physOffset = s.physaddr - v.address ;
+                    s.virtOffset = s.virtaddr - v.address ;
                     continue ;
                 }
-                ret.push({ view: v, address: s.virtaddr, type: 'virtual' }) ;
+
+                ret.push({ view: v, type: 'virtual' }) ;
+                s.virtOffset = s.virtaddr - v.address ;
             }
 
             if (s.physaddr >= v.address && s.physaddr + s.memsize <= v.address + v.size) {
-                ret.push({ view: v, address: s.physaddr, type: 'physical' }) ;
+                ret.push({ view: v, type: 'physical' }) ;
+                s.physOffset = s.physaddr - v.address ;
             }
         }
 
         return ret ;
+    }
+
+    private getViewMatchAddress(s: MemorySegment, vmatch: ViewMatch) : number {
+        let ret: number ;
+
+        if (vmatch.type === 'virtual') {
+            ret = s.virtaddr ;
+        }
+        else if (vmatch.type === 'physical') {
+            ret = s.physaddr ;
+        }
+        else {
+            assert(vmatch.type === 'virtual/physical') ;
+            assert(s.virtaddr === s.physaddr) ;
+            ret = s.physaddr ;
+        }
+        return ret ;
+    }
+
+    private mapProjectSegmentsToViews(project: string, segs: MemorySegment[]) : boolean {
+        if (this.memoryMapObj_ === undefined) {
+            throw new Error('MemoryUsageMgr: assert: memory map object is undefined') ;
+        }
+
+        let proj = this.ext_.env!.appInfo!.projects.find( p => p.name === project ) ;
+        if (!proj) {
+            this.ext_.logger.warn(`MemoryUsageMgr: No project found with name ${project}`) ;
+            return false ;
+        }
+
+        // Get the view name, this is a big of a hack, we assume the view name is 'view_' + core type
+        let viewname = 'view_' + proj.coreType ;
+        let view = this.memoryMapObj_.memoryViewFromViewName(viewname) ;
+        if (!view) {
+            this.ext_.logger.warn(`MemoryUsageMgr: No memory view found for project ${project} core ${proj.coreName}`) ;
+            return false;
+        }
+
+        for(let s of segs) {
+            // Map the memory regions from this segment to views from the memory map
+            s.views = this.findViewEntriesForSeg(view, s) ;
+        }
+
+        return true ;
     }
 
     // #region compute memory usage
@@ -169,214 +252,211 @@ export class MemoryUsageMgr {
             return ;
         }
 
-        for(let [projname, segs] of this.segments_) {
-            let proj = this.ext_.env!.appInfo!.projects.find( p => p.name === projname ) ;
-            if (!proj) {
-                this.ext_.logger.warn(`MemoryUsageMgr: No project found with name ${projname}`) ;
-                continue ;
-            }
-            
-            let viewname = 'view_' + proj.coreType ;
-            let view = this.memoryMapObj_.memoryViewFromViewName(viewname) ;
-            if (!view) {
-                this.ext_.logger.warn(`MemoryUsageMgr: No memory view found for project ${projname} core ${proj.coreName}`) ;
-                continue ;
-            }
-
-            //
-            // We have the view for the segment we are processing, find the view assocaited with the
-            // addresses in the memory segment.  The memory segment comes from running readelf on the
-            // ELF file for the project.  This findViewEntryForSeg method looks at the virtual and the
-            // physical addresses.
-            //
-            for(let s of segs) {
-                let views = this.findViewEntriesForSeg(view, s) ;
-
-                this.ext_.logger.debug(`MemoryUsageMgr: For project ${projname} segment at 0x${s.virtaddr.toString(16)} (0x${s.physaddr.toString(16)}) found ${views.length} matching views`) ;
-                for(let v of views) { 
-                    this.ext_.logger.debug(`    view ${v.view.mapId} at 0x${v.address.toString(16)}, size ${v.view.size}, type ${v.type}`) ;
-                }
-
-                for(let v of views) {
-                    if (!v.view.memory) {
-                        this.ext_.logger.warn(`MemoryUsageMgr: No physical memory found for view ${v.view.memoryId} in project ${projname}`) ;
-                        continue ;
-                    }
-                    let physmem = v.view.memory?.displayName ;
-
-                    let usage = this.usage_.find( u => u.name === physmem ) ;
-                    if (!usage) {
-                        usage = {
-                            name: physmem!,
-                            start: 0,
-                            size: v.view.size,
-                            percent: 0,
-                            segments: []
-                        } ;
-                        this.usage_.push(usage) ;
-                    }
-
-                    let seg = {
-                        start: v.address,
-                        size: s.memsize,
-                        fsize: s.filesize,
-                        type: v.type,
-                        sections: s.sections.map( sec => sec + ` (${s.project})` )
-                    } ;
-
-                    let mapentry = this.usageViewMap_.get(usage) ;
-                    if (mapentry === undefined) {
-                        mapentry = [] ;
-                        this.usageViewMap_.set(usage, mapentry) ;
-                    }
-                    this.insertViewEntry(mapentry, v.view) ;
-                    if (seg.type !== 'physical' || seg.fsize > 0) {
-                        usage.segments.push(seg) ;
-                    }
-                }
-            }
-        }
-
-        this.normalizeUsageAddresses() ;
-        this.computePercentages() ;
-        this.fillGapsInUsage() ;
-    }
-
-    private fillGapsInOneUsage(u: MemoryUsageData) {
-        if (u.segments.length === 0) {
-            u.segments.push( {
-                start: u.start,
-                size: u.size,
-                fsize: u.size,
-                sections: [],
-                type: 'unused'
-            }) ;
-        }
-        else {
-            if (u.start < u.segments[0].start) {
-                u.segments.unshift( {
-                    start: u.start,
-                    size: u.segments[0].start - u.start,
-                    fsize: u.segments[0].start - u.start,
-                    sections: [],
-                    type: 'unused'
-                }) ;
-            }
-
-            for(let i = 0; i < u.segments.length - 1; i++) {
-                let seg1 = u.segments[i] ;
-                let seg2 = u.segments[i + 1] ;
-                let end1 = seg1.start + seg1.size ;
-                if (end1 < seg2.start) {
-                    u.segments.splice(i + 1, 0, {
-                        start: end1,
-                        size: seg2.start - end1,
-                        fsize: seg2.start - end1,
-                        sections: [],
-                        type: 'unused'
-                    }) ;
-                }
-            }
-
-            let lastseg = u.segments[u.segments.length - 1] ;
-            let endlast = lastseg.start + lastseg.size ;
-            if (endlast < u.start + u.size) {
-                u.segments.push( {
-                    start: endlast,
-                    size: (u.start + u.size) - endlast,
-                    fsize: (u.start + u.size) - endlast,
-                    sections: [],
-                    type: 'unused'
-                }) ;
-            }
-        }
-    }
-
-    private fillGapsInUsage() {
-        for(let u of this.usage_) {
-            this.fillGapsInOneUsage(u) ;
-        }
-    }
-
-    private computeOnePercentage(u: MemoryUsageData) {
-        let geom = new GeomElement() ;
-        for(let seg of u.segments) {
-            if (seg.type === 'physical') {
-                geom.addSegmentFromPointAndLength(seg.start, seg.fsize) ;
-            }
-            else {
-                geom.addSegmentFromPointAndLength(seg.start, seg.size) ;
-            }
-        }
-
-        // Now the geom object has all the segments, merge them to eliminate overlaps
-        geom.merge() ;
-
-        let used = 0 ;
-        for(let seg of geom.segments) {
-            used += seg.length ;
-        }
-
-        u.percent = (used / u.size) * 100 ;
-    }
-
-    private computePercentages() {
-        for(let u of this.usage_) {
-            u.segments.sort( (a, b) => a.start - b.start ) ;
-            this.computeOnePercentage(u) ;
-        }
-    }
-
-    private findViewFromUsageAndAddress(u: MemoryUsageData, addr: number) : View | undefined {
-        let views = this.usageViewMap_.get(u) ;
-        if (!views) {
-            return undefined ;
-        }
-
-        for(let v of views) {
-            if (addr >= v.address && addr < v.address + v.size) {
-                return v ;
-            }
-        }
-
-        return undefined ;
-    }
-
-    private normalizeOneUsageAddresses(u: MemoryUsageData, primary: View) {
-        for(let seg of u.segments) {
-            let v = this.findViewFromUsageAndAddress(u, seg.start) ;
-            if (v) {
-                if (v !== primary) {
-                    seg.start = primary.address + (seg.start - v.address) ;
-                }
-            }
-            else {
-                this.ext_.logger.warn(`MemoryUsageMgr: Could not find view for segment starting at ${seg.start.toString(16)} in memory ${u.name}, cannot normalize address`) ;
-            }
-        }
-    }
-
-    private normalizeUsageAddresses() {
-        for(let u of this.usage_) {
-            let primary = this.memoryMapObj_?.getViewForName(u.name) ;
-            if (!primary) {
-                this.ext_.logger.warn(`MemoryUsageMgr: Could not find primary view for memory ${u.name}, cannot normalize addresses`) ;
-                continue ;
-            }
-            u.start = primary.address ;
-            this.normalizeOneUsageAddresses(u, primary) ;
-        }
-    }
-
-    private insertViewEntry(entries: View[], entry: View) {
-        for(let e of entries) {
-            if (e.address === entry.address && e.size === entry.size) {
+        for(let [project, segs] of this.segments_) {
+            if (!this.mapProjectSegmentsToViews(project, segs)) {
                 return ;
             }
         }
 
-        entries.push(entry) ;
+        for(let physical of this.memoryMapObj_.physicalMemories) {
+            let usageData: PhysicalMemoryUsageData = {
+                name: physical.displayName,
+                id: physical.memoryId,
+                size: physical.size,
+                percent: 0,
+                regions: [],
+            } ;
+            this.usage_.push(usageData) ;
+            this.addRegionsToPhysical(usageData, physical) ;
+        }
+
+        this.computePercentages() ;
     }
+
+    private addRegionsToPhysical(usageData: PhysicalMemoryUsageData, physical: PhysicalMemory) {
+        if (this.dmodus_ === undefined) {
+            return ;
+        }
+
+        for(let region of this.dmodus_.getRegions()) {
+            if (region.memoryId === physical.memoryId) {
+                let mregion: MemoryRegion = {
+                    name: region.description,
+                    offset: region.offset,
+                    percent: 0,
+                    size: region.size,
+                    memoryId: region.memoryId,
+                    segments: []
+                };
+                usageData.regions.push(mregion);
+                this.addSegmentsToRegion(usageData, mregion) ;
+            }
+        }
+    }
+
+    private addSegmentsToRegion(usageView: PhysicalMemoryUsageData, mregion: MemoryRegion) {
+        for(let segs of this.segments_.values()) {
+            for(let s of segs) {
+                for(let vmatch of s.views) {
+                    if (vmatch.view.memoryId === mregion.memoryId) {
+                        //
+                        // We are in the right memory, now see if the segment offset matches the region offset
+                        //
+                        if (s.physOffset >= mregion.offset && s.physOffset < mregion.offset + mregion.size && vmatch.type === 'virtual/physical') {
+                            // The virtual and physical addresses are the same and are in the region
+                            let seg: MemoryUsageSegment = {
+                                start: s.physaddr,
+                                msize: s.memsize,
+                                fsize: s.filesize,
+                                type: vmatch.type
+                            } ;
+                            mregion.segments.push(seg) ;                            
+                        }
+                        else if (s.physOffset >= mregion.offset && s.physOffset < mregion.offset + mregion.size && vmatch.type === 'physical') {
+                            // The physical address is in the region
+                            let seg: MemoryUsageSegment = {
+                                start: s.physaddr,
+                                msize: s.memsize,
+                                fsize: s.filesize,
+                                type: vmatch.type
+                            } ;
+                            mregion.segments.push(seg) ;
+                        }
+                        else if (s.virtOffset >= mregion.offset && s.virtOffset < mregion.offset + mregion.size && vmatch.type === 'virtual') {
+                            // The virtual address is in the region
+                            let seg: MemoryUsageSegment = {
+                                start: s.virtaddr,
+                                msize: s.memsize,
+                                fsize: s.filesize,
+                                type: vmatch.type
+                            } ;
+                            mregion.segments.push(seg) ;                            
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private computePercentages() {
+        for(let u of this.usage_) {
+            let memGeom = new GeomElement() ;
+            for(let r of u.regions) {
+                let geom = new GeomElement() ;
+                for(let seg of r.segments) {
+                    let size : number ;
+                    if (seg.type === 'physical') {
+                        size = seg.fsize ;
+                    }
+                    else {
+                        size = Math.max(seg.fsize, seg.msize) ;
+                    }
+                    geom.addSegmentFromPointAndLength(seg.start, size) ;
+                }
+
+                // Now the geom object has all the segments, merge them to eliminate overlaps
+                geom.merge() ;
+
+                let used = 0 ;
+                for(let seg of geom.segments) {
+                    used += seg.length ;
+                }
+
+                r.percent = (used / r.size) * 100 ;
+
+                memGeom.addSegmentFromPointAndLength(r.offset, r.size) ;
+            }
+
+            // Now compute the overall memory usage
+            memGeom.merge() ;
+            let used = 0 ;
+            for(let seg of memGeom.segments) {
+                used += seg.length ;
+            }
+
+            u.percent = (used / u.size) * 100 ;
+        }
+    }
+
+    // private computeOnePercentage(u: PhysicalMemoryUsageData) {
+    //     let geom = new GeomElement() ;
+    //     for(let seg of u.segments) {
+    //         if (seg.type === 'physical') {
+    //             geom.addSegmentFromPointAndLength(seg.start, seg.fsize) ;
+    //         }
+    //         else {
+    //             geom.addSegmentFromPointAndLength(seg.start, seg.size) ;
+    //         }
+    //     }
+
+    //     // Now the geom object has all the segments, merge them to eliminate overlaps
+    //     geom.merge() ;
+
+    //     let used = 0 ;
+    //     for(let seg of geom.segments) {
+    //         used += seg.length ;
+    //     }
+
+    //     u.percent = (used / u.size) * 100 ;
+    // }
+
+    // private computePercentages() {
+    //     for(let u of this.usage_) {
+    //         u.segments.sort( (a, b) => a.start - b.start ) ;
+    //         this.computeOnePercentage(u) ;
+    //     }
+    // }
+
+    // private findViewFromUsageAndAddress(u: PhysicalMemoryUsageData, addr: number) : View | undefined {
+    //     let views = this.usageViewMap_.get(u) ;
+    //     if (!views) {
+    //         return undefined ;
+    //     }
+
+    //     for(let v of views) {
+    //         if (addr >= v.address && addr < v.address + v.size) {
+    //             return v ;
+    //         }
+    //     }
+
+    //     return undefined ;
+    // }
+
+    // private normalizeOneUsageAddresses(u: PhysicalMemoryUsageData, primary: View) {
+    //     for(let seg of u.segments) {
+    //         let v = this.findViewFromUsageAndAddress(u, seg.start) ;
+    //         if (v) {
+    //             if (v !== primary) {
+    //                 seg.start = primary.address + (seg.start - v.address) ;
+    //             }
+    //         }
+    //         else {
+    //             this.ext_.logger.warn(`MemoryUsageMgr: Could not find view for segment starting at ${seg.start.toString(16)} in memory ${u.name}, cannot normalize address`) ;
+    //         }
+    //     }
+    // }
+
+    // private normalizeUsageAddresses() {
+    //     for(let u of this.usage_) {
+    //         let primary = this.memoryMapObj_?.getViewForName(u.name) ;
+    //         if (!primary) {
+    //             this.ext_.logger.warn(`MemoryUsageMgr: Could not find primary view for memory ${u.name}, cannot normalize addresses`) ;
+    //             continue ;
+    //         }
+    //         u.start = primary.address ;
+    //         this.normalizeOneUsageAddresses(u, primary) ;
+    //     }
+    // }
+
+    // private insertViewEntry(entries: View[], entry: View) {
+    //     for(let e of entries) {
+    //         if (e.address === entry.address && e.size === entry.size) {
+    //             return ;
+    //         }
+    //     }
+
+    //     entries.push(entry) ;
+    // }
 
     // #endregion
 

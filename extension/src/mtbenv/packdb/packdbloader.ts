@@ -113,7 +113,7 @@ export class PackDBLoader {
         }
 
         if (obj.attributes && obj.attributes && obj.attributes['tools-root']) {
-            this.toolsdb_.addToolsDir({ dir: obj.attributes['tools-root'], source: MTBToolSource.IDC}) ;
+            this.toolsdb_.addToolsDir({ dir: obj.attributes['tools-root'], source: MTBToolSource.idc}) ;
         }
         else {
             let extdir : string | undefined = undefined ;
@@ -135,7 +135,7 @@ export class PackDBLoader {
             }
 
             if (extdir) {
-                this.toolsdb_.addToolsDir({ dir: path.dirname(extdir), source: MTBToolSource.IDC }) ;
+                this.toolsdb_.addToolsDir({ dir: path.dirname(extdir), source: MTBToolSource.idc }) ;
             }
         }
     }

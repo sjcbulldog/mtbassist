@@ -597,12 +597,12 @@ export class ModusToolboxEnvironment extends EventEmitter {
             }
 
             this.logger_.debug('Loading Tools') ;
-            this.toolsDb_.addToolsDir({ dir: this.toolsDir_, source: MTBToolSource.ToolsDir}) ;
+            this.toolsDb_.addToolsDir({ dir: this.toolsDir_, source: MTBToolSource.toolsDir}) ;
             for(let packdir of this.packDb_.techPacks.map((pack) => pack.path())) {
-                this.toolsDb_.addToolsDir({ dir: packdir, source: MTBToolSource.TechPack }) ;
+                this.toolsDb_.addToolsDir({ dir: packdir, source: MTBToolSource.techPack }) ;
             }
             if (this.packDb_.eap) {
-                this.toolsDb_.addToolsDir({ dir: this.packDb_.eap.path(), source: MTBToolSource.Eap }) ;
+                this.toolsDb_.addToolsDir({ dir: this.packDb_.eap.path(), source: MTBToolSource.eap }) ;
             }
             this.toolsDb_.scanAll(this.logger_)
                 .then(() => {

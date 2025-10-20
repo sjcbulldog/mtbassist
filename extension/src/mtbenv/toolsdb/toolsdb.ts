@@ -20,10 +20,10 @@ import { MTBPack } from "../packdb/mtbpack";
 import * as winston from 'winston';
 
 export enum MTBToolSource {
-    TechPack = 'tech-pack',
-    Eap = 'early-access-pack',
-    ToolsDir = 'tools-dir',
-    IDC = 'idc',
+    techPack = 'tech-pack',
+    eap = 'early-access-pack',
+    toolsDir = 'tools-dir',
+    idc = 'idc',
 }
 
 export interface MTBToolDir {
@@ -32,23 +32,39 @@ export interface MTBToolDir {
 };
 
 export class ToolsDB {
-    private tools_dirs_ : MTBToolDir[] = [] ;
-    private active_tools_ : Map<string, MTBTool> = new Map() ;
+    private toolsDirs_ : MTBToolDir[] = [] ;
+    private activeTools_ : Map<string, MTBTool> = new Map() ;
     private tools_: MTBTool[] = [] ;
 
     constructor() {
     }
 
     public get activeSet() : MTBTool[] {
-        return Array.from(this.active_tools_.values()) ;
+        return Array.from(this.activeTools_.values()) ;
     }
 
     public addToolsDir(dir: MTBToolDir) {
-        this.tools_dirs_.push(dir);
+        this.toolsDirs_.push(dir);
+    }
+
+    public findToolProgramPath(guid: string, ...subpaths: string[]) : string | undefined {
+        let tool = this.findToolByGUID(guid) ;
+        if (tool !== undefined) {
+            let p = path.join(tool.path, ...subpaths) ;
+            if (process.platform === 'win32') { 
+                p += '.exe' ;
+            }
+
+            if (!fs.existsSync(p)) {
+                return undefined ;
+            }
+            return p ;
+        }
+        return undefined ;
     }
 
     public findToolByGUID(guid: string) : MTBTool | undefined {
-        for(let tool of this.active_tools_.values()) {
+        for(let tool of this.activeTools_.values()) {
             if (tool.id === guid) {
                 return tool ;
             }
@@ -58,7 +74,7 @@ export class ToolsDB {
 
     public scanAll(logger: winston.Logger) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            for(let one of this.tools_dirs_) {
+            for(let one of this.toolsDirs_) {
                 let p = this.scanForTools(logger, one) ;
             }
 
@@ -68,28 +84,28 @@ export class ToolsDB {
     }
 
     public setActiveToolSet(eap: MTBPack | undefined) {
-        this.active_tools_.clear() ;
+        this.activeTools_.clear() ;
 
         for(let tool of this.tools_) {
-            let current = this.active_tools_.get(tool.id) ;
+            let current = this.activeTools_.get(tool.id) ;
             if (current === undefined) {
                 //
                 // There is no current tool with this id, so we can add it
                 //
-                this.active_tools_.set(tool.id, tool) ;
+                this.activeTools_.set(tool.id, tool) ;
             }
-            else if (tool.source === MTBToolSource.Eap) {
+            else if (tool.source === MTBToolSource.eap) {
                 //
                 // There is a tool from the EAP pack.  It always takes precedence
                 //
-                this.active_tools_.set(tool.id, tool) ;
+                this.activeTools_.set(tool.id, tool) ;
             }
-            else if (current.source !== MTBToolSource.Eap && tool.version.isGreaterThen(current.version)) {
+            else if (current.source !== MTBToolSource.eap && tool.version.isGreaterThen(current.version)) {
                 //
                 // We found a tool with a newer version, and the existing tool is not from the EAP pack.  We
                 // will use it
                 //
-                this.active_tools_.set(tool.id, tool) ;
+                this.activeTools_.set(tool.id, tool) ;
             }
         }
     }

@@ -13,6 +13,41 @@
       transform: translateY(-1px);
     }
 
+    .memory-header-container {
+      button[mat-icon-button] {
+        color: var(--text-color);
+        background-color: transparent;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+
+        &:hover:not(:disabled) {
+          background-color: var(--hover-background);
+          border-color: var(--primary-color);
+          color: var(--primary-color);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        mat-icon {
+          color: inherit;
+        }
+      }
+    }
+
+    .inline-info-icon {
+      color: var(--text-secondary);
+      opacity: 0.7;
+      transition: opacity 0.2s ease, color 0.2s ease;
+
+      &:hover {
+        opacity: 1;
+        color: var(--primary-color);
+      }
+    }
+
     .collapsible-header {
       display: flex;
       align-items: center;
@@ -101,6 +136,39 @@
         }
       }
 
+      &.region-row {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        background-color: rgba(0, 0, 0, 0.01);
+
+        &:hover {
+          background-color: var(--hover-background);
+        }
+
+        .region-name {
+          display: flex;
+          align-items: center;
+          font-weight: 500;
+          padding-left: 20px;
+
+          .region-indent {
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-right: 8px;
+          }
+
+          .expand-icon {
+            margin-right: 8px;
+            font-size: 16px;
+            transition: transform 0.2s ease;
+
+            &.collapsed {
+              transform: rotate(-90deg);
+            }
+          }
+        }
+      }
+
       &.segment-row {
         background-color: rgba(0, 0, 0, 0.02);
 
@@ -110,7 +178,41 @@
           .segment-indent {
             color: var(--text-secondary);
             font-style: italic;
-            margin-right: 8px;
+            font-weight: 400;
+          }
+
+          .segment-type {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 8px;
+
+            &.virtual {
+              background-color: #e3f2fd;
+              color: #1565c0;
+              border: 1px solid #bbdefb;
+            }
+
+            &.physical {
+              background-color: #f3e5f5;
+              color: #7b1fa2;
+              border: 1px solid #e1bee7;
+            }
+
+            &.virtual-physical {
+              background-color: #e8f5e9;
+              color: #2e7d32;
+              border: 1px solid #c8e6c9;
+            }
+
+            &.unused {
+              background-color: #fafafa;
+              color: #616161;
+              border: 1px solid #e0e0e0;
+            }
           }
 
           .segment-type {
@@ -213,32 +315,38 @@
     }
   }
 
-  .application-status.dark-theme .memory-usage-section .memory-table .segment-row {
-    background-color: rgba(255, 255, 255, 0.05);
+  .application-status.dark-theme .memory-usage-section .memory-table {
+    .region-row {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
 
-    .segment-type {
-      &.virtual {
-        background-color: rgba(33, 150, 243, 0.2);
-        color: #64b5f6;
-        border: 1px solid rgba(33, 150, 243, 0.4);
-      }
+    .segment-row {
+      background-color: rgba(255, 255, 255, 0.03);
 
-      &.physical {
-        background-color: rgba(156, 39, 176, 0.2);
-        color: #ce93d8;
-        border: 1px solid rgba(156, 39, 176, 0.4);
-      }
+      .segment-type {
+        &.virtual {
+          background-color: rgba(33, 150, 243, 0.2);
+          color: #64b5f6;
+          border: 1px solid rgba(33, 150, 243, 0.4);
+        }
 
-      &.virtual-physical {
-        background-color: rgba(76, 175, 80, 0.2);
-        color: #81c784;
-        border: 1px solid rgba(76, 175, 80, 0.4);
-      }
+        &.physical {
+          background-color: rgba(156, 39, 176, 0.2);
+          color: #ce93d8;
+          border: 1px solid rgba(156, 39, 176, 0.4);
+        }
 
-      &.unused {
-        background-color: rgba(158, 158, 158, 0.2);
-        color: #bdbdbd;
-        border: 1px solid rgba(158, 158, 158, 0.4);
+        &.virtual-physical {
+          background-color: rgba(76, 175, 80, 0.2);
+          color: #81c784;
+          border: 1px solid rgba(76, 175, 80, 0.4);
+        }
+
+        &.unused {
+          background-color: rgba(158, 158, 158, 0.2);
+          color: #bdbdbd;
+          border: 1px solid rgba(158, 158, 158, 0.4);
+        }
       }
     }
   }

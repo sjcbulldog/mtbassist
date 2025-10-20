@@ -358,23 +358,6 @@ export interface BrowseResult {
   tag: string ;
   path: string ;
 }
-
-export interface MemoryUsageSegment {
-  start: number ;
-  size: number ;
-  fsize: number ;
-  sections: string[] ;
-  type: 'virtual' | 'physical' | 'virtual/physical' | 'unused';
-}
-
-export interface MemoryUsageData {
-  name: string ;
-  start: number ;
-  size: number ;
-  percent: number ;
-  segments: MemoryUsageSegment[] ;
-}
-
 export interface MTBAssistantTask {
   description: string ;
   vscodecmd: string ;
@@ -396,3 +379,30 @@ export interface CreateProjectGitState {
 }
 
 export type ProjectGitStateTrackerData = Array<CreateProjectGitState> ;
+
+export interface MemoryUsageSegment {
+  start: number ;
+  msize: number ;
+  fsize: number ;
+  type: 'virtual' | 'physical' | 'virtual/physical' | 'unused';  
+} ;
+
+export interface MemoryRegion {
+  name: string ;
+  percent: number ;
+  memoryId: string ;
+  offset: number ;
+  size: number ;
+  segments: MemoryUsageSegment[] ;
+}
+
+//
+// This is physical memory on the device (e.g. SRAM, SOCMEM, external Flash, etc.)
+//
+export interface PhysicalMemoryUsageData {
+  name: string ;
+  id: string ;
+  size: number ;
+  percent: number ;
+  regions: MemoryRegion[] ;
+}

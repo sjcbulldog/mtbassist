@@ -17,6 +17,8 @@ export interface PhysicalMemory {
     reservationId?: string ;
     size: number ;
     capabilities: string[] ;
+    mainview?: View ;
+    views: View[] ;
 }
 
 export interface ExternalReservation {
@@ -36,7 +38,7 @@ export interface View {
     memory? : PhysicalMemory ;
 }
 
-export interface MemoryView {
+export interface DeviceMemoryView {
     viewId: string ;
     memviews: View[] ;
 }
@@ -47,7 +49,7 @@ export class MemoryMap {
 
     private devdb_ : DeviceDBManager ;
     private env_ : ModusToolboxEnvironment ;
-    private memviews_: MemoryView[] = [] ;
+    private memviews_: DeviceMemoryView[] = [] ;
     private physicalMemories_: PhysicalMemory[] = [] ;
     private externalMemories_: PhysicalMemory[] = [] ;
     private externalReservation_: ExternalReservation[] = [] ;
@@ -71,7 +73,7 @@ export class MemoryMap {
         return [...this.physicalMemories_, ...this.externalMemories_] ;
     }
 
-    public memoryViewFromViewName(name: string) : MemoryView | undefined {
+    public memoryViewFromViewName(name: string) : DeviceMemoryView | undefined {
         return this.memviews_.find( mv => mv.viewId === name ) ;
     }
 
@@ -182,6 +184,7 @@ export class MemoryMap {
                 memoryId: phys.$.memoryId,
                 size: parseInt(phys.$.size, 16),
                 capabilities: [...phys.Capabilities.Capability],
+                views: []
             } ;
             this.externalMemories_.push(emem) ;
         }
@@ -196,6 +199,10 @@ export class MemoryMap {
                 let pmem = this.physicalMemories_.find( p => p.memoryId === m.memoryId ) ;
                 if (pmem) {
                     m.memory = pmem ;
+                    pmem.views.push(m) ;
+                    if (pmem.mainview === undefined) {
+                        pmem.mainview = m ;
+                    }
                 }
                 else {
                     let resid = m.mapId ;
@@ -262,7 +269,7 @@ export class MemoryMap {
         if (memviews) {
             if (Array.isArray(memviews.MemoryView)) {
                 for(let mv of memviews.MemoryView) {
-                    let memview : MemoryView = {
+                    let memview : DeviceMemoryView = {
                         viewId: mv.$.viewId,
                         memviews: []
                     } ;
@@ -280,7 +287,7 @@ export class MemoryMap {
                             size: parseInt(views.$.size, 16),
                             suffix: views.$.suffix,
                             capabilitiesAdd: adds,
-                            capabilitiesRemove: removes
+                            capabilitiesRemove: removes,
                         } ;
                         memview.memviews.push(v) ;
                     }
@@ -302,6 +309,7 @@ export class MemoryMap {
                     memoryId: pm.$.memoryId,
                     size: parseInt(pm.$.size, 16),
                     capabilities: [...pm.Capabilities.Capability],
+                    views: []
                 };
                 this.physicalMemories_.push(pmem) ;
             }

@@ -511,11 +511,15 @@ export class MTBAssistObject {
         return ret ;
     } ;
 
-    private reOpenWorkspace() : Promise<void> {
+    private reOpenWorkspace(wkspc: string | undefined) : Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
             if (wkspc) {
-                vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(wkspc)) ;
+                // The workspace was already loaded, so loading it again would not do anything
+                vscode.commands.executeCommand('workbench.action.reloadWindow') ;
+            }
+            else {
+                wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;                
+                vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(wkspc!)) ;
             }            
             resolve() ;
         });
@@ -524,6 +528,7 @@ export class MTBAssistObject {
 
     private runVSCodeAndReload() {
         this.sendMessageWithArgs('startOperation', `Preparing Application For VSCode`) ;        
+        let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
 
         this.seeIfGetLibsNeeded()
         .then(() => {
@@ -532,7 +537,7 @@ export class MTBAssistObject {
             .then(() => {
                 let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
                 if (wkspc) {
-                    this.pendingStatusClosePromise = this.reOpenWorkspace.bind(this) ;                    
+                    this.pendingStatusClosePromise = this.reOpenWorkspace.bind(this, wkspc) ;
                     this.sendMessageWithArgs('finishOperation', '') ;                    
                 }
                 else {
@@ -554,6 +559,7 @@ export class MTBAssistObject {
         if (vscode.workspace.workspaceFile && this.env_!.appInfo) {
             let vscodedir = path.join(this.env_!.appInfo!.appdir, '.vscode') ;  
             if (!fs.existsSync(vscodedir)) {
+                this.optionallyShowPage(true) ;
                 this.runVSCodeAndReload() ;
             }
             else {
@@ -2026,7 +2032,7 @@ export class MTBAssistObject {
 
     private mtbMainPage(args: any[]) {
         this.logger_.debug('Showing ModusToolbox main page.');
-        this.showLocalContent('single-dist/index.html');
+        this.showLocalContent('index.html');
     }
 
     private getDocHTML(uri: vscode.Uri): Promise<string> {

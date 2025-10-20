@@ -18,7 +18,7 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, MemoryUsageData, InstallLLVMProgressMsg, MTBAssistantTask, LCSBSPKeywordAliases, ProjectGitStateTrackerData } from '../../comms';
+import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, PhysicalMemoryUsageData, InstallLLVMProgressMsg, MTBAssistantTask, LCSBSPKeywordAliases, ProjectGitStateTrackerData } from '../../comms';
 import { ProjectManager } from './projectmgr';
 
 declare var acquireVsCodeApi: any | undefined ;
@@ -106,7 +106,7 @@ export class BackendService {
     aiApiKey : BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
 
     // Memory Usage related
-    memoryUsage: BehaviorSubject<MemoryUsageData[] | null> = new BehaviorSubject<MemoryUsageData[] | null>([]);
+    memoryUsage: BehaviorSubject<PhysicalMemoryUsageData[] | null> = new BehaviorSubject<PhysicalMemoryUsageData[] | null>([]);
 
     // Status display related
     startOperation: Subject<string> = new Subject<string>();

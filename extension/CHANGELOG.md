@@ -61,3 +61,6 @@ Fix small bugs with the ModusToolbox tools installer for Linux
 ### 2.7.0
 If configurators are launched and still open when VSCode exits, leave these configurators open
 
+### 2.8.0
+Fixed issue if the workspace exists, but the libs directories and .vscode directories do not exist, then the initialization did not succeed after fixing the ModusToolbox application.
+Updated the memory usage display to show regions created in the device configuration, and the percentage used of each region as well as the physical memories.

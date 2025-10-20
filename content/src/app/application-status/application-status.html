@@ -400,7 +400,7 @@
                 <div class="missing-assets-indicator">
                   <div class="warning-badge">
                     <mat-icon class="warning-icon">warning</mat-icon>
-                    <span class="warning-text">Missing Assets</span>
+                    <span class="warning-text">This project is missing assets required to build.</span>
                   </div>
                   <div class="missing-actions">
                     <button 
@@ -411,8 +411,8 @@
                         <mat-icon>hourglass_empty</mat-icon>
                         Running...
                       } @else {
-                        <mat-icon>build</mat-icon>
-                        Fix Missing Assets
+                        <mat-icon>download</mat-icon>
+                        Download Missing Assets
                       }
                     </button>
                     @if (isFixingAssets(project) && getCurrentlyLoadingAsset(project)) {

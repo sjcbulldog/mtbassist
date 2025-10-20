@@ -21,7 +21,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatMenuModule } from '@angular/material/menu';
-import { ApplicationStatusData, Documentation, MemoryUsageData, MTBAssistantTask } from '../../comms';
+import { ApplicationStatusData, Documentation, PhysicalMemoryUsageData, MTBAssistantTask } from '../../comms';
 import { MemoryUsage } from '../memory-usage/memory-usage.component';
 import { LlvmInstallerComponent } from '../llvm-installer/llvm-installer.component';
 import { BackendService } from '../backend/backend-service';
@@ -52,7 +52,7 @@ export class ApplicationStatus implements OnInit, OnDestroy {
     isEraseAll: boolean = false;
 
     applicationStatus: ApplicationStatusData | null = null;
-    memoryUsageData: MemoryUsageData[] | null = null ;
+    memoryUsageData: PhysicalMemoryUsageData[] | null = null ;
     isLoading = true;
     hasError = false;
     running = false ;
