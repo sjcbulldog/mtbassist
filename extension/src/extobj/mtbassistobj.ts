@@ -1826,10 +1826,25 @@ export class MTBAssistObject {
             this.context_.subscriptions.push(disposable);
 
             disposable = vscode.commands.registerCommand('mtbassist2.installLLVM', this.installLLVMCommand.bind(this));
-            this.context_.subscriptions.push(disposable);            
+            this.context_.subscriptions.push(disposable);    
+            
+            disposable = vscode.commands.registerCommand('mtbassist2.setOutputChannelLevel', this.setOutputChannelLevel.bind(this));
+            this.context_.subscriptions.push(disposable);
 
             this.commandsInited_ = true;
         }
+    }
+
+    private setOutputChannelLevel() {
+        const levels = ['silly', 'debug', 'verbose', 'http', 'info', 'warn', 'error'];
+        vscode.window.showQuickPick(levels, {
+            placeHolder: 'Select the output channel log level'
+        }).then(selected => {
+            if (selected) {
+                this.context_.globalState.update('logLevel', selected);
+                this.logger_.level = selected;
+            }
+        });
     }
 
     private installLLVMCommand() {

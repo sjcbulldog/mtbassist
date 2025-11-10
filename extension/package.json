@@ -2,11 +2,11 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "2.8.0",
+  "version": "2.12.0",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
-  "preview": true,
+  "preview": false,
   "repository": {
     "type": "git",
     "url": "https://github.com/sjcbulldog/mtbassist.git"
@@ -59,6 +59,10 @@
       {
         "command": "mtbassist2.installLLVM",
         "title": "ModusToolbox Assistant: Install the LLVM Compiler"
+      },
+      {
+        "command": "mtbassist2.setOutputChannelLevel",
+        "title": "ModusToolbox Assistant: Set Output Channel Level"
       }
     ],
     "keybindings": [
@@ -122,7 +126,8 @@
     "copy": "npm run copydist && npm run copyshared",
     "content": "cd ../content && npm run build",
     "build": "npm run content && npm run copy && npm run compile",
-    "prerelease": "vsce publish --pre-release"
+    "prerelease": "vsce publish --pre-release",
+    "extrel": "vsce publish"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",

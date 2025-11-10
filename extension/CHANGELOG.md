@@ -64,3 +64,18 @@ If configurators are launched and still open when VSCode exits, leave these conf
 ### 2.8.0
 Fixed issue if the workspace exists, but the libs directories and .vscode directories do not exist, then the initialization did not succeed after fixing the ModusToolbox application.
 Updated the memory usage display to show regions created in the device configuration, and the percentage used of each region as well as the physical memories.
+
+### 2.9.0
+First public release
+
+### 2.10.0
+Updated to fix color problems with some of the displays when in light mode.
+
+### 2.11.0
+Added a new command to manage what is displayed in the ModusToolbox output channel.
+
+### 2.12.0
+Update this change log, which I forgot in the last versions.
+
+### 2.13.0
+Updated the names of the PSOC Edge kits in the kit database to better detect these kits

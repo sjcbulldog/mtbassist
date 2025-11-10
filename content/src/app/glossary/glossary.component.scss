@@ -7,6 +7,9 @@
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .glossary-header {
@@ -14,6 +17,7 @@
   color: white;
   padding: 2rem;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .glossary-title {
@@ -68,7 +72,8 @@
 
 .glossary-content {
   display: flex;
-  height: 600px; /* Fixed height to enable independent scrolling */
+  flex: 1;
+  min-height: 0;
 }
 
 .alphabet-tabs {

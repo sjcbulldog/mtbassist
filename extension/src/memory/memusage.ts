@@ -492,7 +492,7 @@ export class MemoryUsageMgr {
         let ret = new Promise<boolean>((resolve, reject) => {
             let elffile = path.join(proj.path, 'build', 'last_config', proj.name + '.elf') ;
             if (!fs.existsSync(elffile)) {
-                this.ext_.logger.warn(`MemoryUsageMgr: ELF file ${elffile} does not exist`) ;
+                this.ext_.logger.info(`MemoryUsageMgr: ELF file ${elffile} does not exist - skipping memory usage analysis`) ;
                 resolve(false) ;
                 return ;
             }

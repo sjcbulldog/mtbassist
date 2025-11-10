@@ -72,7 +72,7 @@ export class App {
       icon: 'home'
     },
     {
-      label: 'New Project',
+      label: 'Create Project',
       component: 'CreateProject',
       icon: 'add_circle'
     },

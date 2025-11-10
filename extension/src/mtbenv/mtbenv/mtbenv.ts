@@ -113,6 +113,8 @@ export class ModusToolboxEnvironment extends EventEmitter {
             this.exeDir_ = path.normalize(this.exeDir_) ;
         }
         this.logger_ = logger ;
+
+        this.logger_.silly('ModusToolboxEnvironment initialized') ;
     }
 
     public areWeLoading(flags: MTBLoadFlags) : boolean {

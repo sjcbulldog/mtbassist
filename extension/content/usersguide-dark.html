@@ -12,7 +12,7 @@
     :root { --bg: #1e1e1e; --bg2:#252526; --text:#e0e0e0; --muted:#c7c7c7; --card:#2d2d30; --line:#3e3e42; --pri:#1976d2; --pri2:#42a5f5; --acc:#64b5f6; --ok:#81c784; --warn:#ffb74d; --bad:#ef5350; }
     body { margin:0; font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif; background:var(--bg); color:var(--text); }
     .container { max-width:1200px; margin:0 auto; padding:24px; background:var(--bg2); }
-  .header { background:linear-gradient(135deg,var(--pri),var(--pri2)); padding:28px 24px; margin:-24px -24px 24px -24px; color:#ffffff; }
+    .header { background:linear-gradient(135deg,var(--pri),var(--pri2)); padding:28px 24px; margin:-24px -24px 24px -24px; color:#ffffff; }
     .header h1 { margin:0; font-size:2.2rem; }
     .header p { margin:8px 0 0 0; opacity:.9; }
     .toc { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px 20px; margin:16px 0 28px; }
@@ -44,7 +44,7 @@
   <div class="container">
     <div class="header">
       <h1>ModusToolbox Assistant – User Manual</h1>
-      <p>Everything you need to create, configure, and maintain ModusToolbox applications inside VS Code.</p>
+      <p>Everything you need to create, configure, and maintain ModusToolbox applications inside VS Code.</p>
     </div>
 
     <div class="toc">
@@ -56,23 +56,21 @@
         <li><a href="#projects">4. Create Project Wizard</a></li>
         <li><a href="#status">5. Application Status & Actions</a></li>
         <li><a href="#recents">6. Recently Opened</a></li>
-        <li><a href="#lcs">7. Local Content Storage (BSPs)</a></li>
-        <li><a href="#software">8. Software & Tool Installation</a></li>
-        <li><a href="#llvm">9. LLVM Installer</a></li>
-        <li><a href="#devkits">10. DevKit Management</a></li>
-        <li><a href="#settings">11. Settings & Preferences</a></li>
-        <li><a href="#docs">12. Documentation & Help</a></li>
-        <li><a href="#memory">13. Memory Usage View</a></li>
-        <li><a href="#commands">14. Commands, Menus & Shortcuts</a></li>
-        <li><a href="#troubleshooting">15. Troubleshooting</a></li>
-        <li><a href="#faq">16. FAQ</a></li>
-        <li><a href="#about">17. About</a></li>
+        <li><a href="#lcs">7. Local Content Storage</a></li>
+        <li><a href="#devkits">8. DevKit Management</a></li>
+        <li><a href="#settings">9. Settings & Preferences</a></li>
+        <li><a href="#docs">10. Documentation & Help</a></li>
+        <li><a href="#memory">11. Memory Usage View</a></li>
+        <li><a href="#commands">12. Commands, Menus & Shortcuts</a></li>
+        <li><a href="#troubleshooting">13. Troubleshooting</a></li>
+        <li><a href="#faq">14. FAQ</a></li>
+        <li><a href="#about">15. About</a></li>
       </ul>
     </div>
 
     <section id="intro" class="section">
       <h2>1. Overview & Requirements</h2>
-      <p>ModusToolbox Assistant integrates Infineon ModusToolbox workflows into VS Code. It provides project creation, BSP/content management, device kit awareness, tool installation, and deep IDE integration.</p>
+      <p>ModusToolbox Assistant integrates Infineon ModusToolbox workflows into VS Code. It provides project creation, BSP/content management, device kit awareness, tool installation, and deep IDE integration.</p>
       <div class="grid">
         <div class="card">
           <h4>Main Capabilities</h4>
@@ -89,9 +87,10 @@
         <div class="card">
           <h4>Prerequisites</h4>
           <ul>
-            <li>VS Code 1.71.0 or later</li>
+            <li>VS Code 1.71.0 or later</li>
+            <li>ModusToolbox 3.2+ (not compatible with 2.x, 3.0, or 3.1)</li>
             <li>Recommended extensions: <span class="pill">clangd</span> <span class="pill">Cortex-Debug</span></li>
-            <li>ModusToolbox tools (managed via this extension)</li>
+            <li>Toolchains and utilities can be installed from inside the extension</li>
             <li>Optional: Internet access to fetch manifests/BSPs</li>
           </ul>
         </div>
@@ -102,34 +101,30 @@
       <h2>2. Installation & First Run</h2>
       <ol>
         <li>Open the Extensions view (<span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">X</span>) and search for <strong>ModusToolbox Assistant</strong>.</li>
-        <li>Click <strong>Install</strong> and reload VS Code when prompted.</li>
-        <li>On first launch, the assistant initializes and may download manifest data.</li>
+        <li>Click <strong>Install</strong> and reload VS Code when prompted.</li>
       </ol>
-      <div class="note">If you’re behind a proxy/firewall, configure network access in VS Code or system settings before first use.</div>
+      <div class="note">If you're behind a proxy/firewall, configure network access in VS Code or system settings before first use. For fully offline operation, enable Local Content mode and populate BSPs in <a href="#lcs">Local Content Storage</a>.</div>
     </section>
 
     <section id="ui" class="section">
       <h2>3. UI Tour & Navigation</h2>
-      <p>Open the main page via the Command Palette or the status bar item. The UI is tabbed and responsive to VS Code dark/light themes.</p>
+      <p>By default, the ModusToolbox Assistant page is displayed when Visual Studio Code is opened. 
+        This can be changed in the Visual Studio preferences to never open automatically, or only open when a ModusToolbox application is loaded.
+        The UI is tabbed and responsive to VS Code dark/light themes.</p>
       <div class="grid">
         <div class="card">
           <h4>Main Tabs</h4>
           <ul>
-            <li>Getting Started – Orientation and quick links</li>
-            <li>Create Project – Wizard for new applications</li>
+            <li>Getting Started – Orientation, quick steps, and feature overview</li>
+            <li>Create Project – 4‑step wizard for new applications</li>
             <li>Recently Opened – Jump back into recent apps</li>
-            <li>Application Status – Project health, actions, memory</li>
+            <li>Application – Project health, build/program/erase, memory</li>
             <li>DevKit List – Connected kits and BSP association</li>
-            <li>Local Content Storage – Manage BSP packages</li>
-            <li>Software Installer – Install/upgrade tools</li>
+            <li>Local Content Storage – Manage BSP packages (offline mode)</li>
             <li>Settings – Extension/workspace preferences</li>
-            <li>LLVM Installer – Install supported LLVM versions</li>
-            <li>User Guide – Built-in documentation</li>
+            <li>Glossary – ModusToolbox Terminology and definitions</li>
+            <li>User Guide – Built‑in documentation</li>
           </ul>
-        </div>
-        <div class="card">
-          <h4>Status Bar</h4>
-          <p>A status bar entry provides quick access to the main page and indicates when actions complete (e.g., build done).</p>
         </div>
       </div>
     </section>
@@ -139,18 +134,16 @@
       <p>Use the guided wizard to create a new ModusToolbox application based on a Board Support Package (BSP) and optional code examples.</p>
       <h3>Steps</h3>
       <ol>
-        <li><strong>Location</strong>: Choose the project directory; browse via the built‑in folder selector.</li>
-        <li><strong>BSP Selection</strong>: Pick a BSP from <em>Active BSPs</em> (or <em>All BSPs</em> if enabled by manifest).</li>
-        <li><strong>Examples</strong>: Filter and select code examples by category; the assistant fetches and displays available examples.</li>
-        <li><strong>Configuration</strong>: Choose build configuration (e.g., Debug/Release) and other options.</li>
-        <li><strong>Create</strong>: The backend performs project generation and reports progress; errors are surfaced immediately.</li>
+        <li><strong>Project Information</strong>: Enter application name and location (validation enforces safe names/paths); choose configuration (Debug/Release).</li>
+        <li><strong>BSP Selection</strong>: Pick a BSP from available boards. Categories, search, and manifest status help narrow the list.</li>
+        <li><strong>Example Selection</strong>: Browse by category; select one or more examples to include.</li>
+        <li><strong>Review & Create</strong>: Confirm summary and create the application. Progress and any errors are streamed from the backend.</li>
       </ol>
-      <div class="note">After creation, the workspace may auto‑open if a VS Code workspace file is generated by the template.</div>
     </section>
 
     <section id="status" class="section">
       <h2>5. Application Status & Actions</h2>
-      <p>Aggregates project details, tools, middleware, documentation, and memory snapshots. Provides one‑click fixes when tasks/settings are missing or corrupt.</p>
+      <p>Aggregates project details, tools, middleware, documentation, and memory snapshots. Provides one‑click fixes when tasks/settings are missing or out of date.</p>
       <div class="grid">
         <div class="card">
           <h4>What You See</h4>
@@ -164,57 +157,44 @@
         <div class="card">
           <h4>Actions</h4>
           <ul>
-            <li>Fix VS Code tasks and settings</li>
+            <li>Automatically create file required for Visual Studio Code support if they are missing</li>
+            <li>Update VS Code tasks and settings as needed by the extension</li>
             <li>Open project folder or README</li>
-            <li>Run build actions exposed by the assistant</li>
+            <li>Run build actions: <em>Build</em>, <em>Rebuild</em>, <em>Clean</em></li>
+            <li>Program options: <em>Program</em> or <em>Quick Program</em> (toggle via menu)</li>
+            <li>Erase options: <em>Erase</em> (internal) or <em>Erase All</em> (internal + external) (toggle via menu)</li>
+            <li>Launch tools: <em>Device Configurator</em>, <em>Library Manager</em></li>
+            <li>Quick Tasks: run curated tasks (if available)</li>
             <li>Refresh application and rescan environment</li>
           </ul>
         </div>
       </div>
+      <h3>Build/Program/Erase Controls</h3>
+      <ul>
+        <li>Left‑click executes the current choice. Right‑click opens a menu to toggle modes (e.g., Program vs. Quick Program; Erase vs. Erase All).</li>
+        <li>Missing Assets banner provides <em>Fix</em> actions to restore assets required for a sucessful build.</li>
+      </ul>
       <p class="note">For memory analysis, see <a href="#memory">Memory Usage View</a>.</p>
     </section>
 
     <section id="recents" class="section">
       <h2>6. Recently Opened</h2>
-      <p>Track and reopen recent applications with timestamps and BSP metadata. Use <em>Open</em> or <em>Open README</em> from the card actions.</p>
+      <p>Track and reopen recent applications with timestamps and BSP metadata. Use <em>Open</em></p>
     </section>
 
     <section id="lcs" class="section">
-      <h2>7. Local Content Storage (BSPs)</h2>
-      <p>Manage locally stored BSPs for offline development.</p>
+      <h2>7. Local Content Storage</h2>
+      <p>Manage locally stored content for offline development. Content is selected by selecting specific BSPs.  All content associated with a BSP is included.</p>
       <ul>
-        <li>View BSPs present in local storage vs. not present</li>
-        <li>Add or remove BSPs from storage</li>
-        <li>Apply pending changes (bulk operations)</li>
-        <li>Sync with manifest and filter by category/device</li>
+        <li>Two lists: <em>Not In Local Storage</em> and <em>In Local Storage</em>; drag & drop BSPs between lists</li>
+        <li>Bulk operations: <em>Move All To Local</em>, <em>Remove All From Local</em>, <em>Revert</em></li>
+        <li>Updates: <em>Check For Updates (in current content in Local Storage)</em> and <em>Update Existing Content</em></li>
       </ul>
-      <div class="note">The assistant computes <em>in</em>/<em>not in</em> lists against the active manifest and shows when updates are needed.</div>
-    </section>
-
-    <section id="software" class="section">
-      <h2>8. Software & Tool Installation</h2>
-      <p>Install or update ModusToolbox features, tools, and utilities. The assistant reports progress with feature IDs and percentages.</p>
-      <ul>
-        <li>Detects required vs. optional components</li>
-        <li>Installs to configured tools location</li>
-        <li>Supports running setup programs and restarts the extension if needed</li>
-        <li>Provides error messages and recovery guidance</li>
-      </ul>
-      <div class="warn">Ensure you have write permissions to the selected tools directory and adequate disk space.</div>
-    </section>
-
-    <section id="llvm" class="section">
-      <h2>9. LLVM Installer</h2>
-      <p>Install supported LLVM versions used by ModusToolbox build systems.</p>
-      <ul>
-        <li>Fetch and display available LLVM versions</li>
-        <li>Stream installation messages and errors in real‑time</li>
-        <li>Integrate installed LLVM with existing toolchains</li>
-      </ul>
+      <div class="note">The assistant computes <em>in</em>/<em>not in</em> lists against the active manifest and indicates when updates are needed. In <em>Local Content</em> operating mode, the manifest is read from your LCS path.</div>
     </section>
 
     <section id="devkits" class="section">
-      <h2>10. DevKit Management</h2>
+      <h2>8. DevKit Management</h2>
       <p>Enumerate connected Infineon development kits, show firmware versions, features, bridging types, and BSP association.</p>
       <ul>
         <li>Update kit firmware when out of date</li>
@@ -224,12 +204,17 @@
     </section>
 
     <section id="settings" class="section">
-      <h2>11. Settings & Preferences</h2>
+      <h2>9. Settings & Preferences</h2>
       <p>Configure both assistant and workspace settings with validation and inline tips.</p>
       <ul>
         <li>Ownership: <span class="pill">Modus</span> <span class="pill">Extension</span> <span class="pill">Workspace</span></li>
         <li>Types: string, number, boolean, choice, URI, directory path, file path, tools path</li>
-        <li>Automatic read/write to VS Code global/workspace state</li>
+        <li>Automatic read/write to VS Code global/workspace state</li>
+        <li>Choice settings display helpful tips next to each option</li>
+        <li>Conditional enablement, e.g. <em>proxy_server</em> disabled when <em>proxy_mode</em>=direct</li>
+        <li>Manifest DB URL Mode: <em>default</em>, <em>china</em>, or <em>custom</em> (shows custom URL field)</li>
+        <li>Local Content Mode: set <em>operating_mode</em>=Local Content and choose <em>lcs_path</em></li>
+        <li>Toolchain: select versions, or set <em>toolsversion</em>=Custom to enable <em>custompath</em></li>
         <li>Quick‑fixes for invalid paths and configuration mismatches</li>
       </ul>
       <h3>Auto‑display</h3>
@@ -237,7 +222,7 @@
     </section>
 
     <section id="docs" class="section">
-      <h2>12. Documentation & Help</h2>
+      <h2>10. Documentation & Help</h2>
       <ul>
         <li>Open <em>Getting Started</em> and <em>Documentation</em> links in your external browser</li>
         <li>Browse code examples on GitHub</li>
@@ -247,12 +232,23 @@
     </section>
 
     <section id="memory" class="section">
-      <h2>13. Memory Usage View</h2>
-      <p>Visualize memory regions and segments as reported by the backend. Inspect names, start addresses, sizes, and section stacks per segment.</p>
+      <h2>11. Memory Usage View</h2>
+      <p>Visualize application memory in a 3‑level hierarchy: Physical Memory → Regions → Segments. Inspect names, start addresses, sizes, and section stacks per segment.</p>
+      <h3>Display Details</h3>
+      <ul>
+        <li>Top summary shows overall physical memory usage with a <em>devices</em> icon and tooltip.</li>
+        <li>Each Region shows its own usage with a <em>person</em> icon and tooltip.</li>
+        <li>Segments display sizes and details; percentage is not shown (displayed as "–").</li>
+      </ul>
+      <h3>Expand/Collapse Behavior</h3>
+      <ul>
+        <li>Default: top‑level sections are expanded; regions are collapsed.</li>
+        <li>Use <em>Expand All</em> / <em>Collapse All</em> to toggle the view; collapsing keeps the top level open.</li>
+      </ul>
     </section>
 
     <section id="commands" class="section">
-      <h2>14. Commands, Menus & Shortcuts</h2>
+      <h2>12. Commands, Menus & Shortcuts</h2>
       <h3>Commands</h3>
       <ul>
         <li><code>ModusToolbox Assistant: Show Main Page</code> – open the assistant</li>
@@ -270,24 +266,25 @@
     </section>
 
     <section id="troubleshooting" class="section">
-      <h2>15. Troubleshooting</h2>
+      <h2>13. Troubleshooting</h2>
       <h3>Common Issues</h3>
       <ul>
         <li><strong>Tools location errors</strong>: Verify the tools path in Settings and permissions.</li>
         <li><strong>Missing assets</strong>: Use the <em>Fix</em> actions in Application Status to restore tasks/settings.</li>
-        <li><strong>Manifest not available</strong>: Check network/proxy or use previously cached BSPs.</li>
+        <li><strong>Manifest not available</strong>: Check network/proxy or switch to Local Content mode with LCS populated.</li>
         <li><strong>Build issues</strong>: Review the Output panel, ensure compilers (LLVM) are installed.</li>
+        <li><strong>Buttons not appearing</strong>: Rebuild the extension content and reload the VS Code window to refresh the webview.</li>
       </ul>
       <h3>Where to Look</h3>
       <ul>
-        <li>VS Code Output: <em>ModusToolbox</em> channel</li>
+        <li>VS Code Output: <em>ModusToolbox</em> channel</li>
         <li>Developer Tools Console (Help → Toggle Developer Tools)</li>
         <li>Extension logs and progress notifications in the UI</li>
       </ul>
     </section>
 
     <section id="faq" class="section">
-      <h2>16. FAQ</h2>
+      <h2>14. FAQ</h2>
       <h4>Does the assistant work offline?</h4>
       <p>Yes, when BSPs are available in Local Content Storage and cached manifests are present. Some features (example fetching) may require connectivity.</p>
       <h4>Can I change the default tools install path?</h4>
@@ -297,8 +294,8 @@
     </section>
 
     <section id="about" class="section">
-      <h2>17. About</h2>
-      <p><strong>Version:</strong> 2.x (see VS Code Extensions view for the exact version).</p>
+      <h2>15. About</h2>
+      <p><strong>Version:</strong> 2.x (see VS Code Extensions view for the exact version).</p>
       <p>Copyright © C And T Software. Licensed under the Apache License 2.0.</p>
     </section>
   </div>

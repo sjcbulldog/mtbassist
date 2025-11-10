@@ -62,18 +62,25 @@ export class MtbManifestLoader {
     public loadManifestData(paths: PackManifest[]): Promise<void> {
         this.superManifestList = paths ;
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
+            this.logger_.silly('Starting manifest loading process');
             let p = this.loadAllSuperManifests() ;
                 p.then(() => {
+                    this.logger_.silly('Finished loading all super manifests - processing contents');
                     this.processAllSuperManifests()
                         .then((value) => {
+                            this.logger_.silly('Finished processing all super manifests - loading content manifests');
                             this.loadAllContentManifests()
                                 .then(() => {
+                                    this.logger_.silly('Finished loading all content manifests - processing contents');
                                     this.processAllContentManifests()
                                         .then(() => {
+                                            this.logger_.silly('Finished processing all content manifests - loading dependency manifests');
                                             this.loadAllDependencyManifests()
                                                 .then(() => {
+                                                    this.logger_.silly('Finished loading all dependency manifests - processing contents');
                                                     this.processAllDependencyManifests()
                                                         .then(() => {
+                                                            this.logger_.silly('Finished processing all dependency manifests - manifest loading complete');
                                                             resolve();
                                                         })
                                                         .catch((err) => {
@@ -176,6 +183,7 @@ export class MtbManifestLoader {
             if (uri.scheme === 'file') {
                 let fspath = uri.fsPath ;
                 let text = fs.readFileSync(uri.fsPath, 'utf8') ;
+                this.logger_.silly(`loaded manifest file '${fspath}' as a local file`);
                 resolve(text);
             }
             else if (uri.scheme === 'http' || uri.scheme === 'https') {
@@ -183,13 +191,16 @@ export class MtbManifestLoader {
                     .then((resp: Response) => {
                         resp.text()
                             .then(text => {
+                                this.logger_.silly(`loaded manifest file '${uri.toString()}' as a remote file`);
                                 resolve(text);
                             })
                             .catch(err => {
+                                this.logger_.error(`failed to load manifest file '${uri.toString()}' as a remote file`);
                                 reject(err);
                             });
                     })
                     .catch((err) => {
+                        this.logger_.error(`failed to load manifest file '${uri.toString()}' as a remote file`);
                         reject(err);
                     });                    
             }
@@ -200,22 +211,23 @@ export class MtbManifestLoader {
 
     private loadManifestFile(path: PackManifest, mtype: ManifestFileType): Promise<void> {
         let ret: Promise<void> = new Promise<void>((resolve, reject) => {
+            this.logger_.silly(`loading manifest file '${path.uripath}' as ${ManifestFileType[mtype]}`);
             this.getManifestData(path.uripath)
-                .then(text => {
+                .then(text => {                    
                     if (mtype === ManifestFileType.superManifest) {
                         this.superManifestData.set(path.uripath, text);
                         let percent: number = this.superManifestData.size / this.superManifestList.length * 100.0;
-                        this.logger_.silly("loaded super manifest file (" + percent.toFixed(1) + ") '" + path.uripath + "'");
+                        this.logger_.silly(`loaded super manifest file '${path.uripath}'`);
                     }
                     else if (mtype === ManifestFileType.contentManifest) {
                         this.manifestContentData.set(path.uripath, text);
                         let percent: number = this.manifestContentData.size / this.manifestContentList.length * 100.0;
-                        this.logger_.silly("loaded content manifest file (" + percent.toFixed(1) + ") '" + path.uripath + "'");
+                        this.logger_.silly(`loaded content manifest file '${path.uripath}'`);
                     }
                     else if (mtype === ManifestFileType.dependencyManifest) {
                         this.manifestDepData.set(path.uripath, text);
                         let percent: number = this.manifestDepData.size / this.manifestDepList.length * 100.0;
-                        this.logger_.silly("loaded dependency manifest file (" + percent.toFixed(1) + ") '" + path.uripath + "'");
+                        this.logger_.silly(`loaded dependency manifest file '${path.uripath}'`);
                     }
                     resolve();
                 })
