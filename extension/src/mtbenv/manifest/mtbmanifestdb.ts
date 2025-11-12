@@ -22,8 +22,9 @@ import { MTBItemVersion } from "./mtbitemversion";
 import { MtbManifestLoader } from "./mtbmanifestloader";
 import { MTBMiddleware } from "./mtbmiddleware";
 import { PackManifest } from '../packdb/packdb';
+import { EventEmitter } from 'stream';
 
-export class MTBManifestDB {
+export class MTBManifestDB extends EventEmitter {
     public isLoaded: boolean;
     public isLoading: boolean;
     public hadError: boolean;
@@ -38,6 +39,8 @@ export class MTBManifestDB {
     private eapPath_ : string | undefined = undefined;
 
     constructor() {
+        super() ;
+
         this.apps_ = new Map<string, MTBApp>();
         this.boards_ = new Map<string, MTBBoard>();
         this.middleware_ = new Map<string, MTBMiddleware>();
@@ -211,6 +214,7 @@ export class MTBManifestDB {
                         }
                     }
 
+                    this.emit('loaded');
                     resolve() ;
                 })
                 .catch(err => {
@@ -219,14 +223,11 @@ export class MTBManifestDB {
 
                     let errmsg: Error = err as Error ;
                     logger.error("error loading manifest database - " + errmsg.message) ;
+                    this.emit('error', errmsg);
                     reject(err) ;
                 });
         }) ;
         return ret ;
-    }
-
-    public addLoadedCallback(cb: () => void) {
-        this.loadedCallbacks.push(cb) ;
     }
 
     public addApp(logger: winston.Logger, app: MTBApp) {

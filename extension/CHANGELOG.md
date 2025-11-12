@@ -79,3 +79,8 @@ Update this change log, which I forgot in the last versions.
 
 ### 2.13.0
 Updated the names of the PSOC Edge kits in the kit database to better detect these kits
+
+### 2.14.0
+Fixed bug with verbose option to clangd.
+Fixed bug with too much output to the debug console.
+Improved the performance of the scanner that searches documentation for symbols.

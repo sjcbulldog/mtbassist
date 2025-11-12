@@ -114,7 +114,7 @@ export class MtbFunIndex
             for(let asset of proj.assetsRequests) {
                 let loc = asset.fullPath(proj.dirList) ;
                 if (loc && this.processed.indexOf(loc) === -1) {
-                    p.push(this.initAsset(proj, asset)) ;
+                    p = p.concat(this.initAsset(proj, asset)) ;
                 }
             }
 
@@ -301,74 +301,70 @@ export class MtbFunIndex
         return count ;
     }
 
-    private processJSFile(p: string) : number {
-        let dir = path.dirname(p) ;
-        let index: number = 0 ;
-        let count: number = 0 ;
-        let ext = fs.readFileSync(p).toString() ;
-        let status: boolean = false ;
-        let obj = [] ;
-        let id: string | undefined;
+    private processJSFile(p: string) : Promise<number> {
+        let ret = new Promise<number>((resolve, reject) => {
+            let dir = path.dirname(p) ;
+            let index: number = 0 ;
+            let count: number = 0 ;
+            let ext = fs.readFileSync(p).toString() ;
+            let status: boolean = false ;
+            let obj = [] ;
+            let id: string | undefined;
 
-        [index, status, id] = this.parseVarAssign(ext, index) ;
-        if (status === false) {
-            return 0 ;
-        }
-
-        let toparse = '' ;
-        try {
-            let regex: RegExp = /'/g ;
-            let toparse = ext.substring(index, ext.length) ;
-            while (MtbFunIndex.whchars.indexOf(toparse[toparse.length - 1]) !== -1) {
-                toparse = toparse.substring(0, toparse.length - 1) ;
+            [index, status, id] = this.parseVarAssign(ext, index) ;
+            if (status === false) {
+                return 0 ;
             }
 
-            while (toparse[toparse.length -1] === ';') {
-                toparse = toparse.substring(0, toparse.length - 1) ;                
-            }
-
-            toparse = toparse.replace(regex, '"') ;
-            obj = JSON.parse(toparse) ;
-        }
-        catch(err) {
-            return 0 ;
-        }
-
-        if (id === 'searchData') {
-            count += this.processSearchData(dir, obj) ;
-        }
-        else if (id === 'modules') {
-            //
-            // We do not process modules data
-            //
-        }
-        else {
-            count += this.processArbitrarySymbol(dir, obj) ;
-        }
-        return count ;
-    }
-
-    private async initAsset(proj: MTBProjectInfo, asset: MTBAssetRequest) : Promise<number> {
-        let ret: Promise<number> = new Promise<number>((resolve, reject) => {
-            this.logger_.silly("    looking in asset '" + asset.name() + "' for symbols") ;
-            let count = 0 ;
-            let loc = asset.fullPath(proj.dirList) ;
-            if (loc && fs.existsSync(loc)) {
-                let dirs: string[] = this.findFilesByName('api_reference_manual.html', loc) ;
-                let files: string[] = [] ;
-
-                for(let dir of dirs) {
-                    this.findFilesByExt(dir, "js", files) ;
+            let toparse = '' ;
+            try {
+                let regex: RegExp = /'/g ;
+                let toparse = ext.substring(index, ext.length) ;
+                while (MtbFunIndex.whchars.indexOf(toparse[toparse.length - 1]) !== -1) {
+                    toparse = toparse.substring(0, toparse.length - 1) ;
                 }
 
-                for(let file of files) {
-                    count += this.processJSFile(file) ;
-                    this.logger_.silly("        parsing file '" + file + "' for symbols") ;
+                while (toparse[toparse.length -1] === ';') {
+                    toparse = toparse.substring(0, toparse.length - 1) ;                
                 }
+
+                toparse = toparse.replace(regex, '"') ;
+                obj = JSON.parse(toparse) ;
+            }
+            catch(err) {
+                return 0 ;
             }
 
+            if (id === 'searchData') {
+                count += this.processSearchData(dir, obj) ;
+            }
+            else if (id === 'modules') {
+            }
+            else {
+                count += this.processArbitrarySymbol(dir, obj) ;
+            }
             resolve(count) ;
         }) ;
         return ret ;
+    }
+
+    private initAsset(proj: MTBProjectInfo, asset: MTBAssetRequest) : Promise<number>[] {
+        let parray : Promise<number>[] = [] ;
+        this.logger_.silly("    looking in asset '" + asset.name() + "' for symbols") ;
+        let count = 0 ;
+        let loc = asset.fullPath(proj.dirList) ;
+        if (loc && fs.existsSync(loc)) {
+            let dirs: string[] = this.findFilesByName('api_reference_manual.html', loc) ;
+            let files: string[] = [] ;
+
+            for(let dir of dirs) {
+                this.findFilesByExt(dir, "js", files) ;
+            }
+
+            for(let file of files) {
+                parray.push(this.processJSFile(file)) ;
+            }
+        } 
+        return parray ;
     }
 }

@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "2.12.0",
+  "version": "2.14.0",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -127,7 +127,8 @@
     "content": "cd ../content && npm run build",
     "build": "npm run content && npm run copy && npm run compile",
     "prerelease": "vsce publish --pre-release",
-    "extrel": "vsce publish"
+    "ext-publish": "vsce publish",
+    "ext-package": "vsce package"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",

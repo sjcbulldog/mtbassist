@@ -265,7 +265,6 @@ export class IntelliSenseMgr extends MtbManagerBase {
             
             // Configure clangd with essential ModusToolbox-specific settings
             let p = path.join(gcctool.path, "bin", "arm-none-eabi-gcc");
-            ret.push("--log=verbose");           // Enable verbose logging for debugging
             ret.push("--background-index");     // Enable background indexing for better performance
 
             // Apply the updated configuration to workspace settings

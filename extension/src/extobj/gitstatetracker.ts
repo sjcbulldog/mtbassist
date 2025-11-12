@@ -14,7 +14,6 @@ export class ProjectGitStateTracker {
     private states_: Map<string, CreateProjectGitState> = new Map() ;
 
     constructor() {
-        console.log('FLAG: Created ProjectGitStateTracker') ;
     }
 
     public get data(): ProjectGitStateTrackerData {

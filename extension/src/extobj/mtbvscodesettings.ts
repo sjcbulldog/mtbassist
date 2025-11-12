@@ -3,6 +3,7 @@ import * as fs from 'fs' ;
 import * as winston from 'winston';
 import { MTBVSCodeSettingsStatus } from "../comms";
 import { MTBAssistObject } from "./mtbassistobj";
+import path = require("path/posix");
 
 export class MTBVSCodeSettings {
 
@@ -42,19 +43,47 @@ export class MTBVSCodeSettings {
         return ret ;
     }
 
+    private genGCCPath() : string | undefined {
+        let dir : string | undefined = undefined ;
+
+        let tool = this.ext_.env!.toolsDB.findToolByGUID(MTBVSCodeSettings.gccGUID) ;
+        if (tool) {
+            dir = path.normalize(path.join(tool.path, 'bin')) ;
+            dir = dir.replace(/\\/g, '/') ;
+        }
+
+        return dir ;
+    }
+
+    private openOCDPath() : string | undefined {
+        let dir : string | undefined = undefined ;
+
+        let tool = this.ext_.env!.toolsDB.findToolByGUID(MTBVSCodeSettings.openocdGUID) ;
+        if (tool) {
+            let pgm = tool.findProgramByUUID("72f061cf-f339-4181-a0be-1194062832c0") ;
+            if (pgm) {
+                dir = path.normalize(path.join(tool.path, pgm.exe)) ;
+                if (process.platform === 'win32') {
+                    dir = dir.replace(/\\/g, '/') ;
+                    dir += '.exe' ;
+                }
+            }   
+        }       
+        
+        return dir ;
+    }
+
     private fixSettingsFile(filename: string) {
         let dir = this.ext_.toolsDir ;
         this.settings_['modustoolbox.toolsPath'] = dir ;
 
-        let tool = this.ext_.env!.toolsDB.findToolByGUID(MTBVSCodeSettings.openocdGUID) ;
-        if (tool) {
-            dir = tool.path ;
+        dir = this.openOCDPath() ;
+        if (dir) {
             this.settings_['cortex-debug.openocdPath'] = dir ;
         }
 
-        tool = this.ext_.env!.toolsDB.findToolByGUID(MTBVSCodeSettings.gccGUID) ;
-        if (tool) {
-            dir = tool.path ;
+        dir = this.genGCCPath() ;
+        if (dir) {
             this.settings_['cortex-debug.gccPath'] = dir ;
         }
 
@@ -90,23 +119,18 @@ export class MTBVSCodeSettings {
                     return 'needsSettings' ;
                 }
 
-                let tool = this.ext_.env!.toolsDB.findToolByGUID(MTBVSCodeSettings.openocdGUID) ;
-                if (!tool) {
-                    // Should not happen
+                dir = this.openOCDPath() ;
+                if (!dir) {
                     return 'missing' ;
                 }
-
-                dir = tool.path ;
                 if (!this.checkSetting('cortex-debug.openocdPath', dir)) {
                     return 'needsSettings' ;
                 }
 
-                tool = this.ext_.env!.toolsDB.findToolByGUID(MTBVSCodeSettings.gccGUID) ;
-                if (!tool) {
-                    // Should not happen
+                dir = this.genGCCPath() ;
+                if (!dir) {
                     return 'missing' ;
                 }
-                dir = tool.path ;
                 if (!this.checkSetting('cortex-debug.gccPath', dir)) {
                     return 'needsSettings' ;
                 }

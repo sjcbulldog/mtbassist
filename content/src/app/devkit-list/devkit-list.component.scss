@@ -115,10 +115,16 @@
   
   label {
     font-weight: 600;
+    flex-shrink: 0;
   }
   
-  select {
+  .bsp-autocomplete-wrapper {
     flex: 1;
+    position: relative;
+  }
+  
+  select, .bsp-input {
+    width: 100%;
     padding: 0.5rem;
     border: 1px solid var(--border-color, #ccc);
     border-radius: 4px;
@@ -130,6 +136,10 @@
       outline: none;
       border-color: var(--primary-color, #007bff);
     }
+  }
+  
+  .bsp-input {
+    cursor: text;
   }
 }
 
@@ -195,7 +205,7 @@
   }
   
   .bsp-select-row {
-    select {
+    select, .bsp-input {
       background: #1a1d23;
       border-color: #444;
       color: #e0e0e0;
@@ -259,7 +269,7 @@
   }
   
   .bsp-select-row {
-    select {
+    select, .bsp-input {
       background: #ffffff;
       border-color: #ccc;
       color: #333;

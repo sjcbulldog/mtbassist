@@ -31,14 +31,26 @@
           <div><strong>KitProg Type:</strong> {{ kit.kitProgType }}</div>
           <div><strong>USB Mode:</strong> {{ kit.usbMode }}</div>
           <div><strong>Bridging:</strong> {{ kit.bridgingTypes.join(', ') }}</div>
-          <!-- BSP Selection Pulldown -->
+          <!-- BSP Selection with Autocomplete -->
           <div class="bsp-select-row">
-            <label for="bsp-select-{{kit.serial}}"><strong>BSP:</strong></label>
-            <select id="bsp-select-{{kit.serial}}" [(ngModel)]="kit.bsp" (change)="onBspChange(kit, $event)">
-              @for (bspChoice of kit.bspChoices; track bspChoice) {
-                <option [value]="bspChoice">{{ bspChoice }}</option>
-              }
-            </select>
+            <label><strong>BSP:</strong></label>
+            <div class="bsp-autocomplete-wrapper">
+              <input 
+                type="text"
+                class="bsp-input"
+                [value]="getBspFilterText(kit)"
+                (input)="onBspFilterChange(kit, $any($event.target).value)"
+                (focus)="onBspInputFocus(kit)"
+                [matAutocomplete]="auto"
+                placeholder="Type to filter BSPs..."
+                autocomplete="off"
+              />
+              <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onBspSelected(kit, $event.option.value)" [autoActiveFirstOption]="true">
+                @for (bsp of getFilteredBspChoices(kit); track bsp) {
+                  <mat-option [value]="bsp">{{ bsp }}</mat-option>
+                }
+              </mat-autocomplete>
+            </div>
           </div>
         </div>
       </div>

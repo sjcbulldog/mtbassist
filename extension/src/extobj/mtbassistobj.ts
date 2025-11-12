@@ -128,7 +128,6 @@ export class MTBAssistObject {
                 winston.format.prettyPrint()
             ),
             transports: [
-                new ConsoleTransport(),
                 new VSCodeTransport(this.channel_),
             ]
         });
@@ -356,8 +355,8 @@ export class MTBAssistObject {
                 p = this.intellisense_!.trySetupIntellisense();
                 parray.push(p);
 
-                p = this.keywords_.init(this.env_!.appInfo!);
-                parray.push(p);
+                // p = this.keywords_.init(this.env_!.appInfo!);
+                // parray.push(p);
             }
 
             p = this.lcsMgr_!.updateBSPS();
@@ -385,7 +384,12 @@ export class MTBAssistObject {
             // be services before this function runs.
             //
             setTimeout(() => {
-                this.setupAuxiliaryStuffAlt().then(() => { resolve() ; }).catch((error: Error) => { reject(error) ; }); }, 250) ;
+                this.setupAuxiliaryStuffAlt().then(() => { 
+                        resolve() ; 
+                    })
+                    .catch((error: Error) => { 
+                        reject(error) ; }); 
+                    }, 250) ;
         }) ;
         return ret ;
     }
@@ -576,7 +580,7 @@ export class MTBAssistObject {
                     //
                     // Load the workspace file, this should re-initialize the extension and not return in a meaningful way
                     //
-                    vscode.commands.executeCommand('vscode.openWorkspace', vscode.Uri.file(wkspc)) ;
+                    vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(wkspc)) ;
                 }
                 else {
                     //
@@ -779,6 +783,7 @@ export class MTBAssistObject {
                                                 this.sendManifestStatus() ;
                                                 runtime.mark('application load done') ;
                                                 runtime.printAll(this.logger_) ;
+                                                this.sendBSPInformation() ;
                                                 resolve() ;
                                             })
                                             .catch((err) => {

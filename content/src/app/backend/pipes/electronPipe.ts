@@ -29,7 +29,6 @@ export class ElectronPipe implements PipeInterface {
     private responseHandler: ((response: BackEndToFrontEndResponse) => void) | null = null;
 
     constructor() {
-        console.log('ElectronPipe initialized');
     }
 
     get displayName(): string {
@@ -42,9 +41,7 @@ export class ElectronPipe implements PipeInterface {
 
     registerResponseHandler(handler: (response: BackEndToFrontEndResponse) => void): void {
         this.responseHandler = handler;
-        console.log('Response handler registered');
         window.feexpAPI.receive('postMessage', (response: BackEndToFrontEndResponse) => {
-            console.log('Response received:', JSON.stringify(response)); 
             if (this.responseHandler) {
                 this.responseHandler(response);
             }
