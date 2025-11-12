@@ -54,6 +54,7 @@ import { VSCodeProjTaskGenerator } from '../vscodetasks/vscodeprojtaskgen';
 import { RunTimeTracker } from '../runtime';
 import fetch from 'node-fetch';
 import { ApplicationType } from '../mtbenv/appdata/mtbappinfo';
+import { browseropen } from '../browseropen';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -344,6 +345,8 @@ export class MTBAssistObject {
     }
 
     private setupAuxiliaryStuffAlt() : Promise<void> {
+        this.keywords_.init(this.env_!.appInfo!) ;
+
         let ret = new Promise<void>((resolve, reject) => {
             let parray: any[] = [];
             let p: Promise<void>;
@@ -354,9 +357,6 @@ export class MTBAssistObject {
             if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
                 p = this.intellisense_!.trySetupIntellisense();
                 parray.push(p);
-
-                // p = this.keywords_.init(this.env_!.appInfo!);
-                // parray.push(p);
             }
 
             p = this.lcsMgr_!.updateBSPS();
@@ -1951,7 +1951,7 @@ export class MTBAssistObject {
             if (this.keywords_.contains(symbol)) {
                 let url: string | undefined = this.keywords_.getUrl(symbol);
                 if (url) {
-                    let uri = vscode.Uri.parse(url) ;
+                    let uri = vscode.Uri.parse('file:' + url) ;
                     this.showWebContent(uri) ;
                 }
             }
@@ -2112,7 +2112,13 @@ export class MTBAssistObject {
     }
 
     private showWebContentExternal(uri: vscode.Uri) {
-        vscode.env.openExternal(uri);
+        if (uri.scheme === 'file') {
+            this.logger_.debug(`Opening local documentation: ${uri.fsPath}`);
+            browseropen(uri.toString()) ;
+        }
+        else {
+            vscode.env.openExternal(uri);
+        }
     }
 
     private showWebContent(uri: vscode.Uri) {

@@ -84,3 +84,6 @@ Updated the names of the PSOC Edge kits in the kit database to better detect the
 Fixed bug with verbose option to clangd.
 Fixed bug with too much output to the debug console.
 Improved the performance of the scanner that searches documentation for symbols.
+
+### 2.15.0
+Fixed the regression on the symbol to documentation feature

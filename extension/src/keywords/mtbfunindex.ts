@@ -69,26 +69,22 @@ export class MtbFunIndex
         return this.keywordCount_ ;
     }
 
-    public async init(app: MTBAppInfo) : Promise<void> {
+    public async init(app: MTBAppInfo) {
+        let ret : Promise<void>[] = [] ;
+
         this.appdir = app.appdir ;
-        let ret: Promise<void> = new Promise<void>(async (resolve, reject) => {
-            let count = 0 ;
+        this.keywordCount_ = 0 ;
 
-            for(let proj of app.projects) {
-                try {
-                    count += await this.initProject(proj) ;
-                }
-                catch(err) {
-                    reject(err) ;
-                    return ;
-                }
+        for(let proj of app.projects) {
+            try {
+                this.keywordCount_ +=await this.initProject(proj) ;
             }
-            this.logger_.debug(`detected ${count} keywords in ModusToolbox application`) ;
-            this.keywordCount_ = count ;
-            resolve() ;
-        }) ;
+            catch(err) {
+                this.logger_.error("Error processing project '" + proj.name + "' for symbols : " + err) ;
+            }
+        }
 
-        return ret;
+        this.logger_.info("Indexed " + this.keywordCount_ + " symbols for application in '" + this.appdir + "'") ;
     }
 
     public contains(symbol: string) {
@@ -303,6 +299,7 @@ export class MtbFunIndex
 
     private processJSFile(p: string) : Promise<number> {
         let ret = new Promise<number>((resolve, reject) => {
+            this.logger_.debug("        processing JS file '" + p + "' for symbols") ;
             let dir = path.dirname(p) ;
             let index: number = 0 ;
             let count: number = 0 ;
