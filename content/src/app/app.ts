@@ -21,12 +21,13 @@ import { IdcLauncherRequiredComponent } from "./idc-launcher-required/idc-launch
 import { InitializingComponent } from "./initializing/initializing.component";
 import { ErrorComponent } from "./error/error.component";
 import { PasswordOverlayComponent } from './password-overlay/password-overlay.component';
+import { VeneerProblemOverlayComponent } from './veneer-problem-overlay/veneer-problem-overlay.component';
 import { OperationStatusComponent } from './operation-status/operation-status.component';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent, InitializingComponent, ErrorComponent, PasswordOverlayComponent, OperationStatusComponent],
+  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent, InitializingComponent, ErrorComponent, PasswordOverlayComponent, VeneerProblemOverlayComponent, OperationStatusComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -38,6 +39,7 @@ export class App {
   @ViewChild('softwareInstaller') softwareInstaller!: SoftwareInstallerComponent;
 
   isPasswordVisible: boolean = false;
+  isVeneerProblemVisible: boolean = false;
   theme: ThemeType = 'dark';
 
   subscriptions: Subscription[] = [];
@@ -49,6 +51,10 @@ export class App {
 
     this.subscriptions.push(this.be.isPasswordVisible.subscribe(visible => {
       this.isPasswordVisible = visible;
+    }));
+
+    this.subscriptions.push(this.be.showVeneerProblem.subscribe(visible => {
+      this.isVeneerProblemVisible = visible;
     }));
 
     this.subscriptions.push(this.be.mtbMode.subscribe(mode => {

@@ -1,0 +1,42 @@
+<div class="veneer-overlay" 
+     [class.visible]="isVisible" 
+     [class.dark-theme]="themeType === 'dark'" 
+     [class.light-theme]="themeType === 'light'"
+     (click)="onOverlayClick($event)"
+     (keydown)="onKeyDown($event)"
+     tabindex="-1">
+  
+  <div class="veneer-dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <mat-icon class="warning-icon">warning</mat-icon>
+      <h2>TrustZone Veneer Problem Detected</h2>
+    </div>
+    
+    <div class="dialog-content">
+      <p class="dialog-message">
+        The veneers that were built for TrustZone have changed addresses.
+      </p>
+      <p class="dialog-message">
+        This indicates that the addresses for the TrustZone have moved, probably due to a change in the memory map of the application.  If you are trying to match an existing secure project, 
+        you may need to adjust the memory map of your non-secure application to match.  Otherwise, you can choose to remove the existing veneer file and have it rebuilt to match the new addresses.
+      </p>
+      <p class="dialog-question">
+        Would you like to remove this file?
+      </p>
+    </div>
+    
+    <div class="dialog-actions">
+      <button mat-button 
+              (click)="onNoClick()" 
+              class="no-button">
+        No
+      </button>
+      <button mat-raised-button 
+              color="primary" 
+              (click)="onYesClick()" 
+              class="yes-button">
+        Yes
+      </button>
+    </div>
+  </div>
+</div>

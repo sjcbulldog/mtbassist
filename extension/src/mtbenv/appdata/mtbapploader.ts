@@ -151,7 +151,7 @@ export class MTBAppLoader {
                         })
                         .catch((err) => {
                             reject(err) ;
-                        })
+                        });
                 })
                 .catch((err) => {
                     reject(err) ;
@@ -170,14 +170,17 @@ export class MTBAppLoader {
             else {
                 this.app_.setType(ApplicationType.application) ;
                 let pall = [] ;
-                for(let proj of vars.get(MTBNames.MTB_PROJECTS)!.split(' ')) {
-                    let projpath = path.join(this.app_.appdir, proj) ;
-                    if (fs.existsSync(projpath)) {
-                        let p = this.loadProject(projpath) ;
-                        pall.push(p) ;                        
-                    }
-                    else {
-                        this.logger_.warn(`project directory ${projpath} does not exist - ignored`) ;
+                let projs = vars.get(MTBNames.MTB_PROJECTS)!.split(' ') ;
+                for(let proj of projs) {
+                    if (proj.trim().length > 0) {
+                        let projpath = path.join(this.app_.appdir, proj) ;
+                        if (fs.existsSync(projpath)) {
+                            let p = this.loadProject(projpath) ;
+                            pall.push(p) ;                        
+                        }
+                        else {
+                            this.logger_.warn(`project directory ${projpath} does not exist - ignored`) ;
+                        }
                     }
                 }
 

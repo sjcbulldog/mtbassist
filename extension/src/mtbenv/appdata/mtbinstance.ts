@@ -102,7 +102,8 @@ export class MTBInstance {
         }
 
         if (!this.version_) {
-            throw new Error(`No version information found in ${this.rootdir_}`) ;
+            // TODO: ok, the aws stuff does not have version files, set to 0.0.0 for now
+            this.version_ = new MTBVersion(0, 0, 0) ;
         }
     }
 

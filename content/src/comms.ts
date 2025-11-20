@@ -70,7 +70,8 @@ export type FrontEndToBackEndType =
     'set-config' |
     'operation-status-closed' |
     'run-task' |
-    'install-idc-service'
+    'install-idc-service' |
+    'delete-veneer-file'
     ;
 
 export type BackEndToFrontEndType =
@@ -125,7 +126,8 @@ export type BackEndToFrontEndType =
     'tasksAvailable' |
     'lcsGuide' |
     'lcsKeywordAliases' |
-    'gitState'
+    'gitState' |
+    'showVeneerProblem'
     ;
 
 export type ThemeType =

@@ -87,3 +87,18 @@ Improved the performance of the scanner that searches documentation for symbols.
 
 ### 2.15.0
 Fixed the regression on the symbol to documentation feature
+
+### 2.16.0
+Fixed a problem with trailing spaces causing problems in a few places
+
+### 2.17.0
+Fixed a problem with assets that do not have a version file (either version.xml nor props.json)
+
+### 2.18.0
+Fixed a problem with file based (versus https based) manifest files
+
+### 2.19.0
+Updated to that the code example category is shown in alphabetic order
+
+### 2.20.0
+Added code to look for veneer related build erros and help the user fix the issues.

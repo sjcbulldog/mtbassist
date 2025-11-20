@@ -244,9 +244,9 @@ export class MtbManifestLoader {
             let urires: any ;
 
             if (path.isAbsolute(src.fsPath)) {
-                urires = { 
-                    uri: src 
-                } ;
+                urires = {
+                    uri: uriobj.uri
+                };
             }
             else {            
                 let basename = path.dirname(src.fsPath) ;

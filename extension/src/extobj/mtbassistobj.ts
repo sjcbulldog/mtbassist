@@ -75,6 +75,8 @@ export class MTBAssistObject {
     private static readonly applicationStatusTab = 3;
     private static readonly devkitListTab = 4;
 
+    private foundVeneerProblem: boolean = false ;
+
     private context_: vscode.ExtensionContext;
     private channel_: vscode.OutputChannel;
     private logger_: winston.Logger;
@@ -171,6 +173,27 @@ export class MTBAssistObject {
         });
 
         this.computeTheme() ;
+        vscode.window.onDidStartTerminalShellExecution((e: vscode.TerminalShellExecutionStartEvent) => {   
+            this.terminalStarted(e) ;
+        });
+
+        vscode.window.onDidEndTerminalShellExecution((e: vscode.TerminalShellExecutionEndEvent) => {   
+            this.terminalEnded(e) ;
+        });
+    }
+
+    private terminalEnded(e: vscode.TerminalShellExecutionEndEvent) {
+    }
+
+    private readonly phraseToSearch = "start address of `.gnu.sgstubs' is different from previous link" ;
+    private async terminalStarted(e: vscode.TerminalShellExecutionStartEvent) {
+        let strm = e.execution.read() ;
+
+        for await (const data of strm) {
+            if (data.includes(this.phraseToSearch)) {
+                this.foundVeneerProblem = true ;
+            }
+        }
     }
 
     private taskEnd(e: vscode.TaskEndEvent) {
@@ -181,6 +204,10 @@ export class MTBAssistObject {
                 this.sendMessageWithArgs('memoryUsage', this.memusage_.usage) ;
             }
         }) ;
+
+        if (this.foundVeneerProblem) {
+            this.sendMessageWithArgs('showVeneerProblem', true) ;
+        }
     }
     
     public get toolsDir(): string | undefined {
@@ -1046,6 +1073,7 @@ export class MTBAssistObject {
                 }
 
                 if (t) {
+                    this.foundVeneerProblem = false ;
                     vscode.tasks.executeTask(t)
                     .then((e) => {
                         // TODO: keep this for possible future use so we can add a 'Stop' button
@@ -1111,7 +1139,20 @@ export class MTBAssistObject {
         this.cmdhandler_.set('set-config', this.setConfig.bind(this)) ;
         this.cmdhandler_.set('operation-status-closed', this.handleOperationStatusClosed.bind(this)) ;
         this.cmdhandler_.set('run-task', this.runTaskFromGUI.bind(this)) ;
-        this.cmdhandler_.set('install-idc-service', this.installIDCService.bind(this)) ;    
+        this.cmdhandler_.set('install-idc-service', this.installIDCService.bind(this)) ;
+        this.cmdhandler_.set('delete-veneer-file', this.deleteVeneerFile.bind(this)) ;
+    }
+
+    private deleteVeneerFile(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            for(let proj of this.env_!.appInfo!.projects) {
+                let veneerFile = path.join(proj.path, 'nsc_veneer.o') ;
+                if (fs.existsSync(veneerFile)) {
+                    fs.rmSync(veneerFile, { force: true }) ;
+                    this.logger_.info(`Deleted veneer file: ${veneerFile}`) ;
+                }
+            } ;
+        }) ;
     }
 
     private installIDCService() : Promise<void> {

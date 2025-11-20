@@ -437,7 +437,7 @@ export class CreateProject implements OnInit, OnDestroy {
 
     getExampleCategories() : string[] {
         let exset = new Set(this.allexamples.map(ex => ex.category))
-        return [...exset] ;
+        return [...exset].sort((a, b) => a.localeCompare(b));
     }
 
     public getBSPsForSelectedCategory(): BSPIdentifier[] {

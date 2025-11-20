@@ -108,6 +108,9 @@ export class BackendService {
     // Memory Usage related
     memoryUsage: BehaviorSubject<PhysicalMemoryUsageData[] | null> = new BehaviorSubject<PhysicalMemoryUsageData[] | null>([]);
 
+    // Veneer problem related
+    showVeneerProblem: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+
     // Status display related
     startOperation: Subject<string> = new Subject<string>();
     finishOperation: Subject<string> = new Subject<string>();
@@ -282,6 +285,7 @@ export class BackendService {
         this.registerHandler('lcsGuide', (cmd) => { this.lcsGuide.next(cmd.data || '') });
         this.registerHandler('lcsKeywordAliases', (cmd) => { this.lcsKeywordAliases.next(cmd.data || []) });
         this.registerHandler('gitState', (cmd) => { this.receivedGitState(cmd) }) ;
+        this.registerHandler('showVeneerProblem', (cmd) => { this.showVeneerProblem.next(true) });
     }
 
     private receivedGitState(cmd: BackEndToFrontEndResponse) {
