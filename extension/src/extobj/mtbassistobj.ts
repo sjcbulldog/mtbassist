@@ -28,7 +28,7 @@ import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
     FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, LCSBSPKeywordAliases, ManifestStatusType, Middleware, MTBAssistantMode, 
     MTBAssistantTask, 
-    MTBLocationStatus, MTBVSCodeSettingsStatus, MTBVSCodeTaskStatus, Project, ProjectGitStateTrackerData, SettingsError, ThemeType, Tool
+    MTBLocationStatus, MTBSetting, MTBVSCodeSettingsStatus, MTBVSCodeTaskStatus, Project, ProjectGitStateTrackerData, SettingsError, ThemeType, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
@@ -68,6 +68,9 @@ export class MTBAssistObject {
     private static readonly projectCreatorUUID: string = '2b5ece6f-0a04-4a6f-a683-de5e3dc0a060';
     private static readonly lastProjectPath: string = 'lastProjectPath' ;
     private static readonly bootloaderDocUrl: string = 'https://www.mewserver.org/vscode/bootloader.md' ;
+
+    /** UUID identifier for the GCC toolchain in the ModusToolbox tools database */
+    private static readonly gccUUID = '8472a194-a4ec-4c1b-bfda-b6fca90b3f0d' ;    
 
     private static readonly gettingStartedTab = 0;
     private static readonly createProjectTab = 1;
@@ -948,6 +951,57 @@ export class MTBAssistObject {
                 this.mtbMainPage([]) ;
             }
         }
+    }
+
+    public getToolchainAndPath() : null | [string, string] {
+        let v = this.settings_.settingByName('toolchain');
+        if (v && v.type === 'string') {
+            let setting : MTBSetting | undefined ;
+            let ret : [string, string] = [v.value as string, ''] ;
+            switch(v.value as string) {
+                case 'ARM':
+                    setting = this.settings_.settingByName('armccpath') ;
+                    if (!setting || setting.type !== 'string' || !setting.value || (setting.value as string).length === 0) {
+                        return null ;
+                    }
+                    ret[1] = setting.value as string ;
+                    break ;
+                case 'IAR':
+                    setting = this.settings_.settingByName('iarpath') ;
+                    if (!setting || setting.type !== 'string' || !setting.value || (setting.value as string).length === 0) {
+                        return null ;
+                    }
+                    ret[1] = setting.value as string ;
+                    break ;
+                case 'LLVM_ARM':
+                    setting = this.settings_.settingByName('llvmpath') ;
+                    if (!setting || setting.type !== 'string' || !setting.value || (setting.value as string).length === 0) {
+                        return null ;
+                    }
+                    ret[1] = setting.value as string ;
+                    break ;
+                case 'GCC_ARM':
+                case 'Per Project':
+                    setting = this.settings_.settingByName('gccpath') ;
+                    if (!setting || setting.type !== 'string' || !setting.value || (setting.value as string).length === 0) {
+                        return null ;
+                    }
+                    ret[1] = setting.value as string ;
+                    break ;
+                default:
+                    return null ;
+            }   
+
+            return ret ;
+        }
+
+        let gcctool = this.env!.toolsDB.findToolByGUID(MTBAssistObject.gccUUID);
+        if (!gcctool) {
+            return null ;
+        }
+
+        let p = path.join(gcctool.path, "bin", "arm-none-eabi-gcc");        
+        return ['GCC_ARM', p] ;
     }
 
     public async initialize(): Promise<void> {

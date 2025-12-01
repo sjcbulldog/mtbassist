@@ -29,9 +29,6 @@ import * as vscode from 'vscode';
  * error detection, and navigation for ModusToolbox C/C++ projects.
  */
 export class IntelliSenseMgr extends MtbManagerBase {
-    /** UUID identifier for the GCC toolchain in the ModusToolbox tools database */
-    private static readonly gccUUID = '8472a194-a4ec-4c1b-bfda-b6fca90b3f0d' ;
-
     /** Flag indicating whether the clangd extension is installed and available */
     private hasClangD: boolean = false;
 
@@ -150,11 +147,6 @@ export class IntelliSenseMgr extends MtbManagerBase {
 
             iset = true;
         }
-
-        // If project configuration failed, clear IntelliSense settings
-        if (!iset) {
-            this.setIntellisenseProject("");
-        }
     }
 
     /**
@@ -254,19 +246,18 @@ export class IntelliSenseMgr extends MtbManagerBase {
                 }
             }
 
-            // Find the GCC toolchain from ModusToolbox environment
-            // TODO: Since there are settings for the GCC path, tie this to that
-            let gcctool = this.ext.env!.toolsDB.findToolByGUID(IntelliSenseMgr.gccUUID);
-            if (gcctool === undefined) {
-                this.ext.logger.error("GCC tool not found for intellisense setup.");
-                resolve() ;
+            let toolchain = this.ext.getToolchainAndPath() ;
+            if (!toolchain) {
                 return ;
             }
             
             // Configure clangd with essential ModusToolbox-specific settings
-            let p = path.join(gcctool.path, "bin", "arm-none-eabi-gcc");
+
             ret.push("--background-index");     // Enable background indexing for better performance
 
+            let p = toolchain[1].replace(/\\/g, '/') ;
+            ret.push('--query-driver=' + p) ;
+            
             // Apply the updated configuration to workspace settings
             config.update(settings, ret, vscode.ConfigurationTarget.Workspace)
                 .then(() => {
