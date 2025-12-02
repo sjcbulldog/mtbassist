@@ -161,6 +161,7 @@ export class MTBAssistObject {
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
         this.settings_.on('updateTasks', () => { this.tasks_.forEach(task => task.addRequiredTasks()); }); ;
         this.settings_.on('updateAppStatus', () => { this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()); }); ;
+        this.settings_.on('updateIntellisense', () => { this.sendIntellisenseProject() ;}) ;
 
         this.memusage_ = new MemoryUsageMgr(this) ;
         vscode.tasks.onDidEndTask((e) => { 
@@ -955,27 +956,27 @@ export class MTBAssistObject {
 
     public getToolchainAndPath() : null | [string, string] {
         let v = this.settings_.settingByName('toolchain');
-        if (v && v.type === 'string') {
+        if (v && v.type === 'choice') {
             let setting : MTBSetting | undefined ;
             let ret : [string, string] = [v.value as string, ''] ;
             switch(v.value as string) {
                 case 'ARM':
                     setting = this.settings_.settingByName('armccpath') ;
-                    if (!setting || setting.type !== 'string' || !setting.value || (setting.value as string).length === 0) {
+                    if (!setting || setting.type !== 'dirpath' || !setting.value || (setting.value as string).length === 0) {
                         return null ;
                     }
                     ret[1] = setting.value as string ;
                     break ;
                 case 'IAR':
                     setting = this.settings_.settingByName('iarpath') ;
-                    if (!setting || setting.type !== 'string' || !setting.value || (setting.value as string).length === 0) {
+                    if (!setting || setting.type !== 'dirpath' || !setting.value || (setting.value as string).length === 0) {
                         return null ;
                     }
                     ret[1] = setting.value as string ;
                     break ;
                 case 'LLVM_ARM':
                     setting = this.settings_.settingByName('llvmpath') ;
-                    if (!setting || setting.type !== 'string' || !setting.value || (setting.value as string).length === 0) {
+                    if (!setting || setting.type !== 'dirpath' || !setting.value || (setting.value as string).length === 0) {
                         return null ;
                     }
                     ret[1] = setting.value as string ;
@@ -983,7 +984,7 @@ export class MTBAssistObject {
                 case 'GCC_ARM':
                 case 'Per Project':
                     setting = this.settings_.settingByName('gccpath') ;
-                    if (!setting || setting.type !== 'string' || !setting.value || (setting.value as string).length === 0) {
+                    if (!setting || setting.type !== 'dirpath' || !setting.value || (setting.value as string).length === 0) {
                         return null ;
                     }
                     ret[1] = setting.value as string ;

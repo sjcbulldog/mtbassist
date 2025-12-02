@@ -339,6 +339,7 @@ export class MTBSettings extends EventEmitter {
                     this.emit('showError', 'toolchain', undefined) ;
                 }
                 this.emit('updateTasks', null) ;
+                this.emit('updateIntellisense') ;
                 this.writeWorkspaceSettings() ;
             }
             else if (setting.name === 'llvmpath') {
@@ -351,14 +352,17 @@ export class MTBSettings extends EventEmitter {
                     this.emit('updateTasks', null) ;
                     this.writeExtensionSettings() ;
                 }
+                this.emit('updateIntellisense') ;                
             }
             else if (setting.name === 'gccpath') {
                 this.emit('updateTasks', null) ;
                 this.writeExtensionSettings() ;
+                this.emit('updateIntellisense') ;                
             }
             else if (setting.name === 'iarpath') {
                 this.emit('updateTasks', null) ;
                 this.writeExtensionSettings() ;
+                this.emit('updateIntellisense') ;                
             }
             else if (setting.name === 'armccpath') {
                 if (setting.value && !fs.existsSync(setting.value as string)) {
@@ -368,6 +372,7 @@ export class MTBSettings extends EventEmitter {
                     this.emit('showError', 'armccpath', undefined) ;
                     this.emit('showError', 'toolchain', undefined) ;
                     this.emit('updateTasks', null) ;
+                    this.emit('updateIntellisense') ;                    
                     this.writeExtensionSettings() ;
                 }
             }

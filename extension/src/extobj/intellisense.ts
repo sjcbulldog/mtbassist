@@ -116,7 +116,6 @@ export class IntelliSenseMgr extends MtbManagerBase {
     public async setIntellisenseProject(projname: string) {
         const settings: string = "clangd.arguments";
         let proj = this.ext.env?.appInfo?.projects.find((proj) => proj.name === projname);
-        let iset: boolean = false;
 
         if (proj) {
             // Determine the compile commands directory based on application type
@@ -132,20 +131,22 @@ export class IntelliSenseMgr extends MtbManagerBase {
             }
 
             // Update clangd configuration with new compile commands path
-            let config = await vscode.workspace.getConfiguration();
-            let clangargs: string[] = config.get(settings) as string[];
-            clangargs = this.updateCompileCommands(clangargs, compilecmds);
-            config.update(settings, clangargs, vscode.ConfigurationTarget.Workspace)
-                .then((value) => {
-                    // Restart clangd to apply new configuration
-                    vscode.commands.executeCommand('clangd.restart')
-                        .then((obj) => {
-                            iset = true ;
-                        });
-                });
+            this.checkBasicClangdConfig()
+            .then(async () => {
+                let config = await vscode.workspace.getConfiguration();
+                let clangargs: string[] = config.get(settings) as string[];
+                clangargs = this.updateCompileCommands(clangargs, compilecmds);
+                config.update(settings, clangargs, vscode.ConfigurationTarget.Workspace)
+                    .then((value) => {
+                        // Restart clangd to apply new configuration
+                        vscode.commands.executeCommand('clangd.restart')
+                            .then((obj) => {
+                            });
+                    });
+            })
+            .catch((err) => {
 
-
-            iset = true;
+            }) ;
         }
     }
 
