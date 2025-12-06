@@ -701,6 +701,20 @@ export class MTBAssistObject {
                 return;
             }
 
+            // Listen for manifest loading events from the environment
+            this.env_.on('loaded', (flags: MTBLoadFlags) => {
+                if (flags & MTBLoadFlags.manifestData) {
+                    this.logger_.debug('Manifests loaded event received from environment');
+                    this.sendManifestStatus();
+                }
+            });
+
+            // Listen for manifest loading events from the manifest database
+            this.env_.manifestDB.on('loaded', () => {
+                this.logger_.debug('Manifests loaded event received from manifest database');
+                this.sendManifestStatus();
+            });
+
             runtime.mark('ModusToolboxEnvironment.getInstance')  ;
 
 
