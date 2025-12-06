@@ -71,7 +71,8 @@ export type FrontEndToBackEndType =
     'operation-status-closed' |
     'run-task' |
     'install-idc-service' |
-    'delete-veneer-file'
+    'delete-veneer-file' |
+    'yes-no-response'
     ;
 
 export type BackEndToFrontEndType =
@@ -127,7 +128,8 @@ export type BackEndToFrontEndType =
     'lcsGuide' |
     'lcsKeywordAliases' |
     'gitState' |
-    'showVeneerProblem'
+    'showVeneerProblem' |
+    'yes-no-dialog'
     ;
 
 export type ThemeType =
@@ -317,8 +319,30 @@ export interface RecentEntry {
     bspname: string ;
 } ;
 
+export type MTBSettingName = 'toolsversion' | 
+                             'custompath' | 
+                             'configuration' | 
+                             'toolchain' | 
+                             'gccpath' | 
+                             'llvmpath' | 
+                             'iarpath' | 
+                             'armccpath' |
+                             'enabled_eap' |
+                             'global_path' |
+                             'information_level' |
+                             'lcs_path' |
+                             'manifest_loc_path' |
+                             'manifestdb_url_mode' |
+                             'manifestdb_system_url' |
+                             'git_insteadof' |
+                             'operating_mode' |
+                             'proxy_mode' |
+                             'proxy_server' ;
+
+
+
 export interface MTBSetting {
-    name: string ;
+    name: MTBSettingName ;
     displayName: string ;
     owner: 'modus' | 'extension' | 'workspace' ;
     type: 'string' | 'number' | 'boolean' | 'choice' | 'uri' | 'dirpath' | 'filepath' | 'toolspath' ;

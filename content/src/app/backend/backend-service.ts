@@ -111,6 +111,9 @@ export class BackendService {
     // Veneer problem related
     showVeneerProblem: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
+    // Yes/No dialog related
+    showYesNoDialog: BehaviorSubject<{ visible: boolean, question: string }> = new BehaviorSubject<{ visible: boolean, question: string }>({ visible: false, question: '' });
+
     // Status display related
     startOperation: Subject<string> = new Subject<string>();
     finishOperation: Subject<string> = new Subject<string>();
@@ -286,6 +289,7 @@ export class BackendService {
         this.registerHandler('lcsKeywordAliases', (cmd) => { this.lcsKeywordAliases.next(cmd.data || []) });
         this.registerHandler('gitState', (cmd) => { this.receivedGitState(cmd) }) ;
         this.registerHandler('showVeneerProblem', (cmd) => { this.showVeneerProblem.next(true) });
+        this.registerHandler('yes-no-dialog', (cmd) => { this.showYesNoDialog.next({ visible: true, question: cmd.data || '' }) });
     }
 
     private receivedGitState(cmd: BackEndToFrontEndResponse) {

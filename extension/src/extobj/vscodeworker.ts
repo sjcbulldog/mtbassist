@@ -19,7 +19,7 @@ import * as fs from 'fs';
 import * as winston from 'winston';
 import * as vscode from 'vscode';
 import * as vscodeuri from 'vscode-uri';
-import * as EventEmitter from 'events' ;
+import { EventEmitter } from 'events' ;
 import { MTBLoadFlags } from "../mtbenv/mtbenv/loadflags";
 import { MTBAssistObject } from "./mtbassistobj";
 import { MTBProjectInfo } from "../mtbenv/appdata/mtbprojinfo";
@@ -329,7 +329,7 @@ export class VSCodeWorker extends EventEmitter  {
         }
     }
 
-    public runMakeVSCodeCommand(appdir: string): Promise<[number, string[]]> {
+    public runMakeVSCodeCommand(appdir: string, options?: MTBRunCommandOptions): Promise<[number, string[]]> {
         return new Promise<[number, string[]]>((resolve, reject) => {
             let p = appdir ;
             let cliPath = this.findMakePath();
@@ -343,7 +343,8 @@ export class VSCodeWorker extends EventEmitter  {
                     toolspath: this.ext_.toolsDir,
                     id: 'vscode',
                     onOutput: this.makeVSCodeCallback.bind(this),
-                    cwd: p
+                    cwd: p,
+                    ...options
                 };
                 ModusToolboxEnvironment.runCmdCaptureOutput(this.logger_, cliPath, args, opts)
                 .then((result) => {

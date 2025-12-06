@@ -22,12 +22,13 @@ import { InitializingComponent } from "./initializing/initializing.component";
 import { ErrorComponent } from "./error/error.component";
 import { PasswordOverlayComponent } from './password-overlay/password-overlay.component';
 import { VeneerProblemOverlayComponent } from './veneer-problem-overlay/veneer-problem-overlay.component';
+import { YesNoDialogComponent } from './yes-no-dialog/yes-no-dialog.component';
 import { OperationStatusComponent } from './operation-status/operation-status.component';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent, InitializingComponent, ErrorComponent, PasswordOverlayComponent, VeneerProblemOverlayComponent, OperationStatusComponent],
+  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent, InitializingComponent, ErrorComponent, PasswordOverlayComponent, VeneerProblemOverlayComponent, YesNoDialogComponent, OperationStatusComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -40,6 +41,8 @@ export class App {
 
   isPasswordVisible: boolean = false;
   isVeneerProblemVisible: boolean = false;
+  isYesNoDialogVisible: boolean = false;
+  yesNoDialogQuestion: string = '';
   theme: ThemeType = 'dark';
 
   subscriptions: Subscription[] = [];
@@ -55,6 +58,11 @@ export class App {
 
     this.subscriptions.push(this.be.showVeneerProblem.subscribe(visible => {
       this.isVeneerProblemVisible = visible;
+    }));
+
+    this.subscriptions.push(this.be.showYesNoDialog.subscribe(data => {
+      this.isYesNoDialogVisible = data.visible;
+      this.yesNoDialogQuestion = data.question;
     }));
 
     this.subscriptions.push(this.be.mtbMode.subscribe(mode => {

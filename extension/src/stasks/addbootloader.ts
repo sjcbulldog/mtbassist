@@ -227,7 +227,7 @@ export class AddBootloaderTask extends STask {
                                 this.ext_.fixMissingAssetsForProject(AddBootloaderTask.bootloaderProjectName)
                                 .then(() => {
                                     this.addStatusLine('Updating vscode project files (make vscode) ...') ;
-                                    this.ext_.runMakeVSCode()
+                                    this.ext_.runMakeVSCode({})
                                     .then(() => {
                                         this.addStatusLine('Adding bootloader project to workspace...') ;
                                         this.addToWorkspace()

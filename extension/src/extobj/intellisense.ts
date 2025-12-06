@@ -192,6 +192,7 @@ export class IntelliSenseMgr extends MtbManagerBase {
         }
 
         // Add the new compile commands directory argument
+        cmds = cmds.replace(/\\/g, '/');
         ret.push(option + cmds);
 
         return ret;

@@ -1,0 +1,33 @@
+<div class="yes-no-dialog-overlay" 
+     [class.visible]="isVisible" 
+     [class.dark-theme]="themeType === 'dark'" 
+     [class.light-theme]="themeType === 'light'"
+     (click)="onOverlayClick($event)"
+     (keydown)="onKeyDown($event)"
+     tabindex="-1">
+  
+  <div class="yes-no-dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <mat-icon class="question-icon">help_outline</mat-icon>
+      <h2>Question</h2>
+    </div>
+    
+    <div class="dialog-content">
+      <p class="dialog-question">{{ question }}</p>
+    </div>
+    
+    <div class="dialog-actions">
+      <button mat-button 
+              (click)="onNoClick()" 
+              class="no-button">
+        No
+      </button>
+      <button mat-raised-button 
+              color="primary" 
+              (click)="onYesClick()" 
+              class="yes-button">
+        Yes
+      </button>
+    </div>
+  </div>
+</div>

@@ -18,9 +18,7 @@ import * as winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import * as mdit from 'markdown-it';
 import { VSCodeTransport } from './vscodetransport';
-import { ConsoleTransport } from './consoletransport';
 import { ModusToolboxEnvironment, MTBRunCommandOptions } from '../mtbenv/mtbenv/mtbenv';
 import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
@@ -115,6 +113,7 @@ export class MTBAssistObject {
     private manifestStatus_ : ManifestStatusType = 'loading';
     private pendingPasswordPromise: ((pass: string | undefined) => void) | undefined = undefined ;
     private pendingStatusClosePromise: (() => void) | undefined = undefined ;
+    private pendingYesNoPromise: ((response: string) => void) | undefined = undefined ;
     private activeTask_ : STask | undefined = undefined ;
     private password? : string ;
 
@@ -161,7 +160,7 @@ export class MTBAssistObject {
         this.settings_.on('refresh', () => { this.sendMessageWithArgs('settings', this.settings_.settings); });
         this.settings_.on('updateTasks', () => { this.tasks_.forEach(task => task.addRequiredTasks()); }); ;
         this.settings_.on('updateAppStatus', () => { this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()); }); ;
-        this.settings_.on('updateIntellisense', () => { this.sendIntellisenseProject() ;}) ;
+        this.settings_.on('updateIntellisense', () => { this.updateIntellisense() ;}) ;
 
         this.memusage_ = new MemoryUsageMgr(this) ;
         vscode.tasks.onDidEndTask((e) => { 
@@ -255,6 +254,42 @@ export class MTBAssistObject {
         this.context_.globalState.update('mtbintellisense', this.intellisenseProject_);
     }
 
+    private updateIntellisenseDone() {
+
+    }
+
+    private createOptions() : MTBRunCommandOptions {
+        
+        let options: MTBRunCommandOptions = {
+            toolchainCmdLine: true,
+            toolchain: this.settings_.settingByName('toolchain')?.value as string,
+            gccArmPath: this.settings_.settingByName('gccpath')?.value as string,
+            iarPath: this.settings_.settingByName('iarpath')?.value as string,
+            armCCPath: this.settings_.settingByName('armccpath')?.value as string,
+            llvmPath: this.settings_.settingByName('llvmpath')?.value as string
+        } ;
+        return options ;
+    }
+
+    public updateIntellisense() {
+        let prompt = `The toolchain has been changed. Do you want to update the IntelliSense project settings now?
+            This will involve changing the tasks and settings in the .vscode directory but any changes you made to these files will be preserved except for the settings managed by this extension.`;
+        this.askYesNoQuestion(prompt)
+        .then((response) => {
+            if (response === 'yes') {
+                this.pendingStatusClosePromise = this.updateIntellisenseDone.bind(this) ;
+                this.sendMessageWithArgs('startOperation', `Updating Intellisense Settings`) ;
+                this.sendMessageWithArgs('addStatusLine', `Updating IntelliSense project settings...`) ;
+                this.runMakeVSCode(this.createOptions(), true)
+                .then(() => {
+                    this.sendIntellisenseProject() ;
+                    this.sendMessageWithArgs('finishOperation', '') ;
+                }) ;           
+            }
+        }) ;
+
+    }
+
     public sendIntellisenseProject() {
         this.setIntellisenseProject() ;
         this.sendMessageWithArgs('setIntellisenseProject', this.intellisenseProject_);
@@ -292,6 +327,19 @@ export class MTBAssistObject {
         });
     
         return ret ;
+    }
+
+    public askYesNoQuestion(question: string): Promise<string> {
+        if (this.pendingYesNoPromise) {
+            throw new Error('new yes/no question while another is pending');
+        }
+
+        let ret = new Promise<string>((resolve, reject) => {
+            this.pendingYesNoPromise = resolve;
+            this.sendMessageWithArgs('yes-no-dialog', question);
+        });
+
+        return ret;
     }
 
     private sendMessageWithArgs(type: BackEndToFrontEndType, data: any) {
@@ -568,7 +616,7 @@ export class MTBAssistObject {
         this.seeIfGetLibsNeeded()
         .then(() => {
             this.sendMessageWithArgs('addStatusLine', `Running 'make vscode'...`) ;
-            this.runMakeVSCode()
+            this.runMakeVSCode({})
             .then(() => {
                 let wkspc = this.findWorkspaceFile(this.env_!.appInfo!.appdir) ;
                 if (wkspc) {
@@ -774,18 +822,17 @@ export class MTBAssistObject {
                     if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
                         // We do this again in case the setting is to show the mtb assistant only if an application is loaded
                         this.optionallyShowPage();
+                        this.sendIntellisenseProject() ;                        
                         this.recents_!.addToRecentProject(this.env_!.appInfo!.appdir, this.env_!.bspName || '');
 
                         this.sendMessageWithArgs('selectTab', MTBAssistObject.applicationStatusTab) ;
 
                         this.createVSCodeTaskManager() ;
-
                         this.vscodeSettings_ = new MTBVSCodeSettings(this);
 
                         this.getLaunchData()
                             .then(() => {
                                 runtime.mark('getLaunchData') ;
-                                this.setIntellisenseProject();
                                 this.initDeviceDB() 
                                 .then(() => {
                                     runtime.mark('initDeviceDB') ;
@@ -979,7 +1026,7 @@ export class MTBAssistObject {
                     if (!setting || setting.type !== 'dirpath' || !setting.value || (setting.value as string).length === 0) {
                         return null ;
                     }
-                    ret[1] = setting.value as string ;
+                    ret[1] = path.join(setting.value as string, 'bin', 'clang') ;
                     break ;
                 case 'GCC_ARM':
                 case 'Per Project':
@@ -987,7 +1034,8 @@ export class MTBAssistObject {
                     if (!setting || setting.type !== 'dirpath' || !setting.value || (setting.value as string).length === 0) {
                         return null ;
                     }
-                    ret[1] = setting.value as string ;
+                    ret[1] = path.join(setting.value as string, 'bin', 'arm-none-eabi-gcc') ;
+                    
                     break ;
                 default:
                     return null ;
@@ -1196,6 +1244,7 @@ export class MTBAssistObject {
         this.cmdhandler_.set('run-task', this.runTaskFromGUI.bind(this)) ;
         this.cmdhandler_.set('install-idc-service', this.installIDCService.bind(this)) ;
         this.cmdhandler_.set('delete-veneer-file', this.deleteVeneerFile.bind(this)) ;
+        this.cmdhandler_.set('yes-no-response', this.processYesNoResponse.bind(this)) ;
     }
 
     private deleteVeneerFile(request: FrontEndToBackEndRequest): Promise<void> {
@@ -1208,6 +1257,17 @@ export class MTBAssistObject {
                 }
             } ;
         }) ;
+    }
+
+    private processYesNoResponse(request: FrontEndToBackEndRequest): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.pendingYesNoPromise) {
+                let p = this.pendingYesNoPromise;
+                this.pendingYesNoPromise = undefined;
+                p(request.data || 'no');
+            }
+            resolve();
+        });
     }
 
     private installIDCService() : Promise<void> {
@@ -1326,14 +1386,20 @@ export class MTBAssistObject {
         });
     }
 
-    public runMakeVSCode() : Promise<void> {
+    public runMakeVSCode(options: MTBRunCommandOptions, displayStatus: boolean = false) : Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (this.env_ && this.env_.appInfo) {
-                this.worker_?.runMakeVSCodeCommand(this.env_.appInfo.appdir)
+                if (displayStatus) {
+                    this.sendMessageWithArgs('addStatusLine', 'Running \'make vscode\' command...') ;
+                }
+                this.worker_!.runMakeVSCodeCommand(this.env_.appInfo.appdir, options)
                 .then((result) => {
                     if (result[0] !== 0) {
                         reject(new Error('Failed to run make vscode command')) ;
                         return ;
+                    }
+                    if (displayStatus) {
+                        this.sendMessageWithArgs('addStatusLine', 'Updating VSCode tasks and settings...') ;
                     }
                     this.tasks_?.forEach((t) => { t.addRequiredTasks(); }) ;
                     this.vscodeSettings_?.fix() ;                      
@@ -1349,7 +1415,7 @@ export class MTBAssistObject {
     private prepareVSCode(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (this.env_ && this.env_.appInfo) {
-                this.worker_?.runMakeVSCodeCommand(this.env_.appInfo.appdir)
+                this.worker_!.runMakeVSCodeCommand(this.env_.appInfo.appdir)
                 .then((result) => {
                     this.tasks_?.forEach((t) => { t.addRequiredTasks(); }) ;
                     this.vscodeSettings_?.fix() ;                    
@@ -1639,6 +1705,7 @@ export class MTBAssistObject {
     private setIntellisenseProjectFromGUI(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
             this.intellisense_?.setIntellisenseProject(request.data.project);
+            this.intellisenseProject_= request.data.project;
             this.context_.globalState.update('mtbintellisense', request.data.project);
             resolve();
         });

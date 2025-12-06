@@ -23,7 +23,7 @@ import { MTBAppInfo } from '../appdata/mtbappinfo';
 import { MTBOptProgramCodeGen, MTBTool } from '../toolsdb/mtbtool';
 import { MTBCommand } from './mtbcmd';
 import * as winston from 'winston';
-import * as EventEmitter from 'events';
+import { EventEmitter } from 'events';
 import * as exec from 'child_process' ;
 import * as path from 'path';
 import * as fs from 'fs';
@@ -31,13 +31,26 @@ import * as os from 'os';
 import { URI } from 'vscode-uri';
 import { MTBSettings } from '../../extobj/mtbsettings';
 import { Uri } from 'vscode';
+import { MTBSettingName } from '../../comms';
 
 export interface MTBRunCommandOptions {
     /// The directory to run the command in
     cwd?: string ;
 
+    // If true, put toolchain related settings on the command line
+    toolchainCmdLine? : boolean ;
+
     // The tools path to use when running the command
     toolspath?: string ;
+
+    // The tool chain to use when running the command
+    toolchain?: string ;
+
+    // The path to the specific tool chain compiler
+    gccArmPath? : string ;
+    iarPath?: string ;
+    armCCPath?: string ;
+    llvmPath?: string ;
 
     // Called when we get lines of output
     onOutput?: (lines: string[], id?: any) => void ;
@@ -327,28 +340,97 @@ export class ModusToolboxEnvironment extends EventEmitter {
             let sofar = 0 ;
             let text: string = "" ;
             let penv : any = {} ;
-            let found = false ;
-            let cyfound = false ;
+            let flagMap: Set<string> = new Set() ;
+
             for(let key in process.env) {
                 if (key === 'PATH') {
                     penv['PATH'] = ModusToolboxEnvironment.filterPath(process.env[key]!) ;
-                    found = true ;
+                    flagMap.add('PATH') ;
                 }
                 else if (options.toolspath && key === 'CY_TOOLS_PATHS') {
                     penv[key] = options.toolspath ;
-                    cyfound = true ;
+                    flagMap.add(key);
+                }
+                else if (options.toolchain && key === 'TOOLCHAIN') {
+                    penv[key] = options.toolchain ;
+                    flagMap.add(key) ;
+                }
+                else if (options.gccArmPath && key === 'CY_COMPILER_ARM_DIR') {
+                    penv[key] = options.gccArmPath ;
+                    flagMap.add(key) ;
+                }
+                else if (options.iarPath && key === 'CY_COMPILER_IAR_DIR') {
+                    penv[key] = options.iarPath ;
+                    flagMap.add(key) ;
+                }
+                else if (options.armCCPath && key === 'CY_COMPILER_ARM_DIR') {
+                    penv[key] = options.armCCPath ;
+                    flagMap.add(key) ;
+                }
+                else if (options.llvmPath && key === 'CY_COMPILER_LLVM_ARM_DIR') {
+                    penv[key] = options.llvmPath ;
+                    flagMap.add(key) ;
                 }
                 else {
                     penv[key] = process.env[key] ;
                 }
             }
 
-            if (!cyfound && options.toolspath) {
+            if (!flagMap.has('CY_TOOLS_PATHS') && options.toolspath) {
                 penv['CY_TOOLS_PATHS'] = options.toolspath ;
             }
 
-            if (!found) {
+            if (!flagMap.has('PATH')) {
                 penv['PATH'] = ModusToolboxEnvironment.filterPath('') ;
+            }
+
+            if (!flagMap.has('TOOLCHAIN') && options.toolchain) {
+                penv['TOOLCHAIN'] = options.toolchain ;
+            }
+
+            if (!flagMap.has('CY_COMPILER_ARM_DIR') && options.gccArmPath) {
+                penv['CY_COMPILER_ARM_DIR'] = options.gccArmPath.replace(/\\/g, '/') ;
+            }
+
+            if (!flagMap.has('CY_COMPILER_IAR_DIR') && options.iarPath) {
+                penv['CY_COMPILER_IAR_DIR'] = options.iarPath.replace(/\\/g, '/') ;
+            }
+
+            if (!flagMap.has('CY_COMPILER_ARM_DIR') && options.armCCPath) {
+                penv['CY_COMPILER_ARM_DIR'] = options.armCCPath.replace(/\\/g, '/') ;
+            }
+
+            if (!flagMap.has('CY_COMPILER_LLVM_ARM_DIR') && options.llvmPath) {
+                penv['CY_COMPILER_LLVM_ARM_DIR'] = options.llvmPath.replace(/\\/g, '/') ;
+            }
+
+            if (options.toolchainCmdLine) {
+                let arg: string ;
+
+                if (options.toolchain) {
+                    arg = `TOOLCHAIN=${options.toolchain}` ;
+                    args.unshift(arg) ;
+                }
+
+                if (options.gccArmPath) {
+                    arg = `CY_COMPILER_ARM_DIR=${options.gccArmPath.replace(/\\/g, '/')}` ;
+                    args.unshift(arg) ;
+                }
+
+                if (options.iarPath) {
+                    arg = `CY_COMPILER_IAR_DIR=${options.iarPath.replace(/\\/g, '/')}` ;
+                    args.unshift(arg) ;
+                }
+
+                if (options.armCCPath) {
+                    arg = `CY_COMPILER_ARM_DIR=${options.armCCPath.replace(/\\/g, '/')}` ;
+                    args.unshift(arg) ;
+                }
+
+                if (options.llvmPath) {
+                    arg = `CY_COMPILER_LLVM_ARM_DIR=${options.llvmPath.replace(/\\/g, '/')}` ;
+                    args.unshift(arg) ;
+                } 
             }
 
             if (options.onOutput && !options.id) {
@@ -788,7 +870,7 @@ export class ModusToolboxEnvironment extends EventEmitter {
 
     private getManifestLoc() : PackManifest[] | undefined {
         let ret : PackManifest[] | undefined ;
-        let locname = 'manifest_loc_path' ;
+        let locname : MTBSettingName = 'manifest_loc_path' ;
         let setting = this.settings_.settingByName(locname) ;
         let locdir ;
         if (setting) {

@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-import { MTBSetting } from "../comms";
+import { MTBSetting, MTBSettingName } from "../comms";
 import { MTBAssistObject } from "./mtbassistobj";
 
 import EventEmitter = require("events");
@@ -21,6 +21,7 @@ import * as path from 'path' ;
 import * as os from 'os' ;
 import * as fs from 'fs' ;
 import * as vscode from 'vscode';
+
 
 export class MTBSettings extends EventEmitter {
     public static operatingModeOnline = 'direct' ;
@@ -275,7 +276,7 @@ export class MTBSettings extends EventEmitter {
         return settings ;
     }
 
-    public settingByName(name: string) : MTBSetting | undefined {
+    public settingByName(name: MTBSettingName) : MTBSetting | undefined {
         return this.settings_.find(s => s.name === name);
     }
 
