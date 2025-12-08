@@ -102,3 +102,10 @@ Updated to that the code example category is shown in alphabetic order
 
 ### 2.20.0
 Added code to look for veneer related build erros and help the user fix the issues.
+
+### 2.22.0
+Improved the intellisense handling.
+When something changes that would impact intellisense (like toolchain) there is a prompt to make the changes required to have intellisense work at its best.
+
+### 2.23.0
+Fixed issue with manifest loading but not signaling the frontend
