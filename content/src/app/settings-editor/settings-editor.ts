@@ -50,6 +50,7 @@ export class SettingsEditor implements OnInit, OnDestroy {
   settingsErrors: Map<string, string> = new Map<string, string>();
 
   private subscriptions: Subscription[] = [];
+  private pendingPathUpdates: Map<string, any> = new Map<string, any>();
 
   constructor(private be: BackendService, private cdr: ChangeDetectorRef) {
 
@@ -134,7 +135,19 @@ export class SettingsEditor implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.flushPendingPathUpdates();
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  flushPendingPathUpdates(): void {
+    this.pendingPathUpdates.forEach((value, settingName) => {
+      const setting = this.settings.find(s => s.name === settingName);
+      if (setting) {
+        this.be.info(`Sending deferred update for dirpath setting ${setting.name}`);
+        this.be.sendRequestWithArgs('updateSetting', setting);
+      }
+    });
+    this.pendingPathUpdates.clear();
   }
 
   isValidUri(value: any): boolean {
@@ -178,12 +191,16 @@ export class SettingsEditor implements OnInit, OnDestroy {
     const customPath = this.settings.find(s => s.name === 'custompath');
     
     if (customPath && toolsVersion && toolsVersion.value === 'Custom') {
-      this.onValueChange(customPath, value);
+      // Just update the local value, don't send to backend yet
+      customPath.value = value;
+      this.pendingPathUpdates.set(customPath.name, value);
     }
   }
 
   onValueChange(setting: MTBSetting, value: any) {
     setting.value = value;
+
+    this.be.info(`Setting changed: ${setting.name} = ${value}`);
     
     // If this is a choice setting with tips, update the tip property
     if (setting.type === 'choice' && setting.choices && setting.tips && 
@@ -196,7 +213,23 @@ export class SettingsEditor implements OnInit, OnDestroy {
       }
     }
     
-    this.be.sendRequestWithArgs('updateSetting', setting);
+    // For dirpath settings, defer the update until blur or tab change
+    if (setting.type === 'dirpath') {
+      this.pendingPathUpdates.set(setting.name, value);
+      this.be.info(`Deferring update for dirpath setting ${setting.name}`);
+    } else {
+      this.be.info(`Updating setting ${setting.name} immediately`);
+      this.be.sendRequestWithArgs('updateSetting', setting);
+    }
+  }
+
+  onPathBlur(setting: MTBSetting): void {
+    // Send the update immediately when the field loses focus
+    if (this.pendingPathUpdates.has(setting.name)) {
+      this.be.info(`Sending deferred update for dirpath setting ${setting.name} on blur`);
+      this.be.sendRequestWithArgs('updateSetting', setting);
+      this.pendingPathUpdates.delete(setting.name);
+    }
   }
 
   onBrowseForFolder(setting: MTBSetting, button: string) {

@@ -258,7 +258,13 @@ export class IntelliSenseMgr extends MtbManagerBase {
             ret.push("--background-index");     // Enable background indexing for better performance
 
             let p = toolchain[1].replace(/\\/g, '/') ;
-            ret.push('--query-driver=' + p) ;
+            
+            if (/^[a-z]:/i.test(p) && process.platform === 'win32') {
+                // This is a quirk of how the compile_command.json is generated.
+                p = p[0].toUpperCase() + p.slice(1);
+            }
+
+            ret.push('--query-driver=' + p + '/arm-none-eabi-*'); // Set query driver to GCC toolchain;
             
             // Apply the updated configuration to workspace settings
             config.update(settings, ret, vscode.ConfigurationTarget.Workspace)

@@ -713,4 +713,37 @@ export class MTBSettings extends EventEmitter {
             }
         }
     }
+
+    public validateCompilerPaths(): { name: string, displayName: string, path: string }[] {
+        const invalidPaths: { name: string, displayName: string, path: string }[] = [];
+        const pathSettings = ['gccpath', 'llvmpath', 'iarpath', 'armccpath', 'custompath'];
+
+        for (const settingName of pathSettings) {
+            const setting = this.settings_.find(s => s.name === settingName);
+            if (setting && setting.value) {
+                const pathValue = setting.value as string;
+                // Skip empty paths
+                if (pathValue.trim() === '') {
+                    continue;
+                }
+                // For custompath, only validate if toolsversion is 'Custom'
+                if (settingName === 'custompath') {
+                    const toolsVersion = this.settings_.find(s => s.name === 'toolsversion');
+                    if (!toolsVersion || toolsVersion.value !== 'Custom') {
+                        continue;
+                    }
+                }
+                // Check if the path exists
+                if (!fs.existsSync(pathValue)) {
+                    invalidPaths.push({
+                        name: setting.name,
+                        displayName: setting.displayName,
+                        path: pathValue
+                    });
+                }
+            }
+        }
+
+        return invalidPaths;
+    }
 }

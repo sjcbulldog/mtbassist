@@ -437,7 +437,7 @@
                   <div class="enabled-components-tags" [class.collapsed]="isSectionCollapsed(project.name, 'components')">
                     @if (project.components && project.components.length > 0) {
                       @for (component of project.components; track component.name) {
-                        <span class="component-tag" [title]="component.description || 'No Description Found'">
+                        <span class="component-tag" [title]="component.description || (component.name.startsWith('MW_') ? 'This indicates the given middleware is included in the project.' : 'No Description Found')">
                           <mat-icon class="component-icon">extension</mat-icon>
                           <span class="component-name">{{ component.name }}</span>
                         </span>

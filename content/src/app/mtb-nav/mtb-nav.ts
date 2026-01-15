@@ -60,6 +60,7 @@ export class MtbNav implements OnInit, OnDestroy {
   @Input() alignment: 'start' | 'center' | 'end' = 'center';
   @Input() selectedIndex: number = 0;
   @ViewChild('glossary') glossary!: GlossaryComponent;
+  @ViewChild('settingsEditor') settingsEditor!: SettingsEditor;
 
   private subscriptions: Subscription[] = [];
   lcsBusy: boolean = false;
@@ -87,6 +88,16 @@ export class MtbNav implements OnInit, OnDestroy {
   }
 
   onTabChange(index: number) {
+    // Flush any pending path updates from settings editor when leaving that tab
+    if (this.settingsEditor) {
+      this.settingsEditor.flushPendingPathUpdates();
+    }
+    
+    // When navigating to the Settings tab (index 6), validate compiler paths
+    if (index === 6) {
+      this.be.sendRequestWithArgs('validate-compiler-paths', null);
+    }
+    
     this.selectedIndex = index;
   }
 }

@@ -137,6 +137,12 @@ export class MTBAssistObject {
             ]
         });
 
+        if (context.extensionMode === vscode.ExtensionMode.Development) {
+            // Disable this if you want log messages to go to the debug console while you are developing
+            // let consoleTransport = new winston.transports.Console() ;
+            // this.logger_.add(consoleTransport) ;
+        }
+
         this.llvminstaller_ = new LLVMInstaller(this.logger_) ;
         this.llvminstaller_.on('progress', (msg) => {
             this.sendMessageWithArgs('installLLVMMessage', msg);
@@ -1044,12 +1050,7 @@ export class MTBAssistObject {
                     break ;
                 case 'GCC_ARM':
                 case 'Per Project':
-                    setting = this.settings_.settingByName('gccpath') ;
-                    if (!setting || setting.type !== 'dirpath' || !setting.value || (setting.value as string).length === 0) {
-                        return null ;
-                    }
-                    ret[1] = path.join(setting.value as string, 'bin', 'arm-none-eabi-gcc') ;
-                    
+                    ret[1] = this.getGCCToolchainPath() ;
                     break ;
                 default:
                     return null ;
@@ -1065,6 +1066,33 @@ export class MTBAssistObject {
 
         let p = path.join(gcctool.path, "bin", "arm-none-eabi-gcc");        
         return ['GCC_ARM', p] ;
+    }
+
+    private getGCCPathFromTool() : string {
+        let ret = '' ;
+        let gcctool = this.env!.toolsDB.findToolByGUID(MTBAssistObject.gccUUID);
+        if (gcctool) {
+            ret = path.join(gcctool.path, 'bin') ;
+        }
+        return ret;
+    }
+
+    private getGCCToolchainPath() : string {
+        let ret = '' ;
+        let setting = this.settings_.settingByName('gccpath') ;
+        if (setting === undefined) {
+            ret = this.getGCCPathFromTool() ;
+        }
+        else {
+            if (!fs.existsSync(setting.value as string)) {
+                ret = this.getGCCPathFromTool() ;
+            }
+            else {
+                ret = setting.value as string ;
+            }
+        }
+
+        return ret;
     }
 
     public async initialize(): Promise<void> {
@@ -1259,6 +1287,7 @@ export class MTBAssistObject {
         this.cmdhandler_.set('install-idc-service', this.installIDCService.bind(this)) ;
         this.cmdhandler_.set('delete-veneer-file', this.deleteVeneerFile.bind(this)) ;
         this.cmdhandler_.set('yes-no-response', this.processYesNoResponse.bind(this)) ;
+        this.cmdhandler_.set('validate-compiler-paths', this.validateCompilerPaths.bind(this)) ;
     }
 
     private deleteVeneerFile(request: FrontEndToBackEndRequest): Promise<void> {
@@ -1690,7 +1719,19 @@ export class MTBAssistObject {
 
     private updateSetting(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
+            this.logger_.info(`Updating setting: ${request.data.name} = ${request.data.value}`);
             this.settings_.update(request.data);
+            resolve();
+        });
+        return ret;
+    }
+
+    private validateCompilerPaths(request: FrontEndToBackEndRequest): Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            const invalidPaths = this.settings_.validateCompilerPaths();
+            if (invalidPaths.length > 0) {
+                this.sendMessageWithArgs('show-invalid-paths', invalidPaths);
+            }
             resolve();
         });
         return ret;

@@ -109,3 +109,6 @@ When something changes that would impact intellisense (like toolchain) there is 
 
 ### 2.23.0
 Fixed issue with manifest loading but not signaling the frontend
+
+### 2.24.0
+Fixed issue with finding the right compiler for clangd.

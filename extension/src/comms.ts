@@ -72,7 +72,8 @@ export type FrontEndToBackEndType =
     'run-task' |
     'install-idc-service' |
     'delete-veneer-file' |
-    'yes-no-response'
+    'yes-no-response' |
+    'validate-compiler-paths'
     ;
 
 export type BackEndToFrontEndType =
@@ -129,7 +130,8 @@ export type BackEndToFrontEndType =
     'lcsKeywordAliases' |
     'gitState' |
     'showVeneerProblem' |
-    'yes-no-dialog'
+    'yes-no-dialog' |
+    'show-invalid-paths'
     ;
 
 export type ThemeType =

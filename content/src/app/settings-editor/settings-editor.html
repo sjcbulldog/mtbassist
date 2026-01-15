@@ -9,7 +9,12 @@
         </div>
       @if (setting.type === 'string' && setting.name === 'custompath') {
         <mat-form-field appearance="outline" class="setting-field">
-          <input matInput [ngModel]="getCustomPathDisplayValue()" (ngModelChange)="onCustomPathDisplayValueChange($event)" [disabled]="isCustomPathDisabled()" [matTooltip]="getCustomPathDisplayValue()" />
+          <input matInput 
+                 [ngModel]="getCustomPathDisplayValue()" 
+                 (ngModelChange)="onCustomPathDisplayValueChange($event)" 
+                 (blur)="onPathBlur(setting)"
+                 [disabled]="isCustomPathDisabled()" 
+                 [matTooltip]="getCustomPathDisplayValue()" />
           @if (manifestStatus === 'loading') {
             <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
           }               
@@ -65,8 +70,9 @@
           <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
             <input matInput 
                    [ngModel]="getCustomPathDisplayValue()" 
-                   [disabled]="isCustomPathDisabled()"
-                   (ngModelChange)="onCustomPathDisplayValueChange($event)" />
+                   (ngModelChange)="onCustomPathDisplayValueChange($event)"
+                   (blur)="onPathBlur(setting)"
+                   [disabled]="isCustomPathDisabled()" />
           </mat-form-field>
           <button mat-icon-button (click)="onBrowseForFolder(setting, 'Custom Tools Path')" matTooltip="Browse for folder" [disabled]="isCustomPathDisabled()">
             <mat-icon>more_horiz</mat-icon>
@@ -81,7 +87,8 @@
           <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
             <input matInput 
                    [(ngModel)]="setting.value" 
-                   (ngModelChange)="onValueChange(setting, $event)" 
+                   (ngModelChange)="onValueChange(setting, $event)"
+                   (blur)="onPathBlur(setting)"
                    [disabled]="isSettingDisabled(setting)"
                    [matTooltip]="setting.value + ''" />
           </mat-form-field>
@@ -92,7 +99,11 @@
       } @else if (setting.type === 'filepath') {
         <div class="browse-row" style="flex: 1;">
           <mat-form-field appearance="outline" class="setting-field" style="flex: 1;">
-            <input matInput [(ngModel)]="setting.value" (ngModelChange)="onValueChange(setting, $event)" [disabled]="isSettingDisabled(setting)" [matTooltip]="setting.value + ''" />
+            <input matInput 
+                   [(ngModel)]="setting.value" 
+                   (blur)="onPathBlur(setting)"
+                   [disabled]="isSettingDisabled(setting)" 
+                   [matTooltip]="setting.value + ''" />
           </mat-form-field>
           <button mat-icon-button (click)="onBrowseForFile(setting)" matTooltip="Browse for file" [disabled]="isSettingDisabled(setting)">
             <mat-icon>more_horiz</mat-icon>

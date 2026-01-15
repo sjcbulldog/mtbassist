@@ -114,6 +114,9 @@ export class BackendService {
     // Yes/No dialog related
     showYesNoDialog: BehaviorSubject<{ visible: boolean, question: string }> = new BehaviorSubject<{ visible: boolean, question: string }>({ visible: false, question: '' });
 
+    // Invalid paths dialog related
+    showInvalidPathsDialog: BehaviorSubject<{ visible: boolean, invalidPaths: any[] }> = new BehaviorSubject<{ visible: boolean, invalidPaths: any[] }>({ visible: false, invalidPaths: [] });
+
     // Status display related
     startOperation: Subject<string> = new Subject<string>();
     finishOperation: Subject<string> = new Subject<string>();
@@ -290,6 +293,7 @@ export class BackendService {
         this.registerHandler('gitState', (cmd) => { this.receivedGitState(cmd) }) ;
         this.registerHandler('showVeneerProblem', (cmd) => { this.showVeneerProblem.next(true) });
         this.registerHandler('yes-no-dialog', (cmd) => { this.showYesNoDialog.next({ visible: true, question: cmd.data || '' }) });
+        this.registerHandler('show-invalid-paths', (cmd) => { this.showInvalidPathsDialog.next({ visible: true, invalidPaths: cmd.data || [] }) });
     }
 
     private receivedGitState(cmd: BackEndToFrontEndResponse) {

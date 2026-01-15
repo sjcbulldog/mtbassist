@@ -23,12 +23,13 @@ import { ErrorComponent } from "./error/error.component";
 import { PasswordOverlayComponent } from './password-overlay/password-overlay.component';
 import { VeneerProblemOverlayComponent } from './veneer-problem-overlay/veneer-problem-overlay.component';
 import { YesNoDialogComponent } from './yes-no-dialog/yes-no-dialog.component';
+import { InvalidPathsDialogComponent, InvalidCompilerPath } from './invalid-paths-dialog/invalid-paths-dialog.component';
 import { OperationStatusComponent } from './operation-status/operation-status.component';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
-  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent, InitializingComponent, ErrorComponent, PasswordOverlayComponent, VeneerProblemOverlayComponent, YesNoDialogComponent, OperationStatusComponent],
+  imports: [MtbNav, SoftwareInstallerComponent, IdcLauncherRequiredComponent, InitializingComponent, ErrorComponent, PasswordOverlayComponent, VeneerProblemOverlayComponent, YesNoDialogComponent, InvalidPathsDialogComponent, OperationStatusComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -43,6 +44,8 @@ export class App {
   isVeneerProblemVisible: boolean = false;
   isYesNoDialogVisible: boolean = false;
   yesNoDialogQuestion: string = '';
+  isInvalidPathsDialogVisible: boolean = false;
+  invalidCompilerPaths: InvalidCompilerPath[] = [];
   theme: ThemeType = 'dark';
 
   subscriptions: Subscription[] = [];
@@ -63,6 +66,11 @@ export class App {
     this.subscriptions.push(this.be.showYesNoDialog.subscribe(data => {
       this.isYesNoDialogVisible = data.visible;
       this.yesNoDialogQuestion = data.question;
+    }));
+
+    this.subscriptions.push(this.be.showInvalidPathsDialog.subscribe(data => {
+      this.isInvalidPathsDialogVisible = data.visible;
+      this.invalidCompilerPaths = data.invalidPaths;
     }));
 
     this.subscriptions.push(this.be.mtbMode.subscribe(mode => {

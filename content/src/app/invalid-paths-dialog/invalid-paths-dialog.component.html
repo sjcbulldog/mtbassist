@@ -1,0 +1,39 @@
+<div class="invalid-paths-dialog-overlay" 
+     [class.visible]="isVisible" 
+     [class.dark-theme]="themeType === 'dark'" 
+     [class.light-theme]="themeType === 'light'"
+     (click)="onOverlayClick($event)"
+     (keydown)="onKeyDown($event)"
+     tabindex="-1">
+  
+  <div class="invalid-paths-dialog" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <mat-icon class="warning-icon">warning</mat-icon>
+      <h2>Invalid Compiler Paths</h2>
+    </div>
+    
+    <div class="dialog-content">
+      <p class="dialog-message">The following compiler paths are not valid on this machine:</p>
+      
+      <ul class="invalid-paths-list">
+        @for (item of invalidPaths; track item.name) {
+          <li class="invalid-path-item">
+            <div class="path-label">{{ item.displayName }}</div>
+            <div class="path-value">{{ item.path }}</div>
+          </li>
+        }
+      </ul>
+      
+      <p class="dialog-instruction">Please update these paths in the settings to ensure proper compilation.</p>
+    </div>
+    
+    <div class="dialog-actions">
+      <button mat-raised-button 
+              color="primary" 
+              (click)="onOkClick()" 
+              class="ok-button">
+        OK
+      </button>
+    </div>
+  </div>
+</div>

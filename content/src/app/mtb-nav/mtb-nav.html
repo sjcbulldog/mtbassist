@@ -107,7 +107,7 @@
           @case (6) {
             <div class="tab-panel">
               @if (tab.component === 'SettingsEditor') {
-                <mtb-settings-editor></mtb-settings-editor>
+                <mtb-settings-editor #settingsEditor></mtb-settings-editor>
               } @else {
                 <div class="placeholder-content">
                   <h2>{{ tab.label }}</h2>
