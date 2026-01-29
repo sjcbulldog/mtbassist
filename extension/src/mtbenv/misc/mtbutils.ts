@@ -242,7 +242,7 @@ export class MTBUtils {
 
     public static async callGetAppInfo(logger: winston.Logger, toolspath: string | undefined, shtools: string, cwd: string) : Promise<Map<string, string>> {
         let ret = new Promise<Map<string, string>>((resolve, reject) => { 
-            this.callMake(logger, toolspath, shtools, cwd, ['get_app_info', 'CY_PROTOCOL=2', 'MTB_QUERY=1'])
+            MTBUtils.callMake(logger, toolspath, shtools, cwd, ['get_app_info', 'CY_PROTOCOL=2', 'MTB_QUERY=1'])
                 .then((result) => {
                     if (result[0] !== 0) {
                         reject(new Error(`the call to 'make get_app_info' returns status code ${result[0]}`)) ;

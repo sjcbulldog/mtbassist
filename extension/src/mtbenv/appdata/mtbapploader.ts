@@ -128,7 +128,7 @@ export class MTBAppLoader {
                 })
                 .catch((err) => {
                     reject(err) ;
-                })
+                });
         }) ;
         return ret ;
     }

@@ -67,6 +67,19 @@ export class MTBAppInfo {
         return this.appdir_ ;
     }
 
+    public get appName() : string {
+        if (!this.vars_) {
+            throw new Error('MTBAppInfo.appName called without setting the get_app_info vars') ;
+        }
+
+        const name = this.vars_.get(MTBNames.MTB_APP_NAME) ;
+        if (!name) {
+            throw new Error(`MTBAppInfo.appName called but the '${MTBNames.MTB_APP_NAME}' var is not set`) ;
+        }
+
+        return name ;
+    }
+
     public get bspdir() : string {
         return path.join(this.appdir_, MTBNames.BSPsDir) ;
     }

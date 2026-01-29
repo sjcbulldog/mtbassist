@@ -53,6 +53,7 @@ import { RunTimeTracker } from '../runtime';
 import fetch from 'node-fetch';
 import { ApplicationType } from '../mtbenv/appdata/mtbappinfo';
 import { browseropen } from '../browseropen';
+import { CMakeBuildSupport } from './cmakebuild';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -278,22 +279,23 @@ export class MTBAssistObject {
     }
 
     public updateIntellisense() {
-        let prompt = `The toolchain has been changed. Do you want to update the IntelliSense project settings now?
-            This will involve changing the tasks and settings in the .vscode directory but any changes you made to these files will be preserved except for the settings managed by this extension.`;
-        this.askYesNoQuestion(prompt)
-        .then((response) => {
-            if (response === 'yes') {
-                this.pendingStatusClosePromise = this.updateIntellisenseDone.bind(this) ;
-                this.sendMessageWithArgs('startOperation', `Updating Intellisense Settings`) ;
-                this.sendMessageWithArgs('addStatusLine', `Updating IntelliSense project settings...`) ;
-                this.runMakeVSCode(this.createOptions(), true)
-                .then(() => {
-                    this.sendIntellisenseProject() ;
-                    this.sendMessageWithArgs('finishOperation', '') ;
-                }) ;           
-            }
-        }) ;
-
+        if (this.env_ && this.env_.appInfo) {
+            let prompt = `The toolchain has been changed. Do you want to update the IntelliSense project settings now?
+                This will involve changing the tasks and settings in the .vscode directory but any changes you made to these files will be preserved except for the settings managed by this extension.`;
+            this.askYesNoQuestion(prompt)
+            .then((response) => {
+                if (response === 'yes') {
+                    this.pendingStatusClosePromise = this.updateIntellisenseDone.bind(this) ;
+                    this.sendMessageWithArgs('startOperation', `Updating Intellisense Settings`) ;
+                    this.sendMessageWithArgs('addStatusLine', `Updating IntelliSense project settings...`) ;
+                    this.runMakeVSCode(this.createOptions(), true)
+                    .then(() => {
+                        this.sendIntellisenseProject() ;
+                        this.sendMessageWithArgs('finishOperation', '') ;
+                    }) ;           
+                }
+            }) ;
+        }
     }
 
     public sendIntellisenseProject() {
@@ -430,7 +432,9 @@ export class MTBAssistObject {
     }
 
     private setupAuxiliaryStuffAlt() : Promise<void> {
-        this.keywords_.init(this.env_!.appInfo!) ;
+        if (this.env_ && this.env_.appInfo) {
+            this.keywords_.init(this.env_!.appInfo!) ;
+        }
 
         let ret = new Promise<void>((resolve, reject) => {
             let parray: any[] = [];
@@ -2054,8 +2058,17 @@ export class MTBAssistObject {
             disposable = vscode.commands.registerCommand('mtbassist2.setOutputChannelLevel', this.setOutputChannelLevel.bind(this));
             this.context_.subscriptions.push(disposable);
 
+            disposable = vscode.commands.registerCommand('mtbassist2.createCMakeFile', this.createCMakeFile.bind(this));
+            this.context_.subscriptions.push(disposable);
+
             this.commandsInited_ = true;
         }
+    }
+
+    private createCMakeFile() {
+        // Implementation for creating CMake build support
+        const cmakeSupport = new CMakeBuildSupport(this.env_!, this.settings_, this.logger_) ;
+        cmakeSupport.createCMakeFileForCurrentProject() ;
     }
 
     private setOutputChannelLevel() {

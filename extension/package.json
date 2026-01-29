@@ -63,6 +63,10 @@
       {
         "command": "mtbassist2.setOutputChannelLevel",
         "title": "ModusToolbox Assistant: Set Output Channel Level"
+      },
+      {
+        "command": "mtbassist2.createCMakeFile",
+        "title": "ModusToolbox Assistant: Create CMake Build Support"
       }
     ],
     "keybindings": [
