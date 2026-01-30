@@ -1292,6 +1292,7 @@ export class MTBAssistObject {
         this.cmdhandler_.set('delete-veneer-file', this.deleteVeneerFile.bind(this)) ;
         this.cmdhandler_.set('yes-no-response', this.processYesNoResponse.bind(this)) ;
         this.cmdhandler_.set('validate-compiler-paths', this.validateCompilerPaths.bind(this)) ;
+        this.cmdhandler_.set('create-cmake-files', this.createCMakeFile.bind(this)) ;
     }
 
     private deleteVeneerFile(request: FrontEndToBackEndRequest): Promise<void> {
@@ -2065,21 +2066,27 @@ export class MTBAssistObject {
         }
     }
 
-    private createCMakeFile() {
-        // Implementation for creating CMake build support
-        const cmakeSupport = new CMakeBuildSupport(this.env_!, this.settings_, this.logger_, true) ;
-        cmakeSupport.on('startOperation', (msg: string) => {
-            this.sendMessageWithArgs('startOperation', msg) ;
-        }) ;
+    private createCMakeFile() : Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
 
-        cmakeSupport.on('finishOperation', () => {
-            this.sendMessageWithArgs('finishOperation', '') ;
-        }) ;
+            // Implementation for creating CMake build support
+            const cmakeSupport = new CMakeBuildSupport(this.env_!, this.settings_, this.logger_, true) ;
+            cmakeSupport.on('startOperation', (msg: string) => {
+                this.sendMessageWithArgs('startOperation', msg) ;
+            }) ;
 
-        cmakeSupport.on('addStatusLine', (line: string) => {
-            this.sendMessageWithArgs('addStatusLine', line) ;
+            cmakeSupport.on('finishOperation', () => {
+                this.sendMessageWithArgs('finishOperation', '') ;
+            }) ;
+
+            cmakeSupport.on('addStatusLine', (line: string) => {
+                this.sendMessageWithArgs('addStatusLine', line) ;
+            }) ;
+
+            await cmakeSupport.createCMakeFileForCurrentProject() ;
+
+            resolve() ;
         }) ;
-        cmakeSupport.createCMakeFileForCurrentProject() ;
     }
 
     private setOutputChannelLevel() {

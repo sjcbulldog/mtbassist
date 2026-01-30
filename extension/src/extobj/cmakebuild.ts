@@ -531,7 +531,6 @@ set(CMAKE_CXX_COMPILER_WORKS 1)
 # required tools are already in the PATH
 #
 SET(GCCPATH "C:/mtb/tools/mtbgccpackage/gcc/bin/")
-set(MTBSHELL "C:/users/butch/ModusToolbox/tools_3.7/modus-shell/bin/")
 
 #
 # specify the cross compilers
@@ -541,7 +540,6 @@ SET(CMAKE_CXX_COMPILER \${GCCPATH}arm-none-eabi-g++.exe)
 SET(CMAKE_ASM_COMPILER \${GCCPATH}arm-none-eabi-gcc.exe)
 set(CMAKE_OBJCOPY \${GCCPATH}arm-none-eabi-objcopy)
 set(CMAKE_SIZE \${GCCPATH}arm-none-eabi-size)
-SET(CMAKE_MAKE_PROGRAM \${MTBSHELL}make.exe)
 
 # Compiler flags for C
 set(CMAKE_C_FLAGS_DEBUG_INIT "${debugcflags}")

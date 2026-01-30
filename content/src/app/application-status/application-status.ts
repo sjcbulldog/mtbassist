@@ -539,6 +539,10 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         this.be.sendRequestWithArgs('devcfg', null);
     }
 
+    createCMakeFiles() : void {
+        this.be.sendRequestWithArgs('create-cmake-files', null);
+    }
+
     // Open Library Manager
     openLibraryManager(): void {
         this.be.sendRequestWithArgs('libmgr', null);

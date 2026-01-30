@@ -73,7 +73,8 @@ export type FrontEndToBackEndType =
     'install-idc-service' |
     'delete-veneer-file' |
     'yes-no-response' |
-    'validate-compiler-paths'
+    'validate-compiler-paths' |
+    'create-cmake-files'
     ;
 
 export type BackEndToFrontEndType =
