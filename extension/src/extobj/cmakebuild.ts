@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as winston from 'winston';
 import { MTBSettings } from "./mtbsettings";
 import { MTBUtils } from "../mtbenv/misc/mtbutils";
+import EventEmitter = require('events');
 
 interface CompileCommand {
     command: string;
@@ -12,33 +13,47 @@ interface CompileCommand {
     file: string;
 }
 
-export class CMakeBuildSupport {
+class CMakeIncludesAndDefines {
+    // Common includes and defines across all files of each type
+    public cCommonIncludes_ : string[] = [];
+    public cCommonDefines_ : string[] = [];
+    public asmCommonIncludes_ : string[] = [];
+    public asmCommonDefines_ : string[] = [];
+    public cppCommonIncludes_ : string[] = [];
+    public cppCommonDefines_ : string[] = [];
+    
+    // File-specific includes and defines
+    public fileIncludes_ : Map<string, string[]> = new Map();
+    public fileDefines_ : Map<string, string[]> = new Map();
+
+    public sourceFiles_ : Set<string> = new Set();
+
+    public get isValid() : boolean {
+        return this.fileIncludes_.size === 0 && this.fileDefines_.size === 0 ;
+    }
+} ;
+
+export class CMakeBuildSupport extends EventEmitter{
     private env_ : ModusToolboxEnvironment ;
     private settings_ : MTBSettings ;
     private logger_ : winston.Logger;
     private toolsdir_? : string ;
     private modusShellDir_? : string ;
-    private sourceFiles_ : Set<string> = new Set();
-    private flags_ : Map<string, string> = new Map();
-    private toolchainFile_ : string ;
-    
-    // Common includes and defines across all files of each type
-    private cCommonIncludes_ : string[] = [];
-    private cCommonDefines_ : string[] = [];
-    private asmCommonIncludes_ : string[] = [];
-    private asmCommonDefines_ : string[] = [];
-    private cppCommonIncludes_ : string[] = [];
-    private cppCommonDefines_ : string[] = [];
-    
-    // File-specific includes and defines
-    private fileIncludes_ : Map<string, string[]> = new Map();
-    private fileDefines_ : Map<string, string[]> = new Map();
 
-    public constructor(env: ModusToolboxEnvironment, settings: MTBSettings, logger: winston.Logger) {
+    private debugFlags_ : Map<string, string> = new Map();
+    private releaseFlags_ : Map<string, string> = new Map();
+    private toolchainFile_ : string ;
+    private gui_ : boolean = false ;
+    
+    private debugIncludesDefines_: CMakeIncludesAndDefines = new CMakeIncludesAndDefines() ;
+    private releaseIncludesDefines_: CMakeIncludesAndDefines = new CMakeIncludesAndDefines() ;
+
+    public constructor(env: ModusToolboxEnvironment, settings: MTBSettings, logger: winston.Logger, gui: boolean = false) {
+        super() ;
         this.env_ = env ;
         this.settings_ = settings ;
         this.logger_ = logger;
-
+        this.gui_ = gui ;
         this.toolchainFile_ = 'arm-cortex-m33.cmake' ;
 
         this.toolsdir_ = this.env_.toolsDir! ;
@@ -49,29 +64,78 @@ export class CMakeBuildSupport {
 
     public async createCMakeFileForCurrentProject() {
 
+        ////////////// Debug configuration ////////////////
+        if (this.gui_) {
+            this.emit('startOperation', 'Creating CMake files for current project...') ;
+            this.emit('addStatusLine', 'Running "make codegen CONFIG=Debug" to extract build recipe ...') ;
+        }
+
         this.logger_.info('CMakeBuildSupport: generating CMake files for current project...') ; 
         this.logger_.info('                   running "make codegen"') ;
         try {
-            await this.runCodeGen() ;
+            await this.runCodeGen('Debug') ;
         }
         catch(err) {
             this.logger_.warn(`CMakeBuildSupport: failed to run codegen: ${err}`) ;
             return ;
         }
 
-        this.logger_.info('                   reading "compile_commands.json"') ;
-        this.readCompileCommands() ;
+        if (this.gui_) {
+            this.emit('addStatusLine', 'Extracting source files and flags from compile_commands.json...') ;
+        }
+        this.logger_.info('                   reading debug "compile_commands.json"') ;
+        this.readCompileCommands('Debug', this.debugIncludesDefines_) ;
 
-        this.logger_.info('                   reading build flags') ;
-        if (!this.readFlags()) {
+        this.logger_.info('                   reading debug build flags') ;
+        if (!this.readFlags('Debug', this.debugFlags_)) {
             this.logger_.warn('CMakeBuildSupport: failed to read flags from build directory') ;
             return ;
+        }        
+
+        //////////////// Release configuration ////////////////
+
+        if (this.gui_) {
+            this.emit('addStatusLine', 'Running "make codegen CONFIG=Release" to extract build recipe ...') ;
         }
 
+        try {
+            await this.runCodeGen('Release') ;
+        }
+        catch(err) {
+            this.logger_.warn(`CMakeBuildSupport: failed to run codegen: ${err}`) ;
+            return ;
+        }        
+
+        if (this.gui_) {
+            this.emit('addStatusLine', 'Extracting source files and flags from compile_commands.json...') ;
+        }
+        this.logger_.info('                   reading "compile_commands.json"') ;
+        this.readCompileCommands('Release', this.releaseIncludesDefines_) ;
+
+        if (this.gui_) {
+            this.emit('addStatusLine', 'Reading build flags from build directories...') ;
+        }
+
+        if (!this.readFlags('Release', this.releaseFlags_)) {
+            this.logger_.warn('CMakeBuildSupport: failed to read flags from build directory') ;
+            return ;
+        }        
+
+        if (this.gui_) {
+            this.emit('addStatusLine', 'Writing toolchain file...') ;
+        }
         this.logger_.info('                   writing toolchain file') ;
         this.writeToolchainFile() ;
+
+        if (this.gui_) {
+            this.emit('addStatusLine', 'Writing CMakeLists.txt file...') ;
+        }
         this.logger_.info('                   writing CMakeLists.txt file') ;
         this.writeCMakeListsFile() ;
+
+        if (this.gui_) {
+            this.emit('finishOperation', 'CMake files created successfully.') ;
+        }
     }
 
     private get bspName() : string | undefined {
@@ -91,7 +155,7 @@ export class CMakeBuildSupport {
      * Uses the ModusToolboxEnvironment's capabilities to execute the make command.
      * @returns Promise that resolves when the codegen command completes
      */
-    private async runCodeGen(): Promise<void> {
+    private async runCodeGen(config: string): Promise<void> {
         let ret = new Promise<void>(async (resolve, reject) => {
             const appInfo = this.env_.appInfo;
 
@@ -112,15 +176,22 @@ export class CMakeBuildSupport {
                 return ;
             }
 
+            // Remove the build directory to ensure a clean codegen run
+            const buildDir = path.join(projectDir, 'build');
+            if (fs.existsSync(buildDir)) {
+                this.logger_.info(`CMakeBuildSupport: removing existing build directory: ${buildDir}`) ;
+                try {
+                    fs.rmdirSync(buildDir, { recursive: true }) ;
+                }
+                catch(err) {
+                    this.logger_.warn(`CMakeBuildSupport: failed to remove build directory: ${err}`) ;
+                    reject(new Error(`Failed to remove existing build directory: ${err}`)) ;
+                    return ;
+                }
+            }
+
             // Determine the make command based on the platform
-            const setting = this.settings_.settingByName('configuration') ;
-            const args = ['codegen', `CONFIG=${setting?.value || 'Debug'}`];
-
-            const options: MTBRunCommandOptions = {
-                cwd: projectDir,
-                toolchainCmdLine: true
-            };
-
+            const args = ['codegen', `CONFIG=${config}`];
             let toolspath = this.env_.toolsDir! ;
             try {
                 const [exitCode, output] = await MTBUtils.callMake(this.logger_, toolspath, this.modusShellDir_, this.env_.appInfo?.appdir!, args) ;
@@ -143,7 +214,7 @@ export class CMakeBuildSupport {
      * Also extracts includes and defines from each command.
      * @returns Promise that resolves when the compile commands have been read
      */
-    private async readCompileCommands(): Promise<void> {
+    private async readCompileCommands(config: string, includesDefines: CMakeIncludesAndDefines): Promise<void> {
         const appInfo = this.env_.appInfo;
         
         if (!appInfo) {
@@ -163,9 +234,9 @@ export class CMakeBuildSupport {
             const compileCommands: CompileCommand[] = JSON.parse(fileContent);
 
             // Clear the previous data
-            this.sourceFiles_.clear();
-            this.fileIncludes_.clear();
-            this.fileDefines_.clear();
+            includesDefines.sourceFiles_.clear();
+            includesDefines.fileIncludes_.clear();
+            includesDefines.fileDefines_.clear();
 
             // Data structures to compute common includes/defines
             const cFiles: Map<string, {includes: string[], defines: string[]}> = new Map();
@@ -177,7 +248,7 @@ export class CMakeBuildSupport {
                 if (cmd.file) {
                     // Normalize the file path and add to the set
                     const normalizedPath = path.normalize(cmd.file);
-                    this.sourceFiles_.add(normalizedPath);
+                    includesDefines.sourceFiles_.add(normalizedPath);
 
                     // Extract includes and defines from the command
                     const includes = this.extractIncludes(cmd.command);
@@ -198,12 +269,16 @@ export class CMakeBuildSupport {
             }
 
             // Compute common includes and defines for each file type
-            this.computeCommonAndFileSpecific(cFiles, this.cCommonIncludes_, this.cCommonDefines_);
-            this.computeCommonAndFileSpecific(asmFiles, this.asmCommonIncludes_, this.asmCommonDefines_);
-            this.computeCommonAndFileSpecific(cppFiles, this.cppCommonIncludes_, this.cppCommonDefines_);
+            this.computeCommonAndFileSpecific(cFiles, includesDefines.cCommonIncludes_, includesDefines.cCommonDefines_, includesDefines);
+            this.computeCommonAndFileSpecific(asmFiles, includesDefines.asmCommonIncludes_, includesDefines.asmCommonDefines_, includesDefines);
+            this.computeCommonAndFileSpecific(cppFiles, includesDefines.cppCommonIncludes_, includesDefines.cppCommonDefines_, includesDefines);
 
         } catch (err) {
             throw new Error(`Failed to read or parse compile_commands.json: ${err}`);
+        }
+
+        if (!includesDefines.isValid) {
+            throw new Error('Per-file includes/defines detected - cannot generate CMake files');
         }
     }
 
@@ -212,7 +287,7 @@ export class CMakeBuildSupport {
      * Reads the first line of each flag file and stores it in the flags map.
      * Flag files are located in build/BSPNAME/CONFIG directory.
      */
-    private readFlags(): boolean { 
+    private readFlags(config: string, flagsMap: Map<string, string>): boolean { 
         const appInfo = this.env_.appInfo;
         
         if (!appInfo) {
@@ -237,9 +312,6 @@ export class CMakeBuildSupport {
 
         const projectDir = appInfo.appdir;
         
-        const setting = this.settings_.settingByName('configuration');
-        const config = setting?.value || 'Debug';
-        
         const flagsDir = path.join(projectDir, 'build', this.bspName, config as string);
         
         if (!fs.existsSync(flagsDir)) {
@@ -261,7 +333,7 @@ export class CMakeBuildSupport {
         ];
 
         // Clear the previous flags
-        this.flags_.clear();
+        flagsMap.clear();
 
         // Read each flag file
         for (const flagFile of flagFiles) {
@@ -274,7 +346,7 @@ export class CMakeBuildSupport {
                     
                     // Store in map without the leading period
                     const keyName = flagFile.substring(1); // Remove the leading '.'
-                    this.flags_.set(keyName, firstLine);
+                    flagsMap.set(keyName, firstLine);
                 } catch (err) {
                     this.logger_.warn(`Failed to read flag file ${flagFile}: ${err}`);
                 }
@@ -326,7 +398,8 @@ export class CMakeBuildSupport {
     private computeCommonAndFileSpecific(
         filesMap: Map<string, {includes: string[], defines: string[]}>,
         commonIncludes: string[],
-        commonDefines: string[]
+        commonDefines: string[],
+        includesDefines: CMakeIncludesAndDefines
     ): void {
         if (filesMap.size === 0) {
             return;
@@ -374,11 +447,11 @@ export class CMakeBuildSupport {
             const specificDefines = fileData.defines.filter(def => !commonDefinesSet.has(def));
             
             if (specificIncludes.length > 0) {
-                this.fileIncludes_.set(filePath, specificIncludes);
+                includesDefines.fileIncludes_.set(filePath, specificIncludes);
             }
             
             if (specificDefines.length > 0) {
-                this.fileDefines_.set(filePath, specificDefines);
+                includesDefines.fileDefines_.set(filePath, specificDefines);
             }
         }
     }
@@ -432,11 +505,15 @@ export class CMakeBuildSupport {
     }
 
     private writeToolchainFile() : void {
-        let cflags = this.filterCompileFlags(this.flags_.get('cflags') || '') ;
-        let cxxflags = this.filterCompileFlags(this.flags_.get('cxxflags') || '') ;
-        let asflags = this.filterCompileFlags(this.flags_.get('asflags') || '') ;
-        let ldflags = this.filterLDFlags(this.flags_.get('ldflags') || '')  + ' -Wl,-Map,${CMAKE_BINARY_DIR}/build.map -T ${LINKER_SCRIPT}' ;
-        
+        let debugcflags = this.filterCompileFlags(this.debugFlags_.get('cflags') || '') ;
+        let debugcxxflags = this.filterCompileFlags(this.debugFlags_.get('cxxflags') || '') ;
+        let debugasflags = this.filterCompileFlags(this.debugFlags_.get('asflags') || '') ;
+        let debugldflags = this.filterLDFlags(this.debugFlags_.get('ldflags') || '')  + ' -Wl,-Map,${CMAKE_BINARY_DIR}/build-.map -T ${LINKER_SCRIPT}' ;
+
+        let releasecflags = this.filterCompileFlags(this.releaseFlags_.get('cflags') || '') ;
+        let releasecxxflags = this.filterCompileFlags(this.releaseFlags_.get('cxxflags') || '') ;
+        let releaseasflags = this.filterCompileFlags(this.releaseFlags_.get('asflags') || '') ;
+        let releaseldflags = this.filterLDFlags(this.releaseFlags_.get('ldflags') || '')  + ' -Wl,-Map,${CMAKE_BINARY_DIR}/build-.map -T ${LINKER_SCRIPT}' ;      
 
         let contents =`
 # toolchain-gcc_cortex-m33.cmake
@@ -466,27 +543,21 @@ set(CMAKE_OBJCOPY \${GCCPATH}arm-none-eabi-objcopy)
 set(CMAKE_SIZE \${GCCPATH}arm-none-eabi-size)
 SET(CMAKE_MAKE_PROGRAM \${MTBSHELL}make.exe)
 
-# where is the target environment ?
-SET(CMAKE_FIND_ROOT_PATH "/path/to/your/arm/toolchain/install/folder")
-SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY)
-SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-# CPU and FPU settings
-set(CPU_FLAGS "${cflags}")
-set(FPU_FLAGS "-mfloat-abi=soft")
-
 # Compiler flags for C
-set(CMAKE_C_FLAGS "${cflags}")
+set(CMAKE_C_FLAGS_DEBUG_INIT "${debugcflags}")
+set(CMAKE_C_FLAGS_RELEASE_INIT "${releasecflags}")
 
 # Compiler flags for C++
-set(CMAKE_CXX_FLAGS "${cxxflags}")
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "${debugcxxflags}")
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "${releasecxxflags}")
 
 # Compiler flags for ASM
-set(CMAKE_ASM_FLAGS "${asflags}")
+set(CMAKE_ASM_FLAGS_DEBUG_INIT "${debugasflags}")
+set(CMAKE_ASM_FLAGS_RELEASE_INIT "${releaseasflags}")
 
 # specify the flags for the Cortex-M33
-set(CMAKE_EXE_LINKER_FLAGS "${ldflags}")
+set(CMAKE_EXE_LINKER_FLAGS_DEBUG_INIT "${debugldflags}")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE_INIT "${releaseldflags}")
     ` ;
 
         const p = path.join(this.env_!.appInfo!.appdir, this.toolchainFile_) ;
@@ -499,29 +570,125 @@ set(CMAKE_EXE_LINKER_FLAGS "${ldflags}")
     }
 
     private addDefines(contents: string[]) : void {
-        contents.push('# Preprocessor definitions') ;
-        contents.push('add_compile_definitions(') ;
-        for (let def of this.cCommonDefines_) {
-            contents.push(`    ${def}`) ;
+        // Find common defines between debug and release
+        const debugDefines = new Set(this.debugIncludesDefines_.cCommonDefines_);
+        const releaseDefines = new Set(this.releaseIncludesDefines_.cCommonDefines_);
+        const commonDefines: string[] = [];
+        const debugOnlyDefines: string[] = [];
+        const releaseOnlyDefines: string[] = [];
+
+        // Find common defines
+        for (const def of debugDefines) {
+            if (releaseDefines.has(def)) {
+                commonDefines.push(def);
+            } else {
+                debugOnlyDefines.push(def);
+            }
         }
-        contents.push(')') ;
-        contents.push('') ;
+
+        // Find release-only defines
+        for (const def of releaseDefines) {
+            if (!debugDefines.has(def)) {
+                releaseOnlyDefines.push(def);
+            }
+        }
+
+        // Add common defines
+        if (commonDefines.length > 0) {
+            contents.push('# Preprocessor definitions (common to both Debug and Release)') ;
+            contents.push('add_compile_definitions(') ;
+            for (let def of commonDefines) {
+                contents.push(`    ${def}`) ;
+            }
+            contents.push(')') ;
+            contents.push('') ;
+        }
+
+        // Add debug-specific defines
+        if (debugOnlyDefines.length > 0) {
+            contents.push('# Debug-specific preprocessor definitions') ;
+            contents.push('add_compile_definitions(') ;
+            for (let def of debugOnlyDefines) {
+                contents.push(`    $<$<CONFIG:Debug>:${def}>`) ;
+            }
+            contents.push(')') ;
+            contents.push('') ;
+        }
+
+        // Add release-specific defines
+        if (releaseOnlyDefines.length > 0) {
+            contents.push('# Release-specific preprocessor definitions') ;
+            contents.push('add_compile_definitions(') ;
+            for (let def of releaseOnlyDefines) {
+                contents.push(`    $<$<CONFIG:Release>:${def}>`) ;
+            }
+            contents.push(')') ;
+            contents.push('') ;
+        }
     }
 
     private addIncludes(contents: string[]) : void {
-        contents.push('# Include directories') ;
-        contents.push('include_directories(') ;
-        for (let inc of this.cCommonIncludes_) {
-            contents.push(`    ${this.normalizePathForCMake(inc)}`) ;
+        // Find common includes between debug and release
+        const debugIncludes = new Set(this.debugIncludesDefines_.cCommonIncludes_);
+        const releaseIncludes = new Set(this.releaseIncludesDefines_.cCommonIncludes_);
+        const commonIncludes: string[] = [];
+        const debugOnlyIncludes: string[] = [];
+        const releaseOnlyIncludes: string[] = [];
+
+        // Find common includes
+        for (const inc of debugIncludes) {
+            if (releaseIncludes.has(inc)) {
+                commonIncludes.push(inc);
+            } else {
+                debugOnlyIncludes.push(inc);
+            }
         }
-        contents.push(')') ;
-        contents.push('') ;
+
+        // Find release-only includes
+        for (const inc of releaseIncludes) {
+            if (!debugIncludes.has(inc)) {
+                releaseOnlyIncludes.push(inc);
+            }
+        }
+
+        // Add common includes
+        if (commonIncludes.length > 0) {
+            contents.push('# Include directories (common to both Debug and Release)') ;
+            contents.push('include_directories(') ;
+            for (let inc of commonIncludes) {
+                contents.push(`    ${this.normalizePathForCMake(inc)}`) ;
+            }
+            contents.push(')') ;
+            contents.push('') ;
+        }
+
+        // Add debug-specific includes
+        if (debugOnlyIncludes.length > 0) {
+            contents.push('# Debug-specific include directories') ;
+            contents.push('include_directories($<$<CONFIG:Debug>:') ;
+            for (let inc of debugOnlyIncludes) {
+                contents.push(`    ${this.normalizePathForCMake(inc)}`) ;
+            }
+            contents.push('>)') ;
+            contents.push('') ;
+        }
+
+        // Add release-specific includes
+        if (releaseOnlyIncludes.length > 0) {
+            contents.push('# Release-specific include directories') ;
+            contents.push('include_directories($<$<CONFIG:Release>:') ;
+            for (let inc of releaseOnlyIncludes) {
+                contents.push(`    ${this.normalizePathForCMake(inc)}`) ;
+            }
+            contents.push('>)') ;
+            contents.push('') ;
+        }
     }
 
     private addSources(contents: string[]) : void {
         contents.push('# Source files') ;
         contents.push('set(PROJECT_SOURCES') ;
-        for (let srcfile of this.sourceFiles_) {
+        for (let srcfile of this.debugIncludesDefines_.sourceFiles_) {
             contents.push(`    ${this.normalizePathForCMake(srcfile)}`) ;
         }
         contents.push(')') ;

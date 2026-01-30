@@ -2067,7 +2067,18 @@ export class MTBAssistObject {
 
     private createCMakeFile() {
         // Implementation for creating CMake build support
-        const cmakeSupport = new CMakeBuildSupport(this.env_!, this.settings_, this.logger_) ;
+        const cmakeSupport = new CMakeBuildSupport(this.env_!, this.settings_, this.logger_, true) ;
+        cmakeSupport.on('startOperation', (msg: string) => {
+            this.sendMessageWithArgs('startOperation', msg) ;
+        }) ;
+
+        cmakeSupport.on('finishOperation', () => {
+            this.sendMessageWithArgs('finishOperation', '') ;
+        }) ;
+
+        cmakeSupport.on('addStatusLine', (line: string) => {
+            this.sendMessageWithArgs('addStatusLine', line) ;
+        }) ;
         cmakeSupport.createCMakeFileForCurrentProject() ;
     }
 
