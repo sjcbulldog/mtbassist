@@ -370,7 +370,6 @@ export class MTBAssistObject {
             this.sendMessageWithArgs('mtbMode', this.mtbmode_);
             this.sendMessageWithArgs('justNeedTools', this.setupMgr_.justNeedToolsPackage);
             resolve();
-            return;
         });
         return ret;
     }
@@ -478,7 +477,8 @@ export class MTBAssistObject {
                     })
                     .catch((error: Error) => { 
                         reject(error) ; }); 
-                    }, 250) ;
+                    }, 
+                250) ;
         }) ;
         return ret ;
     }
@@ -760,6 +760,7 @@ export class MTBAssistObject {
             this.env_ = ModusToolboxEnvironment.initInstance(this.logger_, this.settings_);
             if (!this.env_) {
                 this.logger_.error('Failed to initialize ModusToolbox environment.');
+                reject(new Error('Failed to initialize ModusToolbox environment.'));
                 return;
             }
 
@@ -857,7 +858,7 @@ export class MTBAssistObject {
                         this.getLaunchData()
                             .then(() => {
                                 runtime.mark('getLaunchData') ;
-                                this.initDeviceDB() 
+                                this.initDeviceDB()
                                 .then(() => {
                                     runtime.mark('initDeviceDB') ;
                                     this.memusage_.updateMemoryInfo()
@@ -1303,6 +1304,7 @@ export class MTBAssistObject {
                     this.logger_.info(`Deleted veneer file: ${veneerFile}`) ;
                 }
             } ;
+            resolve() ;
         }) ;
     }
 
@@ -1379,6 +1381,9 @@ export class MTBAssistObject {
                         copyright: this.llvminstaller_.copyright,
                     }) ;
                     resolve() ;
+                })
+                .catch((err) => {
+                    reject(err) ;
                 }) ;
             }
             else {
@@ -1394,6 +1399,9 @@ export class MTBAssistObject {
                     this.sendMessageWithArgs('settings', this.settings_.settings);
                     vscode.window.showInformationMessage(`LLVM ${request.data.version} installed successfully.`);
                     resolve() ;
+                })
+                .catch((err) => {
+                    reject(err) ;
                 }) ;
             }
         }) ;
@@ -1409,6 +1417,9 @@ export class MTBAssistObject {
                 .catch((err) => {
                     reject(err) ;
                 }) ;
+            }
+            else {
+                resolve() ;
             }
         });
     }   
@@ -1430,6 +1441,7 @@ export class MTBAssistObject {
                 this.sendMessageWithArgs('getPassword', false);
                 p(data.data ? data.data : undefined) ;
             }
+            resolve() ;
         });
     }
 
@@ -1456,6 +1468,9 @@ export class MTBAssistObject {
                     reject(err) ;
                 }) ;
             }
+            else {
+                resolve() ;
+            }
         });
     }
 
@@ -1474,6 +1489,9 @@ export class MTBAssistObject {
                     reject(err) ;
                 }) ;
             }
+            else {
+                resolve() ;
+            }
         }) ;
     }
 
@@ -1483,6 +1501,7 @@ export class MTBAssistObject {
                 this.vscodeSettings_?.fix() ;
                 this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;                
             }
+            resolve() ;
         }) ;
     }
 
@@ -1625,9 +1644,8 @@ export class MTBAssistObject {
                     homeError: 'Your home directory is not a valid ModusToolbox install location. It contains invalid characters.  Please choose a custom path that is valid.'
                 };
                 this.sendMessageWithArgs('setChooseMTBLocationStatus', st);
-                resolve();
-                return;
             }
+            resolve();
         });
         return ret;
     }
@@ -1654,6 +1672,7 @@ export class MTBAssistObject {
             if (send) {
                 this.sendMessageWithArgs('setChooseMTBLocationStatus', st);
             }
+            resolve();
         });
         return ret;
     }
@@ -2275,6 +2294,10 @@ export class MTBAssistObject {
                         this.envLoaded_ = true;
                         this.logger_.info('ModusToolbox environment loaded with application successfully.');
                         resolve();                        
+                    })
+                    .catch((fallbackError: Error) => {
+                        this.logger_.error('Failed to load ModusToolbox environment in fallback mode:', fallbackError.message);
+                        reject(fallbackError);
                     }) ;
                 });
             }
@@ -2435,7 +2458,6 @@ export class MTBAssistObject {
 
     private async getLaunchData(): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {
-            let cwd = process.cwd();
             let cmd = this.mtbLaunchPath();
             if (!cmd) {
                 this.logger_.error('mtblaunch tool not found - cannot get launch data.');
@@ -2467,6 +2489,10 @@ export class MTBAssistObject {
                         }
                         resolve();
                     }
+                })
+                .catch((error: Error) => {
+                    this.logger_.error('Error running mtblaunch:', error.message);
+                    resolve();
                 });
         });
         return ret;

@@ -112,3 +112,6 @@ Fixed issue with manifest loading but not signaling the frontend
 
 ### 2.24.0
 Fixed issue with finding the right compiler for clangd.
+
+### 2.26.0
+Fixed issue with initialization of extension hanging when an error occurs.  Now it reports the error correctly.

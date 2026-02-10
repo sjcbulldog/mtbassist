@@ -250,6 +250,7 @@ export class IntelliSenseMgr extends MtbManagerBase {
 
             let toolchain = this.ext.getToolchainAndPath() ;
             if (!toolchain) {
+                resolve() ;
                 return ;
             }
             
