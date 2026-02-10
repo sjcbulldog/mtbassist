@@ -112,3 +112,6 @@ Fixed issue with manifest loading but not signaling the frontend
 
 ### 2.24.0
 Fixed issue with finding the right compiler for clangd.
+
+### 2.25.7
+Added support for CMake file generation

@@ -144,10 +144,12 @@ export class MTBProjectInfo {
         return this.vars_.get(MTBNames.MTB_CORE_NAME)! ;
     }
 
-    
-
     public get path() : string {
         return this.rootdir_ ;
+    }
+
+    public getVar(vname: string) : string | undefined {
+        return this.vars_.get(vname) ;
     }
 
     public libdir() : string {

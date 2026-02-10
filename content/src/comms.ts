@@ -288,6 +288,7 @@ export interface ApplicationStatusData {
   name: string;
   readme: string ;
   toolsdir: string;
+  type: string;
   vscodeTasksStatus: MTBVSCodeTaskStatus ;
   vscodeSettingsStatus: MTBVSCodeSettingsStatus ;
   needVSCode: boolean ;

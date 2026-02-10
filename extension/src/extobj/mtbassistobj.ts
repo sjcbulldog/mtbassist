@@ -2070,7 +2070,7 @@ export class MTBAssistObject {
         return new Promise<void>(async (resolve, reject) => {
 
             // Implementation for creating CMake build support
-            const cmakeSupport = new CMakeBuildSupport(this.env_!, this.settings_, this.logger_, true) ;
+            const cmakeSupport = new CMakeBuildSupport(this.env_!, this.logger_) ;
             cmakeSupport.on('startOperation', (msg: string) => {
                 this.sendMessageWithArgs('startOperation', msg) ;
             }) ;
@@ -2083,7 +2083,7 @@ export class MTBAssistObject {
                 this.sendMessageWithArgs('addStatusLine', line) ;
             }) ;
 
-            await cmakeSupport.createCMakeFileForCurrentProject() ;
+            await cmakeSupport.generateCMakeFiles() ;
 
             resolve() ;
         }) ;
@@ -2803,6 +2803,7 @@ export class MTBAssistObject {
                 documentation: pinfo?.documentation || [],
                 middleware: [],
                 projects: projects,
+                type: this.env_.appInfo?.typeStr() || 'UNKNOWN',
                 tools: tools,
                 vscodeTasksStatus: vscTaskStatus,
                 vscodeSettingsStatus: vscSettingStatus,
@@ -2823,6 +2824,7 @@ export class MTBAssistObject {
                 middleware: [],
                 projects: [],
                 tools: [],
+                type: 'UNKNOWN',
                 vscodeTasksStatus: 'good',
                 vscodeSettingsStatus: 'good',
                 needVSCode: false,

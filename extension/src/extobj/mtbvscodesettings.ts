@@ -13,6 +13,7 @@ export class MTBVSCodeSettings {
     private ext_: MTBAssistObject ;
     private status_ : MTBVSCodeSettingsStatus = 'missing' ;
     private settings_ : any = {} ;
+    private missingSettings: string[] = [] ;
 
     constructor(ext: MTBAssistObject,) {
         this.ext_ = ext ;
@@ -21,6 +22,10 @@ export class MTBVSCodeSettings {
     public get status() : MTBVSCodeSettingsStatus {
         this.processAllSettingsFile() ;
         return this.status_ ;
+    }
+
+    public details() : string {
+        return "Hello World" ;
     }
 
     public fix() : void {
@@ -104,7 +109,7 @@ export class MTBVSCodeSettings {
     }
 
     private processSettingsFile(filename: string) : MTBVSCodeSettingsStatus {
-        let ret = 'missing' as MTBVSCodeSettingsStatus ;
+        let ret = 'good' as MTBVSCodeSettingsStatus ;
         if (fs.existsSync(filename)) {
             let data = fs.readFileSync(filename, 'utf8') ;
             try {
@@ -116,7 +121,8 @@ export class MTBVSCodeSettings {
                 }
 
                 if (!this.checkSetting('modustoolbox.toolsPath', dir)) {
-                    return 'needsSettings' ;
+                    this.missingSettings.push('modustoolbox.toolsPath') ;
+                    ret = 'needsSettings' ;
                 }
 
                 dir = this.openOCDPath() ;
@@ -124,7 +130,8 @@ export class MTBVSCodeSettings {
                     return 'missing' ;
                 }
                 if (!this.checkSetting('cortex-debug.openocdPath', dir)) {
-                    return 'needsSettings' ;
+                    this.missingSettings.push('cortex-debug.openocdPath') ;
+                    ret = 'needsSettings' ;
                 }
 
                 dir = this.genGCCPath() ;
@@ -132,11 +139,9 @@ export class MTBVSCodeSettings {
                     return 'missing' ;
                 }
                 if (!this.checkSetting('cortex-debug.gccPath', dir)) {
-                    return 'needsSettings' ;
+                    this.missingSettings.push('cortex-debug.gccPath') ;
+                    ret = 'needsSettings' ;
                 }
-
-                ret = 'good' ;
-
             }
             catch (e) {
                 this.ext_.logger.error(e) ;

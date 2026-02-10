@@ -58,6 +58,17 @@ export class MTBAppInfo {
         return this.type_ ;
     }
 
+    public typeStr() : string {
+        switch(this.type_) {
+            case ApplicationType.application:
+                return 'APPLICATION' ;
+            case ApplicationType.combined:
+                return 'COMBINED' ;
+            default:
+                return 'UNKNOWN' ;
+        }   
+    }
+
     public load(logger: winston.Logger) : Promise<void> {
         let loader = new MTBAppLoader(logger, this, this.env_.toolsDir!) ;
         return loader.load() ;
