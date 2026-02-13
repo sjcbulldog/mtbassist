@@ -22,7 +22,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MTBSetting, SettingsError } from '../../comms';
+import { ManifestLoadingStatus, MTBSetting, SettingsError } from '../../comms';
 import { BackendService } from '../backend/backend-service';
 import { Subscription } from 'rxjs';
 
@@ -46,7 +46,7 @@ import { Subscription } from 'rxjs';
 export class SettingsEditor implements OnInit, OnDestroy {
   settings: MTBSetting[] = [];
   themeType: 'dark' | 'light' = 'light';
-  manifestStatus: 'loading' | 'loaded' | 'not-available' = 'loading';
+  manifestStatus: ManifestLoadingStatus = { status: 'loading' };
   settingsErrors: Map<string, string> = new Map<string, string>();
 
   private subscriptions: Subscription[] = [];

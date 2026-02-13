@@ -15,7 +15,7 @@
                  (blur)="onPathBlur(setting)"
                  [disabled]="isCustomPathDisabled()" 
                  [matTooltip]="getCustomPathDisplayValue()" />
-          @if (manifestStatus === 'loading') {
+          @if (manifestStatus.status === 'loading') {
             <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
           }               
         </mat-form-field>
@@ -33,14 +33,14 @@
         <div class="browse-row" style="flex: 1;">
           <mat-form-field class="setting-field" appearance="outline" style="flex: 1;">
             <mat-label>{{ setting.displayName }}</mat-label>
-            <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)" [disabled]="manifestStatus === 'loading' || isSettingDisabled(setting)" [matTooltip]="setting.value + ''">
+            <mat-select [(ngModel)]="setting.value" (selectionChange)="onValueChange(setting, $event.value)" [disabled]="manifestStatus.status === 'loading' || isSettingDisabled(setting)" [matTooltip]="setting.value + ''">
               @for (pair of getChoiceTipPairs(setting); track pair.choice) {
                 <mat-option [value]="pair.choice" [matTooltip]="pair.tip">
                   {{ setting.mapping ? (setting.mapping[pair.choice] || pair.choice) : pair.choice }}
                 </mat-option>
               }
             </mat-select>
-            @if (manifestStatus === 'loading') {
+            @if (manifestStatus.status === 'loading') {
               <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
             }
           </mat-form-field>
@@ -78,7 +78,7 @@
             <mat-icon>more_horiz</mat-icon>
           </button>
         </div>
-        @if (manifestStatus === 'loading') {
+        @if (manifestStatus.status === 'loading') {
           <br>
           <p class="manifest-loading-message" style="font-size: 0.8em; color: #d26619; margin: 4px 0 0 0;">Manifest files are still loading...</p>
         }

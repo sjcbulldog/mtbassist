@@ -18,7 +18,9 @@ import { PipeInterface } from './pipes/pipeInterface';
 import { ElectronPipe } from './pipes/electronPipe';
 import { VSCodePipe } from './pipes/vscodePipe';
 import { BrowserPipe } from './pipes/browserPipe';
-import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, ManifestStatusType, PhysicalMemoryUsageData, InstallLLVMProgressMsg, MTBAssistantTask, LCSBSPKeywordAliases, ProjectGitStateTrackerData } from '../../comms';
+import { BackEndToFrontEndResponse, BSPIdentifier, FrontEndToBackEndRequest, ApplicationStatusData, BackEndToFrontEndType, DevKitInfo, RecentEntry, 
+            FrontEndToBackEndType, SetupProgram, InstallProgress, MTBAssistantMode, GlossaryEntry, MTBSetting, BrowseResult, CodeExampleIdentifier, SettingsError, ThemeType, 
+            PhysicalMemoryUsageData, InstallLLVMProgressMsg, MTBAssistantTask, LCSBSPKeywordAliases, ProjectGitStateTrackerData, ManifestLoadingStatus } from '../../comms';
 import { ProjectManager } from './projectmgr';
 
 declare var acquireVsCodeApi: any | undefined ;
@@ -85,7 +87,7 @@ export class BackendService {
     llvmProgressMessages: BehaviorSubject<InstallLLVMProgressMsg | null> = new BehaviorSubject<InstallLLVMProgressMsg | null>(null) ;
 
     // Manfiest related
-    manifestStatus: BehaviorSubject<ManifestStatusType> = new BehaviorSubject<ManifestStatusType>('loading') ;
+    manifestStatus: BehaviorSubject<ManifestLoadingStatus> = new BehaviorSubject<ManifestLoadingStatus>({ status: 'loading' }) ;
     allBSPs: BehaviorSubject<BSPIdentifier[]> = new BehaviorSubject<BSPIdentifier[]>([]);
     allBSPsExceptEAP: BehaviorSubject<BSPIdentifier[]> = new BehaviorSubject<BSPIdentifier[]>([]);    
     activeBSPs: BehaviorSubject<BSPIdentifier[]> = new BehaviorSubject<BSPIdentifier[]>([]) ;
@@ -143,6 +145,7 @@ export class BackendService {
     }
 
     private log(message: string, type: string) {
+        console.log(`[${type}] ${message}`);
         if (this.pipe_) {
             this.pipe_.sendRequest({
                 request: 'logMessage',
@@ -326,15 +329,7 @@ export class BackendService {
     }
 
     private handleManifestStatus(cmd: BackEndToFrontEndResponse) {
-        if (cmd.data === true) {
-            this.manifestStatus.next('loaded');
-        } else if (cmd.data === false) {
-            this.manifestStatus.next('loading');
-        } else if (typeof cmd.data === 'string' && (cmd.data === 'loading' || cmd.data === 'loaded' || cmd.data === 'not-available')) {
-            this.manifestStatus.next(cmd.data);
-        } else {
-            this.manifestStatus.next('not-available');
-        }
+        this.manifestStatus.next(cmd.data as ManifestLoadingStatus) ;
     }
 
     private handleReadyMessage(cmd: BackEndToFrontEndResponse) {
@@ -426,6 +421,7 @@ export class BackendService {
         if (str.length > maxstr) {
             str = str.substring(0, maxstr) + '...';
         }
+        this.log(`Received message from backend: ${str}`, 'debug') ;
         const handler = this.handlers_.get(cmd.response);
         if (!handler) {
             this.error(`No handler found for command: ${cmd.response}`);

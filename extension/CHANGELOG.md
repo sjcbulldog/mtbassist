@@ -115,4 +115,8 @@ Fixed issue with finding the right compiler for clangd.
 
 ### 2.26.0
 Fixed issue with initialization of extension hanging when an error occurs.  Now it reports the error correctly.
-Added CMAKE file generation
+Added CMAKE file generation (experimental)
+
+### 2.26.1
+Updated the initialization, sequence, especially around manifests to provide better feedback when ther is an error
+Added commands to enable and disable cmake support (very experimental)

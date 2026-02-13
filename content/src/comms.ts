@@ -139,11 +139,6 @@ export type ThemeType =
     'dark' | 
     'light' ;
 
-export type ManifestStatusType = 
-    'loaded' | 
-    'loading' | 
-    'not-available';
-
 export type MTBAssistantMode = 
     'initializing' |
     'none' |
@@ -171,6 +166,13 @@ export interface InstallLLVMProgressMsg {
 export interface InstallLLVMData {
   enabled: boolean ;
   versions: string[] ;
+}
+
+export type ManifestLoadingStatusType = 'loaded' | 'loading' | 'error' ;
+
+export interface ManifestLoadingStatus {
+  status: ManifestLoadingStatusType ;
+  message?: string ;
 }
 
 export interface MTBLocationStatus {
@@ -301,6 +303,8 @@ export interface ApplicationStatusData {
   generalMessageButtonText? : string ;
   generalMessageRequest? : FrontEndToBackEndType ;
   generalMessageHelp? : string ;
+  family: string ;
+  cmakeEnabled: boolean ;
 }
 
 export interface DevKitInfo {

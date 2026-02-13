@@ -2,7 +2,7 @@
   "name": "mtbassist",
   "displayName": "ModusToolbox Assistant",
   "description": "An Assistant for ModusToolbox",
-  "version": "2.26.0",
+  "version": "2.26.1",
   "publisher": "c-and-t-software",
   "license": "license.txt",
   "icon": "media/exticon.png",
@@ -67,6 +67,14 @@
       {
         "command": "mtbassist2.createCMakeFile",
         "title": "ModusToolbox Assistant: Create CMake Build Support"
+      },
+      {
+        "command": "mtbassist2.enableCMakeSupport",
+        "title": "ModusToolbox Assistant: Enable Experimental CMake Support"
+      },
+      {
+        "command": "mtbassist2.disableCMakeSupport",
+        "title": "ModusToolbox Assistant: Disable Experimental CMake Support"
       }
     ],
     "keybindings": [

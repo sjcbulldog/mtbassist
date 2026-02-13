@@ -24,7 +24,7 @@ import { MTBLoadFlags } from '../mtbenv/mtbenv/loadflags';
 import { MTBDevKitMgr } from '../devkits/mtbdevkitmgr';
 import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
-    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, LCSBSPKeywordAliases, ManifestStatusType, Middleware, MTBAssistantMode, 
+    FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, LCSBSPKeywordAliases, ManifestLoadingStatus, Middleware, MTBAssistantMode, 
     MTBAssistantTask, 
     MTBLocationStatus, MTBSetting, MTBVSCodeSettingsStatus, MTBVSCodeTaskStatus, Project, ProjectGitStateTrackerData, SettingsError, ThemeType, Tool
 } from '../comms';
@@ -111,12 +111,13 @@ export class MTBAssistObject {
     private ready_ : boolean = false ;
     private theme_ : ThemeType = 'light';
     private intellisenseProject_ : string | undefined ;
-    private manifestStatus_ : ManifestStatusType = 'loading';
+    private manifestStatus_ : ManifestLoadingStatus = { status: 'loading' } ;
     private pendingPasswordPromise: ((pass: string | undefined) => void) | undefined = undefined ;
     private pendingStatusClosePromise: (() => void) | undefined = undefined ;
     private pendingYesNoPromise: ((response: string) => void) | undefined = undefined ;
     private activeTask_ : STask | undefined = undefined ;
     private password? : string ;
+    private cmakeEnabled_ : boolean = false ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -764,19 +765,18 @@ export class MTBAssistObject {
                 return;
             }
 
-            // Listen for manifest loading events from the environment
-            this.env_.on('loaded', (flags: MTBLoadFlags) => {
-                if (flags & MTBLoadFlags.manifestData) {
-                    this.logger_.debug('Manifests loaded event received from environment');
-                    this.sendManifestStatus();
-                }
-            });
-
             // Listen for manifest loading events from the manifest database
             this.env_.manifestDB.on('loaded', () => {
                 this.logger_.debug('Manifests loaded event received from manifest database');
+                this.manifestStatus_ = { status: 'loaded' };
                 this.sendManifestStatus();
             });
+
+            this.env_.manifestDB.on('error', (error: Error) => {
+                this.logger_.error('Error loading manifests:', error.message);
+                this.manifestStatus_ = { status: 'error', message: error.message };
+                this.sendManifestStatus();
+            }) ;
 
             runtime.mark('ModusToolboxEnvironment.getInstance')  ;
 
@@ -1548,7 +1548,7 @@ export class MTBAssistObject {
 
     private getLcsData(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            if (this.manifestStatus_ === 'loaded') {
+            if (this.manifestStatus_.status === 'loaded') {
                 this.sendLCSData() ;
                 this.sendLCSGuide() ;
                 this.sendLCSKeywordAliases() ;
@@ -1560,6 +1560,7 @@ export class MTBAssistObject {
     private sendAppStatus(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
+            resolve() ;
         });
     }
 
@@ -1593,6 +1594,7 @@ export class MTBAssistObject {
     private getCProjData(request: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.sendBSPInformation() ;
+            resolve() ;
         });
     }
 
@@ -2081,8 +2083,28 @@ export class MTBAssistObject {
             disposable = vscode.commands.registerCommand('mtbassist2.createCMakeFile', this.createCMakeFile.bind(this));
             this.context_.subscriptions.push(disposable);
 
+            disposable = vscode.commands.registerCommand('mtbassist2.enableCMakeSupport', this.enableCMakeSupport.bind(this));
+            this.context_.subscriptions.push(disposable);
+
+            disposable = vscode.commands.registerCommand('mtbassist2.disableCMakeSupport', this.disableCMakeSupport.bind(this));
+            this.context_.subscriptions.push(disposable);
+
             this.commandsInited_ = true;
         }
+    }
+
+    private enableCMakeSupport() {
+        this.cmakeEnabled_ = true ;
+        this.logger_.info('Experimental CMake support enabled') ;
+        vscode.window.showInformationMessage('ModusToolbox Assistant: Experimental CMake support enabled') ;
+        this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
+    }
+
+    private disableCMakeSupport() {
+        this.cmakeEnabled_ = false ;
+        this.logger_.info('Experimental CMake support disabled') ;
+        vscode.window.showInformationMessage('ModusToolbox Assistant: Experimental CMake support disabled') ;
+        this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
     }
 
     private createCMakeFile() : Promise<void> {
@@ -2717,19 +2739,8 @@ export class MTBAssistObject {
         return ret;
     }
 
-    private computeManifestStatus() {
-        this.manifestStatus_ = 'loading' ;
-        if (this.env_ && this.env_.manifestDB && this.env_.manifestDB.errorLoading) {
-            this.manifestStatus_ = 'not-available';
-        } else if (this.env_ && !this.env_.isLoading && this.env_.has(MTBLoadFlags.manifestData)) {
-            this.manifestStatus_ = 'loaded';
-        }
-
-    }
-
     private sendManifestStatus() {
-        this.computeManifestStatus();
-        this.sendMessageWithArgs('manifestStatus', this.manifestStatus_);        
+        this.sendMessageWithArgs('manifestStatus', this.manifestStatus_);
     }
 
     private updateFirmware(request: FrontEndToBackEndRequest): Promise<void> {
@@ -2839,7 +2850,9 @@ export class MTBAssistObject {
                 generalMessageRequest: msgRequest,
                 generalMessageHelp: msgHelp,
                 configuration: this.settings_.configuration,
-                readme: readme
+                readme: readme,
+                family: this.getFamily(),
+                cmakeEnabled: this.cmakeEnabled_
             };
         } else {
             appst = {
@@ -2855,10 +2868,23 @@ export class MTBAssistObject {
                 vscodeSettingsStatus: 'good',
                 needVSCode: false,
                 configuration: 'Debug',
-                readme: ''
-            };
+                readme: '',
+                family:'',
+                cmakeEnabled: this.cmakeEnabled_
+            } ;
         }
         return appst;
+    }
+
+    private getFamily() : string {
+        if (this.isPSOCEdge()) {
+            return 'edge' ;
+        }
+        else if (this.isPSOCControl()) {
+            return 'control' ;
+        }
+
+        return '' ;
     }
 
     private showRedisplayHint() {
@@ -3267,5 +3293,14 @@ export class MTBAssistObject {
 
         // TODO: need a better way to do this
         return this.env_.appInfo.projects[0].device.startsWith('PSE') ;
+    }
+
+    private isPSOCControl() {
+        if (!this.env_ || !this.env_.appInfo || this.env_.appInfo.projects.length === 0) {
+            return false ;
+        }
+
+        // TODO: need a better way to do this
+        return this.env_.appInfo.projects[0].device.startsWith('PSC3') ;
     }
 }

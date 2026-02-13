@@ -27,7 +27,7 @@ import { EventEmitter } from 'stream';
 export class MTBManifestDB extends EventEmitter {
     public isLoaded: boolean;
     public isLoading: boolean;
-    public hadError: boolean;
+    public hadError: string | undefined ;
 
     private apps_: Map<string, MTBApp>;
     private boards_: Map<string, MTBBoard>;
@@ -49,11 +49,15 @@ export class MTBManifestDB extends EventEmitter {
 
         this.isLoaded = false;
         this.isLoading = true;
-        this.hadError = false;
+        this.hadError = undefined;
     }
 
-    public get errorLoading() : boolean {
-        return this.hadError ;
+    public get hadErrorLoading() : boolean {
+        return this.hadError !== undefined ;
+    }
+
+    public get errorLoadingMessage() : string {
+        return this.hadError ? this.hadError : "" ;
     }
 
     public get eapPath() : string | undefined {
@@ -218,8 +222,9 @@ export class MTBManifestDB extends EventEmitter {
                     resolve() ;
                 })
                 .catch(err => {
+                    let errobj: Error = err as Error ;
                     this.isLoading = false;
-                    this.hadError = true;
+                    this.hadError = errobj.message;
 
                     let errmsg: Error = err as Error ;
                     logger.error("error loading manifest database - " + errmsg.message) ;

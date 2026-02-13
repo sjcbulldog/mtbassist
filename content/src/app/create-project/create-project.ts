@@ -27,7 +27,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BackendService } from '../backend/backend-service';
-import { BSPIdentifier, CodeExampleIdentifier, DevKitInfo, ProjectGitStateTrackerData, ThemeType } from '../../comms';
+import { BSPIdentifier, CodeExampleIdentifier, DevKitInfo, ManifestLoadingStatus, ProjectGitStateTrackerData, ThemeType } from '../../comms';
 import { MatDivider } from "@angular/material/divider";
 import { Subscription } from 'rxjs';
 
@@ -83,7 +83,7 @@ export class CreateProject implements OnInit, OnDestroy {
     // Dev kit integration
     devKits: DevKitInfo[] = [];
     selectedDevKit: DevKitInfo | null = null;
-    manifestStatus: 'loading' | 'loaded' | 'not-available' = 'loading';
+    manifestStatus: ManifestLoadingStatus = { status: 'loading' };
 
     gitState: ProjectGitStateTrackerData = [] ;
 
@@ -104,7 +104,7 @@ export class CreateProject implements OnInit, OnDestroy {
             this.manifestStatus = status ;
             
             // Enable/disable form controls based on manifest status
-            if (status === 'loaded') {
+            if (status.status === 'loaded') {
                 this.projectInfoForm.get('projectName')?.enable();
                 this.projectInfoForm.get('projectLocation')?.enable();
                 // Ask for the BSPs and kits again as the manifest is loaded and we have

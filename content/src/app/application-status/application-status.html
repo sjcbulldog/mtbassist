@@ -226,10 +226,12 @@
                         </mat-menu>
                       </div>
                     <div class="config-buttons">
+                      @if ((applicationStatus.family === 'edge' || applicationStatus.family === 'control') && applicationStatus.cmakeEnabled) {
                       <button mat-raised-button class="action-btn" (click)="createCMakeFiles()" [disabled]="running">
                         <mat-icon>code</mat-icon>
                         CMake
                       </button>
+                      }
                       <button mat-raised-button class="action-btn" (click)="openDeviceConfigurator()" [disabled]="running">
                         <mat-icon>settings_input_component</mat-icon>
                         Configure Device

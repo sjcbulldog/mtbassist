@@ -26,6 +26,7 @@ import { URI } from 'vscode-uri';
 import * as winston from 'winston';
 import fetch, { Response } from 'node-fetch';
 import { PackManifest } from '../packdb/packdb';
+import { count } from 'console';
 
 enum ManifestFileType {
     superManifest,
@@ -587,6 +588,7 @@ export class MtbManifestLoader {
         }
     }
 
+    private cnt: number = 0 ;
     private parseContentManifest(pfm: PackManifest, data: string): Promise<void> {
         var parseString = require('xml2js').parseString;
 
