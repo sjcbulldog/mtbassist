@@ -18,8 +18,45 @@ html {
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
-// Global dark theme overrides for Material tabs in application-status component
-.dark-theme {
+// Global CSS custom properties used across components
+:root {
+  // Dark Theme Colors
+  --dark-bg-primary: #121212;
+  --dark-bg-secondary: #1e1e1e;
+  --dark-bg-elevated: #2d2d2d;
+  --dark-text-primary: #ffffff;
+  --dark-text-secondary: rgba(255, 255, 255, 0.7);
+  --dark-text-disabled: rgba(255, 255, 255, 0.5);
+  --dark-border: rgba(255, 255, 255, 0.12);
+  --dark-border-focused: #ffffff;
+  --dark-accent: #1976d2;
+
+  // Light Theme Colors
+  --light-bg-primary: #ffffff;
+  --light-bg-secondary: #f5f5f5;
+  --light-bg-elevated: #fafafa;
+  --light-text-primary: #212121;
+  --light-text-secondary: #666666;
+  --light-text-disabled: #9e9e9e;
+  --light-border: rgba(0, 0, 0, 0.12);
+  --light-border-focused: #1976d2;
+  --light-accent: #1976d2;
+}
+
+// Shared keyframe animations used across multiple components
+@keyframes spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+// Shared mixin: dark theme overrides for Material status tabs
+// Used in application-status component
+@mixin dark-status-tabs($active-color: #4fc3f7) {
   .status-tabs {
     .mat-mdc-tab-header {
       background-color: #000000 !important;
@@ -28,190 +65,55 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     .mat-mdc-tab {
       color: #ffffff !important;
 
-      .mdc-tab__text-label {
-        color: #ffffff !important;
-      }
-      
-      .mat-mdc-tab-label {
-        color: #ffffff !important;
-        
-        span {
-          color: #ffffff !important;
-        }
-        
-        mat-icon {
-          color: #ffffff !important;
-        }
-      }
-      
+      .mdc-tab__text-label,
+      .mat-mdc-tab-label,
+      .mat-tab-label-content,
+      .mat-tab-label,
       mat-icon {
         color: #ffffff !important;
       }
 
-      // Additional specific targeting for tab label text
-      .mat-tab-label-content {
-        color: #ffffff !important;
-      }
-
-      .mat-tab-label {
-        color: #ffffff !important;
-      }
-
-      // Target any text nodes directly
-      span, .mdc-tab__text-label span {
+      .mat-mdc-tab-label span,
+      span,
+      .mdc-tab__text-label span {
         color: #ffffff !important;
       }
     }
 
     .mat-mdc-tab.mdc-tab--active {
-      color: #4fc3f7 !important;
+      color: $active-color !important;
 
-      .mdc-tab__text-label {
-        color: #4fc3f7 !important;
-      }
-      
-      .mat-mdc-tab-label {
-        color: #4fc3f7 !important;
-        
-        span {
-          color: #4fc3f7 !important;
-        }
-        
-        mat-icon {
-          color: #4fc3f7 !important;
-        }
-      }
-      
+      .mdc-tab__text-label,
+      .mat-mdc-tab-label,
+      .mat-tab-label-content,
+      .mat-tab-label,
       mat-icon {
-        color: #4fc3f7 !important;
+        color: $active-color !important;
       }
 
-      // Additional specific targeting for active tab label text
-      .mat-tab-label-content {
-        color: #4fc3f7 !important;
-      }
-
-      .mat-tab-label {
-        color: #4fc3f7 !important;
-      }
-
-      // Target any text nodes directly
-      span, .mdc-tab__text-label span {
-        color: #4fc3f7 !important;
+      .mat-mdc-tab-label span,
+      span,
+      .mdc-tab__text-label span {
+        color: $active-color !important;
       }
     }
 
     .mdc-tab-indicator__content--underline {
-      background-color: #4fc3f7 !important;
+      background-color: $active-color !important;
     }
 
-    // Force all tab label text to be white (inactive) or blue (active)
-    .mat-mdc-tab:not(.mdc-tab--active) * {
-      color: #ffffff !important;
-    }
-
-    .mat-mdc-tab.mdc-tab--active * {
-      color: #4fc3f7 !important;
-    }
+    .mat-mdc-tab:not(.mdc-tab--active) * { color: #ffffff !important; }
+    .mat-mdc-tab.mdc-tab--active * { color: $active-color !important; }
   }
+}
+
+// Global dark theme overrides for Material tabs in application-status component.dark-theme {
+  @include dark-status-tabs();
 }
 
 // Media query fallback for system dark theme preference
 @media (prefers-color-scheme: dark) {
   body:not(.light-theme) {
-    .status-tabs {
-      .mat-mdc-tab-header {
-        background-color: #000000 !important;
-      }
-
-      .mat-mdc-tab {
-        color: #ffffff !important;
-
-        .mdc-tab__text-label {
-          color: #ffffff !important;
-        }
-        
-        .mat-mdc-tab-label {
-          color: #ffffff !important;
-          
-          span {
-            color: #ffffff !important;
-          }
-          
-          mat-icon {
-            color: #ffffff !important;
-          }
-        }
-        
-        mat-icon {
-          color: #ffffff !important;
-        }
-
-        // Additional specific targeting for tab label text
-        .mat-tab-label-content {
-          color: #ffffff !important;
-        }
-
-        .mat-tab-label {
-          color: #ffffff !important;
-        }
-
-        // Target any text nodes directly
-        span, .mdc-tab__text-label span {
-          color: #ffffff !important;
-        }
-      }
-
-      .mat-mdc-tab.mdc-tab--active {
-        color: #4fc3f7 !important;
-
-        .mdc-tab__text-label {
-          color: #4fc3f7 !important;
-        }
-        
-        .mat-mdc-tab-label {
-          color: #4fc3f7 !important;
-          
-          span {
-            color: #4fc3f7 !important;
-          }
-          
-          mat-icon {
-            color: #4fc3f7 !important;
-          }
-        }
-        
-        mat-icon {
-          color: #4fc3f7 !important;
-        }
-
-        // Additional specific targeting for active tab label text
-        .mat-tab-label-content {
-          color: #4fc3f7 !important;
-        }
-
-        .mat-tab-label {
-          color: #4fc3f7 !important;
-        }
-
-        // Target any text nodes directly
-        span, .mdc-tab__text-label span {
-          color: #4fc3f7 !important;
-        }
-      }
-
-      .mdc-tab-indicator__content--underline {
-        background-color: #4fc3f7 !important;
-      }
-
-      // Force all tab label text to be white (inactive) or blue (active)
-      .mat-mdc-tab:not(.mdc-tab--active) * {
-        color: #ffffff !important;
-      }
-
-      .mat-mdc-tab.mdc-tab--active * {
-        color: #4fc3f7 !important;
-      }
-    }
+    @include dark-status-tabs();
   }
 }

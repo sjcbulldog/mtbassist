@@ -48,16 +48,7 @@
   }
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateY(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
+
 
 .dialog-header {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);

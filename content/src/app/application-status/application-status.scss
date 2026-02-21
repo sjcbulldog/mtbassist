@@ -154,28 +154,6 @@
   --critical-color: #d32f2f;
 }
 
-// Light theme
-.application-status.light-theme {
-  --card-background: #ffffff;
-  --secondary-background: #f8f9fa;
-  --text-color: #212529;
-  --text-secondary: #6c757d;
-  --primary-color: #007bff;
-  --primary-hover: #0056b3;
-  --secondary-color: #f8f9fa;
-  --border-color: #dee2e6;
-  --hover-background: #e9ecef;
-  --progress-background: #e9ecef;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
-  --success-color: #28a745;
-  --warning-color: #ffc107;
-  --warning-color-hover: #e0a800;
-  --warning-color-rgb: 255, 193, 7;
-  --danger-color: #dc3545;
-  --critical-color: #8b0000;
-}
-
 // Auto dark theme detection
 @media (prefers-color-scheme: dark) {
   :host:not(.light-theme) {
@@ -1348,14 +1326,7 @@
   }
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
 
-// This is now handled by the .application-status.light-theme selector above
-
-// This is now handled by the .application-status.dark-theme selector above
 
 .project-overview {
   background: var(--card-background, #fff);
