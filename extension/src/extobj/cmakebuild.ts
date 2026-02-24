@@ -5,6 +5,7 @@ import { ModusToolboxEnvironment } from "../mtbenv";
 import { MTBUtils } from "../mtbenv/misc/mtbutils";
 import EventEmitter = require('events');
 import { MTBProjectInfo } from "../mtbenv/appdata/mtbprojinfo";
+import { c } from 'tar';
 
 interface CompileCommand {
     command: string;
@@ -1108,28 +1109,32 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE_INIT "${releaseldflags}")
         contents.push('') ;
 
         contents.push('# Specify the core type flags') ;
-        let ctype = project.getVar('MTB_CORE_TYPE') ;
-        switch(ctype) {
+        let cputype: string = '' ;
+        switch(project.getVar('MTB_CORE_TYPE')) {
             case 'CM33':
-                contents.push('add_compile_options(-mcpu=cortex-m33)') ;
+                cputype = 'cortex-m33' ;
                 break ;
             case 'CM55':
-                contents.push('add_compile_options(-mcpu=cortex-m55)') ;
+                cputype = 'cortex-m55' ;
                 break ;
             case 'CM4':
-                contents.push('add_compile_options(-mcpu=cortex-m4)') ;
+                cputype = 'cortex-m4' ;
                 break ;
             case 'CM0':
-                contents.push('add_compile_options(-mcpu=cortex-m0)') ;
+                cputype = 'cortex-m0' ;
                 break ;
             case 'CM0P':
-                contents.push('add_compile_options(-mcpu=cortex-m0plus)') ;
+                cputype = 'cortex-m0plus' ;
                 break ;
             default:
-                this.logger_.warn(`Unknown core type ${ctype} - cannot set appropriate compiler flags`) ;
-                throw new Error(`Unknown core type ${ctype} - cannot set appropriate compiler flags`) ;
+                this.logger_.warn(`Unknown core type ${project.getVar('MTB_CORE_TYPE')} - cannot set appropriate compiler flags`) ;
+                throw new Error(`Unknown core type ${project.getVar('MTB_CORE_TYPE')} - cannot set appropriate compiler flags`) ;
                 break ;
         }
+
+        contents.push(`add_compile_options(\${PROJECT_NAME}.elf PRIVATE -mcpu=${cputype})`) ;
+
+
 
         contents.push('') ;
         contents.push('# Set the default build type to Release if not specified') ;
