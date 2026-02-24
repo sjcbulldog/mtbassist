@@ -38,15 +38,14 @@ class CMakeIncludesAndDefines {
 class CMakeOneConfig {
     public flags_ : Map<string, string> = new Map();
     public includesDefines_: CMakeIncludesAndDefines = new CMakeIncludesAndDefines() ;
-    public linkerScript_ : string = 'linker_s_flash.ld' ;
-    public cpuFlags_ : string = '-mcpu=cortex-m33' ;
+    public linkerScript_ : string = '' ;
     public veneerLibs_ : string | undefined = undefined ;
     public veneerLibsTmp_ : string | undefined = undefined ;
 }
 
 export class CMakeBuildSupport extends EventEmitter {
     private static mtbSearchUUID : string = 'd187327b-ca9f-40da-bbbc-bdded611d19e' ;
-    private static secureTargetComponentName = 'SECURE_DEVICE' ;
+    private static mtbEdgeProtectToolsUUID : string = '2f2f8f00-a420-4d2f-b5b3-dea0e13163ba' ;
 
     private env_ : ModusToolboxEnvironment ;
     private logger_ : winston.Logger;
@@ -55,6 +54,8 @@ export class CMakeBuildSupport extends EventEmitter {
     private toolchainFile_ : string ;
     private debugConfig_ : CMakeOneConfig = new CMakeOneConfig() ;
     private releaseConfig_ : CMakeOneConfig = new CMakeOneConfig() ;
+    private secure_project_ : string = 'proj_cm33_s' ;
+    private nonsecure_project_ : string = 'proj_cm33_ns' ;
 
     public constructor(env: ModusToolboxEnvironment, logger: winston.Logger) {
         super() ;
@@ -116,6 +117,98 @@ export class CMakeBuildSupport extends EventEmitter {
         return ret;
     }
 
+    private filterContentsForSigning(src: string, dest: string) : void {
+        let contents = fs.readFileSync(src, 'utf-8') ;
+        let json = JSON.parse(contents) ;
+        this.replaceFileNamesWithSymbols(json) ;
+        fs.writeFileSync(dest, JSON.stringify(json, null, 4)) ;
+    }
+
+    private filePathToSymbol(filePath: string) : string {
+        let basename = path.basename(filePath) ;
+        if (basename.startsWith('proj_')) {
+            basename = basename.substring(5) ;
+        }
+        let symbolic = basename.replace(/\./g, '_').toUpperCase() ;
+        return `{{${symbolic}}}` ;
+    }
+
+    private replaceFileNamesWithSymbols(obj: any) : void {
+        if (Array.isArray(obj)) {
+            for (let item of obj) {
+                this.replaceFileNamesWithSymbols(item) ;
+            }
+        } else if (obj !== null && typeof obj === 'object') {
+            for (let key of Object.keys(obj)) {
+                if (key === 'file' && typeof obj[key] === 'string') {
+                    obj[key] = this.filePathToSymbol(obj[key]) ;
+                } else {
+                    this.replaceFileNamesWithSymbols(obj[key]) ;
+                }
+            }
+        }
+    }
+
+    private writeFilePaths(contents: string[]) : boolean {
+
+        let name = this.bspName ;
+        if (!name) {
+            this.logger_.warn(`CMakeBuildSupport: cannot determine BSP name from application info - skipping post-build signing step`) ;
+            return false ;
+        }        
+
+        contents.push('set(BSPPATH ${CMAKE_SOURCE_DIR}/bsps/TARGET_' + name + ')') ;
+        contents.push('set(CM33_S_HEX ${CMAKE_BINARY_DIR}/proj_cm33_s.hex)') ;
+        contents.push('set(CM33_S_SIGNED_HEX ${CMAKE_BINARY_DIR}/proj_cm33_s_signed.hex)') ;
+        contents.push('set(CM33_NS_HEX ${CMAKE_BINARY_DIR}/proj_cm33_ns.hex)') ;
+        contents.push('set(CM33_NS_SHIFTED_HEX ${CMAKE_BINARY_DIR}/proj_cm33_ns_shifted.hex)') ;
+        contents.push('set(CM55_HEX ${CMAKE_BINARY_DIR}/proj_cm55.hex)') ;
+        contents.push('set(APP_COMBINED_HEX ${CMAKE_BINARY_DIR}/proj_app_combined.hex)') ;
+
+        return true ;
+    }
+
+    private addPostBuildSigningStep(contents: string[]) : void {
+
+        // TODO: hard coded for PSOC Explorer - need to determine a more flexible way to specify this kind of thing in the future
+        let srcfile = path.join(this.env_.appInfo!.appdir, "configs", "boot_with_extended_boot.json") ;
+        if (!fs.existsSync(srcfile)) {
+            this.logger_.warn(`CMakeBuildSupport: expected file for post-build signing step not found: ${srcfile} - skipping post-build signing step`) ;
+            return ;
+        }
+
+        let destfile = path.join(this.env_.appInfo!.appdir, "configs", "boot_with_extended_boot_symbolic.json") ;
+        this.filterContentsForSigning(srcfile, destfile) ;
+
+        contents.push('find_program(EPT edgeprotecttools.exe)') ;
+        contents.push('if ("${EPT}" STREQUAL "EPT-NOTFOUND")') ;
+        contents.push('    message(FATAL_ERROR, "Could not find program edgeprotecttools")') ;
+        contents.push('endif()') ;
+        contents.push('message(STATUS "Found edgeprotecttools: ${EPT}")') ;
+      
+        if (!this.writeFilePaths(contents)) {
+            return ;
+        }
+
+        contents.push('') ;
+        contents.push('# Post-build commands to generate additional output files') ;
+        contents.push('add_custom_command(') ;
+        contents.push('    OUTPUT ${APP_COMBINED_HEX}') ;
+        contents.push('    COMMAND ${EPT} run-config -i ${CMAKE_SOURCE_DIR}/configs/boot_with_extended_boot_symbolic.json --symbol-search ${BSPPATH} --set CM33_S_HEX ${CM33_S_HEX} --set CM33_S_SIGNED_HEX ${CM33_S_SIGNED_HEX} ') ;
+        contents.push('                --set CM33_NS_HEX ${CM33_NS_HEX} --set CM33_NS_SHIFTED_HEX ${CM33_NS_SHIFTED_HEX} --set CM55_HEX ${CM55_HEX} --set APP_COMBINED_HEX ${APP_COMBINED_HEX}') ;
+        contents.push('    COMMENT "Combining and signing to create single output file"') ;
+        contents.push('    VERBATIM') ;
+        contents.push(')') ;
+
+        contents.push('') ;
+        contents.push('add_custom_target(') ;
+        contents.push('    SignCombine') ;
+        contents.push('    DEPENDS ${APP_COMBINED_HEX}') ;
+        contents.push(')') ;
+
+        contents.push('add_dependencies(SignCombine proj_cm33_ns.elf proj_cm33_s.elf proj_cm55.elf)') ;
+    }
+
     private writeTopLevelCMakeListsFile() : void {
         const appInfo = this.env_.appInfo! ;
         let contents: string[] = [] ;
@@ -129,11 +222,16 @@ export class CMakeBuildSupport extends EventEmitter {
             contents.push(`add_subdirectory(${project.name})`) ;
         }
 
+        // TODO: Hardcoded for PSOC Explorer - need to determine a more flexible way to specify this kind of thing in the future
         contents.push('') ;
         contents.push('# Hardcoded for now - in the future we can add options to control this') ;
         contents.push('add_dependencies(proj_cm33_ns.elf proj_cm33_s.elf)') ;
+
+        this.addPostBuildSigningStep(contents) ;
+
         let p = path.join(appInfo.appdir, 'CMakeLists.txt') ;
         fs.writeFileSync(p, contents.join('\n')) ;
+
     }
 
     private doOneConfig(project: MTBProjectInfo, configName: string, config: CMakeOneConfig) : Promise<void> {
@@ -481,21 +579,6 @@ export class CMakeBuildSupport extends EventEmitter {
         }
     }
 
-    private extractCPUFromCFlags(config: CMakeOneConfig, cflags: string | undefined) : boolean {
-        if (!cflags) {
-            return false ;
-        }
-
-        const parts = cflags.split(' ') ;
-        for(let part of parts) {
-            if (part.startsWith('-mcpu=')) {
-                config.cpuFlags_ = part ;
-                return true ;
-            }
-        }
-        return false ;        
-    }
-
     private extractFromLdFlags(config: CMakeOneConfig, ldflags: string | undefined) : string[] {
         let re = /-Wl,([A-Za-z0-9_\-\.\/\\:]+)/ ;                
         let ret : string[] = [] ;
@@ -507,42 +590,10 @@ export class CMakeBuildSupport extends EventEmitter {
         let i = 0 ;
         while (i < parts.length) {
             let part = parts[i++] ;
-            if (part === '-Wl,--in-implib') {
-                if (i < parts.length) {
-                    let m = re.exec(parts[i++]) ;
-                    if (m && m.length > 1) {
-                        config.veneerLibs_ = m[1] ;
-                    }
-                }
-            }
-            else if (part === '-Wl,--out-implib') {
-                if (i < parts.length) {
-                    let m = re.exec(parts[i++]) ;
-                    if (m && m.length > 1) {
-                        config.veneerLibsTmp_ = m[1] ;
-                    }
-                }
-            }
-            else if (part === '-T') {
-                config.linkerScript_ = parts[i++] ;
-            }
-            else if (part.startsWith('-T')) {
-                config.linkerScript_ = part.substring(2) ;
-            }
-            else if (part.startsWith('-Wl,-T')) {
-                config.linkerScript_ = part.substring('-Wl,-T'.length) ;
-            }
-            else if (part.startsWith('-Wl,--script=')) {
-                config.linkerScript_ = part.substring('-Wl,--script='.length) ;
-            }            
-            else if (part.startsWith('-mcpu=') || part.startsWith('-T') || part.startsWith('-Wl,-Map') || part.startsWith('-Wl,--start-group') || 
-                     part.startsWith('--specs') || part.startsWith('-Wl,--end-group') || part.startsWith('-o') || part === '@elffile' || part === '@objs') {
-                // Skip these entries from the ldflags as they are not relevant for the CMakeLists.txt and may cause issues if included
+            if (part === '-o' || part === '@elffile' || part === '@objs' || part.startsWith('-Wl,--start-group') || part.startsWith('-Wl,--end-group') || part.startsWith('-Wl,-Map')) {
                 continue ;
-            }            
-            else {
-                ret.push(part) ;
             }
+            ret.push(part) ;
         }
 
         return ret ;
@@ -615,17 +666,6 @@ export class CMakeBuildSupport extends EventEmitter {
             }
         }
 
-        let ldflags = this.extractFromLdFlags(config, config.flags_.get('ldflags')) ;
-        config.flags_.set('ldflags', ldflags.join(' ')) ;
-
-        if (!this.extractCPUFromCFlags(config, config.flags_.get('cflags'))) {
-            this.logger_.warn('Failed to extract CPU flags from cflags - using default CPU flags') ;
-            return false ;
-        }
-
-        if (config.linkerScript_.startsWith('"') && config.linkerScript_.endsWith('"')) {
-            config.linkerScript_ = config.linkerScript_.substring(1, config.linkerScript_.length - 1);
-        }
         return true ;
     }
 
@@ -743,7 +783,6 @@ export class CMakeBuildSupport extends EventEmitter {
     }
 
     private filterCompileFlags(originalFlags: string) : string {
-        // Example: remove any optimization flags
         const parts = originalFlags.split(' ');
         const filteredParts : string[] = [] ;
         let skipNext = false ;
@@ -756,7 +795,7 @@ export class CMakeBuildSupport extends EventEmitter {
                 skipNext = true ;
                 continue ;
             }
-            else if (!part.startsWith('-mcpu=') && !part.startsWith('-c') && part !== '-MMD' && part !== '-MP') {
+            else if (part !== '-MMD' && part !== '-MP' && part !== '-c') {
                 filteredParts.push(part);
             }
         }
@@ -768,38 +807,22 @@ export class CMakeBuildSupport extends EventEmitter {
         return cflags.split(' ').filter(f => f.length > 0) ;
     }
 
-    private addCFlags(project: MTBProjectInfo, contents: string[]) : void {
-        const debugFlags = new Set(this.getCFlags(this.debugConfig_)) ;
-        const releaseFlags = new Set(this.getCFlags(this.releaseConfig_)) ;
+    private getCppFlags(config: CMakeOneConfig) : string[] {
+        const cxxflags = this.filterCompileFlags(config.flags_.get('cxxflags') || '') ;
+        return cxxflags.split(' ').filter(f => f.length > 0) ;
+    }
+
+    private getAsmFlags(config: CMakeOneConfig) : string[] {
+        const asflags = this.filterCompileFlags(config.flags_.get('asflags') || '') ;
+        return asflags.split(' ').filter(f => f.length > 0) ;
+    }
+
+    private addLanguageFlags(language: string, debugFlagsList: string[], releaseFlagsList: string[], contents: string[]) : void {
+        const debugFlags = new Set(debugFlagsList) ;
+        const releaseFlags = new Set(releaseFlagsList) ;
         const commonFlags: string[] = [] ;
         const debugOnlyFlags: string[] = [] ;
         const releaseOnlyFlags: string[] = [] ;
-
-        contents.push('# Specify the core type flags') ;
-        let cputype: string = '' ;
-        switch(project.getVar('MTB_CORE_TYPE')) {
-            case 'CM33':
-                cputype = 'cortex-m33' ;
-                break ;
-            case 'CM55':
-                cputype = 'cortex-m55' ;
-                break ;
-            case 'CM4':
-                cputype = 'cortex-m4' ;
-                break ;
-            case 'CM0':
-                cputype = 'cortex-m0' ;
-                break ;
-            case 'CM0P':
-                cputype = 'cortex-m0plus' ;
-                break ;
-            default:
-                this.logger_.warn(`Unknown core type ${project.getVar('MTB_CORE_TYPE')} - cannot set appropriate compiler flags`) ;
-                throw new Error(`Unknown core type ${project.getVar('MTB_CORE_TYPE')} - cannot set appropriate compiler flags`) ;
-                break ;
-        }
-
-        contents.push(`add_compile_options(\${PROJECT_NAME}.elf PRIVATE -mcpu=${cputype})`) ;        
 
         // Find common flags
         for (const flag of debugFlags) {
@@ -819,10 +842,10 @@ export class CMakeBuildSupport extends EventEmitter {
 
         // Add common flags
         if (commonFlags.length > 0) {
-            contents.push('# Compiler flags (common to both Debug and Release)') ;
+            contents.push(`# ${language} compiler flags (common to both Debug and Release)`) ;
             contents.push('add_compile_options(') ;
             for (let flag of commonFlags) {
-                contents.push(`    ${flag}`) ;
+                contents.push(`    $<$<COMPILE_LANGUAGE:${language}>:${flag}>`) ;
             }
             contents.push(')') ;
             contents.push('') ;
@@ -830,10 +853,10 @@ export class CMakeBuildSupport extends EventEmitter {
 
         // Add debug-specific flags
         if (debugOnlyFlags.length > 0) {
-            contents.push('# Debug-specific compiler flags') ;
+            contents.push(`# ${language} Debug-specific compiler flags`) ;
             contents.push('add_compile_options(') ;
             for (let flag of debugOnlyFlags) {
-                contents.push(`    $<$<CONFIG:Debug>:${flag}>`) ;
+                contents.push(`    $<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:${language}>>:${flag}>`) ;
             }
             contents.push(')') ;
             contents.push('') ;
@@ -841,8 +864,139 @@ export class CMakeBuildSupport extends EventEmitter {
 
         // Add release-specific flags
         if (releaseOnlyFlags.length > 0) {
-            contents.push('# Release-specific compiler flags') ;
+            contents.push(`# ${language} Release-specific compiler flags`) ;
             contents.push('add_compile_options(') ;
+            for (let flag of releaseOnlyFlags) {
+                contents.push(`    $<$<AND:$<CONFIG:Release>,$<COMPILE_LANGUAGE:${language}>>:${flag}>`) ;
+            }
+            contents.push(')') ;
+            contents.push('') ;
+        }
+    }
+
+    private getLdFlags(config: CMakeOneConfig) : string[] {
+        const ldflags = config.flags_.get('ldflags') || '' ;
+        const parts = ldflags.split(' ').filter(f => f.length > 0) ;
+        const filtered: string[] = [] ;
+        let skipNext = false ;
+        let skipXlinkerArg = false ;
+        for (const part of parts) {
+            if (skipNext) {
+                skipNext = false ;
+                continue ;
+            }
+
+            if (skipXlinkerArg) {
+                // Previous token was -Xlinker; this is its argument
+                skipXlinkerArg = false ;
+                if (part === '-L' || part === '-T') {
+                    // -Xlinker -L <path> or -Xlinker -T <file>: skip the next argument too
+                    skipNext = true ;
+                }
+                // Either way, skip this -Xlinker argument (the -L/-T flag or -L<path>/-T<file>)
+                continue ;
+            }
+
+            if (part === '-Xlinker') {
+                // Peek: the next part is the linker argument passed via -Xlinker
+                skipXlinkerArg = true ;
+                continue ;
+            }
+
+            if (part === '-T' || part === '-L') {
+                // -T <file> or -L <path> form: skip this flag and the following argument
+                skipNext = true ;
+                continue ;
+            }
+            if (part.startsWith('-T') || part.startsWith('-L')) {
+                // -T<file> or -L<path> form: skip this flag
+                continue ;
+            }
+
+            if (part.startsWith('@')) {
+                // Skip response file arguments
+                continue ;
+            }
+
+            if (part === '-o') {
+                // -o <output>: skip this flag and its argument
+                skipNext = true ;
+                continue ;
+            }
+
+            if (part === '-Wl,--start-group' || part === '-Wl,--end-group') {
+                // Skip group flags
+                continue ;
+            }
+
+            if (part.startsWith('-Wl,-Map')) {
+                // Skip map file flags
+                continue ;
+            }
+
+            filtered.push(part) ;
+        }
+        return filtered ;
+    }
+
+    private addCFlags(project: MTBProjectInfo, contents: string[]) : void {
+        this.addLanguageFlags('C', this.getCFlags(this.debugConfig_), this.getCFlags(this.releaseConfig_), contents) ;
+        this.addLanguageFlags('CXX', this.getCppFlags(this.debugConfig_), this.getCppFlags(this.releaseConfig_), contents) ;
+        this.addLanguageFlags('ASM', this.getAsmFlags(this.debugConfig_), this.getAsmFlags(this.releaseConfig_), contents) ;
+    }
+
+    private addLinkFlags(contents: string[]) : void {
+        const debugFlags = new Set(this.getLdFlags(this.debugConfig_)) ;
+        const releaseFlags = new Set(this.getLdFlags(this.releaseConfig_)) ;
+        const commonFlags: string[] = [] ;
+        const debugOnlyFlags: string[] = [] ;
+        const releaseOnlyFlags: string[] = [] ;
+
+        // Find common flags
+        for (const flag of debugFlags) {
+            if (releaseFlags.has(flag)) {
+                commonFlags.push(flag) ;
+            } else {
+                debugOnlyFlags.push(flag) ;
+            }
+        }
+
+        // Find release-only flags
+        for (const flag of releaseFlags) {
+            if (!debugFlags.has(flag)) {
+                releaseOnlyFlags.push(flag) ;
+            }
+        }
+
+        // Add common link flags
+        if (commonFlags.length > 0) {
+            contents.push('# Linker flags (common to both Debug and Release)') ;
+            contents.push('add_link_options(') ;
+            for (let flag of commonFlags) {
+                if (flag.includes('../proj_cm33_s/nsc_veneer.o')) {
+                    flag = flag.replace('../proj_cm33_s/nsc_veneer.o', '${CMAKE_CURRENT_SOURCE_DIR}/../proj_cm33_s/nsc_veneer.o') ;
+                }
+                contents.push(`    ${flag}`) ;
+            }
+            contents.push(')') ;
+            contents.push('') ;
+        }
+
+        // Add debug-specific link flags
+        if (debugOnlyFlags.length > 0) {
+            contents.push('# Debug-specific linker flags') ;
+            contents.push('add_link_options(') ;
+            for (let flag of debugOnlyFlags) {
+                contents.push(`    $<$<CONFIG:Debug>:${flag}>`) ;
+            }
+            contents.push(')') ;
+            contents.push('') ;
+        }
+
+        // Add release-specific link flags
+        if (releaseOnlyFlags.length > 0) {
+            contents.push('# Release-specific linker flags') ;
+            contents.push('add_link_options(') ;
             for (let flag of releaseOnlyFlags) {
                 contents.push(`    $<$<CONFIG:Release>:${flag}>`) ;
             }
@@ -852,9 +1006,6 @@ export class CMakeBuildSupport extends EventEmitter {
     }
 
     private writeToolchainFile() : void {
-        let debugldflags = this.debugConfig_.flags_.get('ldflags') + ' -Wl,-Map,${CMAKE_BINARY_DIR}/build-debug.map' ;
-        let releaseldflags = this.releaseConfig_.flags_.get('ldflags') + ' -Wl,-Map,${CMAKE_BINARY_DIR}/build-release.map' ;
-
         let contents =`
 # toolchain.cmake - generated by ModusToolbox Assistant for VS Code
 SET(CMAKE_SYSTEM_NAME Generic)
@@ -882,10 +1033,6 @@ SET(CMAKE_CXX_COMPILER \${GCCPATH}arm-none-eabi-g++)
 SET(CMAKE_ASM_COMPILER \${GCCPATH}arm-none-eabi-gcc)
 set(CMAKE_OBJCOPY \${GCCPATH}arm-none-eabi-objcopy)
 set(CMAKE_SIZE \${GCCPATH}arm-none-eabi-size)
-
-# specify the flags for the Cortex-M33
-set(CMAKE_EXE_LINKER_FLAGS_DEBUG_INIT "${debugldflags}")
-set(CMAKE_EXE_LINKER_FLAGS_RELEASE_INIT "${releaseldflags}")
     ` ;
 
         const p = path.join(this.env_!.appInfo!.appdir, this.toolchainFile_) ;
@@ -1061,37 +1208,75 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE_INIT "${releaseldflags}")
     }
 
     private pubObj(contents: string[], config: string | undefined, obj: string) : void {
-        contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/${obj})`) ;
+        if (config) {
+            contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE $<$<CONFIG:${config}>:\${CMAKE_CURRENT_SOURCE_DIR}/${obj}>)`) ;
+        } else {
+            contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/${obj})`) ;
+        }
     }
 
     private addLDLibsExtra(contents: string[]) : void {
         const debugLdLibs = this.debugConfig_.flags_.get('ldlibs') ;
         const releaseLdLibs = this.releaseConfig_.flags_.get('ldlibs') ;
 
-        if (debugLdLibs || releaseLdLibs) {
-            contents.push(`message(STATUS "")`) ;
-            contents.push(`message(STATUS "")`) ;
-            contents.push('# Additional linker libraries specified in ldlibs files') ;
-            if (debugLdLibs) {
-                contents.push('# Debug configuration') ;
-                for(let lib of debugLdLibs.split(' ')) {
-                    if (lib.endsWith('.a')) {
-                        this.putLib(contents, 'Debug', lib) ;
-                    }
-                    else if (lib.endsWith('.o')) {
-                        this.pubObj(contents, 'Debug', lib) ;
-                    }
+        const debugLibs = debugLdLibs ? debugLdLibs.split(' ').filter(f => f.length > 0) : [] ;
+        const releaseLibs = releaseLdLibs ? releaseLdLibs.split(' ').filter(f => f.length > 0) : [] ;
+
+        if (debugLibs.length === 0 && releaseLibs.length === 0) {
+            return ;
+        }
+
+        const debugSet = new Set(debugLibs) ;
+        const releaseSet = new Set(releaseLibs) ;
+        const commonLibs: string[] = [] ;
+        const debugOnlyLibs: string[] = [] ;
+        const releaseOnlyLibs: string[] = [] ;
+
+        for (const lib of debugSet) {
+            if (releaseSet.has(lib)) {
+                commonLibs.push(lib) ;
+            } else {
+                debugOnlyLibs.push(lib) ;
+            }
+        }
+
+        for (const lib of releaseSet) {
+            if (!debugSet.has(lib)) {
+                releaseOnlyLibs.push(lib) ;
+            }
+        }
+
+        contents.push('# Additional linker libraries specified in ldlibs files') ;
+
+        if (commonLibs.length > 0) {
+            contents.push('# Common to both Debug and Release') ;
+            for (const lib of commonLibs) {
+                if (lib.endsWith('.a')) {
+                    this.putLib(contents, undefined, lib) ;
+                } else if (lib.endsWith('.o')) {
+                    this.pubObj(contents, undefined, lib) ;
                 }
             }
-            if (releaseLdLibs) {
-                contents.push('# Release configuration') ;
-                for(let lib of releaseLdLibs.split(' ')) {
-                    if (lib.endsWith('.a')) {
-                        this.putLib(contents, 'Release', lib) ;
-                    }
-                    else if (lib.endsWith('.o')) {
-                        this.pubObj(contents, 'Release', lib) ;
-                    }
+        }
+
+        if (debugOnlyLibs.length > 0) {
+            contents.push('# Debug-specific libraries') ;
+            for (const lib of debugOnlyLibs) {
+                if (lib.endsWith('.a')) {
+                    this.putLib(contents, 'Debug', lib) ;
+                } else if (lib.endsWith('.o')) {
+                    this.pubObj(contents, 'Debug', lib) ;
+                }
+            }
+        }
+
+        if (releaseOnlyLibs.length > 0) {
+            contents.push('# Release-specific libraries') ;
+            for (const lib of releaseOnlyLibs) {
+                if (lib.endsWith('.a')) {
+                    this.putLib(contents, 'Release', lib) ;
+                } else if (lib.endsWith('.o')) {
+                    this.pubObj(contents, 'Release', lib) ;
                 }
             }
         }
@@ -1102,10 +1287,7 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE_INIT "${releaseldflags}")
         const releaselib = this.releaseConfig_.includesDefines_.libraries_ ;
 
         if (debuglibs.length > 0 || releaselib.length > 0) {
-
-            contents.push(`message(STATUS "")`) ;
-            contents.push(`message(STATUS "")`) ;
-
+            contents.push('# Libraries specified assets') ;
             const commonlibs: string[] = [] ;
             const debugonlylibs: string[] = [] ;
             const releaseonlylibs: string[] = [] ;
@@ -1153,14 +1335,153 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE_INIT "${releaseldflags}")
         this.addLDLibsExtra(contents) ;
     }
 
-    private fixupLinkerScript(linkerScript: string) : string {
-        let ret = this.normalizePathForCMake(linkerScript) ;
-        return ret ;
+    private normalizeLinkerScriptPath(script: string) : string {
+        if (script.startsWith('"') && script.endsWith('"')) {
+            script = script.substring(1, script.length - 1).replace(/\\/g, '/') ;
+        }
+
+        return this.normalizePathForCMake(script) ;
     }
 
-    private getGeneratedSourceDir(project: MTBProjectInfo) : string {
-        let p = path.relative(project.path, this.env_.appInfo!.generatedSourceDir) ;
-        return this.normalizePathForCMake(p) ;
+    private addLibsAndLinkerScriptFromCommandLine(contents: string[]) : void {
+        const debugLdFlags = this.debugConfig_.flags_.get('ldflags') ;
+        const releaseLdFlags = this.releaseConfig_.flags_.get('ldflags') ;
+
+        const extractFromLdFlags = (ldflags: string | undefined) : { libDirs: string[], linkerScripts: string[] } => {
+            if (!ldflags) {
+                return { libDirs: [], linkerScripts: [] } ;
+            }
+            const parts = ldflags.split(' ').filter(f => f.length > 0) ;
+            const libDirs: string[] = [] ;
+            const linkerScripts: string[] = [] ;
+            let i = 0 ;
+            while (i < parts.length) {
+                const part = parts[i++] ;
+                if (part === '-Xlinker' && i < parts.length) {
+                    const arg = parts[i++] ;
+                    if (arg === '-L' && i < parts.length) {
+                        // -Xlinker -L <path>
+                        libDirs.push(parts[i++]) ;
+                    } else if (arg.startsWith('-L')) {
+                        // -Xlinker -L<path>
+                        libDirs.push(arg.substring(2)) ;
+                    } else if (arg === '-T' && i < parts.length) {
+                        // -Xlinker -T <file>
+                        linkerScripts.push(parts[i++]) ;
+                    } else if (arg.startsWith('-T')) {
+                        // -Xlinker -T<file>
+                        linkerScripts.push(arg.substring(2)) ;
+                    }
+                } else if (part === '-L' && i < parts.length) {
+                    // -L <path>
+                    libDirs.push(parts[i++]) ;
+                } else if (part.startsWith('-L')) {
+                    // -L<path>
+                    libDirs.push(part.substring(2)) ;
+                } else if (part === '-T' && i < parts.length) {
+                    // -T <file>
+                    linkerScripts.push(parts[i++]) ;
+                } else if (part.startsWith('-T')) {
+                    // -T<file>
+                    linkerScripts.push(part.substring(2)) ;
+                }
+            }
+            return { libDirs, linkerScripts } ;
+        } ;
+
+        const debugExtracted = extractFromLdFlags(debugLdFlags) ;
+        const releaseExtracted = extractFromLdFlags(releaseLdFlags) ;
+
+        // Process library directories
+        const debugDirs = new Set(debugExtracted.libDirs) ;
+        const releaseDirs = new Set(releaseExtracted.libDirs) ;
+        const commonDirs: string[] = [] ;
+        const debugOnlyDirs: string[] = [] ;
+        const releaseOnlyDirs: string[] = [] ;
+
+        for (const dir of debugDirs) {
+            if (releaseDirs.has(dir)) {
+                commonDirs.push(dir) ;
+            } else {
+                debugOnlyDirs.push(dir) ;
+            }
+        }
+
+        for (const dir of releaseDirs) {
+            if (!debugDirs.has(dir)) {
+                releaseOnlyDirs.push(dir) ;
+            }
+        }
+
+        if (commonDirs.length > 0) {
+            contents.push('') ;
+            contents.push('# Library directories (common to both Debug and Release)') ;
+            for (const dir of commonDirs) {
+                contents.push(`target_link_directories(\${PROJECT_NAME}.elf PRIVATE -Xlinker -L \${CMAKE_CURRENT_SOURCE_DIR}/${this.normalizePathForCMake(dir)})`) ;
+            }
+            contents.push('') ;
+        }
+
+        if (debugOnlyDirs.length > 0) {
+            contents.push('# Debug-specific library directories') ;
+            for (const dir of debugOnlyDirs) {
+                contents.push(`target_link_directories(\${PROJECT_NAME}.elf PRIVATE $<$<CONFIG:Debug>:-Xlinker -L \${CMAKE_CURRENT_SOURCE_DIR}/${this.normalizePathForCMake(dir)}>)`) ;
+            }
+            contents.push('') ;
+        }
+
+        if (releaseOnlyDirs.length > 0) {
+            contents.push('# Release-specific library directories') ;
+            for (const dir of releaseOnlyDirs) {
+                contents.push(`target_link_directories(\${PROJECT_NAME}.elf PRIVATE $<$<CONFIG:Release>:-Xlinker -L \${CMAKE_CURRENT_SOURCE_DIR}/${this.normalizePathForCMake(dir)}>)`) ;
+            }
+            contents.push('') ;
+        }
+
+        // Process linker scripts
+        const debugScripts = new Set(debugExtracted.linkerScripts) ;
+        const releaseScripts = new Set(releaseExtracted.linkerScripts) ;
+        const commonScripts: string[] = [] ;
+        const debugOnlyScripts: string[] = [] ;
+        const releaseOnlyScripts: string[] = [] ;
+
+        for (const script of debugScripts) {
+            if (releaseScripts.has(script)) {
+                commonScripts.push(script) ;
+            } else {
+                debugOnlyScripts.push(script) ;
+            }
+        }
+
+        for (const script of releaseScripts) {
+            if (!debugScripts.has(script)) {
+                releaseOnlyScripts.push(script) ;
+            }
+        }
+
+        if (commonScripts.length > 0) {
+            contents.push('# Linker scripts (common to both Debug and Release)') ;
+            for (const script of commonScripts) {
+                contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE -T\${CMAKE_CURRENT_SOURCE_DIR}/${this.normalizeLinkerScriptPath(script)})`) ;
+            }
+            contents.push('') ;
+        }
+
+        if (debugOnlyScripts.length > 0) {
+            contents.push('# Debug-specific linker scripts') ;
+            for (const script of debugOnlyScripts) {
+                contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE $<$<CONFIG:Debug>:-T \${CMAKE_CURRENT_SOURCE_DIR}/${this.normalizePathForCMake(script)}>)`) ;
+            }
+            contents.push('') ;
+        }
+
+        if (releaseOnlyScripts.length > 0) {
+            contents.push('# Release-specific linker scripts') ;
+            for (const script of releaseOnlyScripts) {
+                contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE $<$<CONFIG:Release>:-T \${CMAKE_CURRENT_SOURCE_DIR}/${this.normalizePathForCMake(script)}>)`) ;
+            }
+            contents.push('') ;
+        }
     }
 
     private writeCMakeListsFile(project: MTBProjectInfo) : void {
@@ -1182,28 +1503,18 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE_INIT "${releaseldflags}")
         contents.push('endif()') ;
         contents.push('') ;
 
+        this.addCFlags(project, contents) ;
+        this.addLinkFlags(contents) ;
+
         this.addDefines(contents) ;
         this.addIncludes(contents) ;
-        this.addCFlags(project, contents) ;
         this.addSources(contents) ;
 
         contents.push(`# Create executable`) ;
         contents.push(`add_executable(\${PROJECT_NAME}.elf \${PROJECT_SOURCES})`) ;
-
-        contents.push('# Per project compile options') ;
-        contents.push(`target_compile_options(\${PROJECT_NAME}.elf PRIVATE ${this.debugConfig_.cpuFlags_})`) ;
-        if (secure) {
-            contents.push('target_compile_options(${PROJECT_NAME}.elf PRIVATE -mcmse)') ;
-            contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE -Wl,--cmse-implib)`) ;
-            contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE -Wl,--in-implib -Wl,\${CMAKE_CURRENT_SOURCE_DIR}/${this.debugConfig_.veneerLibs_})`) ;
-            contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE -Wl,--out-implib -Wl,\${CMAKE_CURRENT_SOURCE_DIR}/${this.debugConfig_.veneerLibsTmp_})`) ;
-        }
-
-        contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE ${this.debugConfig_.cpuFlags_})`) ;        
-        contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE -L\${CMAKE_CURRENT_SOURCE_DIR}/${this.getGeneratedSourceDir(project)})`) ;
-        contents.push(`target_link_options(\${PROJECT_NAME}.elf PRIVATE -T \${CMAKE_CURRENT_SOURCE_DIR}/${this.fixupLinkerScript(this.debugConfig_.linkerScript_)})`) ;
         contents.push('') ;
 
+        contents.push('') ;
         this.addLibraries(contents) ;
 
         if (secure) {
@@ -1217,6 +1528,9 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE_INIT "${releaseldflags}")
             contents.push(``) ;            
         }
 
+        // Add libraries and linker script from the command line
+        this.addLibsAndLinkerScriptFromCommandLine(contents) ;
+
         contents.push(``) ;        
         contents.push(`# Post-build commands to generate additional output files`) ;
         contents.push(`add_custom_command(TARGET \${PROJECT_NAME}.elf POST_BUILD`) ;
@@ -1225,8 +1539,6 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE_INIT "${releaseldflags}")
         contents.push(`    COMMAND \${CMAKE_SIZE} $<TARGET_FILE:\${PROJECT_NAME}.elf>`) ;
         contents.push(`    COMMENT "Generating HEX and BIN files, and printing size information"`) ;
         contents.push(`)`) ;
-
-
 
         let cmakefile = path.join(project.path, 'CMakeLists.txt') ;
         fs.writeFileSync(cmakefile, contents.join('\n')) ;
