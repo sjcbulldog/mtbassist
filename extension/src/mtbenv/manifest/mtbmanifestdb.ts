@@ -137,7 +137,7 @@ export class MTBManifestDB extends EventEmitter {
                     }
                     else {
                         // This is a non-versioned requirement, just check if the board provides it
-                        if (!bsp.provides.includes(req2)) {
+                        if (!provides.includes(req2)) {
                             match = false;
                             break;
                         }

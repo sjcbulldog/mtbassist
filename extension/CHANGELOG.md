@@ -120,3 +120,9 @@ Added CMAKE file generation (experimental)
 ### 2.26.1
 Updated the initialization, sequence, especially around manifests to provide better feedback when ther is an error
 Added commands to enable and disable cmake support (very experimental)
+
+### 2.26.2
+Update the very, very experimental cmake support
+
+### 2.26.3
+Fixed bug with some BSPs not matching correctly with some code examples
