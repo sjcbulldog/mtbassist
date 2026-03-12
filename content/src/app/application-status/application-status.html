@@ -17,13 +17,21 @@
         </ng-template>
 
         <div class="tab-content">
-          @if (!applicationStatus.valid) {
+          @if (applicationStatus.appstatus === 'invalid') {
             <!-- No Valid Application Message -->
             <div class="no-application-message">
               <mat-icon class="info-icon">info</mat-icon>
               <h2>No Valid ModusToolbox Application</h2>
               <p>A valid ModusToolbox application is not currently loaded.</p>
               <p>Please open a ModusToolbox application to view its status and perform actions.</p>
+            </div>
+          } @else if (applicationStatus.appstatus === 'oldflow') {
+            <!-- Old Flow Application Message -->
+            <div class="no-application-message">
+              <mat-icon class="info-icon">info</mat-icon>
+              <h2>Unsupported Project</h2>
+              <p>The current project uses an older ModusToolbox flow that is not supported by this extension.</p>
+              <p>Please migrate to a newer ModusToolbox project format to use the assistant features.</p>
             </div>
           } @else {
           <!-- Application Overview Card -->
@@ -113,18 +121,19 @@
                     </button>
                   </div>
                 </div>
-              } @else if (applicationStatus.vscodeTasksStatus !== 'good') {
+              } @else if (applicationStatus.vscodeTasksStatus.status!== 'good') {
                 <div class="warning-card tasks-warning">
                   <div class="warning-content">
                     <mat-icon class="warning-icon">warning</mat-icon>
                     <div class="warning-text">
                       <span class="warning-message">
-                        @if (applicationStatus.vscodeTasksStatus === 'missing') {
+                        @if (applicationStatus.vscodeTasksStatus.status === 'missing') {
                           VS Code tasks.json file is missing. Create required tasks file.
-                        } @else if (applicationStatus.vscodeTasksStatus === 'corrupt') {
+                        } @else if (applicationStatus.vscodeTasksStatus.status === 'corrupt') {
                           VS Code tasks file is corrupt. Create a new tasks file.
                         } @else {
-                          Some VS Code tasks are missing or incorrect. Update tasks configuration.
+                          Some VS Code tasks are missing or incorrect.
+                          <a class="details-link" (click)="showDetails('Tasks Changes', applicationStatus.vscodeTasksStatus.details)">View Details</a>
                         }
                       </span>
                     </div>
@@ -135,18 +144,19 @@
                 </div>
               }
               
-              @if (applicationStatus.vscodeSettingsStatus !== 'good') {
+              @if (applicationStatus.vscodeSettingsStatus.status !== 'good') {
                 <div class="warning-card settings-warning">
                   <div class="warning-content">
                     <mat-icon class="warning-icon">warning</mat-icon>
                     <div class="warning-text">
                       <span class="warning-message">
-                        @if (applicationStatus.vscodeSettingsStatus === 'missing') {
+                        @if (applicationStatus.vscodeSettingsStatus.status === 'missing') {
                           VS Code settings.json file is missing. Create required settings file.
-                        } @else if (applicationStatus.vscodeSettingsStatus === 'corrupt') {
+                        } @else if (applicationStatus.vscodeSettingsStatus.status === 'corrupt') {
                           VS Code settings file is corrupt. Create a new settings file.
                         } @else {
-                          Some VS Code settings are missing or incorrect. Update settings configuration.
+                          Some VS Code settings are missing or incorrect.
+                          <a class="details-link" (click)="showDetails('Settings Changes', applicationStatus.vscodeSettingsStatus.details)">View Details</a>
                         }
                       </span>
                     </div>
@@ -159,7 +169,7 @@
             </div>
 
             <!-- Actions Section -->
-            @if (applicationStatus.valid) {
+            @if (applicationStatus.appstatus === 'valid') {
               <div class="actions-section">
                 <!-- Build Actions -->
                 <div class="action-group">
@@ -269,9 +279,9 @@
           </div>
 
           <!-- Memory Usage Section -->
-          @if (applicationStatus.valid && memoryUsageData && memoryUsageData.length > 0) {
+          @if (applicationStatus.appstatus === 'valid' && memoryUsageData && memoryUsageData.length > 0) {
             <app-memory-usage [memoryUsageData]="memoryUsageData" [collapsedStates]="memoryCollapsedStates"></app-memory-usage>
-          } @else if (applicationStatus.valid && memoryUsageData && memoryUsageData.length === 0) {
+          } @else if (applicationStatus.appstatus === 'valid' && memoryUsageData && memoryUsageData.length === 0) {
             <div class="documentation-section">
               <div class="memory-header-container" style="display: flex; align-items: center;">
                 <h3 class="collapsible-header" style="flex: 1; margin: 0; cursor: pointer;" (click)="noMemoryCollapsed = !noMemoryCollapsed">
@@ -295,7 +305,7 @@
           }
 
           <!-- Application Documentation Section -->
-          @if (applicationStatus.valid) {
+          @if (applicationStatus.appstatus === 'valid') {
             <div class="documentation-section">
               <h3 class="collapsible-header" (click)="toggleSection('application', 'documentation')">
                 <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed('application', 'documentation')">
@@ -315,7 +325,7 @@
             </div>
           }
 
-          @if (applicationStatus.valid) {
+          @if (applicationStatus.appstatus === 'valid') {
             <div class="tools-section">
               <h3 class="collapsible-header" (click)="toggleSection('application', 'tools')">
                 <mat-icon class="collapse-icon" [class.collapsed]="isSectionCollapsed('application', 'tools')">
@@ -551,4 +561,23 @@
   @if (displayLLVMInstallControl) {
     <app-llvm-installer (close)="closeLLVMInstaller()"></app-llvm-installer>
   }
-</div>
+
+  <!-- Details Popup Overlay -->
+  @if (detailsPopupVisible) {
+    <div class="details-popup-overlay" (click)="closeDetails()">
+      <div class="details-popup" (click)="$event.stopPropagation()">
+        <div class="details-popup-header">
+          <h3>{{ detailsPopupTitle }}</h3>
+          <mat-icon class="close-btn" (click)="closeDetails()">close</mat-icon>
+        </div>
+        <ul class="details-popup-list">
+          @for (item of detailsPopupItems; track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+        <div class="details-popup-actions">
+          <button mat-raised-button color="primary" (click)="closeDetails()">Close</button>
+        </div>
+      </div>
+    </div>
+  }

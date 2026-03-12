@@ -556,6 +556,21 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         this.be.sendRequestWithArgs('fix-settings', null);
     }
 
+    // Details popup state
+    detailsPopupVisible = false;
+    detailsPopupTitle = '';
+    detailsPopupItems: string[] = [];
+
+    showDetails(title: string, details: string[]): void {
+        this.detailsPopupTitle = title;
+        this.detailsPopupItems = details;
+        this.detailsPopupVisible = true;
+    }
+
+    closeDetails(): void {
+        this.detailsPopupVisible = false;
+    }
+
     prepareVSCode() {
         this.be.sendRequestWithArgs('prepareVSCode', null);
     }

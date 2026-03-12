@@ -2142,6 +2142,85 @@
   }
 }
 
+// Details popup overlay
+.details-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  .details-popup {
+    background: var(--card-background, #fff);
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 60vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+    .details-popup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+
+      h3 {
+        margin: 0;
+        color: var(--text-color, #333);
+        font-size: 16px;
+      }
+
+      .close-btn {
+        cursor: pointer;
+        color: var(--text-secondary, #666);
+        &:hover {
+          color: var(--text-color, #333);
+        }
+      }
+    }
+
+    .details-popup-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        padding: 8px 0;
+        color: var(--text-color, #333);
+        font-size: 13px;
+        border-bottom: 1px solid var(--border-color, #eee);
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+
+    .details-popup-actions {
+      margin-top: 16px;
+      text-align: right;
+    }
+  }
+}
+
+.details-link {
+  color: #0066cc;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 4px;
+
+  &:hover {
+    color: #004499;
+  }
+}
+
 // Dark theme adjustments for memory usage
 .application-status.dark-theme .memory-usage-section {
   .memory-table {
