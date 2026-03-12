@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +15,7 @@
 
 
 export class MTBNames {
+    public static FLOW_VERSION = 'FLOW_VERSION' ;
     public static MTB_TYPE = 'MTB_TYPE' ;
     public static MTB_TYPE_APPLICATION = 'APPLICATION' ;
     public static MTB_TYPE_PROJECT = 'PROJECT' ;

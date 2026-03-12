@@ -261,7 +261,15 @@ export class VSCodeWorker extends EventEmitter  {
                             if (makeResult[0] !== 0) {
                                 resolve([-1, [`Failed to create project '${bspid} - ${ceid}': ${makeResult[1].join('\n')}`]]);
                                 return;
-                            }   
+                            }
+                            let fpath = path.join(targetdir, appname, '.vscode', 'newproject.json') ;
+                            try {
+                                fs.writeFileSync(fpath, '{}', 'utf8') ;
+                            } catch (error) {
+                                let err = error as Error ;
+                                resolve([-1, [`Failed to create project '${bspid} - ${ceid}': ${err.message}`]]);
+                                return;
+                            }
                             resolve([0, [`Application '${bspid} - ${ceid}' created successfully.`]]);
                         }) ;
                     }

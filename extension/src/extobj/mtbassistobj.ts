@@ -26,7 +26,7 @@ import {
     ApplicationStatusData, BackEndToFrontEndResponse, BackEndToFrontEndType, BSPIdentifier, CodeExampleIdentifier, ComponentInfo, Documentation,
     FrontEndToBackEndRequest, FrontEndToBackEndType, GlossaryEntry, InstallProgress, LCSBSPKeywordAliases, ManifestLoadingStatus, Middleware, MTBAssistantMode, 
     MTBAssistantTask, 
-    MTBLocationStatus, MTBSetting, MTBVSCodeSettingsStatus, MTBVSCodeTaskStatus, Project, ProjectGitStateTrackerData, SettingsError, ThemeType, Tool
+    MTBLocationStatus, MTBSetting, MTBVSCodeSettingsInfo, MTBVSCodeSettingsStatus, MTBVSCodeTaskInfo, MTBVSCodeTaskStatus, Project, ProjectGitStateTrackerData, SettingsError, ThemeType, Tool
 } from '../comms';
 import { MTBProjectInfo } from '../mtbenv/appdata/mtbprojinfo';
 import { MTBAssetRequest } from '../mtbenv/appdata/mtbassetreq';
@@ -54,6 +54,7 @@ import fetch from 'node-fetch';
 import { ApplicationType } from '../mtbenv/appdata/mtbappinfo';
 import { browseropen } from '../browseropen';
 import { CMakeBuildSupport } from './cmakebuild';
+import { MTBError } from '../mtbenv/mtberror';
 
 export class MTBAssistObject {
     private static readonly mtbLaunchUUID = 'f7378c77-8ea8-424b-8a47-7602c3882c49';
@@ -118,6 +119,7 @@ export class MTBAssistObject {
     private activeTask_ : STask | undefined = undefined ;
     private password? : string ;
     private cmakeEnabled_ : boolean = false ;
+    private isFlow2_ : boolean = false ;
 
     // Managers
     private devkitMgr_: MTBDevKitMgr | undefined = undefined;
@@ -753,6 +755,33 @@ export class MTBAssistObject {
         }
     }
 
+    private fixTasksAndSettings(appdir: string) : Promise<void> {
+        let ret = new Promise<void>((resolve, reject) => {
+            let p = path.join(appdir, '.vscode', 'newproject.json') ;
+            if (fs.existsSync(p)) {
+                fs.rmSync(p) ;
+                this.fixSettings()
+                .then(() => {
+                    this.fixTasks()
+                    .then(() => {
+                        resolve() ;
+                    })
+                    .catch((error: Error) => {
+                        reject(error) ;
+                    }) ;
+                })
+                .catch((error: Error) => {
+                    reject(error) ;
+                }) ;
+            }
+            else {
+                resolve() ;
+            }
+        }) ;
+
+        return ret ;
+    }
+
     private initWithTools(): Promise<void> {
         let runtime = RunTimeTracker.getInstance() ;
         runtime.mark('initWithTools');
@@ -779,7 +808,6 @@ export class MTBAssistObject {
             }) ;
 
             runtime.mark('ModusToolboxEnvironment.getInstance')  ;
-
 
             this.toolspath_ = this.settings_.toolsPath;
             if (!this.toolspath_ || this.toolspath_.length === 0 || !fs.existsSync(this.toolspath_)) {
@@ -846,6 +874,7 @@ export class MTBAssistObject {
                     runtime.mark('postInitializeManagers') ;
                     if (this.env_ && this.env_.has(MTBLoadFlags.appInfo) && this.env_.appInfo) {
                         // We do this again in case the setting is to show the mtb assistant only if an application is loaded
+
                         this.optionallyShowPage();
                         this.sendIntellisenseProject() ;                        
                         this.recents_!.addToRecentProject(this.env_!.appInfo!.appdir, this.env_!.bspName || '');
@@ -855,64 +884,67 @@ export class MTBAssistObject {
                         this.createVSCodeTaskManager() ;
                         this.vscodeSettings_ = new MTBVSCodeSettings(this);
 
-                        this.getLaunchData()
-                            .then(() => {
-                                runtime.mark('getLaunchData') ;
-                                this.initDeviceDB()
+                        this.fixTasksAndSettings(this.env_.appInfo.appdir)
+                        .then(() => {                            
+                            this.getLaunchData()
                                 .then(() => {
-                                    runtime.mark('initDeviceDB') ;
-                                    this.memusage_.updateMemoryInfo()
+                                    runtime.mark('getLaunchData') ;
+                                    this.initDeviceDB()
                                     .then(() => {
-                                        runtime.mark('updateMemoryInfo') ;
-                                        this.logger_.debug('All managers post-initialization completed successfully.');
-
-                                        //
-                                        // Tell the front end we are ready to supply (most) data.  Since manifest data takes a while to 
-                                        // get from the git hub servers, we handle this data independently
-                                        //
-                                        this.ready_ = true ;
-                                        this.computeTheme() ;
-                                        this.sendMessageWithArgs('ready', this.theme_) ;
-                                        this.mtbmode_ = 'mtb' ;
-                                        this.sendMessageWithArgs('mtbMode', this.mtbmode_);
-                                        runtime.mark('Show Application') ;
-
-                                        this.setupAuxiliaryStuff()
+                                        runtime.mark('initDeviceDB') ;
+                                        this.memusage_.updateMemoryInfo()
                                         .then(() => {
-                                            runtime.mark('setupAuxiliaryStuff') ;
-                                            this.env?.load(MTBLoadFlags.manifestData)
+                                            runtime.mark('updateMemoryInfo') ;
+                                            this.logger_.debug('All managers post-initialization completed successfully.');
+
+                                            //
+                                            // Tell the front end we are ready to supply (most) data.  Since manifest data takes a while to 
+                                            // get from the git hub servers, we handle this data independently
+                                            //
+                                            this.ready_ = true ;
+                                            this.computeTheme() ;
+                                            this.sendMessageWithArgs('ready', this.theme_) ;
+                                            this.mtbmode_ = 'mtb' ;
+                                            this.sendMessageWithArgs('mtbMode', this.mtbmode_);
+                                            runtime.mark('Show Application') ;
+
+                                            this.setupAuxiliaryStuff()
                                             .then(() => {
-                                                runtime.mark('loadManifestData') ;
-                                                this.sendManifestStatus() ;
-                                                runtime.mark('application load done') ;
-                                                runtime.printAll(this.logger_) ;
-                                                this.sendBSPInformation() ;
-                                                resolve() ;
+                                                runtime.mark('setupAuxiliaryStuff') ;
+                                                this.env?.load(MTBLoadFlags.manifestData)
+                                                .then(() => {
+                                                    runtime.mark('loadManifestData') ;
+                                                    this.sendManifestStatus() ;
+                                                    runtime.mark('application load done') ;
+                                                    runtime.printAll(this.logger_) ;
+                                                    this.sendBSPInformation() ;
+                                                    resolve() ;
+                                                })
+                                                .catch((err) => {
+                                                    this.sendManifestStatus();
+                                                    reject(err);
+                                                });
                                             })
-                                            .catch((err) => {
-                                                this.sendManifestStatus();
-                                                reject(err);
-                                            });
+                                            .catch((error: Error) => {
+                                                this.logger_.error('Failed to load manifest files:', error.message);
+                                                resolve();
+                                            }) ;
                                         })
                                         .catch((error: Error) => {
                                             this.logger_.error('Failed to load manifest files:', error.message);
                                             resolve();
-                                        }) ;
+                                        });
                                     })
                                     .catch((error: Error) => {
-                                        this.logger_.error('Failed to load manifest files:', error.message);
+                                        this.logger_.error('Failed to initialize device database:', error.message);
                                         resolve();
                                     });
                                 })
                                 .catch((error: Error) => {
-                                    this.logger_.error('Failed to initialize device database:', error.message);
-                                    resolve();
+                                    this.logger_.error('Error during post-initialization of managers:', error.message);
+                                    resolve() ;
                                 });
-                            })
-                            .catch((error: Error) => {
-                                this.logger_.error('Error during post-initialization of managers:', error.message);
-                                resolve() ;
-                            });
+                        }) ;
                     }
                     else {
                         runtime.mark('update status bar') ;
@@ -1496,7 +1528,7 @@ export class MTBAssistObject {
         }) ;
     }
 
-    private fixSettings(request: FrontEndToBackEndRequest): Promise<void> {
+    private fixSettings(request?: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (this.env_ && this.env_.appInfo) {
                 this.vscodeSettings_?.fix() ;
@@ -1506,7 +1538,7 @@ export class MTBAssistObject {
         }) ;
     }
 
-    private fixTasks(request: FrontEndToBackEndRequest): Promise<void> {
+    private fixTasks(request?: FrontEndToBackEndRequest): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.tasks_?.forEach((t) => { t.addRequiredTasks(); }) ;
             this.sendMessageWithArgs('appStatus', this.getAppStatusFromEnv()) ;
@@ -2327,6 +2359,10 @@ export class MTBAssistObject {
                     this.logger_.info('ModusToolbox application loaded successfully.');
                     resolve();
                 }).catch((error: Error) => {
+                    if (error instanceof MTBError && error.code === MTBError.FLOW2_NOT_SUPPORTED) {
+                        this.isFlow2_ = true ;
+                    }
+                    
                     flags = MTBLoadFlags.packs | MTBLoadFlags.tools;
                     ModusToolboxEnvironment.destroy() ;
                     this.env_ = ModusToolboxEnvironment.initInstance(this.logger_, this.settings_) ;
@@ -2813,19 +2849,18 @@ export class MTBAssistObject {
                 msgHelp = 'There is a VSCode extension setting that disables this prompt.  See File/Preferences/Settings and search for "mtbassist2.disablellvmnag".' ;
             }
 
-            let vscTaskStatus : MTBVSCodeTaskStatus= 'good' ;
-            let vscSettingStatus : MTBVSCodeSettingsStatus = 'good' ;
+            let vscTaskStatus : MTBVSCodeTaskInfo = { status: 'good', details: [] } ;
+            let vscSettingStatus : MTBVSCodeSettingsInfo = { status: 'good', details: [] } ;
 
             if (!needVSCode) {
                 for(let tasks of this.tasks_.values()) {
-                    if (tasks.taskFileStatus !== 'good') {
-                        vscTaskStatus = tasks.taskFileStatus || 'missing' ;
-                        vscTaskStatus = 'needsTasks' ;
+                    if (tasks.taskFileStatus.status !== 'good') {
+                        vscTaskStatus = tasks.taskFileStatus ;
                         break ;
                     }
                 }
 
-                vscSettingStatus = this.vscodeSettings_?.status || 'missing' ;
+                vscSettingStatus = this.vscodeSettings_?.status || { status: 'missing', details: ['Regenerate the settings file'] } ;
             }
 
             let readme: string = path.join(this.env_!.appInfo!.appdir, 'README.md') ;
@@ -2834,7 +2869,7 @@ export class MTBAssistObject {
             }
         
             appst = {
-                valid: true,
+                appstatus: 'valid',
                 name: this.env_.appInfo?.appdir || '',
                 toolsdir: this.env_.toolsDir!,
                 documentation: pinfo?.documentation || [],
@@ -2856,7 +2891,7 @@ export class MTBAssistObject {
             };
         } else {
             appst = {
-                valid: false,
+                appstatus: this.isFlow2_ ? 'oldflow' : 'invalid',
                 name: '',
                 toolsdir: this.settings_.toolsPath ? this.settings_.toolsPath : '',
                 documentation: [],
@@ -2864,8 +2899,8 @@ export class MTBAssistObject {
                 projects: [],
                 tools: [],
                 type: 'UNKNOWN',
-                vscodeTasksStatus: 'good',
-                vscodeSettingsStatus: 'good',
+                vscodeTasksStatus: { status: 'good', details: [] },
+                vscodeSettingsStatus: { status: 'good', details: [] },
                 needVSCode: false,
                 configuration: 'Debug',
                 readme: '',
@@ -3226,7 +3261,6 @@ export class MTBAssistObject {
         });
         return ret;
     }
-
 
     private loadWorkspace(request: FrontEndToBackEndRequest): Promise<void> {
         let ret = new Promise<void>((resolve, reject) => {

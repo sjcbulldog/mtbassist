@@ -18,6 +18,7 @@ import { ModusToolboxEnvironment } from "../mtbenv/mtbenv";
 import { MTBAppLoader } from "./mtbapploader";
 import { MTBProjectInfo } from "./mtbprojinfo";
 import * as winston from 'winston';
+import { MTBError } from '../mtberror';
 
 export enum ApplicationType {
     unknown,
@@ -129,6 +130,11 @@ export class MTBAppInfo {
 
         if (!this.vars_) {
             return new Error('MTBAppInfo.isValid called without setting the get_app_info vars') ;
+        }
+
+        if (this.vars_.has(MTBNames.FLOW_VERSION) && this.vars_.get(MTBNames.FLOW_VERSION) === '2') {
+            msg = 'Flow version 2 is not supported' ;
+            return new MTBError(msg, MTBError.FLOW2_NOT_SUPPORTED) ;
         }
 
         if (!this.vars_.has(MTBNames.MTB_TYPE)) {
