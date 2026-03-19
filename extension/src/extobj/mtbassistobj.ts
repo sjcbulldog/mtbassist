@@ -848,8 +848,7 @@ export class MTBAssistObject {
                 runtime.mark('updateStatusBar') ;
                 this.createAppStructure();
                 runtime.mark('createAppStructure') ;
-                this.sendTasks() ;
-                runtime.mark('sendTasks') ;
+
 
                 this.logger_.debug('All managers initialized successfully.');
 
@@ -885,7 +884,8 @@ export class MTBAssistObject {
                         this.vscodeSettings_ = new MTBVSCodeSettings(this);
 
                         this.fixTasksAndSettings(this.env_.appInfo.appdir)
-                        .then(() => {                            
+                        .then(() => {        
+                            this.sendTasks() ;
                             this.getLaunchData()
                                 .then(() => {
                                     runtime.mark('getLaunchData') ;

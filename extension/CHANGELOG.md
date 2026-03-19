@@ -139,3 +139,6 @@ Detected older, flow version 2.0 applications and provide a better error message
 
 ### 2.27.0
 Fixed several bugs with recent releases around visibility of elements in the content
+
+### 2.27.1
+Fixed bug with tasks being send to frontend too early and there not being displayed
