@@ -1,7 +1,7 @@
 import { ModusToolboxEnvironment } from "../mtbenv";
 import * as fs from 'fs' ;
 import * as winston from 'winston';
-import { MTBVSCodeSettingsStatus } from "../comms";
+import { MTBVSCodeSettingsInfo, MTBVSCodeSettingsStatus } from "../comms";
 import { MTBAssistObject } from "./mtbassistobj";
 import path = require("path/posix");
 
@@ -9,23 +9,25 @@ export class MTBVSCodeSettings {
 
     private static readonly openocdGUID = 'c0688bed-ec45-4dab-9521-10f5283a6ead' ;
     private static readonly gccGUID = '8472a194-a4ec-4c1b-bfda-b6fca90b3f0d' ;
+    private static readonly toolsPathSetting = 'modustoolbox.toolsPath' ;
+    private static readonly gccPathSetting = 'cortex-debug.gccPath' ;
+    private static readonly openocdPathSetting = 'cortex-debug.openocdPath' ;
 
     private ext_: MTBAssistObject ;
     private status_ : MTBVSCodeSettingsStatus = 'missing' ;
     private settings_ : any = {} ;
-    private missingSettings: string[] = [] ;
+    private settingsDetails_: string[] = [] ;
 
     constructor(ext: MTBAssistObject,) {
         this.ext_ = ext ;
     }
 
-    public get status() : MTBVSCodeSettingsStatus {
+    public get status() : MTBVSCodeSettingsInfo {
         this.processAllSettingsFile() ;
-        return this.status_ ;
-    }
-
-    public details() : string {
-        return "Hello World" ;
+        return {
+            status: this.status_,
+            details: this.settingsDetails_
+        } ;
     }
 
     public fix() : void {
@@ -80,16 +82,16 @@ export class MTBVSCodeSettings {
 
     private fixSettingsFile(filename: string) {
         let dir = this.ext_.toolsDir ;
-        this.settings_['modustoolbox.toolsPath'] = dir ;
+        this.settings_[MTBVSCodeSettings.toolsPathSetting] = dir ;
 
         dir = this.openOCDPath() ;
         if (dir) {
-            this.settings_['cortex-debug.openocdPath'] = dir ;
+            this.settings_[MTBVSCodeSettings.openocdPathSetting] = dir ;
         }
 
         dir = this.genGCCPath() ;
         if (dir) {
-            this.settings_['cortex-debug.gccPath'] = dir ;
+            this.settings_[MTBVSCodeSettings.gccPathSetting] = dir ;
         }
 
         fs.writeFileSync(filename, JSON.stringify(this.settings_, null, 4), 'utf8') ;
@@ -99,10 +101,14 @@ export class MTBVSCodeSettings {
 
     private processAllSettingsFile() {
         this.status_ = 'good' ;
+        this.settingsDetails_ = [] ;
         for(let file of this.getAllSettingsFiles()) {
             let stat = this.processSettingsFile(file) ;
             if (stat !== 'good') {
                 this.status_ = stat ;
+                if (stat === 'corrupt' || stat === 'missing') {
+                    this.settingsDetails_ = ['Regenerate the settings file'] ;
+                }
                 return ;
             }
         }
@@ -120,8 +126,9 @@ export class MTBVSCodeSettings {
                     return 'missing' ;
                 }
 
-                if (!this.checkSetting('modustoolbox.toolsPath', dir)) {
-                    this.missingSettings.push('modustoolbox.toolsPath') ;
+                let result = this.checkSetting(MTBVSCodeSettings.toolsPathSetting, dir) ;
+                if (result !== 'match') {
+                    this.addSettingDetail(MTBVSCodeSettings.toolsPathSetting, dir, result) ;
                     ret = 'needsSettings' ;
                 }
 
@@ -129,8 +136,9 @@ export class MTBVSCodeSettings {
                 if (!dir) {
                     return 'missing' ;
                 }
-                if (!this.checkSetting('cortex-debug.openocdPath', dir)) {
-                    this.missingSettings.push('cortex-debug.openocdPath') ;
+                result = this.checkSetting(MTBVSCodeSettings.openocdPathSetting, dir) ;
+                if (result !== 'match') {
+                    this.addSettingDetail(MTBVSCodeSettings.openocdPathSetting, dir, result) ;
                     ret = 'needsSettings' ;
                 }
 
@@ -138,8 +146,9 @@ export class MTBVSCodeSettings {
                 if (!dir) {
                     return 'missing' ;
                 }
-                if (!this.checkSetting('cortex-debug.gccPath', dir)) {
-                    this.missingSettings.push('cortex-debug.gccPath') ;
+                result = this.checkSetting(MTBVSCodeSettings.gccPathSetting, dir) ;
+                if (result !== 'match') {
+                    this.addSettingDetail(MTBVSCodeSettings.gccPathSetting, dir, result) ;
                     ret = 'needsSettings' ;
                 }
             }
@@ -148,15 +157,27 @@ export class MTBVSCodeSettings {
                 ret = 'corrupt' ;
             }
         }
+        else {
+            ret = 'missing' ;
+        }
         return ret ;
     }
 
-    private checkSetting(name: string, value: string) : boolean {
+    private addSettingDetail(name: string, expected: string, result: 'add' | 'change') : void {
+        if (result === 'add') {
+            this.settingsDetails_.push(`Add '${name}' = '${expected}'`) ;
+        } else {
+            this.settingsDetails_.push(`Change '${name}' from '${this.settings_[name]}' to '${expected}'`) ;
+        }
+    }
+
+    private checkSetting(name: string, value: string) : 'match' | 'add' | 'change' {
         if (this.settings_.hasOwnProperty(name)) {
             if (this.settings_[name] === value) {
-                return true ;
+                return 'match' ;
             }
+            return 'change' ;
         }
-        return false ;
+        return 'add' ;
     }
 }

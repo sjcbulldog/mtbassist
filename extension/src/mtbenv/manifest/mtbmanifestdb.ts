@@ -153,7 +153,9 @@ export class MTBManifestDB extends EventEmitter {
                 }
             }
 
-            return match ;
+            if (match) {
+                return true ;
+            }
         }
 
         return false ;

@@ -15,7 +15,7 @@
 import * as fs from 'fs' ;
 import * as path from 'path' ;
 import * as winston from 'winston';
-import { MTBVSCodeTaskStatus } from '../comms';
+import { MTBVSCodeTaskInfo, MTBVSCodeTaskStatus } from '../comms';
 import { VSCodeTaskGenerator } from './vscodetaskgen';
 
 export class VSCodeTasks
@@ -25,6 +25,7 @@ export class VSCodeTasks
     private valid_: boolean = false ;
     private logger_ : winston.Logger ;
     private taskFileStatus_: MTBVSCodeTaskStatus = 'good' ;
+    private taskDetails_: string[] = [] ;
     private taskGenerator_ : VSCodeTaskGenerator  ;
 
     constructor(logger: winston.Logger, filename: string, gen: VSCodeTaskGenerator) {
@@ -34,9 +35,12 @@ export class VSCodeTasks
         this.processTasksFile() ;
     }
 
-    public get taskFileStatus() : MTBVSCodeTaskStatus {
+    public get taskFileStatus() : MTBVSCodeTaskInfo {
         this.processTasksFile() ;
-        return this.taskFileStatus_ ;
+        return {
+            status: this.taskFileStatus_,
+            details: this.taskDetails_
+        } ;
     }
 
     public reset() : void {
@@ -85,6 +89,7 @@ export class VSCodeTasks
             if (task) {
                 if (task.missing) {
                     this.logger_.info(`task '${task.label}' is missing`) ;
+                    this.taskDetails_.push(`Add task '${task.label}'`) ;
                 }
                 else {
                     this.logger_.info(`task '${task.label}' is different than expected`) ;
@@ -93,6 +98,7 @@ export class VSCodeTasks
                     task.other = undefined ;
                     this.logger_.info(`    expected '${JSON.stringify(task)}'`) ;
                     this.logger_.info(`    existing '${curstr}'`) ;
+                    this.taskDetails_.push(`Change task '${task.label}'`) ;
                 }
                 ret = true ;
             }
@@ -112,10 +118,12 @@ export class VSCodeTasks
     }
 
     private processTasksFile() : void {
+        this.taskDetails_ = [] ;
         if (fs.existsSync(this.filename_)) {
             this.initFromFile() ;
             if (!this.valid_) {
                 this.taskFileStatus_ = 'corrupt' ;
+                this.taskDetails_ = ['Regenerate the tasks file'] ;
             }
             else if (this.doWeNeedTaskUpdates()) {
                 this.taskFileStatus_ = 'needsTasks' ;
@@ -126,6 +134,7 @@ export class VSCodeTasks
         }
         else {
             this.taskFileStatus_ = 'missing' ;
+            this.taskDetails_ = ['Regenerate the tasks file'] ;
         }
     }    
 

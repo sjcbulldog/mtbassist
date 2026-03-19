@@ -126,3 +126,19 @@ Update the very, very experimental cmake support
 
 ### 2.26.3
 Fixed bug with some BSPs not matching correctly with some code examples
+
+### 2.26.4
+Added the ability to view what will change in the tasks.json or settings.json if the extension needs to update these files.
+
+### 2.26.5
+Fixed another bug in the BSPs matching to code examples
+Automatically update the tasks.json and settings.json for newly created projects
+
+### 2.26.6
+Detected older, flow version 2.0 applications and provide a better error message
+
+### 2.27.0
+Fixed several bugs with recent releases around visibility of elements in the content
+
+### 2.27.1
+Fixed bug with tasks being send to frontend too early and there not being displayed

@@ -92,6 +92,9 @@ export class ApplicationStatus implements OnInit, OnDestroy {
         this.subscriptions.push(this.be.availableTasks.subscribe((tasks) => {
             this.availableTasks = tasks;
             this.cdr.detectChanges();
+            let err = new Error().stack ;
+            this.be.debug('Received available tasks:' + JSON.stringify(tasks));
+            this.be.debug('Stack trace for available tasks subscription: ' + err);
         }));
 
         this.subscriptions.push(this.be.isLLVMInstalling.subscribe((installing) => {
@@ -554,6 +557,21 @@ export class ApplicationStatus implements OnInit, OnDestroy {
 
     fixSettings() {
         this.be.sendRequestWithArgs('fix-settings', null);
+    }
+
+    // Details popup state
+    detailsPopupVisible = false;
+    detailsPopupTitle = '';
+    detailsPopupItems: string[] = [];
+
+    showDetails(title: string, details: string[]): void {
+        this.detailsPopupTitle = title;
+        this.detailsPopupItems = details;
+        this.detailsPopupVisible = true;
+    }
+
+    closeDetails(): void {
+        this.detailsPopupVisible = false;
     }
 
     prepareVSCode() {

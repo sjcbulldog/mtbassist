@@ -145,7 +145,6 @@ export class BackendService {
     }
 
     private log(message: string, type: string) {
-        console.log(`[${type}] ${message}`);
         if (this.pipe_) {
             this.pipe_.sendRequest({
                 request: 'logMessage',
@@ -290,13 +289,18 @@ export class BackendService {
         this.registerHandler('startOperation', (cmd) => { this.startOperation.next(cmd.data) });
         this.registerHandler('finishOperation', (cmd) => { this.finishOperation.next(cmd.data) });
         this.registerHandler('addStatusLine', (cmd) => { this.addStatusLine.next(cmd.data) });
-        this.registerHandler('tasksAvailable', (cmd) => { this.availableTasks.next(cmd.data) });
+        this.registerHandler('tasksAvailable', (cmd) => { this.receivedTasksAvailable(cmd) }) ; 
         this.registerHandler('lcsGuide', (cmd) => { this.lcsGuide.next(cmd.data || '') });
         this.registerHandler('lcsKeywordAliases', (cmd) => { this.lcsKeywordAliases.next(cmd.data || []) });
         this.registerHandler('gitState', (cmd) => { this.receivedGitState(cmd) }) ;
         this.registerHandler('showVeneerProblem', (cmd) => { this.showVeneerProblem.next(true) });
         this.registerHandler('yes-no-dialog', (cmd) => { this.showYesNoDialog.next({ visible: true, question: cmd.data || '' }) });
         this.registerHandler('show-invalid-paths', (cmd) => { this.showInvalidPathsDialog.next({ visible: true, invalidPaths: cmd.data || [] }) });
+    }
+
+    private receivedTasksAvailable(cmd: BackEndToFrontEndResponse) {
+        this.debug('Backend received tasks available: ' + JSON.stringify(cmd.data)) ;
+        this.availableTasks.next(cmd.data) ;
     }
 
     private receivedGitState(cmd: BackEndToFrontEndResponse) {
@@ -421,7 +425,7 @@ export class BackendService {
         if (str.length > maxstr) {
             str = str.substring(0, maxstr) + '...';
         }
-        this.log(`Received message from backend: ${str}`, 'debug') ;
+        this.debug(`Received message from backend: ${str}`) ;
         const handler = this.handlers_.get(cmd.response);
         if (!handler) {
             this.error(`No handler found for command: ${cmd.response}`);

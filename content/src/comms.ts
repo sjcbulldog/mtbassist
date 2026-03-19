@@ -152,11 +152,21 @@ export type MTBVSCodeTaskStatus =
     'missing' |
     'needsTasks' ;
 
+export interface MTBVSCodeTaskInfo {
+    status: MTBVSCodeTaskStatus ;
+    details: string[] ;
+}
+
 export type MTBVSCodeSettingsStatus =
     'good' |
     'corrupt' |
     'missing' |
     'needsSettings' ;
+
+export interface MTBVSCodeSettingsInfo {
+    status: MTBVSCodeSettingsStatus ;
+    details: string[] ;
+}
 
 export interface InstallLLVMProgressMsg {
   error: boolean ;
@@ -285,14 +295,16 @@ export interface Project {
   enabledComponents?: ComponentInfo[];
 }
 
+export type AppStatusType = 'valid' | 'invalid' | 'oldflow' ;
+
 export interface ApplicationStatusData {
-  valid: boolean ;
+  appstatus: AppStatusType ;
   name: string;
   readme: string ;
   toolsdir: string;
   type: string;
-  vscodeTasksStatus: MTBVSCodeTaskStatus ;
-  vscodeSettingsStatus: MTBVSCodeSettingsStatus ;
+  vscodeTasksStatus: MTBVSCodeTaskInfo ;
+  vscodeSettingsStatus: MTBVSCodeSettingsInfo ;
   needVSCode: boolean ;
   documentation: Documentation[];
   middleware: Middleware[];
